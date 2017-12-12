@@ -1,0 +1,19 @@
+version: '3'
+services:
+  gateway:
+    image: rust_nightly
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.rust_nightly
+    container_name: gateway
+    command: bash
+    volumes:
+      - ..:/app
+    ports:
+      - 9000:8080
+    stdin_open: true
+    tty: true
+networks:
+  default:
+    external:
+      name: storiqa
