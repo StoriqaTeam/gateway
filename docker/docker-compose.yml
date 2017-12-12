@@ -13,3 +13,7 @@ services:
       - 9000:8080
     stdin_open: true
     tty: true
+networks:
+  default:
+    external:
+      name: storiqa
