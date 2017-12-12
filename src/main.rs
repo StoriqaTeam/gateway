@@ -10,10 +10,8 @@ extern crate juniper_rocket;
 use rocket::response::content;
 use rocket::State;
 
-use juniper::{EmptyMutation};
-
 use graphql::context::Context;
-use graphql::schema::{Schema, Query};
+use graphql::schema::{Schema};
 
 #[get("/ping")]
 fn ping() -> &'static str {
@@ -47,13 +45,9 @@ fn post_graphql_handler(
 
 fn main() {
     let context = Context {};
-    let query = Query {};
-    let mutation = EmptyMutation::new();
+    let schema = graphql::schema::create();
     rocket::ignite()
         .manage(context)
-        .manage(graphql::schema::Schema::new(
-            query,
-            mutation
-        ))
+        .manage(schema)
         .mount("/", routes![ping, graphiql, get_graphql_handler, post_graphql_handler]).launch();
 }

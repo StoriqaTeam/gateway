@@ -62,3 +62,9 @@ graphql_object!(Query: Context |&self| {
 // A root schema consists of a query and a mutation.
 // Request queries can be executed against a RootNode.
 pub type Schema = juniper::RootNode<'static, Query, EmptyMutation<Context>>;
+
+pub fn create() -> Schema {
+    let query = Query {};
+    let mutation = EmptyMutation::new();
+    Schema::new(query, mutation)
+}
