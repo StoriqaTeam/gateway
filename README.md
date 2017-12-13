@@ -7,3 +7,7 @@ Graphql backend service that acts as a gateway for web browser / mobile
 2. `docker network create storiqa`
 3. `cd docker && docker-compose run gateway`
 4. To run project `cargo run`
+
+### Run shell with Rust
+
+`docker-compose --service-ports run gateway bash`
