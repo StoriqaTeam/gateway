@@ -10,4 +10,4 @@ Graphql backend service that acts as a gateway for web browser / mobile
 
 ### Run shell with Rust
 
-`docker-compose --service-ports run gateway bash`
+`docker-compose run --service-ports gateway bash`
