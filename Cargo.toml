@@ -4,3 +4,7 @@ version = "0.1.0"
 authors = ["root"]
 
 [dependencies]
+juniper = "0.9.0"
+juniper_rocket = "0.1.0"
+rocket = "0.3.3"
+rocket_codegen = "0.3.3"

@@ -6,13 +6,18 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.rust_nightly
     container_name: gateway
-    command: bash
+    command: cargo run
     volumes:
       - ..:/app
+      - stq_cargo_cache:/usr/local/cargo
     ports:
-      - 9000:8080
+      - 8000:8000
     stdin_open: true
     tty: true
+
+volumes:
+  stq_cargo_cache:
+
 networks:
   default:
     external:
