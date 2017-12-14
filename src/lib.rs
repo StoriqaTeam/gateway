@@ -6,29 +6,32 @@ extern crate serde_json;
 
 pub mod graphiql;
 
-use futures::future::{FutureResult, Future, ok};
-use futures::future;
-use futures::{Stream};
+use futures::future::{FutureResult, Future};
+use futures::{future, Stream};
 
 use hyper::{Get, Post, StatusCode};
 use hyper::header::ContentLength;
 use hyper::server::{Http, Service, Request, Response};
+use hyper::error::Error;
 
 use juniper::http::{GraphQLRequest};
 
 struct WebService;
 
 fn read_body(request: Request) -> Box<Future<Item=String, Error=hyper::Error>> {
-    request.body()
-        .fold(Vec::new(), |mut acc, chunk| {
-            acc.extend_from_slice(&*chunk);
-            ok::<_, hyper::Error>(acc)
-        })
-        .and_then(|v| {
-            let stringify = String::from_utf8(v).unwrap();
-            println!("{}", stringify);
-            ok(stringify)
-        }).boxed()
+    Box::new(
+        request.body()
+            .fold(Vec::new(), |mut acc, chunk| {
+                acc.extend_from_slice(&*chunk);
+                future::ok::<_, hyper::Error>(acc)
+            })
+            .and_then(|bytes| {
+                match String::from_utf8(bytes) {
+                    Ok(data) => future::ok(data),
+                    Err(err) => future::err(Error::Utf8(err.utf8_error()))
+                }
+            })
+    )
 }
 
 impl Service for WebService {
@@ -38,35 +41,23 @@ impl Service for WebService {
     type Future = Box<futures::Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        let (method, uri, _version, headers, body) = req.deconstruct();
         let response = Response::new();
         let headers = hyper::header::Headers::new();
-        match method {
-            Get => {
+        match req.method() {
+            &Get => {
                 let source = graphiql::source("/graphql");
                 let response = Response::new()
                         .with_header(ContentLength(source.len() as u64))
                         .with_body(source);
-                Box::new(ok(response))
+                Box::new(future::ok(response))
             },
-            Post => {
-                read_body(req).map(|body| {
-                    response.with_headers(headers).with_body(body)
-                }).boxed()
-                // let body = body
-                //     .fold(Vec::new(), |mut acc, chunk| {
-                //         acc.extend_from_slice(&*chunk);
-                //         futures::future::ok::<_, Self::Error>(acc)
-                //     })
-                //     .and_then(|v| {
-                //         let stringify = String::from_utf8(v).unwrap();
-                //         println!("{}", stringify);
-                //         Ok::<_, Self::Error>(stringify)
-                //     })
-                //     .and_then(|body| {
-                //         futures::future::ok(response.with_headers(headers).with_body(body))
-                //     }).boxed();
-                // body
+            &Post => {
+                Box::new(
+                    read_body(req).map(|body| {
+                        let graphqlReq: GraphQLRequest = serde_json::from_str(&body).unwrap();
+                        response.with_headers(headers).with_body(body)
+                    })
+                )
             },
             _ => Box::new(futures::future::ok(response.with_headers(headers)))
         }
