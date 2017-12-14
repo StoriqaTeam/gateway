@@ -17,3 +17,5 @@ path = "tests/lib.rs"
 
 [dependencies]
 juniper = "0.9.0"
+hyper = "0.11.9"
+futures = "0.1.17"
