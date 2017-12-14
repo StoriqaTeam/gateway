@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate juniper;
 extern crate futures;
 extern crate hyper;
@@ -5,6 +6,8 @@ extern crate regex;
 extern crate serde_json;
 
 pub mod graphiql;
+pub mod context;
+pub mod schema;
 
 use futures::future::{FutureResult, Future};
 use futures::{future, Stream};
@@ -16,9 +19,7 @@ use hyper::error::Error;
 
 use juniper::http::{GraphQLRequest};
 
-struct WebService;
-
-fn read_body(request: Request) -> Box<Future<Item=String, Error=hyper::Error>> {
+fn read_body(request: &Request) -> Box<Future<Item=String, Error=hyper::Error>> {
     Box::new(
         request.body()
             .fold(Vec::new(), |mut acc, chunk| {
@@ -34,6 +35,11 @@ fn read_body(request: Request) -> Box<Future<Item=String, Error=hyper::Error>> {
     )
 }
 
+struct WebService {
+    context: context::Context,
+    schema: schema::Schema
+}
+
 impl Service for WebService {
     type Request = Request;
     type Response = Response;
@@ -41,8 +47,6 @@ impl Service for WebService {
     type Future = Box<futures::Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        let response = Response::new();
-        let headers = hyper::header::Headers::new();
         match req.method() {
             &Get => {
                 let source = graphiql::source("/graphql");
@@ -53,13 +57,22 @@ impl Service for WebService {
             },
             &Post => {
                 Box::new(
-                    read_body(req).map(|body| {
-                        let graphqlReq: GraphQLRequest = serde_json::from_str(&body).unwrap();
-                        response.with_headers(headers).with_body(body)
-                    })
+                    read_body(&req)
+                        .and_then(|body| {
+                            let graphqlReq: GraphQLRequest = serde_json::from_str(&body).unwrap();
+                            let graphqlResp = graphqlReq.execute(&self.schema, &self.context);
+                            let st = serde_json::to_string(&graphqlResp).unwrap();
+                            let response = Response::new();
+                            let headers = hyper::header::Headers::new();
+                            future::ok(response.with_headers(headers).with_body(st))
+                        })
                 )
             },
-            _ => Box::new(futures::future::ok(response.with_headers(headers)))
+            _ => {
+                let resp = Response::new();
+                let heads = hyper::header::Headers::new();
+                Box::new(futures::future::ok(resp.with_headers(heads)))
+            }
         }
     }
 }
@@ -155,8 +168,14 @@ impl Service for WebService {
 
 pub fn start_server() {
     let addr = "0.0.0.0:8000".parse().unwrap();
+    let schema = schema::Schema::new();
+    let context = context::Context::new();
+    let service = WebService {
+        context,
+        schema
+    };
 
-    let mut server = Http::new().bind(&addr, || Ok(WebService)).unwrap();
+    let mut server = Http::new().bind(&addr, || Ok(service)).unwrap();
     server.no_proto();
     println!("Listening on http://{} with 1 thread.", server.local_addr().unwrap());
     server.run().unwrap();
