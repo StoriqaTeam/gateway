@@ -1,6 +1,5 @@
-extern crate juniper;
-
-use juniper::{FieldResult, EmptyMutation};
+use juniper;
+use juniper::{EmptyMutation, FieldResult};
 
 use super::context::Context;
 
@@ -14,7 +13,7 @@ enum Episode {
 }
 
 #[derive(GraphQLObject)]
-#[graphql(description="A humanoid creature in the Star Wars universe")]
+#[graphql(description = "A humanoid creature in the Star Wars universe")]
 struct Human {
     id: String,
     name: String,
@@ -52,11 +51,11 @@ graphql_object!(Query: Context |&self| {
 // struct Mutation;
 
 // graphql_object!(Mutation: Context |&self| {
-    // field createHuman(&executor, new_human: NewHuman) -> FieldResult<Human> {
-    //     let db = executor.context().pool.get_connection()?;
-    //     let human: Human = db.insert_human(&new_human)?;
-    //     Ok(human)
-    // }
+// field createHuman(&executor, new_human: NewHuman) -> FieldResult<Human> {
+//     let db = executor.context().pool.get_connection()?;
+//     let human: Human = db.insert_human(&new_human)?;
+//     Ok(human)
+// }
 // });
 
 // A root schema consists of a query and a mutation.
