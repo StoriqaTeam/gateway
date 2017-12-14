@@ -18,21 +18,18 @@ use juniper::http::{GraphQLRequest};
 
 struct WebService;
 
-// fn read_body(request: Request) -> Future<Item=String, Error=hyper::Error> {
-//     request.body()
-//         .fold(Vec::new(), |mut acc, chunk| {
-//             acc.extend_from_slice(&*chunk);
-//             futures::future::ok::<_, hyper::Error>(acc)
-//         })
-//         .and_then(|v| {
-//             let stringify = String::from_utf8(v).unwrap();
-//             println!("{}", stringify);
-//             Ok::<_, hyper::Error>(stringify)
-//         })
-//         .and_then(|body| {
-//             futures::future::ok(response.with_headers(headers).with_body(body))
-//         })
-// }
+fn read_body(request: Request) -> Box<Future<Item=String, Error=hyper::Error>> {
+    request.body()
+        .fold(Vec::new(), |mut acc, chunk| {
+            acc.extend_from_slice(&*chunk);
+            ok::<_, hyper::Error>(acc)
+        })
+        .and_then(|v| {
+            let stringify = String::from_utf8(v).unwrap();
+            println!("{}", stringify);
+            ok(stringify)
+        }).boxed()
+}
 
 impl Service for WebService {
     type Request = Request;
@@ -53,20 +50,23 @@ impl Service for WebService {
                 Box::new(ok(response))
             },
             Post => {
-                let body = body
-                    .fold(Vec::new(), |mut acc, chunk| {
-                        acc.extend_from_slice(&*chunk);
-                        futures::future::ok::<_, Self::Error>(acc)
-                    })
-                    .and_then(|v| {
-                        let stringify = String::from_utf8(v).unwrap();
-                        println!("{}", stringify);
-                        Ok::<_, Self::Error>(stringify)
-                    })
-                    .and_then(|body| {
-                        futures::future::ok(response.with_headers(headers).with_body(body))
-                    }).boxed();
-                body
+                read_body(req).map(|body| {
+                    response.with_headers(headers).with_body(body)
+                }).boxed()
+                // let body = body
+                //     .fold(Vec::new(), |mut acc, chunk| {
+                //         acc.extend_from_slice(&*chunk);
+                //         futures::future::ok::<_, Self::Error>(acc)
+                //     })
+                //     .and_then(|v| {
+                //         let stringify = String::from_utf8(v).unwrap();
+                //         println!("{}", stringify);
+                //         Ok::<_, Self::Error>(stringify)
+                //     })
+                //     .and_then(|body| {
+                //         futures::future::ok(response.with_headers(headers).with_body(body))
+                //     }).boxed();
+                // body
             },
             _ => Box::new(futures::future::ok(response.with_headers(headers)))
         }
