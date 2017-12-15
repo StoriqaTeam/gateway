@@ -3,7 +3,7 @@
 
 pub mod api;
 pub mod schema;
-pub mod context;
+pub mod helper;
 
 #[macro_use]
 extern crate juniper;
@@ -13,11 +13,9 @@ extern crate rocket;
 
 
 
-/// Constructs a new Rocket instance.
-///
-/// This function takes care of attaching all routes and handlers of the application.
-pub fn rocket_factory() -> Result<rocket::Rocket, String> {
-    let context = context::Context {};
+pub fn rocket_factory(config: String) -> Result<rocket::Rocket, String> {
+    let mut context = helper::microservices::Microservices::new();
+    context.apply(config);
     let schema = schema::create();
     let rocket = rocket::ignite().manage(context).manage(schema).mount(
         "/",

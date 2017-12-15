@@ -2,7 +2,7 @@ use rocket::response::content;
 use rocket::State;
 use juniper_rocket;
 
-use context::Context;
+use helper::microservices::Microservices;
 use schema::Schema;
 
 #[get("/ping")]
@@ -17,7 +17,7 @@ pub fn graphql() -> content::Html<String> {
 
 #[get("/graphql?<request>")]
 pub fn get_graphql_handler(
-    context: State<Context>,
+    context: State<Microservices>,
     request: juniper_rocket::GraphQLRequest,
     schema: State<Schema>,
 ) -> juniper_rocket::GraphQLResponse {
@@ -26,7 +26,7 @@ pub fn get_graphql_handler(
 
 #[post("/graphql", data = "<request>")]
 pub fn post_graphql_handler(
-    context: State<Context>,
+    context: State<Microservices>,
     request: juniper_rocket::GraphQLRequest,
     schema: State<Schema>,
 ) -> juniper_rocket::GraphQLResponse {
