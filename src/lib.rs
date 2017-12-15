@@ -9,17 +9,19 @@ pub mod graphiql;
 pub mod context;
 pub mod schema;
 
-use futures::future::{FutureResult, Future};
+use futures::future::{Future};
 use futures::{future, Stream};
 
-use hyper::{Get, Post, StatusCode};
+use hyper::{Get, Post};
 use hyper::header::ContentLength;
 use hyper::server::{Http, Service, Request, Response};
 use hyper::error::Error;
 
 use juniper::http::{GraphQLRequest};
 
-fn read_body(request: &Request) -> Box<Future<Item=String, Error=hyper::Error>> {
+use std::sync::Arc;
+
+fn read_body(request: Request) -> Box<Future<Item=String, Error=hyper::Error>> {
     Box::new(
         request.body()
             .fold(Vec::new(), |mut acc, chunk| {
@@ -36,8 +38,8 @@ fn read_body(request: &Request) -> Box<Future<Item=String, Error=hyper::Error>> 
 }
 
 struct WebService {
-    context: context::Context,
-    schema: schema::Schema
+    context: Arc<context::Context>,
+    schema: Arc<schema::Schema>
 }
 
 impl Service for WebService {
@@ -56,12 +58,14 @@ impl Service for WebService {
                 Box::new(future::ok(response))
             },
             &Post => {
+                let context = self.context.clone();
+                let schema = self.schema.clone();
                 Box::new(
-                    read_body(&req)
-                        .and_then(|body| {
-                            let graphqlReq: GraphQLRequest = serde_json::from_str(&body).unwrap();
-                            let graphqlResp = graphqlReq.execute(&self.schema, &self.context);
-                            let st = serde_json::to_string(&graphqlResp).unwrap();
+                    read_body(req)
+                        .and_then(move |body| {
+                            let graphql_req: GraphQLRequest = serde_json::from_str(&body).unwrap();
+                            let graphql_resp = graphql_req.execute(&schema, &context);
+                            let st = serde_json::to_string(&graphql_resp).unwrap();
                             let response = Response::new();
                             let headers = hyper::header::Headers::new();
                             future::ok(response.with_headers(headers).with_body(st))
@@ -168,14 +172,15 @@ impl Service for WebService {
 
 pub fn start_server() {
     let addr = "0.0.0.0:8000".parse().unwrap();
-    let schema = schema::Schema::new();
-    let context = context::Context::new();
-    let service = WebService {
-        context,
-        schema
-    };
-
-    let mut server = Http::new().bind(&addr, || Ok(service)).unwrap();
+    let mut server = Http::new().bind(&addr, || {
+        let schema = schema::create();
+        let context = context::Context {};
+        let service = WebService {
+            context: Arc::new(context),
+            schema: Arc::new(schema),
+        };
+        Ok(service)
+    }).unwrap();
     server.no_proto();
     println!("Listening on http://{} with 1 thread.", server.local_addr().unwrap());
     server.run().unwrap();
