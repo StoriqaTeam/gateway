@@ -45,15 +45,23 @@ impl UsersMicroservice {
         vec![user1, user2]
     }
     //POST /users - создать пользователя. + Механизм для подтверждения email, если //не через соцсети
-    pub fn post_user(&self, user: User) {
-        unimplemented!()
+    pub fn create_user(&self, name: String, email: String) -> User {
+        User {
+            id: 0,
+            name: name,
+            email: email,
+        }
     }
     //PUT /users/:id - апдейт пользователя
-    pub fn put_user(&self, user: User) {
-        unimplemented!()
+    pub fn update_user(&self, id: i32, name: String, email: String) -> User {
+        User {
+            id: id,
+            name: name,
+            email: email,
+        }
     }
     //DELETE /users/:id - удалить пользователя
-    pub fn delete_user(&self, user: User) {
-        unimplemented!()
+    pub fn delete_user(&self, id: i32) {
+        ()
     }
 }
