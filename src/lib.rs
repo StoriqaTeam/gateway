@@ -19,7 +19,7 @@ use hyper::error::Error;
 
 use juniper::http::{GraphQLRequest};
 
-fn read_body<'a>(request: &'a Request) -> Box<Future<Item=String, Error=hyper::Error> + 'a> {
+fn read_body(request: &Request) -> Box<Future<Item=String, Error=hyper::Error>> {
     Box::new(
         request.body()
             .fold(Vec::new(), |mut acc, chunk| {
@@ -40,7 +40,7 @@ struct WebService {
     schema: schema::Schema
 }
 
-impl<'a> Service for WebService {
+impl Service for WebService {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
@@ -56,17 +56,15 @@ impl<'a> Service for WebService {
                 Box::new(future::ok(response))
             },
             &Post => {
-                let schema = self.schema;
-                let context = CONTEXT;
                 Box::new(
                     read_body(&req)
                         .and_then(|body| {
                             let graphqlReq: GraphQLRequest = serde_json::from_str(&body).unwrap();
-                            let graphqlResp = graphqlReq.execute(schema, &context);
-                            // let st = serde_json::to_string(&graphqlResp).unwrap();
+                            let graphqlResp = graphqlReq.execute(&self.schema, &self.context);
+                            let st = serde_json::to_string(&graphqlResp).unwrap();
                             let response = Response::new();
                             let headers = hyper::header::Headers::new();
-                            future::ok(response.with_headers(headers).with_body("123"))
+                            future::ok(response.with_headers(headers).with_body(st))
                         })
                 )
             },
@@ -167,13 +165,11 @@ impl<'a> Service for WebService {
     // }
 // }
 
-static CONTEXT: context::Context = context::Context {};
-
 
 pub fn start_server() {
     let addr = "0.0.0.0:8000".parse().unwrap();
     let schema = schema::Schema::new();
-    let context = context::Context {};
+    let context = context::Context::new();
     let service = WebService {
         context,
         schema
