@@ -8,11 +8,12 @@ extern crate serde_json;
 pub mod graphiql;
 pub mod context;
 pub mod schema;
+pub mod error;
 
 use futures::future::{Future};
 use futures::{future, Stream};
 
-use hyper::{Get, Post};
+use hyper::{Get, Post, StatusCode};
 use hyper::header::ContentLength;
 use hyper::server::{Http, Service, Request, Response};
 use hyper::error::Error;
@@ -37,6 +38,19 @@ fn read_body(request: Request) -> Box<Future<Item=String, Error=hyper::Error>> {
     )
 }
 
+fn response_with_body(body: String) -> Response {
+    Response::new()
+        .with_header(ContentLength(body.len() as u64))
+        .with_body(body)
+}
+
+fn response_with_error(error: error::Error) -> Response {
+    use error::Error::*;
+    match error {
+        Json(err) => response_with_body(err.to_string()).with_status(StatusCode::UnprocessableEntity)
+    }
+}
+
 struct WebService {
     context: Arc<context::Context>,
     schema: Arc<schema::Schema>
@@ -52,10 +66,7 @@ impl Service for WebService {
         match req.method() {
             &Get => {
                 let source = graphiql::source("/graphql");
-                let response = Response::new()
-                        .with_header(ContentLength(source.len() as u64))
-                        .with_body(source);
-                Box::new(future::ok(response))
+                Box::new(future::ok(response_with_body(source)))
             },
             &Post => {
                 let context = self.context.clone();
@@ -63,12 +74,15 @@ impl Service for WebService {
                 Box::new(
                     read_body(req)
                         .and_then(move |body| {
-                            let graphql_req: GraphQLRequest = serde_json::from_str(&body).unwrap();
-                            let graphql_resp = graphql_req.execute(&schema, &context);
-                            let st = serde_json::to_string(&graphql_resp).unwrap();
-                            let response = Response::new();
-                            let headers = hyper::header::Headers::new();
-                            future::ok(response.with_headers(headers).with_body(st))
+                            let result = (serde_json::from_str(&body) as Result<GraphQLRequest, serde_json::error::Error>)
+                                .and_then(|graphql_req| {
+                                    let graphql_resp = graphql_req.execute(&schema, &context);
+                                    serde_json::to_string(&graphql_resp)
+                                });
+                            match result {
+                                Ok(data) => future::ok(response_with_body(data)),
+                                Err(err) => future::ok(response_with_error(error::Error::Json(err)))
+                            }
                         })
                 )
             },
@@ -80,95 +94,6 @@ impl Service for WebService {
         }
     }
 }
-
-    // fn call(&self, req: Request) -> Self::Future {
-    //     match (req.method(), req.path()) {
-    //         (&Get, "/") | (&Get, "/echo") => {
-    //             let source = graphiql::source("/graphql");
-    //             ok(
-    //                 Response::new()
-    //                     .with_header(ContentLength(source.len() as u64))
-    //                     .with_body(source)
-    //             )
-    //         },
-    //         (&Post, "/graphql") => {
-    //             println!("FUNCTION CALLED?");
-    //             let mut response = Response::new();
-    //             // let mut headers = Headers::new();
-    //             // let mut ContentType = Ascii::new("Content-Type".to_owned());
-    //             // let mut AccessControlAH = Ascii::new("Access-Control-Allow-Headers".to_owned());
-                
-    //             // headers.set(AccessControlAllowHeaders(vec![ContentType, AccessControlAH]));
-    //             // headers.set(AccessControlAllowOrigin::Any);
-
-    //             let body = req.body()
-    //                 .fold(Vec::new(), |mut acc, chunk| {
-    //                     acc.extend_from_slice(&*chunk);
-    //                     futures::future::ok::<_, Self::Error>(acc)
-    //                 })
-    //                 .and_then(|v| {
-    //                     let stringify = String::from_utf8(v).unwrap();
-    //                     Ok::<_, Self::Error>(stringify)
-    //                 })
-    //                 .and_then(|_| {
-    //                     futures::future::ok(response)
-    //                 });
-
-    //             body
-    //             // root_node: &RootNode<QueryT, MutationT>,
-    //             // context: &CtxT,
-    //             // http::GraphQLRequest
-    //             // let response = self.0.execute(root_node, context);
-    //             // let status = if response.is_ok() {
-    //             //     Status::Ok
-    //             // } else {
-    //             //     Status::BadRequest
-    //             // };
-    //             // let json = serde_json::to_string_pretty(&response).unwrap();
-    //             // let mut res = Response::new();
-    //             // if let Some(len) = req.headers().get::<ContentLength>() {
-    //             //     res.headers_mut().set(len.clone());
-    //             // }
-    //             // println!("Yo");
-    //             // let v = req.body().concat2();
-    //             // let res = v.map(|b| { res.with_body(b) });
-    //             // res
-    //             // println!("Yo1");
-    //             // let x = v.wait();
-    //             // println!("Yo2");
-    //             // let reqBody = String::from_utf8(x.unwrap().as_ref().to_vec()).unwrap();
-    //             // println!("Req: {}", reqBody);
-    //             // let graphqlReq: GraphQLRequest = serde_json::from_str(&reqBody).unwrap();
-    //             // println!("Req: {}", reqBody);
-    //             // let resp = req.body().fold(Vec::new(), |mut v, chunk| {
-    //             //     v.extend(&chunk[..]);
-    //             //     future::ok::<_, hyper::Error>(v)
-    //             // }).and_then(move |chunks| {
-    //             //     let body = String::from_utf8(chunks).unwrap();
-    //             //     future::ok(body)
-    //             // }).wait();
-    //             // let graphqlReq: GraphQLRequest = serde_json::from_str(req.body()).unwrap();
-
-    //             // ok(res.with_body("123"))
-    //         },
-    //         (&Post, "/echo") => {
-    //             let mut res = Response::new();
-    //             if let Some(len) = req.headers().get::<ContentLength>() {
-    //                 res.headers_mut().set(len.clone());
-    //             }
-    //             ok(res.with_body(req.body()))
-    //         },
-
-    //         _ => {
-    //             ok (
-    //                 Response::new()
-    //                     .with_status(StatusCode::NotFound)
-    //             )
-    //         }
-    //     }
-    // }
-// }
-
 
 pub fn start_server() {
     let addr = "0.0.0.0:8000".parse().unwrap();

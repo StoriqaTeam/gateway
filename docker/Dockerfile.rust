@@ -12,6 +12,8 @@ RUN curl https://sh.rustup.rs -sSf > /tmp/rust-init.sh && \
     chmod +x /tmp/rust-init.sh && \
     /tmp/rust-init.sh -y --no-modify-path --default-toolchain stable
 
+RUN cargo install cargo-watch
+
 WORKDIR /app
 
 CMD ["bash"]
