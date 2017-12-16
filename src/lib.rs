@@ -9,6 +9,7 @@ pub mod graphiql;
 pub mod context;
 pub mod schema;
 pub mod error;
+pub mod router;
 
 use futures::future::{Future};
 use futures::{future, Stream};
