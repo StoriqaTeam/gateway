@@ -51,6 +51,10 @@ fn response_with_error(error: error::Error) -> Response {
     }
 }
 
+fn response_not_found() -> Response {
+    Response::new().with_status(StatusCode::NotFound)
+}
+
 struct WebService {
     context: Arc<context::Context>,
     schema: Arc<schema::Schema>
@@ -63,14 +67,15 @@ impl Service for WebService {
     type Future = Box<futures::Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
+        let context = self.context.clone();
+        let schema = self.schema.clone();
+
         match req.method() {
             &Get => {
                 let source = graphiql::source("/graphql");
                 Box::new(future::ok(response_with_body(source)))
             },
             &Post => {
-                let context = self.context.clone();
-                let schema = self.schema.clone();
                 Box::new(
                     read_body(req)
                         .and_then(move |body| {
@@ -86,11 +91,7 @@ impl Service for WebService {
                         })
                 )
             },
-            _ => {
-                let resp = Response::new();
-                let heads = hyper::header::Headers::new();
-                Box::new(futures::future::ok(resp.with_headers(heads)))
-            }
+            _ => Box::new(future::ok(response_not_found()))
         }
     }
 }
