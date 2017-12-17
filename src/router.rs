@@ -1,8 +1,4 @@
-use regex::{Regex, Match};
-
-struct Error {
-    message: String
-}
+use regex::{Regex};
 
 type ParamsConverter = Fn(Vec<&str>) -> Option<Route>;
 

@@ -108,8 +108,10 @@ pub fn start_server() {
         let mut router = router::Router::new();
         router.add_route(r"^/$", router::Route::Root);
         router.add_route(r"^/graphql$", router::Route::Graphql);
-        router.add_route_with_params(r"^/users/(\d+)$", |matches| {
-            Some(router::Route::Users(1))
+        router.add_route_with_params(r"^/users/(\d+)$", |params| {
+            params.get(0)
+                .and_then(|string_id| string_id.parse::<i32>().ok())
+                .map(|user_id| router::Route::Users(user_id))
         });
         let service = WebService {
             context: Arc::new(context),
