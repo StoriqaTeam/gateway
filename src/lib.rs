@@ -53,12 +53,13 @@ fn response_with_error(error: error::Error) -> Response {
 }
 
 fn response_not_found() -> Response {
-    Response::new().with_status(StatusCode::NotFound)
+    response_with_body("Not found".to_string()).with_status(StatusCode::NotFound)
 }
 
 struct WebService {
     context: Arc<context::Context>,
-    schema: Arc<schema::Schema>
+    schema: Arc<schema::Schema>,
+    router: Arc<router::Router>
 }
 
 impl Service for WebService {
@@ -70,13 +71,14 @@ impl Service for WebService {
     fn call(&self, req: Request) -> Self::Future {
         let context = self.context.clone();
         let schema = self.schema.clone();
-
-        match req.method() {
-            &Get => {
+        // println!("{}", req.path());
+        // println!(r"^/$");
+        match (req.method(), self.router.test(req.path())) {
+            (&Get, Some(router::Route::Root)) => {
                 let source = graphiql::source("/graphql");
                 Box::new(future::ok(response_with_body(source)))
             },
-            &Post => {
+            (&Post, Some(router::Route::Graphql)) => {
                 Box::new(
                     read_body(req)
                         .and_then(move |body| {
@@ -92,6 +94,9 @@ impl Service for WebService {
                         })
                 )
             },
+            (&Get, Some(router::Route::Users(user_id))) =>
+                Box::new(future::ok(response_with_body(user_id.to_string()))),
+
             _ => Box::new(future::ok(response_not_found()))
         }
     }
@@ -102,9 +107,16 @@ pub fn start_server() {
     let mut server = Http::new().bind(&addr, || {
         let schema = schema::create();
         let context = context::Context {};
+        let mut router = router::Router::new();
+        router.add_route(r"^/$", router::Route::Root);
+        router.add_route(r"^/graphql$", router::Route::Graphql);
+        router.add_route_with_params(r"^/users/(\d+)$", |matches| {
+            Some(router::Route::Users(1))
+        });
         let service = WebService {
             context: Arc::new(context),
             schema: Arc::new(schema),
+            router: Arc::new(router)
         };
         Ok(service)
     }).unwrap();
