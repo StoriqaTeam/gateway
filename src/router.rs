@@ -55,3 +55,15 @@ impl Router {
             })     
     }
 }
+
+pub fn create_router() -> Router {
+    let mut router = Router::new();
+    router.add_route(r"^/$", Route::Root);
+    router.add_route(r"^/graphql$", Route::Graphql);
+    router.add_route_with_params(r"^/users/(\d+)$", |params| {
+        params.get(0)
+            .and_then(|string_id| string_id.parse::<i32>().ok())
+            .map(|user_id| Route::Users(user_id))
+    });
+    router
+}
