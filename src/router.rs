@@ -32,26 +32,20 @@ impl Router {
 
     pub fn add_route_with_params<F>(&mut self, regex_pattern: &str, converter: F) -> &Self 
         where F: Fn(Vec<&str>) -> Option<Route> + 'static {
-        println!("{}", regex_pattern);
         let regex = Regex::new(regex_pattern).unwrap();
         self.regex_and_converters.push((regex, Box::new(converter)));
-        println!("After {:?}", self.regex_and_converters.len());
         self
     }
 
     pub fn test(&self, route: &str) -> Option<Route> {
-        println!("Start test {:?}", self.regex_and_converters.len());
         self.regex_and_converters.iter().fold(None, |acc, ref regex_and_converter| {
-            println!("In fold");
             if acc.is_some() { return acc }
-            println!("Acc none");
             Router::get_matches(&regex_and_converter.0, route)
                 .and_then(|params| regex_and_converter.1(params))
         })
     }
 
     fn get_matches<'a>(regex: &Regex, string: &'a str) -> Option<Vec<&'a str>> {
-        println!("Capts: {:?}, regex: {}", regex.captures(string), regex);
         regex.captures(string)
             .and_then(|captures| {
                 captures.iter().skip(1).fold(Some(Vec::<&str>::new()), |mut maybe_acc, maybe_match| {

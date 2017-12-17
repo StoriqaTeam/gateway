@@ -71,8 +71,6 @@ impl Service for WebService {
     fn call(&self, req: Request) -> Self::Future {
         let context = self.context.clone();
         let schema = self.schema.clone();
-        // println!("{}", req.path());
-        // println!(r"^/$");
         match (req.method(), self.router.test(req.path())) {
             (&Get, Some(router::Route::Root)) => {
                 let source = graphiql::source("/graphql");
