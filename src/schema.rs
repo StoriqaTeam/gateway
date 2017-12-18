@@ -17,8 +17,10 @@ pub fn create() -> Schema {
 #[graphql(description = "Information about a user")]
 pub struct User {
     #[graphql(description = "The person's id")] pub id: i32,
+
     #[graphql(description = "The person's full name, including both first and last names")]
     pub name: String,
+
     #[graphql(description = "The person's email address")] pub email: String,
 }
 
@@ -41,7 +43,7 @@ graphql_object!(Query: Context |&self| {
     }
     
     field users(&executor, from: i32, to: i32) -> FieldResult<Vec<User>> {
-        let microservices = executor.context();
+        let context = executor.context();
         let user1 = User {
             id: 1,
             name: String::from("Luke"),
@@ -70,7 +72,7 @@ graphql_object!(Mutation: Context |&self| {
 
     //POST /users - создать пользователя. + Механизм для подтверждения email, если //не через соцсети
     field createUser(&executor, name: String, email: String) -> FieldResult<User> {
-        let microservices = executor.context();
+        let context = executor.context();
         let user = User {
             id: 0,
             name: name,
@@ -81,7 +83,7 @@ graphql_object!(Mutation: Context |&self| {
 
     //PUT /users/:id - апдейт пользователя
     field updateUser(&executor,id: i32, name: String, email: String) -> FieldResult<User> {
-        let microservices = executor.context();
+        let context = executor.context();
         let user = User {
             id: 0,
             name: name,
@@ -92,7 +94,7 @@ graphql_object!(Mutation: Context |&self| {
 
     //DELETE /users/:id - удалить пользователя
     field deleteUser(&executor, id: i32) -> FieldResult<()> {
-        let microservices = executor.context();
+        let context = executor.context();
         Ok(())
     }
     
