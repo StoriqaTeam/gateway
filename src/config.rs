@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use std::env;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Env {
     production,
     develop,
@@ -23,7 +23,7 @@ impl FromStr for Env {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     pub users_url: String,
     pub store_url: String,
