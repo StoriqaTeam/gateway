@@ -1,4 +1,4 @@
-extern crate juniper;
+use juniper;
 
 // Graphql context
 pub struct Context;
