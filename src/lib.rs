@@ -16,13 +16,13 @@ extern crate rocket;
 extern crate tokio_core;
 
 
-use config::Config;
+use config::{Config, Env};
 use context::Context;
 use tokio_core::reactor::Core;
 
 
-pub fn rocket_factory(config_name: String) -> Result<rocket::Rocket, String> {
-    let config = Config::from(&config_name)?;
+pub fn rocket_factory(config_name: Env) -> Result<rocket::Rocket, String> {
+    let config = Config::from(config_name)?;
     let mut core = Core::new().unwrap();
     let handle = core.handle();
     let mut context = Context::new(config, &handle);
