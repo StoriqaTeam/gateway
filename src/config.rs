@@ -50,7 +50,6 @@ impl Default for Config {
 
 impl Config {
     pub fn from(config_name: Env) -> Result<Config, String> {
-        // We'll start with a base config that sets some defaults and then apply the chosen app config.
         match config_name {
             Env::production => Ok(Config::production_config()),
             Env::develop => Ok(Config::develop_config()),
@@ -75,8 +74,11 @@ impl Config {
 
     fn testing_config() -> Config {
         Config {
+            users_url: "http://localhost/".to_string(),
+            store_url: "http://localhost/".to_string(),
+            orders_url: "http://localhost/".to_string(),
+            billing_url: "http://localhost/".to_string(),
             environment_name: Env::testing,
-            ..Default::default()
         }
     }
 }
