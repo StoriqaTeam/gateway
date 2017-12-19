@@ -1,22 +1,20 @@
 use juniper;
 use pool::Pool;
-use config::Config;
-use settings;
+use settings::Settings;
 
 
 pub struct Context {
     pub users_connection_pool: Pool,
-    pub config: Config,
+    pub config: Settings,
 }
 
 impl Context {
-    pub fn new() -> Self {
-        let config = settings::get().unwrap();
-        let users_url = config.get::<String>("users_microservice.url").unwrap();
+    pub fn new(settings: Settings) -> Self {
+        let users_url = settings.users_microservice.url.clone();
         let users = Pool::new(users_url);
         Context {
             users_connection_pool: users,
-            config: config,
+            config: settings,
         }
     }
 }

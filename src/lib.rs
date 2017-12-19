@@ -6,6 +6,10 @@ extern crate juniper;
 extern crate regex;
 extern crate serde_json;
 extern crate tokio_core;
+extern crate serde;
+
+#[macro_use]
+extern crate serde_derive;
 
 pub mod graphiql;
 pub mod context;
@@ -24,6 +28,7 @@ use hyper::server::{Http, Request, Response, Service};
 use juniper::http::GraphQLRequest;
 use std::sync::Arc;
 use context::Context;
+use settings::Settings;
 
 
 struct WebService {
@@ -76,12 +81,12 @@ impl Service for WebService {
 }
 
 
-pub fn start_server() {
-    let addr = "0.0.0.0:8000".parse().unwrap();
+pub fn start_server(settings: Settings) {
+    let addr = settings.gateway.url.parse().unwrap();
     let mut server = Http::new()
         .bind(&addr, move || {
             let schema = schema::create();
-            let context = Context::new();
+            let context = Context::new(settings.clone());
             let service = WebService {
                 context: Arc::new(context),
                 schema: Arc::new(schema),

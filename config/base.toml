@@ -1,13 +1,15 @@
-pool_size=1
+[gateway]
+url="0.0.0.0:8000"
+thread_pool_size=1
 
 [users_microservice]
-url="http://localhost/"
+url="http://localhost:8000/"
 
 [store_microservice]
-url="http://localhost/"
+url="http://localhost:8001/"
 
 [orders_microservice]
-url="http://localhost/"
+url="http://localhost:8002/"
 
 [billing_microservice]
-url="http://localhost/"
+url="http://localhost:8003/"
