@@ -16,12 +16,14 @@ pub fn create() -> Schema {
 #[derive(GraphQLObject)]
 #[graphql(description = "Information about a user")]
 pub struct User {
-    #[graphql(description = "The person's id")] pub id: i32,
+    #[graphql(description = "The person's id")] 
+    pub id: i32,
 
     #[graphql(description = "The person's full name, including both first and last names")]
     pub name: String,
 
-    #[graphql(description = "The person's email address")] pub email: String,
+    #[graphql(description = "The person's email address")] 
+    pub email: String,
 }
 
 graphql_object!(Query: Context |&self| {

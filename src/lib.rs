@@ -29,7 +29,7 @@ use context::Context;
 struct WebService {
     context: Arc<context::Context>,
     schema: Arc<schema::Schema>,
-    router: Arc<router::Router>,
+    router: Arc<router::Router>
 }
 
 impl Service for WebService {
@@ -48,7 +48,8 @@ impl Service for WebService {
             }
 
             (&Post, Some(router::Route::Graphql)) => {
-                Box::new(http_utils::read_body(req).and_then(move |body| {
+                Box::new(http_utils::read_body(req)
+                .and_then(move |body| {
                     let result = (serde_json::from_str(&body)
                         as Result<GraphQLRequest, serde_json::error::Error>)
                         .and_then(|graphql_req| {
