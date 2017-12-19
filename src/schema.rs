@@ -32,7 +32,7 @@ graphql_object!(Query: Context |&self| {
 
     field user(&executor, id: i32) -> FieldResult<User> {
         let context = executor.context();
-        let pool = context.users.clone();
+        let pool = &context.users_connection_pool;
 
         let user = User {
             id: 1,

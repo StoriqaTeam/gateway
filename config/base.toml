@@ -1,0 +1,13 @@
+pool_size=1
+
+[users_microservice]
+url="http://localhost/"
+
+[store_microservice]
+url="http://localhost/"
+
+[orders_microservice]
+url="http://localhost/"
+
+[billing_microservice]
+url="http://localhost/"

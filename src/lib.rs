@@ -1,3 +1,4 @@
+extern crate config;
 extern crate futures;
 extern crate hyper;
 #[macro_use]
@@ -12,22 +13,17 @@ pub mod schema;
 pub mod error;
 pub mod router;
 pub mod http_utils;
+pub mod pool;
+pub mod settings;
+
 
 use futures::future;
 use futures::future::Future;
-
 use hyper::{Get, Post};
 use hyper::server::{Http, Request, Response, Service};
-pub mod pool;
-pub mod config;
-
-
 use juniper::http::GraphQLRequest;
-
 use std::sync::Arc;
-use config::{Config, Env};
 use context::Context;
-use tokio_core::reactor::Core;
 
 
 struct WebService {
@@ -79,16 +75,12 @@ impl Service for WebService {
 }
 
 
-pub fn start_server(configured_environment: Env) {
+pub fn start_server() {
     let addr = "0.0.0.0:8000".parse().unwrap();
-    let config = Config::from(configured_environment).unwrap();
     let mut server = Http::new()
         .bind(&addr, move || {
             let schema = schema::create();
-            let config = config.clone();
-            let core = Core::new().unwrap();
-            let handle = core.handle();
-            let context = Context::new(config, &handle);
+            let context = Context::new();
             let service = WebService {
                 context: Arc::new(context),
                 schema: Arc::new(schema),

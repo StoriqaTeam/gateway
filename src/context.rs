@@ -1,27 +1,22 @@
 use juniper;
 use pool::Pool;
 use config::Config;
-use tokio_core::reactor::Handle;
+use settings;
 
 
 pub struct Context {
-    pub users: Pool,
-    pub store: Pool,
-    pub order: Pool,
-    pub billing: Pool,
+    pub users_connection_pool: Pool,
+    pub config: Config,
 }
 
 impl Context {
-    pub fn new(config: Config, handle: &Handle) -> Self {
-        let users = Pool::new(config.users_url, handle);
-        let store = Pool::new(config.store_url, handle);
-        let order = Pool::new(config.orders_url, handle);
-        let billing = Pool::new(config.billing_url, handle);
+    pub fn new() -> Self {
+        let config = settings::get().unwrap();
+        let users_url = config.get::<String>("users_microservice.url").unwrap();
+        let users = Pool::new(users_url);
         Context {
-            users: users,
-            store: store,
-            order: order,
-            billing: billing,
+            users_connection_pool: users,
+            config: config,
         }
     }
 }
