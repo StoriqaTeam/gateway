@@ -1,35 +1,30 @@
 use juniper;
-use juniper::{EmptyMutation, FieldResult};
-
-use super::context::Context;
+use juniper::FieldResult;
+use context::Context;
 
 pub struct Query;
+pub struct Mutation;
 
-#[derive(GraphQLEnum)]
-enum Episode {
-    NewHope,
-    Empire,
-    Jedi,
+pub type Schema = juniper::RootNode<'static, Query, Mutation>;
+
+pub fn create() -> Schema {
+    let query = Query {};
+    let mutation = Mutation {};
+    Schema::new(query, mutation)
 }
 
 #[derive(GraphQLObject)]
-#[graphql(description = "A humanoid creature in the Star Wars universe")]
-struct Human {
-    id: String,
-    name: String,
-    appears_in: Vec<Episode>,
-    home_planet: String,
+#[graphql(description = "Information about a user")]
+pub struct User {
+    #[graphql(description = "The person's id")] 
+    pub id: i32,
+
+    #[graphql(description = "The person's full name, including both first and last names")]
+    pub name: String,
+
+    #[graphql(description = "The person's email address")] 
+    pub email: String,
 }
-
-// There is also a custom derive for mapping GraphQL input objects.
-
-// #[derive(GraphQLInputObject)]
-// #[graphql(description="A humanoid creature in the Star Wars universe")]
-// struct NewHuman {
-//     name: String,
-//     appears_in: Vec<Episode>,
-//     home_planet: String,
-// }
 
 graphql_object!(Query: Context |&self| {
 
@@ -37,33 +32,72 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
-    field human(&executor, id: String) -> FieldResult<Human> {
-        let human = Human {
-            id: String::from("1"),
+    field user(&executor, id: i32) -> FieldResult<User> {
+        let context = executor.context();
+        let pool = &context.users_connection_pool;
+
+        let user = User {
+            id: 1,
             name: String::from("Luke"),
-            appears_in: vec![Episode::NewHope],
-            home_planet: String::from("Tatuin")
+            email: String::from("example@mail.com"),
         };
-        Ok(human)
+        Ok(user)
+    }
+    
+    field users(&executor, from: i32, to: i32) -> FieldResult<Vec<User>> {
+        let context = executor.context();
+        let user1 = User {
+            id: 1,
+            name: String::from("Luke"),
+            email: String::from("example@mail.com"),
+        };
+
+        let user2 = User {
+            id: 2,
+            name: String::from("Mike"),
+            email: String::from("elpmaxe@mail.com"),
+        };
+        let users = vec![user1, user2];
+        Ok(users)
     }
 });
 
-// struct Mutation;
 
-// graphql_object!(Mutation: Context |&self| {
-// field createHuman(&executor, new_human: NewHuman) -> FieldResult<Human> {
-//     let db = executor.context().pool.get_connection()?;
-//     let human: Human = db.insert_human(&new_human)?;
-//     Ok(human)
-// }
-// });
 
-// A root schema consists of a query and a mutation.
-// Request queries can be executed against a RootNode.
-pub type Schema = juniper::RootNode<'static, Query, EmptyMutation<Context>>;
+//mutation {
+//  createUser(name: "andy", email: "hope is a good thing") {
+//    id
+//  }
+//}
 
-pub fn create() -> Schema {
-    let query = Query {};
-    let mutation = EmptyMutation::new();
-    Schema::new(query, mutation)
-}
+graphql_object!(Mutation: Context |&self| {
+
+    //POST /users - создать пользователя. + Механизм для подтверждения email, если //не через соцсети
+    field createUser(&executor, name: String, email: String) -> FieldResult<User> {
+        let context = executor.context();
+        let user = User {
+            id: 0,
+            name: name,
+            email: email,
+        };
+        Ok(user)
+    }
+
+    //PUT /users/:id - апдейт пользователя
+    field updateUser(&executor,id: i32, name: String, email: String) -> FieldResult<User> {
+        let context = executor.context();
+        let user = User {
+            id: 0,
+            name: name,
+            email: email,
+        };
+        Ok(user)
+    }
+
+    //DELETE /users/:id - удалить пользователя
+    field deleteUser(&executor, id: i32) -> FieldResult<()> {
+        let context = executor.context();
+        Ok(())
+    }
+    
+});
