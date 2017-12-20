@@ -1,22 +1,24 @@
 use juniper;
-use pool::Pool;
 use settings::Settings;
-
+use tokio_core::reactor::{Remote};
 
 pub struct Context {
-    pub users_connection_pool: Pool,
+
     pub config: Settings,
+    pub remote: Remote,
 }
 
+unsafe impl Sync for Context {}
+unsafe impl Send for Context {}
+
 impl Context {
-    pub fn new(settings: Settings) -> Self {
-        let users_url = settings.users_microservice.url.clone();
-        let users = Pool::new(users_url);
+    pub fn new(settings: Settings, remote: Remote) -> Self {
         Context {
-            users_connection_pool: users,
             config: settings,
+            remote: remote
         }
     }
+
 }
 
 impl juniper::Context for Context {}

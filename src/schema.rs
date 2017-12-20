@@ -1,6 +1,15 @@
 use juniper;
 use juniper::FieldResult;
 use context::Context;
+use hyper::{Method, Request, Response};
+use std::io;
+use futures::{Canceled, Future, Stream};
+use serde_json::Value;
+use serde_json;
+use hyper::client::{Client};
+use tokio_core::reactor::*;
+use futures::oneshot;
+
 
 pub struct Query;
 pub struct Mutation;
@@ -34,12 +43,29 @@ graphql_object!(Query: Context |&self| {
 
     field user(&executor, id: i32) -> FieldResult<User> {
         let context = executor.context();
-        let pool = &context.users_connection_pool;
+        
+        let mut url = context.config.users_microservice.url.clone();
+        url.push_str("users/");
+        url.push_str(&id.to_string());
+
+        let req = Request::new(Method::Get, url.parse()?);
+
+        let res = send_request(context.remote.clone(), req)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+        let values = get_value_from_body(context.remote.clone(), res)
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+        let name = values["name"].as_str()
+        .ok_or(io::Error::new(io::ErrorKind::Other,"There is no name field!"))?; 
+        let email = values["email"].as_str()
+        .ok_or(io::Error::new(io::ErrorKind::Other,"There is no email field!"))?; 
+
 
         let user = User {
-            id: 1,
-            name: String::from("Luke"),
-            email: String::from("example@mail.com"),
+            id: id,
+            name: name.to_string(),
+            email: email.to_string(),
         };
         Ok(user)
     }
@@ -101,3 +127,37 @@ graphql_object!(Mutation: Context |&self| {
     }
     
 });
+
+
+fn send_request(remote: Remote, request: Request) -> Result<Response, Canceled> {
+    let (tx, rx) = oneshot();
+    remote.spawn(|handle| {
+        let client = Client::new(&handle);
+        client
+            .request(request)
+            .map_err(|_err| ())
+            .and_then(|resp| {
+                tx.send(resp).unwrap();
+                Ok(())
+            })
+            .or_else(|_err| Err(()))
+    });
+    rx.wait()
+}
+
+fn get_value_from_body(remote: Remote, responce: Response) -> Result<Value, Canceled> {
+    let (tx, rx) = oneshot();
+    remote.spawn(|_| {
+        responce
+            .body()
+            .concat2()
+            .and_then(move |body| {
+                let v: Value = serde_json::from_slice(&body)
+                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                tx.send(v).unwrap();
+                Ok(())
+            })
+            .or_else(|_err| Err(()))
+    });
+    rx.wait()
+}
