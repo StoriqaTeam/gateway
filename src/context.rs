@@ -3,7 +3,6 @@ use settings::Settings;
 use tokio_core::reactor::{Remote};
 
 pub struct Context {
-
     pub config: Settings,
     pub remote: Remote,
 }
