@@ -28,7 +28,7 @@ impl Http {
         };
         
         Http {
-            router: Arc::new(router::Router::new()),
+            router: Arc::new(router::create_router()),
             tokio_handle,
             graphql: Arc::new(graphql),
             thread_pool: Arc::new(CpuPool::new(settings.gateway.graphql_thread_pool_size)),
