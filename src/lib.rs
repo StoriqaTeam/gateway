@@ -40,9 +40,6 @@ use futures_cpupool::CpuPool;
 
 struct WebService {
     context: Arc<context::Context>,
-    schema: Arc<schema::Schema>,
-    router: Arc<router::Router>,
-    pool: CpuPool,
 }
 
 impl Service for WebService {
@@ -89,36 +86,26 @@ impl Service for WebService {
 }
 
 pub fn start_server(settings: Settings) {
-    let n_workers = 4;
-    // Create a worker thread pool with four threads
-    let pool = CpuPool::new(n_workers);
     let mut core = Core::new().unwrap();
-    let main_handle = core.handle();
-    let remote = main_handle.remote().clone();
-
+    let handle = core.handle();
     let addr = settings.gateway.url.parse().unwrap();
-    let server = Http::new()
-        .serve_addr_handle(&addr, &main_handle, move || {
-            let schema = schema::create();
-            let context = Context::new(settings.clone(), remote.clone());
-            let service = WebService {
-                context: Arc::new(context),
-                schema: Arc::new(schema),
-                router: Arc::new(router::create_router()),
-                pool: pool.clone(),
-            };
-            Ok(service)
+
+    let serve = Http::new()
+        .serve_addr_handle(&addr, &handle, || {
+            Ok(
+                WebService {
+                    context: Arc::new(Context::new(settings, core.handle())),
+                }
+            )
         })
         .unwrap_or_else(|why| {
             error!("Http Server Initialization Error: {}", why);
             process::exit(1);
         });
-
-    let server_handle = main_handle.clone();
-    main_handle.spawn(
-        server
+    handle.spawn(
+        serve
             .for_each(move |conn| {
-                server_handle.spawn(
+                handle.spawn(
                     conn.map(|_| ())
                         .map_err(|why| error!("Server Error: {:?}", why)),
                 );

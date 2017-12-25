@@ -33,7 +33,7 @@ pub struct Microservice {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Gateway {
     pub url: String,
-    pub graphql_thread_pool_size: u32
+    pub graphql_thread_pool_size: usize
 }
 
 
