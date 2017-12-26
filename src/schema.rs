@@ -1,6 +1,6 @@
 use juniper;
 use juniper::FieldResult;
-use context::Context;
+use context::{Graphql as Context};
 use hyper::{Method, Request, Response};
 use std::io;
 use futures::{Canceled, Future, Stream};
@@ -44,16 +44,13 @@ graphql_object!(Query: Context |&self| {
     field user(&executor, id: i32) -> FieldResult<User> {
         let context = executor.context();
         
-        let mut url = context.config.users_microservice.url.clone();
-        url.push_str("users/");
-        url.push_str(&id.to_string());
-
+        let url = format!("{}users/{}", context.settings.users_microservice.url, id);
         let req = Request::new(Method::Get, url.parse()?);
 
-        let res = send_request(context.remote.clone(), req)
+        let res = send_request(&*context.tokio_remote, req)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
-        let values = get_value_from_body(context.remote.clone(), res)
+        let values = get_value_from_body(&*context.tokio_remote, res)
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
         let name = values["name"].as_str()
@@ -129,7 +126,7 @@ graphql_object!(Mutation: Context |&self| {
 });
 
 
-fn send_request(remote: Remote, request: Request) -> Result<Response, Canceled> {
+fn send_request(remote: &Remote, request: Request) -> Result<Response, Canceled> {
     let (tx, rx) = oneshot();
     remote.spawn(|handle| {
         let client = Client::new(&handle);
@@ -145,7 +142,7 @@ fn send_request(remote: Remote, request: Request) -> Result<Response, Canceled> 
     rx.wait()
 }
 
-fn get_value_from_body(remote: Remote, responce: Response) -> Result<Value, Canceled> {
+fn get_value_from_body(remote: &Remote, responce: Response) -> Result<Value, Canceled> {
     let (tx, rx) = oneshot();
     remote.spawn(|_| {
         responce

@@ -1,6 +1,6 @@
 [gateway]
 url="0.0.0.0:8000"
-thread_pool_size=1
+graphql_thread_pool_size=1
 
 [users_microservice]
 url="http://localhost:8000/"
