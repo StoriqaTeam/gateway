@@ -57,10 +57,12 @@ impl Service for WebService {
             (&Post, Some(router::Route::Graphql)) => {
                 Box::new(http_utils::read_body(req).and_then(move |body| {
                     let graphql_context = context.graphql.clone();
+
                     let graphql_req = (serde_json::from_str(&body)
                         as Result<GraphQLRequest, serde_json::error::Error>)
                         .unwrap();
-                    let result = context.thread_pool.spawn_fn(move || {
+
+                    context.thread_pool.spawn_fn(move || {
                         let graphql_resp = graphql_req.execute(&graphql_context.schema, &graphql_context);
                         serde_json::to_string(&graphql_resp)
                     }).then(|r| match r {
@@ -68,8 +70,7 @@ impl Service for WebService {
                         Err(err) => {
                             future::ok(http_utils::response_with_error(error::Error::Json(err)))
                         }
-                    });
-                    result
+                    })
                 }))
             }
 
@@ -103,11 +104,11 @@ pub fn start_server(settings: Settings) {
             process::exit(1);
         });
 
-    let handle_arc = handle.clone();
+    let handle_arc2 = handle.clone();
     handle.spawn(
         serve
             .for_each(move |conn| {
-                handle_arc.spawn(
+                handle_arc2.spawn(
                     conn.map(|_| ())
                         .map_err(|why| error!("Server Error: {:?}", why)),
                 );
