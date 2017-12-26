@@ -1,4 +1,4 @@
-extern crate config;
+extern crate config as config_crate;
 extern crate futures;
 extern crate futures_cpupool;
 extern crate hyper;
@@ -21,7 +21,7 @@ pub mod schema;
 pub mod error;
 pub mod router;
 pub mod http_utils;
-pub mod settings;
+pub mod config;
 
 
 use futures::future;
@@ -32,7 +32,7 @@ use hyper::{Get, Post};
 use hyper::server::{Http, Request, Response, Service};
 use juniper::http::GraphQLRequest;
 use std::sync::Arc;
-use settings::Settings;
+use config::Config;
 use std::process;
 
 
@@ -83,19 +83,19 @@ impl Service for WebService {
     }
 }
 
-pub fn start_server(settings: Settings) {
-    let settings = Arc::new(settings);
+pub fn start_server(config: Config) {
+    let config = Arc::new(config);
     let mut core = Core::new().expect("Unexpected error creating event loop core");
     let handle = Arc::new(core.handle());
-    let addr = settings.gateway.url.parse().expect("Cannot parse gateway url from config");
+    let addr = config.gateway.url.parse().expect("Cannot parse gateway url from config");
 
-    let settings_arc = settings.clone();
+    let config_arc = config.clone();
     let handle_arc = handle.clone();
     let serve = Http::new()
         .serve_addr_handle(&addr, &handle, move || {
             Ok(
                 WebService {
-                    context: Arc::new(context::Http::new(settings_arc.clone(), handle_arc.clone())),
+                    context: Arc::new(context::Http::new(config_arc.clone(), handle_arc.clone())),
                 }
             )
         })

@@ -1,5 +1,5 @@
 use std::env;
-use config::{Config, ConfigError, Environment, File};
+use config_crate::{Config as RawConfig, ConfigError, Environment, File};
 
 enum Env {
     Development,
@@ -38,7 +38,7 @@ pub struct Gateway {
 
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct Settings {
+pub struct Config {
     pub gateway: Gateway,
     pub users_microservice: Microservice,
     pub store_microservice: Microservice,
@@ -47,13 +47,13 @@ pub struct Settings {
 }
 
 
-impl Settings {
-    /// Creates settings from base.toml, which are overwritten by <env>.toml, where
+impl Config {
+    /// Creates config from base.toml, which are overwritten by <env>.toml, where
     /// env is one of development, test, production. After that it could be overwritten
-    /// by env variables like STQ_GATEWAY_URL (this will override `url` field in settings)
+    /// by env variables like STQ_GATEWAY_URL (this will override `url` field in config)
     pub fn new() -> Result<Self, ConfigError> {
         let env = Env::new();
-        let mut s = Config::new();
+        let mut s = RawConfig::new();
 
         s.merge(File::with_name("config/base"))?;
         // Optional file specific for environment
