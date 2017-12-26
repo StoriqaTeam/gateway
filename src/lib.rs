@@ -62,7 +62,7 @@ impl Service for WebService {
                         as Result<GraphQLRequest, serde_json::error::Error>)
                         .unwrap();
 
-                    context.thread_pool.spawn_fn(move || {
+                    context.graphql_thread_pool.spawn_fn(move || {
                         let graphql_resp = graphql_req.execute(&graphql_context.schema, &graphql_context);
                         serde_json::to_string(&graphql_resp)
                     }).then(|r| match r {

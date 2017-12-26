@@ -14,9 +14,8 @@ pub struct Graphql {
 
 pub struct Http {
     pub router: Arc<router::Router>,
-    pub tokio_handle: Arc<Handle>,
     pub graphql: Arc<Graphql>,
-    pub thread_pool: Arc<CpuPool>,
+    pub graphql_thread_pool: Arc<CpuPool>,
 }
 
 impl Http {
@@ -29,9 +28,8 @@ impl Http {
         
         Http {
             router: Arc::new(router::create_router()),
-            tokio_handle,
             graphql: Arc::new(graphql),
-            thread_pool: Arc::new(CpuPool::new(config.gateway.graphql_thread_pool_size)),
+            graphql_thread_pool: Arc::new(CpuPool::new(config.gateway.graphql_thread_pool_size)),
         }
     }
 }
