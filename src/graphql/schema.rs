@@ -1,15 +1,16 @@
+use std::io;
+
 use juniper;
 use juniper::FieldResult;
-use context::{Graphql as Context};
 use hyper::{Method, Request, Response};
-use std::io;
+use futures::oneshot;
 use futures::{Canceled, Future, Stream};
-use serde_json::Value;
 use serde_json;
+use serde_json::Value;
 use hyper::client::{Client};
 use tokio_core::reactor::*;
-use futures::oneshot;
 
+use super::context::Context;
 
 pub struct Query;
 pub struct Mutation;
@@ -44,7 +45,7 @@ graphql_object!(Query: Context |&self| {
     field user(&executor, id: i32) -> FieldResult<User> {
         let context = executor.context();
         
-        let url = format!("{}users/{}", context.settings.users_microservice.url, id);
+        let url = format!("{}users/{}", context.config.users_microservice.url, id);
         let req = Request::new(Method::Get, url.parse()?);
 
         let res = send_request(&*context.tokio_remote, req)

@@ -1,13 +1,12 @@
+use hyper;
 use hyper::{StatusCode};
 use hyper::header::ContentLength;
 use hyper::server::{Request, Response};
 use hyper::error::Error;
-
 use futures::future::{Future};
 use futures::{future, Stream};
 
-use hyper;
-use error;
+use super::error;
 
 pub fn read_body(request: Request) -> Box<Future<Item=String, Error=hyper::Error>> {
     Box::new(
@@ -32,7 +31,7 @@ pub fn response_with_body(body: String) -> Response {
 }
 
 pub fn response_with_error(error: error::Error) -> Response {
-    use error::Error::*;
+    use super::error::Error::*;
     match error {
         Json(err) => response_with_body(err.to_string()).with_status(StatusCode::UnprocessableEntity)
     }
