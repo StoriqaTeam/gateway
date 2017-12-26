@@ -1,15 +1,16 @@
+use std::io;
+
 use juniper;
 use juniper::FieldResult;
-use context::{Graphql as Context};
 use hyper::{Method, Request, Response};
-use std::io;
+use futures::oneshot;
 use futures::{Canceled, Future, Stream};
-use serde_json::Value;
 use serde_json;
+use serde_json::Value;
 use hyper::client::{Client};
 use tokio_core::reactor::*;
-use futures::oneshot;
 
+use super::context::Context;
 
 pub struct Query;
 pub struct Mutation;
