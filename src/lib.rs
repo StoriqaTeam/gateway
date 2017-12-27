@@ -26,7 +26,7 @@ use config::Config;
 
 pub fn start(config: Config) {
     let config = Arc::new(config);
-    let mut core = Core::new().expect("Unexpected error creating event loop core");
+    let mut core = Core::new().expect("Unexpected error creating main event loop");
     let handle = Arc::new(core.handle());
 
     http::start_server(config, handle);

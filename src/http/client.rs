@@ -1,37 +1,27 @@
 use std::sync::mpsc;
+use std::thread;
 
+use tokio_core::reactor::{Core, Handle};
 use hyper;
-use tokio_core::reactor::Handle;
+use futures::Future;
 
-pub struct ClientActor {
-  client: hyper::Client<hyper::client::HttpConnector>,
-  tx: mpsc::Sender<Payload>,
-  rx: mpsc::Receiver<Payload>,
-}
-
-impl ClientActor {
-  pub fn new(handle: &Handle) -> Self {
-    let (tx, rx) = mpsc::channel();
-    let client = hyper::Client::new(handle);
-    ClientActor {
-      client,
-      tx,
-      rx
-    }
-  }
-
-  // pub fn remote(&self) -> Client {
-  //   Client {
-  //     tx: self.tx,
-  //   }
-  // }
-}
+use super::utils;
 
 pub struct Client {
   tx: mpsc::Sender<Payload>,
 }
 
 impl Client {
+  pub fn new() -> Self {
+    let (tx, rx) = mpsc::channel::<Payload>();
+    let client_actor = 
+      Client {
+        tx,
+      };
+    client_actor.start(rx);
+    client_actor
+  }
+
   pub fn send(&self, url: String, method: hyper::Method, body: Option<String>, callback: mpsc::Sender<Result<String, hyper::Error>>) {
     let payload = Payload {
       url,
@@ -55,6 +45,28 @@ impl Client {
     self.tx.send(payload);
     rx.recv().unwrap()
   }
+
+
+  fn start(&self, rx: mpsc::Receiver<Payload>) {
+    thread::spawn(|| {
+      let mut core = Core::new().expect("Unexpected error creating main event loop");
+      let handle = core.handle();
+
+      let client = hyper::Client::new(&handle);
+
+      for payload in rx {
+        let uri = payload.url.parse().unwrap();
+        let task = client.get(uri)
+          .and_then(|res| utils::read_body(res.body()))
+          .map(|res| {
+            payload.callback.send(Ok(res));
+          });
+
+        core.run(task);
+      }
+    });    
+  }
+
 }
 
 struct Payload {

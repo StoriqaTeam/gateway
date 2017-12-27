@@ -37,7 +37,7 @@ impl Service for WebService {
             }
 
             (&Post, Some(router::Route::Graphql)) => {
-                Box::new(utils::read_body(req).and_then(move |body| {
+                Box::new(utils::read_body(req.body()).and_then(move |body| {
                     let graphql_context = context.graphql_context.clone();
 
                     let graphql_req = (serde_json::from_str(&body)

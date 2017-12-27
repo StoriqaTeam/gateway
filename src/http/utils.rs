@@ -8,9 +8,9 @@ use futures::{future, Stream};
 
 use super::error;
 
-pub fn read_body(request: Request) -> Box<Future<Item=String, Error=hyper::Error>> {
+pub fn read_body(body: hyper::Body) -> Box<Future<Item=String, Error=hyper::Error>> {
     Box::new(
-        request.body()
+        body
             .fold(Vec::new(), |mut acc, chunk| {
                 acc.extend_from_slice(&*chunk);
                 future::ok::<_, hyper::Error>(acc)
