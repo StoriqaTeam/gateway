@@ -75,7 +75,7 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>) {
         .serve_addr_handle(&addr, &tokio_handle, move || {
             Ok(
                 WebService {
-                    context: Arc::new(Context::new(config_arc.clone(), handle_arc.clone())),
+                    context: Arc::new(Context::new(config_arc.clone())),
                 }
             )
         })
@@ -84,11 +84,10 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>) {
             process::exit(1);
         });
 
-    let handle_arc2 = tokio_handle.clone();
     tokio_handle.spawn(
         serve
             .for_each(move |conn| {
-                handle_arc2.spawn(
+                handle_arc.spawn(
                     conn.map(|_| ())
                         .map_err(|why| error!("Server Error: {:?}", why)),
                 );
