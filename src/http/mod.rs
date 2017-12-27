@@ -1,4 +1,5 @@
 pub mod server;
+pub mod client;
 mod context;
 mod error;
 mod graphiql;
