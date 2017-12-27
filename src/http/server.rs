@@ -45,7 +45,8 @@ impl Service for WebService {
                         .unwrap();
 
                     context.graphql_thread_pool.spawn_fn(move || {
-                        let graphql_resp = graphql_req.execute(&graphql_context.schema, &graphql_context);
+                        let ctx = graphql_context.clone();
+                        let graphql_resp = graphql_req.execute(&ctx.schema, &ctx);
                         serde_json::to_string(&graphql_resp)
                     }).then(|r| match r {
                         Ok(data) => future::ok(utils::response_with_body(data)),

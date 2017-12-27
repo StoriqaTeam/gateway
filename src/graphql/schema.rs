@@ -44,27 +44,35 @@ graphql_object!(Query: Context |&self| {
 
     field user(&executor, id: i32) -> FieldResult<User> {
         let context = executor.context();
-        
-        let url = format!("{}users/{}", context.config.users_microservice.url, id);
-        let req = Request::new(Method::Get, url.parse()?);
+        let res = context.http_client.send_sync(Method::Get, "http://example.com/".to_string(), None);
+        println!("{:?}", res);
+        // let url = format!("{}users/{}", context.config.users_microservice.url, id);
+        // let req = Request::new(Method::Get, url.parse()?);
 
-        let res = send_request(&*context.tokio_remote, req)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        // let res = send_request(&*context.tokio_remote, req)
+        //     .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
-        let values = get_value_from_body(&*context.tokio_remote, res)
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        // let values = get_value_from_body(&*context.tokio_remote, res)
+        //         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
-        let name = values["name"].as_str()
-        .ok_or(io::Error::new(io::ErrorKind::Other,"There is no name field!"))?; 
-        let email = values["email"].as_str()
-        .ok_or(io::Error::new(io::ErrorKind::Other,"There is no email field!"))?; 
+        // let name = values["name"].as_str()
+        // .ok_or(io::Error::new(io::ErrorKind::Other,"There is no name field!"))?; 
+        // let email = values["email"].as_str()
+        // .ok_or(io::Error::new(io::ErrorKind::Other,"There is no email field!"))?; 
 
+
+        // let user = User {
+        //     id: id,
+        //     name: name.to_string(),
+        //     email: email.to_string(),
+        // };
 
         let user = User {
-            id: id,
-            name: name.to_string(),
-            email: email.to_string(),
+            id: 1,
+            name: String::from("Luke"),
+            email: String::from("example@mail.com"),
         };
+
         Ok(user)
     }
     
