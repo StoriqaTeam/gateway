@@ -1,9 +1,10 @@
 use juniper;
 use juniper::FieldResult;
-use hyper::Method;
+use hyper::{Method, StatusCode};
 use serde_json;
 
 use super::context::Context;
+use ::http;
 
 pub struct Query;
 pub struct Mutation;
@@ -33,16 +34,62 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
-    field user(&executor, id: i32) -> FieldResult<User> {
+    field user(&executor, id: i32) -> FieldResult<Option<User>> {
         let context = executor.context();
         let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
-        println!("{:?}", url);
-        let res = context.http_client.send_sync(Method::Get, url, None).unwrap();
-        println!("{:?}", res);
-        let user = serde_json::from_str::<User>(&res).unwrap();
-        println!("{:?}", user);
-        
-        Ok(user)
+
+        // Todo - extract error handling into a separate method common for all fields
+        let res = match context.http_client.send_sync(Method::Get, url, None) {
+            Ok(resp) => resp,
+            Err(http::client::Error::Api(StatusCode::NotFound, _)) => return Ok(None),
+            Err(http::client::Error::Api(status, message)) => {
+                let status = status.to_string();
+                if let Some(http::client::ErrorMessage { code, message }) = message {
+                    let code = code.to_string();
+                    return Err(
+                        juniper::FieldError::new(
+                            "Error response from users microservice",
+                            graphql_value!({ "status": status, "code": code, "message": message }),
+                        )
+                    )
+                }
+                else {
+                    return Err(
+                        juniper::FieldError::new(
+                            "Error response from users microservice",
+                            graphql_value!({ "status": status }),
+                        )
+                    )
+                }
+            }
+            Err(http::client::Error::Network(err)) => 
+                return Err(
+                    juniper::FieldError::new(
+                        "Error connecting to users microservice",
+                        graphql_value!("See logs for details."),
+                    )
+                ),
+            _ =>
+                return Err(
+                    juniper::FieldError::new(
+                        "Unknown error for request to users microservice",
+                        graphql_value!("See logs for details."),
+                    )
+                )
+        };
+
+        match serde_json::from_str::<User>(&res) {
+            Ok(user) => Ok(Some(user)),
+            Err(err) => {
+                error!("Error deserializing user: {}", err);
+                Err(
+                    juniper::FieldError::new(
+                        "Error deserializing response from users microservice",
+                        graphql_value!("Probably mismatching client / server api versions? See logs for details."),
+                    )
+                )
+            }
+        }
     }
     
     field users(&executor, from: i32, to: i32) -> FieldResult<Vec<User>> {

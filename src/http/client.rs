@@ -27,6 +27,8 @@ impl Client {
   }
 
   pub fn send_sync(&self, method: hyper::Method, url: String, body: Option<String>) -> ClientResult {
+    info!("Starting outbound http request: {} {} with body {}", method, url, body.clone().unwrap_or_default());
+
     let (tx, rx) = mpsc::channel::<ClientResult>();
     let payload = Payload {
       url,
@@ -73,10 +75,21 @@ impl Client {
         }
 
         let task = client.request(req)
-          .map_err(|err| Error::Network(err))
+          .map_err(|err| {
+            error!("Error sending request to `{}`: {}", url, err);
+            Error::Network(err)
+          })
           .and_then(|res| {
             let status = res.status();
-            let body_future: Box<future::Future<Item = String, Error = Error>> = Box::new(utils::read_body(res.body()).map_err(|err| Error::Network(err)));
+            let url1 = url.clone();
+            let body_future: Box<future::Future<Item = String, Error = Error>> = 
+              Box::new(utils::read_body(res.body())
+                .map_err(move |err| {
+                  // Todo - is this a memory leak? (url1)
+                  error!("Error reading body from `{}`: {}", url1, err);
+                  Error::Network(err)
+                })
+              );
             match status {
               hyper::StatusCode::Ok => 
                 body_future,
@@ -120,8 +133,8 @@ struct Payload {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ErrorMessage {
-    code: u16,
-    message: String
+    pub code: u16,
+    pub message: String
 }
 
 #[derive(Debug)]

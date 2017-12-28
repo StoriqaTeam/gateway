@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use juniper;
-use tokio_core::reactor::{Handle, Remote};
 
 use super::schema;
 use ::config::Config;
