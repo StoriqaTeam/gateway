@@ -3,13 +3,13 @@ url="0.0.0.0:8000"
 graphql_thread_pool_size=1
 
 [users_microservice]
-url="http://localhost:8000/"
+url="http://users:8000"
 
 [store_microservice]
-url="http://localhost:8001/"
+url="http://localhost:8001"
 
 [orders_microservice]
-url="http://localhost:8002/"
+url="http://localhost:8002"
 
 [billing_microservice]
-url="http://localhost:8003/"
+url="http://localhost:8003"
