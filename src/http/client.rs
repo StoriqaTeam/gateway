@@ -1,8 +1,7 @@
 use std::sync::mpsc;
 use std::thread;
-use std::result;
 
-use tokio_core::reactor::{Core, Handle};
+use tokio_core::reactor::Core;
 use hyper;
 use futures::{future, Future};
 use serde_json;
@@ -10,7 +9,6 @@ use serde_json;
 use super::utils;
 
 pub type ClientResult = Result<String, Error>;
-type Sender = mpsc::Sender<ClientResult>;
 
 #[derive(Clone)]
 pub struct Client {
@@ -28,17 +26,6 @@ impl Client {
     client_actor
   }
 
-  pub fn send(&self, method: hyper::Method, url: String, body: Option<String>, callback: mpsc::Sender<ClientResult>) {
-    let payload = Payload {
-      url,
-      method,
-      body,
-      callback
-    };
-
-    self.tx.send(payload);
-  }
-
   pub fn send_sync(&self, method: hyper::Method, url: String, body: Option<String>) -> ClientResult {
     let (tx, rx) = mpsc::channel::<ClientResult>();
     let payload = Payload {
@@ -48,14 +35,24 @@ impl Client {
       callback: tx,
     };
 
-    self.tx.send(payload);
-    rx.recv().unwrap()
+    if let Err(err) = self.tx.send(payload) {
+      error!("Unexpected error sending http client request params to actor: {}", err);
+      return Err(Error::Unknown)
+    };
+
+    match rx.recv() {
+      Ok(result) => result,
+      Err(err) => {
+        error!("Unexpected error sending http client request params to actor: {}", err);
+        Err(Error::Unknown)      
+      }
+    }
   }
 
 
   fn start(&self, rx: mpsc::Receiver<Payload>) {
     thread::spawn(|| {
-      let mut core = Core::new().expect("Unexpected error creating main event loop");
+      let mut core = Core::new().expect("Unexpected error creating main event loop for http client");
       let handle = core.handle();
 
       let client = hyper::Client::new(&handle);
@@ -63,7 +60,13 @@ impl Client {
       for payload in rx {
         let Payload { url, method, body: maybe_body, callback } = payload;
 
-        let uri = url.parse().unwrap();
+        let uri = match url.parse() {
+          Ok(val) => val,
+          Err(err) => {
+            error!("Url `{}` passed to http client cannot be parsed: `{}`", url, err);
+            continue
+          }
+        };
         let mut req = hyper::Request::new(method, uri);
         for body in maybe_body.iter() {
           req.set_body(body.clone());
@@ -89,13 +92,19 @@ impl Client {
               }
             })
           .map(|body| {
-            callback.send(Ok(body));
+            if let Err(err) = callback.send(Ok(body)) {
+              error!("Unexpected error passing body to callback from http client: {}", err)
+            }
           })
           .map_err(|err| {
-            callback.send(Err(err));
+            if let Err(err1) = callback.send(Err(err)) {
+              error!("Unexpected error passing http error to callback from http client: {}", err1)
+            }
           });
 
-        core.run(task);
+        if let Err(err) = core.run(task) {
+          error!("Unexpected running http client on event loop: {:?}", err)
+        }
       }
     });    
   }

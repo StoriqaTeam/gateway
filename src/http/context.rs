@@ -1,5 +1,4 @@
 use futures_cpupool::CpuPool;
-use tokio_core::reactor::{Handle};
 use std::sync::Arc;
 
 use super::router;

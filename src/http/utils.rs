@@ -1,7 +1,7 @@
 use hyper;
 use hyper::{StatusCode};
 use hyper::header::ContentLength;
-use hyper::server::{Request, Response};
+use hyper::server::Response;
 use hyper::error::Error;
 use futures::future::{Future};
 use futures::{future, Stream};
