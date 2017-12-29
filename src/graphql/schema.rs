@@ -28,6 +28,24 @@ pub struct User {
     pub is_active: bool,
 }
 
+enum Node {
+    User(User),
+    
+}
+
+graphql_interface!(Node: () |&self| {
+    field id() -> &i32 {
+        match *self {
+            Node::User (User { ref id, .. })  => id,
+        }
+    }
+
+    instance_resolvers: |_| {
+        &User => match *self { Node::User(ref user) => Some(user), _ => None },
+    }
+});
+
+
 graphql_object!(Query: Context |&self| {
 
     field apiVersion() -> &str {
