@@ -37,7 +37,7 @@ impl Service for WebService {
             }
 
             (&Post, Some(router::Route::Graphql)) => {
-                Box::new(utils::read_body(req).and_then(move |body| {
+                Box::new(utils::read_body(req.body()).and_then(move |body| {
                     let graphql_context = context.graphql_context.clone();
 
                     let graphql_req = (serde_json::from_str(&body)
@@ -45,7 +45,8 @@ impl Service for WebService {
                         .unwrap();
 
                     context.graphql_thread_pool.spawn_fn(move || {
-                        let graphql_resp = graphql_req.execute(&graphql_context.schema, &graphql_context);
+                        let ctx = graphql_context.clone();
+                        let graphql_resp = graphql_req.execute(&ctx.schema, &ctx);
                         serde_json::to_string(&graphql_resp)
                     }).then(|r| match r {
                         Ok(data) => future::ok(utils::response_with_body(data)),
@@ -74,7 +75,7 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>) {
         .serve_addr_handle(&addr, &tokio_handle, move || {
             Ok(
                 WebService {
-                    context: Arc::new(Context::new(config_arc.clone(), handle_arc.clone())),
+                    context: Arc::new(Context::new(config_arc.clone())),
                 }
             )
         })
@@ -83,11 +84,10 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>) {
             process::exit(1);
         });
 
-    let handle_arc2 = tokio_handle.clone();
     tokio_handle.spawn(
         serve
             .for_each(move |conn| {
-                handle_arc2.spawn(
+                handle_arc.spawn(
                     conn.map(|_| ())
                         .map_err(|why| error!("Server Error: {:?}", why)),
                 );

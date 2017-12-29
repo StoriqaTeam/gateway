@@ -1,16 +1,10 @@
-use std::io;
-
 use juniper;
 use juniper::FieldResult;
-use hyper::{Method, Request, Response};
-use futures::oneshot;
-use futures::{Canceled, Future, Stream};
+use hyper::{Method, StatusCode};
 use serde_json;
-use serde_json::Value;
-use hyper::client::{Client};
-use tokio_core::reactor::*;
 
 use super::context::Context;
+use http;
 
 pub struct Query;
 pub struct Mutation;
@@ -23,17 +17,15 @@ pub fn create() -> Schema {
     Schema::new(query, mutation)
 }
 
-#[derive(GraphQLObject)]
-#[graphql(description = "Information about a user")]
+#[derive(GraphQLObject, Deserialize, Debug)]
+#[graphql(description = "User's profile")]
 pub struct User {
-    #[graphql(description = "The person's id")] 
+    #[graphql(description = "Unique id")] 
     pub id: i32,
-
-    #[graphql(description = "The person's full name, including both first and last names")]
-    pub name: String,
-
-    #[graphql(description = "The person's email address")] 
+    #[graphql(description = "Email")] 
     pub email: String,
+    #[graphql(name = "isActive", description = "If the user was disabled (deleted), isActive is false")]
+    pub is_active: bool,
 }
 
 graphql_object!(Query: Context |&self| {
@@ -42,50 +34,47 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
-    field user(&executor, id: i32) -> FieldResult<User> {
+    field user(&executor, id: i32) -> FieldResult<Option<User>> {
         let context = executor.context();
-        
-        let url = format!("{}users/{}", context.config.users_microservice.url, id);
-        let req = Request::new(Method::Get, url.parse()?);
+        let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
 
-        let res = send_request(&*context.tokio_remote, req)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-
-        let values = get_value_from_body(&*context.tokio_remote, res)
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-
-        let name = values["name"].as_str()
-        .ok_or(io::Error::new(io::ErrorKind::Other,"There is no name field!"))?; 
-        let email = values["email"].as_str()
-        .ok_or(io::Error::new(io::ErrorKind::Other,"There is no email field!"))?; 
-
-
-        let user = User {
-            id: id,
-            name: name.to_string(),
-            email: email.to_string(),
+        let res = match send(Method::Get, url, None, &context) {
+            Ok(resp) => resp,
+            Err(SchemaError::NotFound) => return Ok(None),
+            Err(SchemaError::GraphQlError(e)) => return Err(e)
         };
-        Ok(user)
+        
+        match serde_json::from_str::<User>(&res) {
+            Ok(user) => Ok(Some(user)),
+            Err(err) => {
+                error!("Error deserializing user: {}", err);
+                Err(
+                    juniper::FieldError::new(
+                        "Error deserializing response from users microservice",
+                        graphql_value!("Probably mismatching client / server api versions? See logs for details."),
+                    )
+                )
+            }
+        }
     }
     
     field users(&executor, from: i32, to: i32) -> FieldResult<Vec<User>> {
         let context = executor.context();
         let user1 = User {
             id: 1,
-            name: String::from("Luke"),
             email: String::from("example@mail.com"),
+            is_active: false,
         };
 
         let user2 = User {
             id: 2,
-            name: String::from("Mike"),
             email: String::from("elpmaxe@mail.com"),
+            is_active: false,
         };
         let users = vec![user1, user2];
         Ok(users)
     }
 });
-
 
 
 //mutation {
@@ -101,8 +90,8 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let user = User {
             id: 0,
-            name: name,
-            email: email,
+            email,
+            is_active: false,
         };
         Ok(user)
     }
@@ -112,8 +101,8 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let user = User {
             id: 0,
-            name: name,
-            email: email,
+            email,
+            is_active: false,
         };
         Ok(user)
     }
@@ -127,35 +116,45 @@ graphql_object!(Mutation: Context |&self| {
 });
 
 
-fn send_request(remote: &Remote, request: Request) -> Result<Response, Canceled> {
-    let (tx, rx) = oneshot();
-    remote.spawn(|handle| {
-        let client = Client::new(&handle);
-        client
-            .request(request)
-            .map_err(|_err| ())
-            .and_then(|resp| {
-                tx.send(resp).unwrap();
-                Ok(())
-            })
-            .or_else(|_err| Err(()))
-    });
-    rx.wait()
+#[derive(Debug)]
+pub enum SchemaError {
+    GraphQlError(juniper::FieldError),
+    NotFound,
 }
 
-fn get_value_from_body(remote: &Remote, responce: Response) -> Result<Value, Canceled> {
-    let (tx, rx) = oneshot();
-    remote.spawn(|_| {
-        responce
-            .body()
-            .concat2()
-            .and_then(move |body| {
-                let v: Value = serde_json::from_slice(&body)
-                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-                tx.send(v).unwrap();
-                Ok(())
-            })
-            .or_else(|_err| Err(()))
-    });
-    rx.wait()
+pub type SchemaResult = Result<String, SchemaError>;
+
+
+fn send(method: Method, url: String, body: Option<String>, context: &Context) -> SchemaResult {
+    match context.http_client.send_sync(method, url, body) {
+        Ok(resp) => Ok(resp),
+        Err(http::client::Error::Api(StatusCode::NotFound, _)) => return Err(SchemaError::NotFound),
+        Err(http::client::Error::Api(status, message)) => {
+            let status = status.to_string();
+            if let Some(http::client::ErrorMessage { code, message }) = message {
+                let code = code.to_string();
+                return Err(SchemaError::GraphQlError(juniper::FieldError::new(
+                    "Error response from users microservice",
+                    graphql_value!({ "status": status, "code": code, "message": message }),
+                )));
+            } else {
+                return Err(SchemaError::GraphQlError(juniper::FieldError::new(
+                    "Error response from users microservice",
+                    graphql_value!({ "status": status }),
+                )));
+            }
+        }
+        Err(http::client::Error::Network(_)) => {
+            return Err(SchemaError::GraphQlError(juniper::FieldError::new(
+                "Error connecting to users microservice",
+                graphql_value!("See logs for details."),
+            )))
+        }
+        _ => {
+            return Err(SchemaError::GraphQlError(juniper::FieldError::new(
+                "Unknown error for request to users microservice",
+                graphql_value!("See logs for details."),
+            )))
+        }
+    }
 }
