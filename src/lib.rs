@@ -19,6 +19,7 @@ pub mod config;
 mod graphql;
 mod http;
 
+use futures::stream::Stream;
 use tokio_core::reactor::Core;
 use std::sync::Arc;
 
@@ -26,10 +27,17 @@ use config::Config;
 
 pub fn start(config: Config) {
     let config = Arc::new(config);
+
     let mut core = Core::new().expect("Unexpected error creating main event loop");
     let handle = Arc::new(core.handle());
-
     http::start_server(config, handle);
+
+    let client = http::client::Client::new(&config, &handle);
+    let client_handle = client.handle();
+    let client_stream = client.stream();
+    handle.spawn(
+        client_stream.for_each(|_| Ok(()))
+    );
 
     core.run(futures::future::empty::<(), ()>()).unwrap();
 }

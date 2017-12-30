@@ -1,64 +1,55 @@
-use std::sync::{mpsc, Arc};
+use std::sync::Arc;
 use std::thread;
 
-use tokio_core::reactor::Core;
+use tokio_core::reactor::{Core, Handle};
 use hyper;
 use futures::{future, Future};
+use futures::sync::mpsc;
+use futures::stream::{Stream};
+use futures::sink::Sink;
 use serde_json;
 
 use super::utils;
+use ::config::Config;
 
 pub type ClientResult = Result<String, Error>;
 
-#[derive(Clone)]
 pub struct Client {
+  client: hyper::Client<hyper::client::HttpConnector>,
   tx: mpsc::Sender<Payload>,
+  rx: mpsc::Receiver<Payload>,
 }
 
 impl Client {
-  pub fn new() -> Self {
-    let (tx, rx) = mpsc::channel::<Payload>();
-    let client_actor = 
-      Client {
-        tx,
-      };
-    client_actor.start(rx);
-    client_actor
+  pub fn new(config: &Config, handle: &Handle) -> Self {
+    let (tx, rx) = mpsc::channel::<Payload>(config.gateway.http_client_buffer_size);
+    let client = hyper::Client::new(handle);
+    Client { client, tx, rx }
   }
 
-  pub fn send_sync(&self, method: hyper::Method, url: String, body: Option<String>) -> ClientResult {
-    info!("Starting outbound http request: {} {} with body {}", method, url, body.clone().unwrap_or_default());
+  pub fn stream(&self) -> Box<Stream<Item=(), Error=()>> {
+    let client = self.client.clone();
+    Box::new(
+      self.rx.and_then(move |payload| {
+        Self::send_request(client, payload).map(|_| ()).map_err(|_| ())
+      })
+    )
+  }
 
-    let (tx, rx) = mpsc::channel::<ClientResult>();
-    let payload = Payload {
-      url,
-      method,
-      body,
-      callback: tx,
-    };
-
-    if let Err(err) = self.tx.send(payload) {
-      error!("Unexpected error sending http client request params to actor: {}", err);
-      return Err(Error::Unknown)
-    };
-
-    match rx.recv() {
-      Ok(result) => result,
-      Err(err) => {
-        error!("Unexpected error sending http client request params to actor: {}", err);
-        Err(Error::Unknown)      
-      }
+  pub fn handle(&self) -> ClientHandle {
+    ClientHandle {
+      tx: self.tx.clone()
     }
   }
 
-  fn make_request(client: &hyper::Client<hyper::client::HttpConnector>, payload: Payload) -> Box<Future<Item=String, Error=Error>> {
+  fn send_request(client: hyper::Client<hyper::client::HttpConnector>, payload: Payload) -> Box<Future<Item=(), Error=()>> {
     let Payload { url, method, body: maybe_body, callback } = payload;
 
     let uri = match url.parse() {
       Ok(val) => val,
       Err(err) => {
         error!("Url `{}` passed to http client cannot be parsed: `{}`", url, err);
-        return Box::new(future::err(Error::Unknown))
+        return Box::new(callback.send(Err(Error::Unknown)).map(|_| ()).map_err(|_| ()))
       }
     };
     let mut req = hyper::Request::new(method, uri);
@@ -96,32 +87,68 @@ impl Client {
               })
             )
           }
-        });
+        })
+        .then(|result| callback.send(result))
+        .map(|_| ()).map_err(|_| ());
 
     Box::new(task)
   }
 
-  fn start_event_loop(rx: mpsc::Receiver<Payload>) {
-      let mut core = Core::new().expect("Unexpected error creating main event loop for http client");
-      let handle = core.handle();
-
-      let client = hyper::Client::new(&handle);
-
-      for payload in rx {
-        let task = Self::make_request(&client, payload);
-        if let Err(err) = core.run(task) {
-          error!("Unexpected error running http client on event loop: {:?}", err)
-        }
-      }
-  }
-
-  fn start(&self, rx: mpsc::Receiver<Payload>) {
-    thread::spawn(|| {
-      Self::start_event_loop(rx)
-    });
-  }
-
 }
+
+#[derive(Clone)]
+pub struct ClientHandle {
+  tx: mpsc::Sender<Payload>,
+}
+
+// impl ClientHandle {
+//   pub fn send_sync(&self, method: hyper::Method, url: String, body: Option<String>) -> ClientResult {
+//     info!("Starting outbound http request: {} {} with body {}", method, url, body.clone().unwrap_or_default());
+
+//     let (tx, rx) = mpsc::channel::<ClientResult>();
+//     let payload = Payload {
+//       url,
+//       method,
+//       body,
+//       callback: tx,
+//     };
+
+//     if let Err(err) = self.tx.send(payload) {
+//       error!("Unexpected error sending http client request params to actor: {}", err);
+//       return Err(Error::Unknown)
+//     };
+
+//     match rx.recv() {
+//       Ok(result) => result,
+//       Err(err) => {
+//         error!("Unexpected error sending http client request params to actor: {}", err);
+//         Err(Error::Unknown)      
+//       }
+//     }
+//   }
+
+
+//   fn start_event_loop(rx: mpsc::Receiver<Payload>) {
+//       let mut core = Core::new().expect("Unexpected error creating main event loop for http client");
+//       let handle = core.handle();
+
+//       let client = hyper::Client::new(&handle);
+
+//       for payload in rx {
+//         let task = Self::make_request(&client, payload);
+//         if let Err(err) = core.run(task) {
+//           error!("Unexpected error running http client on event loop: {:?}", err)
+//         }
+//       }
+//   }
+
+//   fn start(&self, rx: mpsc::Receiver<Payload>) {
+//     thread::spawn(|| {
+//       Self::start_event_loop(rx)
+//     });
+//   }
+
+// }
 
 struct Payload {
   pub url: String,
