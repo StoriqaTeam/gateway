@@ -101,9 +101,7 @@ impl Client {
     Box::new(task)
   }
 
-
-  fn start(&self, rx: mpsc::Receiver<Payload>) {
-    thread::spawn(|| {
+  fn start_event_loop(rx: mpsc::Receiver<Payload>) {
       let mut core = Core::new().expect("Unexpected error creating main event loop for http client");
       let handle = core.handle();
 
@@ -112,10 +110,15 @@ impl Client {
       for payload in rx {
         let task = Self::make_request(&client, payload);
         if let Err(err) = core.run(task) {
-          error!("Unexpected running http client on event loop: {:?}", err)
+          error!("Unexpected error running http client on event loop: {:?}", err)
         }
       }
-    });    
+  }
+
+  fn start(&self, rx: mpsc::Receiver<Payload>) {
+    thread::spawn(|| {
+      Self::start_event_loop(rx)
+    });
   }
 
 }
