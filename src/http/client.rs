@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc};
 use std::thread;
 
 use tokio_core::reactor::Core;
@@ -51,6 +51,56 @@ impl Client {
     }
   }
 
+  fn make_request(client: &hyper::Client<hyper::client::HttpConnector>, payload: Payload) -> Box<Future<Item=String, Error=Error>> {
+    let Payload { url, method, body: maybe_body, callback } = payload;
+
+    let uri = match url.parse() {
+      Ok(val) => val,
+      Err(err) => {
+        error!("Url `{}` passed to http client cannot be parsed: `{}`", url, err);
+        return Box::new(future::err(Error::Unknown))
+      }
+    };
+    let mut req = hyper::Request::new(method, uri);
+    for body in maybe_body.iter() {
+      req.set_body(body.clone());
+    }
+
+    let url = Arc::new(url);
+    let url_clone = url.clone();
+
+    let task = client.request(req)
+      .map_err(move |err| {
+        error!("Error sending request to `{}`: {}", url, err);
+        Error::Network(err)
+      })
+      .and_then(move |res| {
+        let status = res.status();
+        let body_future: Box<future::Future<Item = String, Error = Error>> = 
+          Box::new(utils::read_body(res.body())
+            .map_err(move |err| {
+              error!("Error reading body from `{}`: {}", url_clone, err);
+              Error::Network(err)
+            })
+          );
+        match status {
+          hyper::StatusCode::Ok => 
+            body_future,
+
+          _ =>
+            Box::new(
+              body_future.and_then(move |body| {
+                let message = serde_json::from_str::<ErrorMessage>(&body).ok();
+                let error = Error::Api(status, message);
+                future::err(error)
+              })
+            )
+          }
+        });
+
+    Box::new(task)
+  }
+
 
   fn start(&self, rx: mpsc::Receiver<Payload>) {
     thread::spawn(|| {
@@ -60,61 +110,7 @@ impl Client {
       let client = hyper::Client::new(&handle);
 
       for payload in rx {
-        let Payload { url, method, body: maybe_body, callback } = payload;
-
-        let uri = match url.parse() {
-          Ok(val) => val,
-          Err(err) => {
-            error!("Url `{}` passed to http client cannot be parsed: `{}`", url, err);
-            continue
-          }
-        };
-        let mut req = hyper::Request::new(method, uri);
-        for body in maybe_body.iter() {
-          req.set_body(body.clone());
-        }
-
-        let task = client.request(req)
-          .map_err(|err| {
-            error!("Error sending request to `{}`: {}", url, err);
-            Error::Network(err)
-          })
-          .and_then(|res| {
-            let status = res.status();
-            let url1 = url.clone();
-            let body_future: Box<future::Future<Item = String, Error = Error>> = 
-              Box::new(utils::read_body(res.body())
-                .map_err(move |err| {
-                  // Todo - is this a memory leak? (url1)
-                  error!("Error reading body from `{}`: {}", url1, err);
-                  Error::Network(err)
-                })
-              );
-            match status {
-              hyper::StatusCode::Ok => 
-                body_future,
-
-              _ =>
-                Box::new(
-                  body_future.and_then(move |body| {
-                    let message = serde_json::from_str::<ErrorMessage>(&body).ok();
-                    let error = Error::Api(status, message);
-                    future::err(error)
-                  })
-                )
-              }
-            })
-          .map(|body| {
-            if let Err(err) = callback.send(Ok(body)) {
-              error!("Unexpected error passing body to callback from http client: {}", err)
-            }
-          })
-          .map_err(|err| {
-            if let Err(err1) = callback.send(Err(err)) {
-              error!("Unexpected error passing http error to callback from http client: {}", err1)
-            }
-          });
-
+        let task = Self::make_request(&client, payload);
         if let Err(err) = core.run(task) {
           error!("Unexpected running http client on event loop: {:?}", err)
         }
