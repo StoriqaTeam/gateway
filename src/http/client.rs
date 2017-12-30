@@ -1,7 +1,6 @@
 use std::sync::Arc;
-use std::thread;
 
-use tokio_core::reactor::{Core, Handle};
+use tokio_core::reactor::{Handle};
 use hyper;
 use futures::{future, Future};
 use futures::sync::mpsc;
