@@ -151,19 +151,19 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             &Error::Api(ref status, Some(ref error_message)) => {
-                write!(f, "Http client: Api error: status: {}, code: {}, message: {}", status, error_message.code, error_message.message)
+                write!(f, "Http client 100: Api error: status: {}, code: {}, message: {}", status, error_message.code, error_message.message)
             },
             &Error::Api(status, None) => {
-                write!(f, "Http client: Api error: status: {}", status)
+                write!(f, "Http client 100: Api error: status: {}", status)
             },
             &Error::Network(ref err) => {
-                write!(f, "Http client: Network error: {:?}", err)
+                write!(f, "Http client 200: Network error: {:?}", err)
             },
             &Error::Parse(ref err) => {
-                write!(f, "Http client: Parse error: {}", err)
+                write!(f, "Http client 300: Parse error: {}", err)
             }
             &Error::Unknown(ref err) => {
-                write!(f, "Http client: Unknown error: {}", err)
+                write!(f, "Http client 400: Unknown error: {}", err)
             }
         }
     }
@@ -177,30 +177,30 @@ impl Error {
                 let status = status.to_string();
                 FieldError::new(
                     "Error response from microservice",
-                    graphql_value!({ "status": status, "code": code, "message": message }),
+                    graphql_value!({ "code": 100, "details": {"status": status, "code": code, "message": message }}),
                 )
             },
             Error::Api(status, None) => {
                 let status = status.to_string();
                 FieldError::new(
                     "Error response from microservice",
-                    graphql_value!({ "status": status }),
+                    graphql_value!({ "code": 100, "details": { "status": status }}),
                 )
             },
             Error::Network(_) =>
                 FieldError::new(
                     "Network error for microservice",
-                    graphql_value!("See server logs for details."),
+                    graphql_value!({ "code": 200, "details": { "See server logs for details." }}),
                 ),
             Error::Parse(message) =>
                 FieldError::new(
                     "Unexpected parsing error",
-                    graphql_value!(message),
+                    graphql_value!({ "code": 300, "details": { message }}),
                 ),
             _ =>
                 FieldError::new(
                     "Unknown error for microservice",
-                    graphql_value!("See server logs for details."),
+                    graphql_value!({ "code": 400, "details": { "See server logs for details." }}),
                 ),
         }
     }
