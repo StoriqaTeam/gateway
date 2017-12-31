@@ -2,11 +2,13 @@ use std::sync::Arc;
 
 use tokio_core::reactor::{Handle};
 use hyper;
+use futures::future::IntoFuture;
 use futures::{future, Future};
-use futures::sync::mpsc;
+use futures::sync::{mpsc, oneshot};
 use futures::stream::{Stream};
 use futures::sink::Sink;
 use serde_json;
+use juniper;
 
 use super::utils;
 use ::config::Config;
@@ -48,7 +50,7 @@ impl Client {
       Ok(val) => val,
       Err(err) => {
         error!("Url `{}` passed to http client cannot be parsed: `{}`", url, err);
-        return Box::new(callback.send(Err(Error::Unknown)).map(|_| ()).map_err(|_| ()))
+        return Box::new(callback.send(Err(Error::Unknown)).into_future().map(|_| ()).map_err(|_| ()))
       }
     };
     let mut req = hyper::Request::new(method, uri);
@@ -100,60 +102,42 @@ pub struct ClientHandle {
   tx: mpsc::Sender<Payload>,
 }
 
-// impl ClientHandle {
-//   pub fn send_sync(&self, method: hyper::Method, url: String, body: Option<String>) -> ClientResult {
-//     info!("Starting outbound http request: {} {} with body {}", method, url, body.clone().unwrap_or_default());
+impl ClientHandle {
+  pub fn send(&self, method: hyper::Method, url: String, body: Option<String>) -> Box<Future<Item=String, Error=Error>> {
+    info!("Starting outbound http request: {} {} with body {}", method, url, body.clone().unwrap_or_default());
 
-//     let (tx, rx) = mpsc::channel::<ClientResult>();
-//     let payload = Payload {
-//       url,
-//       method,
-//       body,
-//       callback: tx,
-//     };
-
-//     if let Err(err) = self.tx.send(payload) {
-//       error!("Unexpected error sending http client request params to actor: {}", err);
-//       return Err(Error::Unknown)
-//     };
-
-//     match rx.recv() {
-//       Ok(result) => result,
-//       Err(err) => {
-//         error!("Unexpected error sending http client request params to actor: {}", err);
-//         Err(Error::Unknown)      
-//       }
-//     }
-//   }
+    let (tx, rx) = oneshot::channel::<ClientResult>();
+    let payload = Payload {
+      url,
+      method,
+      body,
+      callback: tx,
+    };
 
 
-//   fn start_event_loop(rx: mpsc::Receiver<Payload>) {
-//       let mut core = Core::new().expect("Unexpected error creating main event loop for http client");
-//       let handle = core.handle();
+    let future = self.tx.send(payload)
+      .map_err(|err| {
+        error!("Unexpected error sending http client request params to channel: {}", err);
+        Error::Unknown
+      })
+      .and_then(|_| {
+        rx.map_err(|err| {
+          error!("Unexpected error receiving http client response from channel: {}", err);
+          Error::Unknown
+        })
+      })
+      .and_then(|result| result);
 
-//       let client = hyper::Client::new(&handle);
+    Box::new(future)
+  }
+}
 
-//       for payload in rx {
-//         let task = Self::make_request(&client, payload);
-//         if let Err(err) = core.run(task) {
-//           error!("Unexpected error running http client on event loop: {:?}", err)
-//         }
-//       }
-//   }
-
-//   fn start(&self, rx: mpsc::Receiver<Payload>) {
-//     thread::spawn(|| {
-//       Self::start_event_loop(rx)
-//     });
-//   }
-
-// }
 
 struct Payload {
   pub url: String,
   pub method: hyper::Method,
   pub body: Option<String>,
-  pub callback: mpsc::Sender<ClientResult>,
+  pub callback: oneshot::Sender<ClientResult>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -167,4 +151,39 @@ pub enum Error {
   Api(hyper::StatusCode, Option<ErrorMessage>),
   Network(hyper::Error),
   Unknown,
+}
+
+impl Error {
+  pub fn to_graphql(&self, service_name: &str) -> juniper::FieldError {
+    let description = format!("Error response from {} microservice", service_name);
+    match *self {
+      Error::Api(status, Some(ErrorMessage { code, message })) => {
+        let code = code.to_string();
+        let status = status.to_string();
+        juniper::FieldError::new(
+            description,
+            graphql_value!({ "status": status, "code": code, "message": message }),
+        )
+      },
+      Error::Api(status, None) => {
+        let status = status.to_string();
+        juniper::FieldError::new(
+            description,
+            graphql_value!({ "status": status }),
+        )
+      },
+      Error::Network(_) => {
+        juniper::FieldError::new(
+            description,
+            graphql_value!("See logs for details."),
+        )
+      }
+      _ => {
+          juniper::FieldError::new(
+            description,
+            graphql_value!("See logs for details."),
+          )
+      }
+    }
+  }
 }
