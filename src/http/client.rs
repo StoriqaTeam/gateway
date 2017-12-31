@@ -28,11 +28,11 @@ impl Client {
     Client { client, tx, rx }
   }
 
-  pub fn stream(&self) -> Box<Stream<Item=(), Error=()>> {
-    let client = self.client.clone();
+  pub fn stream(self) -> Box<Stream<Item=(), Error=()>> {
+    let Self { client, tx, rx } = self;
     Box::new(
-      self.rx.and_then(move |payload| {
-        Self::send_request(client, payload).map(|_| ()).map_err(|_| ())
+      rx.and_then(move |payload| {
+        Self::send_request(&client, payload).map(|_| ()).map_err(|_| ())
       })
     )
   }
@@ -43,14 +43,14 @@ impl Client {
     }
   }
 
-  fn send_request(client: hyper::Client<hyper::client::HttpConnector>, payload: Payload) -> Box<Future<Item=(), Error=()>> {
+  fn send_request(client: &hyper::Client<hyper::client::HttpConnector>, payload: Payload) -> Box<Future<Item=(), Error=()>> {
     let Payload { url, method, body: maybe_body, callback } = payload;
 
     let uri = match url.parse() {
       Ok(val) => val,
       Err(err) => {
         error!("Url `{}` passed to http client cannot be parsed: `{}`", url, err);
-        return Box::new(callback.send(Err(Error::Unknown)).into_future().map(|_| ()).map_err(|_| ()))
+        return Box::new(callback.send(Err(Error::Parse(format!("Cannot parse url `{}`", url)))).into_future().map(|_| ()).map_err(|_| ()))
       }
     };
     let mut req = hyper::Request::new(method, uri);
@@ -68,7 +68,7 @@ impl Client {
       })
       .and_then(move |res| {
         let status = res.status();
-        let body_future: Box<future::Future<Item = String, Error = Error>> = 
+        let body_future: Box<future::Future<Item = String, Error = Error>> =
           Box::new(utils::read_body(res.body())
             .map_err(move |err| {
               error!("Error reading body from `{}`: {}", url_clone, err);
@@ -76,7 +76,7 @@ impl Client {
             })
           );
         match status {
-          hyper::StatusCode::Ok => 
+          hyper::StatusCode::Ok =>
             body_future,
 
           _ =>
@@ -115,7 +115,7 @@ impl ClientHandle {
     };
 
 
-    let future = self.tx.send(payload)
+    let future = self.tx.clone().send(payload)
       .map_err(|err| {
         error!("Unexpected error sending http client request params to channel: {}", err);
         Error::Unknown
@@ -150,40 +150,6 @@ pub struct ErrorMessage {
 pub enum Error {
   Api(hyper::StatusCode, Option<ErrorMessage>),
   Network(hyper::Error),
+  Parse(String),
   Unknown,
-}
-
-impl Error {
-  pub fn to_graphql(&self, service_name: &str) -> juniper::FieldError {
-    let description = format!("Error response from {} microservice", service_name);
-    match *self {
-      Error::Api(status, Some(ErrorMessage { code, message })) => {
-        let code = code.to_string();
-        let status = status.to_string();
-        juniper::FieldError::new(
-            description,
-            graphql_value!({ "status": status, "code": code, "message": message }),
-        )
-      },
-      Error::Api(status, None) => {
-        let status = status.to_string();
-        juniper::FieldError::new(
-            description,
-            graphql_value!({ "status": status }),
-        )
-      },
-      Error::Network(_) => {
-        juniper::FieldError::new(
-            description,
-            graphql_value!("See logs for details."),
-        )
-      }
-      _ => {
-          juniper::FieldError::new(
-            description,
-            graphql_value!("See logs for details."),
-          )
-      }
-    }
-  }
 }

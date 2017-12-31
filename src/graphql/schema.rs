@@ -5,6 +5,8 @@ use serde_json;
 
 use super::context::Context;
 use http;
+use futures::Future;
+use futures::future;
 
 pub struct Query;
 pub struct Mutation;
@@ -20,9 +22,9 @@ pub fn create() -> Schema {
 #[derive(GraphQLObject, Deserialize, Debug)]
 #[graphql(description = "User's profile")]
 pub struct User {
-    #[graphql(description = "Unique id")] 
+    #[graphql(description = "Unique id")]
     pub id: i32,
-    #[graphql(description = "Email")] 
+    #[graphql(description = "Email")]
     pub email: String,
     #[graphql(name = "isActive", description = "If the user was disabled (deleted), isActive is false")]
     pub is_active: bool,
@@ -38,26 +40,24 @@ graphql_object!(Query: Context |&self| {
         let context = executor.context();
         let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
 
-        let res = match send(Method::Get, url, None, &context) {
-            Ok(resp) => resp,
-            Err(SchemaError::NotFound) => return Ok(None),
-            Err(SchemaError::GraphQlError(e)) => return Err(e)
-        };
-        
-        match serde_json::from_str::<User>(&res) {
-            Ok(user) => Ok(Some(user)),
-            Err(err) => {
-                error!("Error deserializing user: {}", err);
-                Err(
-                    juniper::FieldError::new(
-                        "Error deserializing response from users microservice",
-                        graphql_value!("Probably mismatching client / server api versions? See logs for details."),
-                    )
-                )
-            }
+        let result = context.http_client.send(Method::Get, url, None)
+            .map(|res| Some(res))
+            .or_else(|err| match err {
+                http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
+                err => Err(err)
+            }).wait();
+
+        match result {
+            Ok(Some(response)) => {
+                serde_json::from_str::<User>(&response)
+                    .map(|user| Some(user))
+                    .map_err(|err| http::client::Error::Parse(format!("{}", err)).into())
+            },
+            Ok(None) => Ok(None),
+            Err(err) => Err(err.into()),
         }
     }
-    
+
     field users(&executor, from: i32, to: i32) -> FieldResult<Vec<User>> {
         let context = executor.context();
         let user1 = User {
@@ -112,7 +112,7 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         Ok(())
     }
-    
+
 });
 
 
@@ -123,38 +123,3 @@ pub enum SchemaError {
 }
 
 pub type SchemaResult = Result<String, SchemaError>;
-
-
-fn send(method: Method, url: String, body: Option<String>, context: &Context) -> SchemaResult {
-    match context.http_client.send_sync(method, url, body) {
-        Ok(resp) => Ok(resp),
-        Err(http::client::Error::Api(StatusCode::NotFound, _)) => return Err(SchemaError::NotFound),
-        Err(http::client::Error::Api(status, message)) => {
-            let status = status.to_string();
-            if let Some(http::client::ErrorMessage { code, message }) = message {
-                let code = code.to_string();
-                return Err(SchemaError::GraphQlError(juniper::FieldError::new(
-                    "Error response from users microservice",
-                    graphql_value!({ "status": status, "code": code, "message": message }),
-                )));
-            } else {
-                return Err(SchemaError::GraphQlError(juniper::FieldError::new(
-                    "Error response from users microservice",
-                    graphql_value!({ "status": status }),
-                )));
-            }
-        }
-        Err(http::client::Error::Network(_)) => {
-            return Err(SchemaError::GraphQlError(juniper::FieldError::new(
-                "Error connecting to users microservice",
-                graphql_value!("See logs for details."),
-            )))
-        }
-        _ => {
-            return Err(SchemaError::GraphQlError(juniper::FieldError::new(
-                "Unknown error for request to users microservice",
-                graphql_value!("See logs for details."),
-            )))
-        }
-    }
-}
