@@ -6,7 +6,6 @@ use serde_json;
 use super::context::Context;
 use http;
 use futures::Future;
-use futures::future;
 
 pub struct Query;
 pub struct Mutation;
@@ -51,10 +50,10 @@ graphql_object!(Query: Context |&self| {
             Ok(Some(response)) => {
                 serde_json::from_str::<User>(&response)
                     .map(|user| Some(user))
-                    .map_err(|err| http::client::Error::Parse(format!("{}", err)).into())
+                    .map_err(|err| http::client::Error::Parse(format!("{}", err)).to_graphql())
             },
             Ok(None) => Ok(None),
-            Err(err) => Err(err.into()),
+            Err(err) => Err(err.to_graphql()),
         }
     }
 
@@ -115,11 +114,3 @@ graphql_object!(Mutation: Context |&self| {
 
 });
 
-
-#[derive(Debug)]
-pub enum SchemaError {
-    GraphQlError(juniper::FieldError),
-    NotFound,
-}
-
-pub type SchemaResult = Result<String, SchemaError>;
