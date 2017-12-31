@@ -1,6 +1,7 @@
 [gateway]
 url="0.0.0.0:8000"
-graphql_thread_pool_size=1
+graphql_thread_pool_size=3
+http_client_buffer_size=3
 
 [users_microservice]
 url="http://users:8000"

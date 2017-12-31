@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use super::router;
 use config::Config;
+use super::client::ClientHandle;
 use ::graphql;
 
 pub struct Context {
@@ -12,10 +13,10 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(config: Arc<Config>) -> Self {
+    pub fn new(config: Arc<Config>, client_handle: ClientHandle) -> Self {
         Context {
             router: Arc::new(router::create_router()),
-            graphql_context: graphql::context::Context::new(config.clone()),
+            graphql_context: graphql::context::Context::new(config.clone(), client_handle),
             graphql_thread_pool: Arc::new(CpuPool::new(config.gateway.graphql_thread_pool_size)),
         }
     }

@@ -16,6 +16,7 @@ use super::context::Context;
 use super::graphiql;
 use super::utils;
 use super::error;
+use super::client;
 use ::config::Config;
 
 struct WebService {
@@ -66,7 +67,7 @@ impl Service for WebService {
     }
 }
 
-pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>) {
+pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: client::ClientHandle) {
     let addr = config.gateway.url.parse().expect("Cannot parse gateway url from config");
 
     let config_arc = config.clone();
@@ -75,7 +76,7 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>) {
         .serve_addr_handle(&addr, &tokio_handle, move || {
             Ok(
                 WebService {
-                    context: Arc::new(Context::new(config_arc.clone())),
+                    context: Arc::new(Context::new(config_arc.clone(), client_handle.clone())),
                 }
             )
         })
