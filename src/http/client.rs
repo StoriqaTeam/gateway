@@ -16,73 +16,73 @@ use ::config::Config;
 pub type ClientResult = Result<String, Error>;
 
 pub struct Client {
-  client: hyper::Client<hyper::client::HttpConnector>,
-  tx: mpsc::Sender<Payload>,
-  rx: mpsc::Receiver<Payload>,
+    client: hyper::Client<hyper::client::HttpConnector>,
+    tx: mpsc::Sender<Payload>,
+    rx: mpsc::Receiver<Payload>,
 }
 
 impl Client {
-  pub fn new(config: &Config, handle: &Handle) -> Self {
-    let (tx, rx) = mpsc::channel::<Payload>(config.gateway.http_client_buffer_size);
-    let client = hyper::Client::new(handle);
-    Client { client, tx, rx }
-  }
-
-  pub fn stream(self) -> Box<Stream<Item=(), Error=()>> {
-    let Self { client, tx: _, rx } = self;
-    Box::new(
-      rx.and_then(move |payload| {
-        Self::send_request(&client, payload).map(|_| ()).map_err(|_| ())
-      })
-    )
-  }
-
-  pub fn handle(&self) -> ClientHandle {
-    ClientHandle {
-      tx: self.tx.clone()
-    }
-  }
-
-  fn send_request(client: &hyper::Client<hyper::client::HttpConnector>, payload: Payload) -> Box<Future<Item=(), Error=()>> {
-    let Payload { url, method, body: maybe_body, callback } = payload;
-
-    let uri = match url.parse() {
-      Ok(val) => val,
-      Err(err) => {
-        error!("Url `{}` passed to http client cannot be parsed: `{}`", url, err);
-        return Box::new(callback.send(Err(Error::Parse(format!("Cannot parse url `{}`", url)))).into_future().map(|_| ()).map_err(|_| ()))
-      }
-    };
-    let mut req = hyper::Request::new(method, uri);
-    for body in maybe_body.iter() {
-      req.set_body(body.clone());
+    pub fn new(config: &Config, handle: &Handle) -> Self {
+        let (tx, rx) = mpsc::channel::<Payload>(config.gateway.http_client_buffer_size);
+        let client = hyper::Client::new(handle);
+        Client { client, tx, rx }
     }
 
-    let task = client.request(req)
-      .map_err(|err| Error::Network(err))
-      .and_then(move |res| {
-        let status = res.status();
-        let body_future: Box<future::Future<Item = String, Error = Error>> =
-          Box::new(utils::read_body(res.body()).map_err(|err| Error::Network(err)));
-        match status {
-          hyper::StatusCode::Ok =>
-            body_future,
+    pub fn stream(self) -> Box<Stream<Item=(), Error=()>> {
+        let Self { client, tx: _, rx } = self;
+        Box::new(
+            rx.and_then(move |payload| {
+                Self::send_request(&client, payload).map(|_| ()).map_err(|_| ())
+            })
+        )
+    }
 
-          _ =>
-            Box::new(
-              body_future.and_then(move |body| {
-                let message = serde_json::from_str::<ErrorMessage>(&body).ok();
-                let error = Error::Api(status, message);
-                future::err(error)
-              })
-            )
-          }
-        })
-        .then(|result| callback.send(result))
-        .map(|_| ()).map_err(|_| ());
+    pub fn handle(&self) -> ClientHandle {
+        ClientHandle {
+            tx: self.tx.clone()
+        }
+    }
 
-    Box::new(task)
-  }
+    fn send_request(client: &hyper::Client<hyper::client::HttpConnector>, payload: Payload) -> Box<Future<Item=(), Error=()>> {
+        let Payload { url, method, body: maybe_body, callback } = payload;
+
+        let uri = match url.parse() {
+        Ok(val) => val,
+        Err(err) => {
+            error!("Url `{}` passed to http client cannot be parsed: `{}`", url, err);
+            return Box::new(callback.send(Err(Error::Parse(format!("Cannot parse url `{}`", url)))).into_future().map(|_| ()).map_err(|_| ()))
+        }
+        };
+        let mut req = hyper::Request::new(method, uri);
+        for body in maybe_body.iter() {
+        req.set_body(body.clone());
+        }
+
+        let task = client.request(req)
+        .map_err(|err| Error::Network(err))
+        .and_then(move |res| {
+            let status = res.status();
+            let body_future: Box<future::Future<Item = String, Error = Error>> =
+            Box::new(utils::read_body(res.body()).map_err(|err| Error::Network(err)));
+            match status {
+            hyper::StatusCode::Ok =>
+                body_future,
+
+            _ =>
+                Box::new(
+                body_future.and_then(move |body| {
+                    let message = serde_json::from_str::<ErrorMessage>(&body).ok();
+                    let error = Error::Api(status, message);
+                    future::err(error)
+                })
+                )
+            }
+            })
+            .then(|result| callback.send(result))
+            .map(|_| ()).map_err(|_| ());
+
+        Box::new(task)
+    }
 
 }
 
@@ -92,44 +92,44 @@ pub struct ClientHandle {
 }
 
 impl ClientHandle {
-  pub fn send(&self, method: hyper::Method, url: String, body: Option<String>) -> Box<Future<Item=String, Error=Error>> {
-    info!("Starting outbound http request: {} {} with body {}", method, url, body.clone().unwrap_or_default());
-    let url_clone = url.clone();
-    let method_clone = method.clone();
+    pub fn send(&self, method: hyper::Method, url: String, body: Option<String>) -> Box<Future<Item=String, Error=Error>> {
+        info!("Starting outbound http request: {} {} with body {}", method, url, body.clone().unwrap_or_default());
+        let url_clone = url.clone();
+        let method_clone = method.clone();
 
-    let (tx, rx) = oneshot::channel::<ClientResult>();
-    let payload = Payload {
-      url,
-      method,
-      body,
-      callback: tx,
-    };
+        let (tx, rx) = oneshot::channel::<ClientResult>();
+        let payload = Payload {
+        url,
+        method,
+        body,
+        callback: tx,
+        };
 
 
-    let future = self.tx.clone().send(payload)
-      .map_err(|err| {
-        Error::Unknown(format!("Unexpected error sending http client request params to channel: {}", err))
-      })
-      .and_then(|_| {
-        rx.map_err(|err| {
-          Error::Unknown(format!("Unexpected error receiving http client response from channel: {}", err))
+        let future = self.tx.clone().send(payload)
+        .map_err(|err| {
+            Error::Unknown(format!("Unexpected error sending http client request params to channel: {}", err))
         })
-      })
-      .and_then(|result| result)
-      .map_err(move |err| {
-          error!("{} {} : {}", method_clone, url_clone, err);
-          err
-      });
+        .and_then(|_| {
+            rx.map_err(|err| {
+            Error::Unknown(format!("Unexpected error receiving http client response from channel: {}", err))
+            })
+        })
+        .and_then(|result| result)
+        .map_err(move |err| {
+            error!("{} {} : {}", method_clone, url_clone, err);
+            err
+        });
 
-    Box::new(future)
-  }
+        Box::new(future)
+    }
 }
 
 struct Payload {
-  pub url: String,
-  pub method: hyper::Method,
-  pub body: Option<String>,
-  pub callback: oneshot::Sender<ClientResult>,
+    pub url: String,
+    pub method: hyper::Method,
+    pub body: Option<String>,
+    pub callback: oneshot::Sender<ClientResult>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -140,10 +140,10 @@ pub struct ErrorMessage {
 
 #[derive(Debug)]
 pub enum Error {
-  Api(hyper::StatusCode, Option<ErrorMessage>),
-  Network(hyper::Error),
-  Parse(String),
-  Unknown(String),
+    Api(hyper::StatusCode, Option<ErrorMessage>),
+    Network(hyper::Error),
+    Parse(String),
+    Unknown(String),
 }
 
 
