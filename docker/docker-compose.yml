@@ -6,6 +6,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.rust
     container_name: gateway
+    working_dir: /app
     command: cargo run
     volumes:
       - ..:/app
