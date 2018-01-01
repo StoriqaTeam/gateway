@@ -30,11 +30,37 @@ pub struct User {
 
 graphql_object!(Query: Context |&self| {
 
-    field apiVersion() -> &str {
+    description: "Top level query.
+
+    Remote mark
+
+    Some fields are marked as `Remote`. That means that they are
+    part of microservices and their fetching can fail.
+    In this case null will be returned (even if o/w
+    type signature declares not-null type) and corresponding errors
+    will be returned in errors section. Each error is guaranteed
+    to have a `code` field and `details field`.
+
+    Codes:
+    - 100 - microservice responded,
+    but with error http status. In this case `details` is guaranteed
+    to have `status` field with http status and
+    probably some additional details.
+
+    - 200 - there was a network error while connecting to microservice.
+
+    - 300 - there was a parse error - that usually means that
+    graphql couldn't parse api json response
+    (probably because of mismatching types on graphql and microservice)
+    or api url parse failed.
+
+    - 400 - Unknown error."
+
+    field apiVersion() -> &str as "Current api version." {
         "1.0"
     }
 
-    field user(&executor, id: i32) -> FieldResult<Option<User>> {
+    field user(&executor, id: i32 as "Id of a user.") -> FieldResult<Option<User>> as "Fetches user by id. Remote." {
         let context = executor.context();
         let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
 
