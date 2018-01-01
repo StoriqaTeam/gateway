@@ -1,7 +1,6 @@
 use juniper;
 use juniper::FieldResult;
 use hyper::{Method, StatusCode};
-use serde_json;
 
 use super::context::Context;
 use http;
@@ -31,30 +30,47 @@ pub struct User {
 
 graphql_object!(Query: Context |&self| {
 
-    field apiVersion() -> &str {
+    description: "Top level query.
+
+    Remote mark
+
+    Some fields are marked as `Remote`. That means that they are
+    part of microservices and their fetching can fail.
+    In this case null will be returned (even if o/w
+    type signature declares not-null type) and corresponding errors
+    will be returned in errors section. Each error is guaranteed
+    to have a `code` field and `details field`.
+
+    Codes:
+    - 100 - microservice responded,
+    but with error http status. In this case `details` is guaranteed
+    to have `status` field with http status and
+    probably some additional details.
+
+    - 200 - there was a network error while connecting to microservice.
+
+    - 300 - there was a parse error - that usually means that
+    graphql couldn't parse api json response
+    (probably because of mismatching types on graphql and microservice)
+    or api url parse failed.
+
+    - 400 - Unknown error."
+
+    field apiVersion() -> &str as "Current api version." {
         "1.0"
     }
 
-    field user(&executor, id: i32) -> FieldResult<Option<User>> {
+    field user(&executor, id: i32 as "Id of a user.") -> FieldResult<Option<User>> as "Fetches user by id. Remote." {
         let context = executor.context();
         let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
 
-        let result = context.http_client.send(Method::Get, url, None)
+        context.http_client.request::<User>(Method::Get, url, None)
             .map(|res| Some(res))
             .or_else(|err| match err {
                 http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
-                err => Err(err)
-            }).wait();
-
-        match result {
-            Ok(Some(response)) => {
-                serde_json::from_str::<User>(&response)
-                    .map(|user| Some(user))
-                    .map_err(|err| http::client::Error::Parse(format!("{}", err)).to_graphql())
-            },
-            Ok(None) => Ok(None),
-            Err(err) => Err(err.to_graphql()),
-        }
+                err => Err(err.to_graphql())
+            })
+            .wait()
     }
 
     field users(&executor, from: i32, to: i32) -> FieldResult<Vec<User>> {
