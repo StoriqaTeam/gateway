@@ -8,6 +8,7 @@ use futures::sync::{mpsc, oneshot};
 use futures::stream::{Stream};
 use futures::sink::Sink;
 use serde_json;
+use serde::de::Deserialize;
 use juniper::FieldError;
 
 use super::utils;
@@ -19,17 +20,19 @@ pub struct Client {
     client: hyper::Client<hyper::client::HttpConnector>,
     tx: mpsc::Sender<Payload>,
     rx: mpsc::Receiver<Payload>,
+    max_retries: usize,
 }
 
 impl Client {
     pub fn new(config: &Config, handle: &Handle) -> Self {
+        let max_retries = config.gateway.http_client_retries;
         let (tx, rx) = mpsc::channel::<Payload>(config.gateway.http_client_buffer_size);
         let client = hyper::Client::new(handle);
-        Client { client, tx, rx }
+        Client { client, tx, rx, max_retries }
     }
 
     pub fn stream(self) -> Box<Stream<Item=(), Error=()>> {
-        let Self { client, tx: _, rx } = self;
+        let Self { client, tx: _, rx, max_retries: _ } = self;
         Box::new(
             rx.and_then(move |payload| {
                 Self::send_request(&client, payload).map(|_| ()).map_err(|_| ())
@@ -39,7 +42,8 @@ impl Client {
 
     pub fn handle(&self) -> ClientHandle {
         ClientHandle {
-            tx: self.tx.clone()
+            tx: self.tx.clone(),
+            max_retries: self.max_retries,
         }
     }
 
@@ -89,20 +93,61 @@ impl Client {
 #[derive(Clone)]
 pub struct ClientHandle {
   tx: mpsc::Sender<Payload>,
+  max_retries: usize,
 }
 
 impl ClientHandle {
-    pub fn send(&self, method: hyper::Method, url: String, body: Option<String>) -> Box<Future<Item=String, Error=Error>> {
+
+    pub fn request<T>(&self, method: hyper::Method, url: String, body: Option<String>) -> Box<Future<Item=T, Error=Error>>
+        where T: for <'a> Deserialize<'a> + 'static
+    {
+        Box::new(
+            self.send_request_with_retries(method, url, body, None, self.max_retries)
+                .and_then(|response| {
+                    serde_json::from_str::<T>(&response)
+                        .map_err(|err| Error::Parse(format!("{}", err)))
+                })
+        )
+    }
+
+    fn send_request_with_retries(&self, method: hyper::Method, url: String, body: Option<String>, last_err: Option<Error>, retries: usize) -> Box<Future<Item=String, Error=Error>> {
+        if retries == 0 {
+            let error = last_err.unwrap_or(Error::Unknown("Unexpected missing error in send_request_with_retries".to_string()));
+            Box::new(
+                future::err(error)
+            )
+        } else {
+            let self_clone = self.clone();
+            let method_clone = method.clone();
+            let body_clone = body.clone();
+            let url_clone = url.clone();
+            Box::new(
+                self.send_request(method, url, body)
+                    .or_else(move |err| {
+                        match err {
+                            Error::Network(err) => {
+                                warn!("Failed to fetch `{}` with error `{}`, retrying... Retries left {}", url_clone, err, retries);
+                                self_clone.send_request_with_retries(method_clone, url_clone, body_clone, Some(Error::Network(err)), retries - 1)
+                            }
+                            _ => Box::new(future::err(err))
+                        }
+                    })
+            )
+
+        }
+    }
+
+    fn send_request(&self, method: hyper::Method, url: String, body: Option<String>) -> Box<Future<Item=String, Error=Error>> {
         info!("Starting outbound http request: {} {} with body {}", method, url, body.clone().unwrap_or_default());
         let url_clone = url.clone();
         let method_clone = method.clone();
 
         let (tx, rx) = oneshot::channel::<ClientResult>();
         let payload = Payload {
-        url,
-        method,
-        body,
-        callback: tx,
+            url,
+            method,
+            body,
+            callback: tx,
         };
 
 
@@ -112,7 +157,7 @@ impl ClientHandle {
         })
         .and_then(|_| {
             rx.map_err(|err| {
-            Error::Unknown(format!("Unexpected error receiving http client response from channel: {}", err))
+                Error::Unknown(format!("Unexpected error receiving http client response from channel: {}", err))
             })
         })
         .and_then(|result| result)

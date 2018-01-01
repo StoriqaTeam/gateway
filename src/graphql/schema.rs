@@ -1,7 +1,6 @@
 use juniper;
 use juniper::FieldResult;
 use hyper::{Method, StatusCode};
-use serde_json;
 
 use super::context::Context;
 use http;
@@ -39,22 +38,13 @@ graphql_object!(Query: Context |&self| {
         let context = executor.context();
         let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
 
-        let result = context.http_client.send(Method::Get, url, None)
+        context.http_client.request::<User>(Method::Get, url, None)
             .map(|res| Some(res))
             .or_else(|err| match err {
                 http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
-                err => Err(err)
-            }).wait();
-
-        match result {
-            Ok(Some(response)) => {
-                serde_json::from_str::<User>(&response)
-                    .map(|user| Some(user))
-                    .map_err(|err| http::client::Error::Parse(format!("{}", err)).to_graphql())
-            },
-            Ok(None) => Ok(None),
-            Err(err) => Err(err.to_graphql()),
-        }
+                err => Err(err.to_graphql())
+            })
+            .wait()
     }
 
     field users(&executor, from: i32, to: i32) -> FieldResult<Vec<User>> {
