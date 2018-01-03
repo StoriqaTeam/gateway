@@ -5,6 +5,7 @@ use hyper::{Method, StatusCode};
 use super::context::Context;
 use http;
 use futures::Future;
+use url::form_urlencoded;
 
 pub struct Query;
 pub struct Mutation;
@@ -24,6 +25,8 @@ pub struct User {
     pub id: i32,
     #[graphql(description = "Email")]
     pub email: String,
+    #[graphql(name = "Password", description = "Password")]
+    pub password: String,
     #[graphql(name = "isActive", description = "If the user was disabled (deleted), isActive is false")]
     pub is_active: bool,
 }
@@ -91,59 +94,68 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field users(&executor, from: i32, to: i32) -> FieldResult<Vec<User>> {
+    field users(&executor, from: i32 as "Starting id", count: i32 as "Count of users") -> FieldResult<Option<Vec<User>>> as "Fetches users using from and count." {
         let context = executor.context();
-        let user1 = User {
-            id: 1,
-            email: String::from("example@mail.com"),
-            is_active: false,
-        };
+        let url = format!("{}/users" ,context.config.users_microservice.url.clone());
 
-        let user2 = User {
-            id: 2,
-            email: String::from("elpmaxe@mail.com"),
-            is_active: false,
-        };
-        let users = vec![user1, user2];
-        Ok(users)
+        let body: String = form_urlencoded::Serializer::new(String::new())
+         .append_pair("from", &*from.to_string())
+         .append_pair("count", &*count.to_string())
+         .finish();
+        context.http_client.request::<Vec<User>>(Method::Get, url, Some(body))
+            .map(|res| Some(res))
+            .or_else(|err| match err {
+                http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
+                err => Err(err.to_graphql())
+            })
+            .wait()
     }
 });
 
 
-//mutation {
-//  createUser(name: "andy", email: "hope is a good thing") {
-//    id
-//  }
-//}
-
 graphql_object!(Mutation: Context |&self| {
 
-    //POST /users - создать пользователя. + Механизм для подтверждения email, если //не через соцсети
-    field createUser(&executor, name: String, email: String) -> FieldResult<User> {
+    field createUser(&executor, email: String as "Email of a user.", password: String as "Password of a user.") -> FieldResult<Option<User>> as "Creates new user." {
         let context = executor.context();
-        let user = User {
-            id: 0,
-            email,
-            is_active: false,
-        };
-        Ok(user)
+        let url = format!("{}/users/", context.config.users_microservice.url.clone());
+        let user = json!({"email": email, "password": password});
+        let body: String = user.to_string();
+
+        context.http_client.request::<User>(Method::Post, url, Some(body))
+            .map(|res| Some(res))
+            .or_else(|err| match err {
+                http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
+                err => Err(err.to_graphql())
+            })
+            .wait()
     }
 
-    //PUT /users/:id - апдейт пользователя
-    field updateUser(&executor,id: i32, name: String, email: String) -> FieldResult<User> {
+    field updateUser(&executor, id: i32 as "Id of a user." , email: String as "New email of a user.") -> FieldResult<Option<User>>  as "Updates existing user."{
         let context = executor.context();
-        let user = User {
-            id: 0,
-            email,
-            is_active: false,
-        };
-        Ok(user)
+        let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
+        let user = json!({"email": email});
+        let body: String = user.to_string();
+
+        context.http_client.request::<User>(Method::Put, url, Some(body))
+            .map(|res| Some(res))
+            .or_else(|err| match err {
+                http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
+                err => Err(err.to_graphql())
+            })
+            .wait()
     }
 
-    //DELETE /users/:id - удалить пользователя
-    field deleteUser(&executor, id: i32) -> FieldResult<()> {
+    field deactivateUser(&executor, id: i32 as "Id of a user.") -> FieldResult<Option<User>>  as "Deactivates existing user." {
         let context = executor.context();
-        Ok(())
+        let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
+
+        context.http_client.request::<User>(Method::Delete, url, None)
+            .map(|res| Some(res))
+            .or_else(|err| match err {
+                http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
+                err => Err(err.to_graphql())
+            })
+            .wait()
     }
 
 });
