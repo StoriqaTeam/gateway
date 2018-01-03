@@ -19,6 +19,13 @@ pub fn create() -> Schema {
 }
 
 #[derive(GraphQLObject, Deserialize, Debug)]
+#[graphql(description = "JWT Token")]
+pub struct JWT {
+    #[graphql(description = "Token")]
+    pub token: String,
+}
+
+#[derive(GraphQLObject, Deserialize, Debug)]
 #[graphql(description = "User's profile")]
 pub struct User {
     #[graphql(description = "Unique id")]
@@ -117,7 +124,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field createUser(&executor, email: String as "Email of a user.", password: String as "Password of a user.") -> FieldResult<Option<User>> as "Creates new user." {
         let context = executor.context();
-        let url = format!("{}/users/", context.config.users_microservice.url.clone());
+        let url = format!("{}/users", context.config.users_microservice.url.clone());
         let user = json!({"email": email, "password": password});
         let body: String = user.to_string();
 
@@ -158,5 +165,50 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+
+    field getTokenByEmail(&executor, email: String as "Email of a user.") -> FieldResult<Option<JWT>> as "Get JWT Token by email." {
+        let context = executor.context();
+        let url = format!("{}/jwt/email", context.config.users_microservice.url.clone());
+        let email = json!({"email": email});
+        let body: String = email.to_string();
+
+        context.http_client.request::<JWT>(Method::Post, url, Some(body))
+            .map(|res| Some(res))
+            .or_else(|err| match err {
+                http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
+                err => Err(err.to_graphql())
+            })
+            .wait()
+    }
+
+    field getTokenByGoogleAcc(&executor, oauth: String as "Google oauth.") -> FieldResult<Option<JWT>> as "Get JWT Token by Google oauth." {
+        let context = executor.context();
+        let url = format!("{}/jwt/google", context.config.users_microservice.url.clone());
+        let oauth = json!({"oauth": oauth});
+        let body: String = oauth.to_string();
+
+        context.http_client.request::<JWT>(Method::Post, url, Some(body))
+            .map(|res| Some(res))
+            .or_else(|err| match err {
+                http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
+                err => Err(err.to_graphql())
+            })
+            .wait()
+    }
+
+    field getTokenByFacebookAcc(&executor, oauth: String as "Facebook oauth.") -> FieldResult<Option<JWT>> as "Get JWT Token by Facebook oauth." {
+        let context = executor.context();
+        let url = format!("{}/jwt/facebook", context.config.users_microservice.url.clone());
+        let oauth = json!({"oauth": oauth});
+        let body: String = oauth.to_string();
+
+        context.http_client.request::<JWT>(Method::Post, url, Some(body))
+            .map(|res| Some(res))
+            .or_else(|err| match err {
+                http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
+                err => Err(err.to_graphql())
+            })
+            .wait()
+    }
 });
 
