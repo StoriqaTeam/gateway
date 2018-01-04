@@ -4,6 +4,7 @@ use hyper::Method;
 
 use super::context::Context;
 use futures::Future;
+use std::fmt;
 
 pub struct Query;
 pub struct Mutation;
@@ -79,6 +80,15 @@ enum Provider {
     Google,
     #[graphql(description = "Facebook")] 
     Facebook,
+}
+
+impl fmt::Display for Provider {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Provider::Facebook => write!(f, "facebook"),
+            Provider::Google => write!(f, "google")
+        }
+    }
 }
 
 graphql_object!(Query: Context |&self| {
@@ -208,11 +218,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field getJWTByProvider(&executor, provider: Provider as "Token provider", token: String as "Token.") -> FieldResult<JWT> as "Get JWT Token from token provider." {
         let context = executor.context();
-        let provider = match provider {
-            Provider::Facebook => "facebook",
-            Provider::Google => "google"
-        };
-        let url = format!("{}/jwt/{}", context.config.users_microservice.url.clone(), provider);
+        let url = format!("{}/jwt/{}", context.config.users_microservice.url.clone(), provider.to_string());
         let oauth = json!({"token": token});
         let body: String = oauth.to_string();
 
