@@ -8,7 +8,7 @@ use std::fmt;
 use base64::encode as encode_to_base64;
 use base64::decode as decode_from_base64;
 use juniper::FieldError;
-
+use std::str::FromStr;
 
 pub struct Query;
 pub struct Mutation;
@@ -30,7 +30,7 @@ pub struct JWT {
 
 #[derive(Deserialize, Debug)]
 pub struct User {
-    pub raw_id: i32,
+    pub id: i32,
     pub email: String,
     pub is_active: bool,
 }
@@ -46,7 +46,7 @@ graphql_interface!(Node: () as "Node" |&self| {
     
     field id() -> String {
         match *self {
-            Node::User(User { ref raw_id, .. })  => encode_to_base64(&*format!("user_{}", raw_id)),
+            Node::User(User { ref id, .. })  => ID::new(Services::Users, Models::User, *id).to_string(),
         }
     }
 
@@ -55,14 +55,17 @@ graphql_interface!(Node: () as "Node" |&self| {
     }
 });
 
-
 graphql_object!(User: () as "User" |&self| {
     description: "User's profile."
 
     interfaces: [&Node]
 
     field id() -> String as "Unique id"{
-        encode_to_base64(&*format!("user_{}", self.raw_id))
+        ID::new(Services::Users, Models::User, self.id).to_string()
+    }
+
+    field raw_id() -> String as "Unique id"{
+        self.id.to_string()
     }
 
     field email() -> String as "Email" {
@@ -74,8 +77,6 @@ graphql_object!(User: () as "User" |&self| {
     }
 
 });
-
-
 
 #[derive(GraphQLEnum)]
 #[graphql(name = "Provider", description = "Token providers")]
@@ -90,37 +91,137 @@ impl fmt::Display for Provider {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Provider::Facebook => write!(f, "facebook"),
-            Provider::Google => write!(f, "google")
+            Provider::Google => write!(f, "google"),
         }
     }
 }
 
-fn get_raw_id(id:String) -> FieldResult<(String,i32)> {
-    let base64 = decode_from_base64(&*id).map_err(|err| FieldError::new(
-                    "Id parsing error",
-                    graphql_value!({ "code": 300, "details": { err.to_string() }}),
-                ))?;
+enum Services {
+    Users,
+}
 
-    let id = String::from_utf8(base64).map_err(|err| FieldError::new(
-                    "Id parsing error",
-                    graphql_value!({ "code": 300, "details": { err.to_string() }}),
-                ))?;
-
-    let v: Vec<&str> = id.split('_').collect();
-    if v.len() != 2 {
-        return Err(FieldError::new(
-                    "Id parsing error",
-                    graphql_value!({ "code": 300, "details": { "can not resolve service and id" }}),
-                ))
+impl fmt::Display for Services {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Services::Users => write!(f, "users"),
+        }
     }
+}
 
-    let service = v[0].to_string();
-    let raw_id = v[1].parse::<i32>().map_err(|err| FieldError::new(
-                    "Id parsing error",
-                    graphql_value!({ "code": 300, "details": { err.to_string() }}),
-                ))?;
+impl FromStr for Services {
+    type Err = FieldError;
 
-    Ok((service, raw_id))
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "users" => Ok(Services::Users),
+            _ => {
+                return Err(FieldError::new(
+                    "Unknown service",
+                    graphql_value!({ "code": 300, "details": { 
+                        format!("Can not resolve service name. Unknown service: '{}'", s) 
+                        }}),
+                ))
+            }
+        }
+    }
+}
+
+enum Models {
+    User,
+}
+
+impl fmt::Display for Models {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Models::User => write!(f, "user"),
+        }
+    }
+}
+
+impl FromStr for Models {
+    type Err = FieldError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "user" => Ok(Models::User),
+            _ => {
+                return Err(FieldError::new(
+                    "Unknown model",
+                    graphql_value!({ "code": 300, "details": { 
+                        format!("Can not resolve model name. Unknown model: '{}'", s) 
+                        }}),
+                ))
+            }
+        }
+    }
+}
+
+struct ID {
+    service: Services,
+    model: Models,
+    raw_id: i32,
+}
+
+impl fmt::Display for ID {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            encode_to_base64(&*format!("{}_{}_{}", self.service, self.model, self.raw_id))
+        )
+    }
+}
+
+impl FromStr for ID {
+    type Err = FieldError;
+
+    fn from_str(id: &str) -> Result<Self, Self::Err> {
+        let base64 = decode_from_base64(&*id).map_err(|err| {
+            FieldError::new(
+                "Id parsing error",
+                graphql_value!({ "code": 300, "details": { err.to_string() }}),
+            )
+        })?;
+
+        let id = String::from_utf8(base64).map_err(|err| {
+            FieldError::new(
+                "Id parsing error",
+                graphql_value!({ "code": 300, "details": { err.to_string() }}),
+            )
+        })?;
+
+        let v: Vec<&str> = id.split('_').collect();
+        if v.len() != 3 {
+            return Err(FieldError::new(
+                "Id parsing error",
+                graphql_value!({ "code": 300, "details": { "can not resolve service, model or id" }}),
+            ));
+        }
+
+        let service = Services::from_str(v[0])?;
+        let model = Models::from_str(v[1])?;
+        let raw_id = v[2].parse::<i32>().map_err(|err| {
+            FieldError::new(
+                "Id parsing error",
+                graphql_value!({ "code": 300, "details": { err.to_string() }}),
+            )
+        })?;
+        Ok(ID {
+            service: service,
+            model: model,
+            raw_id: raw_id,
+        })
+    }
+}
+
+impl ID {
+    fn new(service: Services, model: Models, id: i32) -> ID {
+        ID {
+            service: service,
+            model: model,
+            raw_id: id,
+        }
+    }
 }
 
 graphql_object!(Query: Context |&self| {
@@ -157,8 +258,11 @@ graphql_object!(Query: Context |&self| {
 
     field user(&executor, id: String as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
-        let (_,raw_id) = get_raw_id(id)?;
-        let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), raw_id);
+        let identifier = ID::from_str(&*id)?;
+        let url = format!("{}/{}/{}", 
+            context.config.users_microservice.url.clone(), 
+            Services::Users, 
+            identifier.raw_id);
 
         context.http_client.request::<User>(Method::Get, url, None)
             .or_else(|err| Err(err.to_graphql()))
@@ -167,9 +271,12 @@ graphql_object!(Query: Context |&self| {
 
     field users(&executor, from: String as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
         let context = executor.context();
-        let (_,raw_id) = get_raw_id(from)?;
-        let url = format!("{}/users/?from={}&count={}" ,context.config.users_microservice.url.clone(),
-        raw_id, count);
+        let identifier = ID::from_str(&*from)?;
+        let url = format!("{}/{}/?from={}&count={}",
+        context.config.users_microservice.url.clone(),
+        Services::Users, 
+        identifier.raw_id, 
+        count);
 
         context.http_client.request::<Vec<User>>(Method::Get, url, None)
             .or_else(|err| Err(err.to_graphql()))
@@ -178,22 +285,17 @@ graphql_object!(Query: Context |&self| {
 
     field node(&executor, id: String as "Id of a user.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
         let context = executor.context();
-        let (service,raw_id) = get_raw_id(id)?;
-        match &*service {
-            "user" => {
-                let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), raw_id);
+        let identifier = ID::from_str(&*id)?;
+        let url = format!("{}/{}/{}", 
+            context.config.users_microservice.url.clone(),
+            Services::Users, 
+            identifier.raw_id);
+        match identifier.service {
+            Services::Users => {
                         context.http_client.request::<User>(Method::Get, url, None)
                             .map(|res| Node::User(res))
                             .or_else(|err| Err(err.to_graphql()))
                             .wait()
-            }
-            _ => {
-                return Err(FieldError::new(
-                    "Unknown service",
-                    graphql_value!({ "code": 300, "details": { 
-                        format!("Can not resolve service name to get Node. Unknown service: '{}'", &*service) 
-                        }}),
-                ))
             }
         }
         
@@ -222,7 +324,9 @@ graphql_object!(Mutation: Context |&self| {
 
     field createUser(&executor, email: String as "Email of a user.", password: String as "Password of a user.") -> FieldResult<User> as "Creates new user." {
         let context = executor.context();
-        let url = format!("{}/users", context.config.users_microservice.url.clone());
+        let url = format!("{}/{}", 
+        context.config.users_microservice.url.clone(),
+        Services::Users);
         let user = json!({"email": email, "password": password});
         let body: String = user.to_string();
 
@@ -233,8 +337,11 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateUser(&executor, id: String as "Id of a user." , email: String as "New email of a user.") -> FieldResult<User>  as "Updates existing user."{
         let context = executor.context();
-        let (_,raw_id) = get_raw_id(id)?;
-        let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), raw_id);
+        let identifier = ID::from_str(&*id)?;
+        let url = format!("{}/{}/{}", 
+            context.config.users_microservice.url.clone(), 
+            Services::Users, 
+            identifier.raw_id);
         let user = json!({"email": email});
         let body: String = user.to_string();
 
@@ -245,8 +352,11 @@ graphql_object!(Mutation: Context |&self| {
 
     field deactivateUser(&executor, id: String as "Id of a user.") -> FieldResult<User>  as "Deactivates existing user." {
         let context = executor.context();
-        let (_,raw_id) = get_raw_id(id)?;
-        let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), raw_id);
+        let identifier = ID::from_str(&*id)?;
+        let url = format!("{}/{}/{}", 
+            context.config.users_microservice.url.clone(), 
+            Services::Users, 
+            identifier.raw_id);
 
         context.http_client.request::<User>(Method::Delete, url, None)
             .or_else(|err| Err(err.to_graphql()))
