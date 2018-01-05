@@ -6,6 +6,7 @@ extern crate hyper;
 extern crate juniper;
 extern crate regex;
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 extern crate tokio_core;
 

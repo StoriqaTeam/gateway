@@ -1,10 +1,10 @@
 use juniper;
 use juniper::FieldResult;
-use hyper::{Method, StatusCode};
+use hyper::Method;
 
 use super::context::Context;
-use http;
 use futures::Future;
+use std::fmt;
 
 pub struct Query;
 pub struct Mutation;
@@ -18,14 +18,77 @@ pub fn create() -> Schema {
 }
 
 #[derive(GraphQLObject, Deserialize, Debug)]
-#[graphql(description = "User's profile")]
+#[graphql(description = "JWT Token")]
+pub struct JWT {
+    #[graphql(description = "Token")] 
+    pub token: String,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct User {
-    #[graphql(description = "Unique id")]
     pub id: i32,
-    #[graphql(description = "Email")]
     pub email: String,
-    #[graphql(name = "isActive", description = "If the user was disabled (deleted), isActive is false")]
     pub is_active: bool,
+}
+
+enum Node {
+    User(User),
+}
+
+graphql_interface!(Node: () as "Node" |&self| {
+    description: "The Node interface contains a single field, 
+        id, which is a ID!. The node root field takes a single argument, 
+        a ID!, and returns a Node. These two work in concert to allow refetching."
+    
+    field id() -> &i32 {
+        match *self {
+            Node::User(User { ref id, .. })  => id,
+        }
+    }
+
+    instance_resolvers: |_| {
+        &User => match *self { Node::User(ref h) => Some(h), _ => None },
+    }
+});
+
+
+graphql_object!(User: () as "User" |&self| {
+    description: "User's profile."
+
+    interfaces: [&Node]
+
+    field id() -> &i32 as "Unique id"{
+        &self.id
+    }
+
+    field email() -> String as "Email" {
+        self.email.clone()
+    }
+
+    field isActive() -> bool as "If the user was disabled (deleted), isActive is false" {
+        self.is_active
+    }
+
+});
+
+
+
+#[derive(GraphQLEnum)]
+#[graphql(name = "Provider", description = "Token providers")]
+enum Provider {
+    #[graphql(description = "Google")] 
+    Google,
+    #[graphql(description = "Facebook")] 
+    Facebook,
+}
+
+impl fmt::Display for Provider {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Provider::Facebook => write!(f, "facebook"),
+            Provider::Google => write!(f, "google")
+        }
+    }
 }
 
 graphql_object!(Query: Context |&self| {
@@ -66,67 +129,102 @@ graphql_object!(Query: Context |&self| {
 
         context.http_client.request::<User>(Method::Get, url, None)
             .map(|res| Some(res))
-            .or_else(|err| match err {
-                http::client::Error::Api(StatusCode::NotFound, _) => Ok(None),
-                err => Err(err.to_graphql())
-            })
+            .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field users(&executor, from: i32, to: i32) -> FieldResult<Vec<User>> {
+    field users(&executor, from: i32 as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
         let context = executor.context();
-        let user1 = User {
-            id: 1,
-            email: String::from("example@mail.com"),
-            is_active: false,
-        };
+        let url = format!("{}/users/?from={}&count={}" ,context.config.users_microservice.url.clone(),
+        from, count);
 
-        let user2 = User {
-            id: 2,
-            email: String::from("elpmaxe@mail.com"),
-            is_active: false,
-        };
-        let users = vec![user1, user2];
-        Ok(users)
+        context.http_client.request::<Vec<User>>(Method::Get, url, None)
+            .or_else(|err| Err(err.to_graphql()))
+            .wait()
     }
+
+    field node(&executor, id: i32 as "Id of a user.") -> FieldResult<Option<Node>> as "Fetches graphql interface node by id. Remote."  {
+        let context = executor.context();
+        let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
+        context.http_client.request::<User>(Method::Get, url, None)
+            .map(|res| Some(Node::User(res)))
+            .or_else(|err| Err(err.to_graphql()))
+            .wait()
+    }
+
 });
-
-
-//mutation {
-//  createUser(name: "andy", email: "hope is a good thing") {
-//    id
-//  }
-//}
 
 graphql_object!(Mutation: Context |&self| {
+     
+    description: "Top level mutation.
 
-    //POST /users - создать пользователя. + Механизм для подтверждения email, если //не через соцсети
-    field createUser(&executor, name: String, email: String) -> FieldResult<User> {
+    Codes:
+    - 100 - microservice responded,
+    but with error http status. In this case `details` is guaranteed
+    to have `status` field with http status and
+    probably some additional details.
+
+    - 200 - there was a network error while connecting to microservice.
+
+    - 300 - there was a parse error - that usually means that
+    graphql couldn't parse api json response
+    (probably because of mismatching types on graphql and microservice)
+    or api url parse failed.
+
+    - 400 - Unknown error."
+
+    field createUser(&executor, email: String as "Email of a user.", password: String as "Password of a user.") -> FieldResult<User> as "Creates new user." {
         let context = executor.context();
-        let user = User {
-            id: 0,
-            email,
-            is_active: false,
-        };
-        Ok(user)
+        let url = format!("{}/users", context.config.users_microservice.url.clone());
+        let user = json!({"email": email, "password": password});
+        let body: String = user.to_string();
+
+        context.http_client.request::<User>(Method::Post, url, Some(body))
+            .or_else(|err| Err(err.to_graphql()))
+            .wait()
     }
 
-    //PUT /users/:id - апдейт пользователя
-    field updateUser(&executor,id: i32, name: String, email: String) -> FieldResult<User> {
+    field updateUser(&executor, id: i32 as "Id of a user." , email: String as "New email of a user.") -> FieldResult<User>  as "Updates existing user."{
         let context = executor.context();
-        let user = User {
-            id: 0,
-            email,
-            is_active: false,
-        };
-        Ok(user)
+        let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
+        let user = json!({"email": email});
+        let body: String = user.to_string();
+
+        context.http_client.request::<User>(Method::Put, url, Some(body))
+            .or_else(|err| Err(err.to_graphql()))
+            .wait()
     }
 
-    //DELETE /users/:id - удалить пользователя
-    field deleteUser(&executor, id: i32) -> FieldResult<()> {
+    field deactivateUser(&executor, id: i32 as "Id of a user.") -> FieldResult<User>  as "Deactivates existing user." {
         let context = executor.context();
-        Ok(())
+        let url = format!("{}/users/{}", context.config.users_microservice.url.clone(), id);
+
+        context.http_client.request::<User>(Method::Delete, url, None)
+            .or_else(|err| Err(err.to_graphql()))
+            .wait()
+    }
+
+
+    field getJWTByEmail(&executor, email: String as "Email of a user.", password: String as "Password of a user") -> FieldResult<JWT> as "Get JWT Token by email." {
+        let context = executor.context();
+        let url = format!("{}/jwt/email", context.config.users_microservice.url.clone());
+        let account = json!({"email": email, "password": password});
+        let body: String = account.to_string();
+
+        context.http_client.request::<JWT>(Method::Post, url, Some(body))
+            .or_else(|err| Err(err.to_graphql()))
+            .wait()
+    }
+
+    field getJWTByProvider(&executor, provider: Provider as "Token provider", token: String as "Token.") -> FieldResult<JWT> as "Get JWT Token from token provider." {
+        let context = executor.context();
+        let url = format!("{}/jwt/{}", context.config.users_microservice.url.clone(), provider.to_string());
+        let oauth = json!({"token": token});
+        let body: String = oauth.to_string();
+
+        context.http_client.request::<JWT>(Method::Post, url, Some(body))
+            .or_else(|err| Err(err.to_graphql()))
+            .wait()
     }
 
 });
-
