@@ -3,11 +3,10 @@ use juniper::FieldResult;
 use hyper::Method;
 
 use super::context::Context;
-use super::helper::{ID, Services, Models};
+use super::model::{ID, Service, Model, Provider, User, Node, JWT};
 use futures::Future;
-use std::fmt;
+use juniper::ID as GraphqlID;
 use std::str::FromStr;
-use juniper::ID as Graphql_ID;
 
 
 pub struct Query;
@@ -21,32 +20,14 @@ pub fn create() -> Schema {
     Schema::new(query, mutation)
 }
 
-#[derive(GraphQLObject, Deserialize, Debug)]
-#[graphql(description = "JWT Token")]
-pub struct JWT {
-    #[graphql(description = "Token")] 
-    pub token: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct User {
-    pub id: i32,
-    pub email: String,
-    pub is_active: bool,
-}
-
-enum Node {
-    User(User),
-}
-
 graphql_interface!(Node: () as "Node" |&self| {
     description: "The Node interface contains a single field, 
         id, which is a ID!. The node root field takes a single argument, 
         a ID!, and returns a Node. These two work in concert to allow refetching."
     
-    field id() -> Graphql_ID {
+    field id() -> GraphqlID {
         match *self {
-            Node::User(User { ref id, .. })  => ID::new(Services::Users, Models::User, *id).to_string().into(),
+            Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::Users, *id).to_string().into(),
         }
     }
 
@@ -60,11 +41,11 @@ graphql_object!(User: () as "User" |&self| {
 
     interfaces: [&Node]
 
-    field id() -> Graphql_ID as "Unique id"{
-        ID::new(Services::Users, Models::User, self.id).to_string().into()
+    field id() -> GraphqlID as "Unique id"{
+        ID::new(Service::Users, Model::Users, self.id).to_string().into()
     }
 
-    field raw_id() -> Graphql_ID as "Unique id"{
+    field raw_id() -> GraphqlID as "Unique id"{
         self.id.to_string().into()
     }
 
@@ -77,24 +58,6 @@ graphql_object!(User: () as "User" |&self| {
     }
 
 });
-
-#[derive(GraphQLEnum)]
-#[graphql(name = "Provider", description = "Token providers")]
-enum Provider {
-    #[graphql(description = "Google")] 
-    Google,
-    #[graphql(description = "Facebook")] 
-    Facebook,
-}
-
-impl fmt::Display for Provider {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Provider::Facebook => write!(f, "facebook"),
-            Provider::Google => write!(f, "google"),
-        }
-    }
-}
 
 
 graphql_object!(Query: Context |&self| {
@@ -129,26 +92,23 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
-    field user(&executor, id: String as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
+    field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
-        let url = format!("{}/{}/{}", 
-            context.config.users_microservice.url.clone(), 
-            Services::Users, 
-            identifier.raw_id);
+        let url = identifier.url(&context.config);
 
         context.http_client.request::<User>(Method::Get, url, None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field users(&executor, from: String as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
+    field users(&executor, from: GraphqlID as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
         let context = executor.context();
         let identifier = ID::from_str(&*from)?;
         let url = format!("{}/{}/?from={}&count={}",
-            context.config.users_microservice.url.clone(),
-            Services::Users, 
-            identifier.raw_id, 
+            Service::Users.to_url(&context.config), 
+            Model::Users,
+            identifier.raw_id,
             count);
 
         context.http_client.request::<Vec<User>>(Method::Get, url, None)
@@ -156,16 +116,12 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field node(&executor, id: String as "Id of a user.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
+    field node(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
-        match identifier.service {
-            Services::Users => {
-                            let url = format!("{}/{}/{}", 
-                                context.config.users_microservice.url.clone(),
-                                Services::Users, 
-                                identifier.raw_id);
-                            context.http_client.request::<User>(Method::Get, url, None)
+        match (&identifier.service, &identifier.model) {
+            (&Service::Users, _) => {
+                            context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None)
                                 .map(|res| Node::User(res))
                                 .or_else(|err| Err(err.to_graphql()))
                                 .wait()
@@ -198,8 +154,8 @@ graphql_object!(Mutation: Context |&self| {
     field createUser(&executor, email: String as "Email of a user.", password: String as "Password of a user.") -> FieldResult<User> as "Creates new user." {
         let context = executor.context();
         let url = format!("{}/{}", 
-            context.config.users_microservice.url.clone(),
-            Services::Users);
+            Service::Users.to_url(&context.config),
+            Model::Users);
         let user = json!({"email": email, "password": password});
         let body: String = user.to_string();
 
@@ -208,13 +164,10 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateUser(&executor, id: String as "Id of a user." , email: String as "New email of a user.") -> FieldResult<User>  as "Updates existing user."{
+    field updateUser(&executor, id: GraphqlID as "Id of a user." , email: String as "New email of a user.") -> FieldResult<User>  as "Updates existing user."{
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
-        let url = format!("{}/{}/{}", 
-            context.config.users_microservice.url.clone(), 
-            Services::Users, 
-            identifier.raw_id);
+        let url = identifier.url(&context.config);
         let user = json!({"email": email});
         let body: String = user.to_string();
 
@@ -223,13 +176,10 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deactivateUser(&executor, id: String as "Id of a user.") -> FieldResult<User>  as "Deactivates existing user." {
+    field deactivateUser(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User>  as "Deactivates existing user." {
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
-        let url = format!("{}/{}/{}", 
-            context.config.users_microservice.url.clone(), 
-            Services::Users, 
-            identifier.raw_id);
+        let url = identifier.url(&context.config);
 
         context.http_client.request::<User>(Method::Delete, url, None)
             .or_else(|err| Err(err.to_graphql()))
@@ -239,8 +189,9 @@ graphql_object!(Mutation: Context |&self| {
 
     field getJWTByEmail(&executor, email: String as "Email of a user.", password: String as "Password of a user") -> FieldResult<JWT> as "Get JWT Token by email." {
         let context = executor.context();
-        let url = format!("{}/jwt/email", 
-            context.config.users_microservice.url.clone());
+        let url = format!("{}/{}/email", 
+            Service::Users.to_url(&context.config),
+            Model::JWT);
         let account = json!({"email": email, "password": password});
         let body: String = account.to_string();
 
@@ -251,9 +202,10 @@ graphql_object!(Mutation: Context |&self| {
 
     field getJWTByProvider(&executor, provider: Provider as "Token provider", token: String as "Token.") -> FieldResult<JWT> as "Get JWT Token from token provider." {
         let context = executor.context();
-        let url = format!("{}/jwt/{}", 
-            context.config.users_microservice.url.clone(), 
-            provider.to_string());
+        let url = format!("{}/{}/{}", 
+            Service::Users.to_url(&context.config), 
+            Model::JWT,
+            provider);
         let oauth = json!({"token": token});
         let body: String = oauth.to_string();
 

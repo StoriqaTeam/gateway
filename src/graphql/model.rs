@@ -1,27 +1,47 @@
 use std::fmt;
-use base64::encode as encode_to_base64;
-use base64::decode as decode_from_base64;
+use base64::encode;
+use base64::decode;
 use juniper::FieldError;
 use std::str::FromStr;
+use ::config::Config;
 
-pub enum Services {
+
+#[derive(GraphQLObject, Deserialize, Debug)]
+#[graphql(description = "JWT Token")]
+pub struct JWT {
+    #[graphql(description = "Token")] 
+    pub token: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct User {
+    pub id: i32,
+    pub email: String,
+    pub is_active: bool,
+}
+
+pub enum Node {
+    User(User),
+}
+
+pub enum Service {
     Users,
 }
 
-impl fmt::Display for Services {
+impl fmt::Display for Service {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Services::Users => write!(f, "users"),
+            Service::Users => write!(f, "users"),
         }
     }
 }
 
-impl FromStr for Services {
+impl FromStr for Service {
     type Err = FieldError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "users" => Ok(Services::Users),
+            "users" => Ok(Service::Users),
             _ => {
                 return Err(FieldError::new(
                     "Unknown service",
@@ -34,24 +54,35 @@ impl FromStr for Services {
     }
 }
 
-pub enum Models {
-    User,
+impl Service {
+    pub fn to_url(&self, config: &Config) -> String {
+        match *self {
+                Service::Users => config.users_microservice.url.clone(),
+            }
+    }
 }
 
-impl fmt::Display for Models {
+pub enum Model {
+    Users,
+    JWT
+}
+
+impl fmt::Display for Model {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Models::User => write!(f, "user"),
+            Model::Users => write!(f, "users"),
+            Model::JWT => write!(f, "jwt"),
         }
     }
 }
 
-impl FromStr for Models {
+impl FromStr for Model {
     type Err = FieldError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "user" => Ok(Models::User),
+            "users" => Ok(Model::Users),
+            "jwt" => Ok(Model::JWT),
             _ => {
                 return Err(FieldError::new(
                     "Unknown model",
@@ -65,8 +96,8 @@ impl FromStr for Models {
 }
 
 pub struct ID {
-    pub service: Services,
-    pub model: Models,
+    pub service: Service,
+    pub model: Model,
     pub raw_id: i32,
 }
 
@@ -75,7 +106,7 @@ impl fmt::Display for ID {
         write!(
             f,
             "{}",
-            encode_to_base64(&*format!("{}_{}_{}", self.service, self.model, self.raw_id))
+            encode(&*format!("{}_{}_{}", self.service, self.model, self.raw_id))
         )
     }
 }
@@ -84,7 +115,7 @@ impl FromStr for ID {
     type Err = FieldError;
 
     fn from_str(id: &str) -> Result<Self, Self::Err> {
-        let base64 = decode_from_base64(&*id).map_err(|err| {
+        let base64 = decode(&*id).map_err(|err| {
             FieldError::new(
                 "Id parsing error",
                 graphql_value!({ "code": 300, "details": { err.to_string() }}),
@@ -106,8 +137,8 @@ impl FromStr for ID {
             ));
         }
 
-        let service = Services::from_str(v[0])?;
-        let model = Models::from_str(v[1])?;
+        let service = Service::from_str(v[0])?;
+        let model = Model::from_str(v[1])?;
         let raw_id = v[2].parse::<i32>().map_err(|err| {
             FieldError::new(
                 "Id parsing error",
@@ -119,11 +150,36 @@ impl FromStr for ID {
 }
 
 impl ID {
-    pub fn new(service: Services, model: Models, id: i32) -> ID {
+    pub fn new(service: Service, model: Model, id: i32) -> ID {
         ID {
             service: service,
             model: model,
             raw_id: id,
+        }
+    }
+
+    pub fn url(&self, config: &Config) -> String {
+        format!("{}/{}/{}", 
+            self.service.to_url(config), 
+            self.model, 
+            self.raw_id) 
+    }
+}
+
+#[derive(GraphQLEnum)]
+#[graphql(name = "Provider", description = "Token providers")]
+pub enum Provider {
+    #[graphql(description = "Google")] 
+    Google,
+    #[graphql(description = "Facebook")] 
+    Facebook,
+}
+
+impl fmt::Display for Provider {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Provider::Facebook => write!(f, "facebook"),
+            Provider::Google => write!(f, "google"),
         }
     }
 }
