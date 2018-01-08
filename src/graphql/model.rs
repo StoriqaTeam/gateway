@@ -63,14 +63,14 @@ impl Service {
 }
 
 pub enum Model {
-    Users,
+    User,
     JWT
 }
 
 impl fmt::Display for Model {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Model::Users => write!(f, "users"),
+            Model::User => write!(f, "user"),
             Model::JWT => write!(f, "jwt"),
         }
     }
@@ -81,7 +81,7 @@ impl FromStr for Model {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "users" => Ok(Model::Users),
+            "user" => Ok(Model::User),
             "jwt" => Ok(Model::JWT),
             _ => {
                 return Err(FieldError::new(
@@ -92,6 +92,15 @@ impl FromStr for Model {
                 ))
             }
         }
+    }
+}
+
+impl Model {
+    pub fn to_url(&self) -> String {
+        match *self {
+                Model::User => "users".to_owned(),
+                Model::JWT => "jwt".to_owned(),
+            }
     }
 }
 
@@ -161,7 +170,7 @@ impl ID {
     pub fn url(&self, config: &Config) -> String {
         format!("{}/{}/{}", 
             self.service.to_url(config), 
-            self.model, 
+            self.model.to_url(), 
             self.raw_id) 
     }
 }

@@ -27,7 +27,7 @@ graphql_interface!(Node: () as "Node" |&self| {
     
     field id() -> GraphqlID {
         match *self {
-            Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::Users, *id).to_string().into(),
+            Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::User, *id).to_string().into(),
         }
     }
 
@@ -42,7 +42,7 @@ graphql_object!(User: () as "User" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
-        ID::new(Service::Users, Model::Users, self.id).to_string().into()
+        ID::new(Service::Users, Model::User, self.id).to_string().into()
     }
 
     field raw_id() -> GraphqlID as "Unique id"{
@@ -107,7 +107,7 @@ graphql_object!(Query: Context |&self| {
         let identifier = ID::from_str(&*from)?;
         let url = format!("{}/{}/?from={}&count={}",
             Service::Users.to_url(&context.config), 
-            Model::Users,
+            Model::User.to_url(),
             identifier.raw_id,
             count);
 
@@ -155,7 +155,7 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let url = format!("{}/{}", 
             Service::Users.to_url(&context.config),
-            Model::Users);
+            Model::User.to_url());
         let user = json!({"email": email, "password": password});
         let body: String = user.to_string();
 
@@ -191,7 +191,7 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let url = format!("{}/{}/email", 
             Service::Users.to_url(&context.config),
-            Model::JWT);
+            Model::JWT.to_url());
         let account = json!({"email": email, "password": password});
         let body: String = account.to_string();
 
@@ -204,7 +204,7 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let url = format!("{}/{}/{}", 
             Service::Users.to_url(&context.config), 
-            Model::JWT,
+            Model::JWT.to_url(),
             provider);
         let oauth = json!({"token": token});
         let body: String = oauth.to_string();
