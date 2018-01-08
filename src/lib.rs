@@ -16,6 +16,8 @@ extern crate serde_derive;
 #[macro_use]
 extern crate log;
 
+extern crate base64;
+
 pub mod config;
 mod graphql;
 mod http;
