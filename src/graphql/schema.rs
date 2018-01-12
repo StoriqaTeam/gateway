@@ -94,8 +94,10 @@ graphql_object!(Query: Context |&self| {
 
     field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
-        let url = identifier.url(&context.config);
+        let url = format!("{}/{}/{}",
+            Service::Users.to_url(&context.config), 
+            Model::User.to_url(),
+            id.to_string());
 
         context.http_client.request::<User>(Method::Get, url, None)
             .or_else(|err| Err(err.to_graphql()))
