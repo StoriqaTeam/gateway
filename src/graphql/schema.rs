@@ -3,7 +3,7 @@ use juniper::FieldResult;
 use hyper::Method;
 
 use super::context::Context;
-use super::model::{ID, Service, Model, Provider, User, Node, JWT};
+use super::model::{ID, Service, Model, Provider, User, Node, JWT, UsersConnection, UsersEdge, PageInfo};
 use futures::Future;
 use juniper::ID as GraphqlID;
 use std::str::FromStr;
@@ -60,6 +60,12 @@ graphql_object!(User: () as "User" |&self| {
 });
 
 
+
+
+
+
+
+
 graphql_object!(Query: Context |&self| {
 
     description: "Top level query.
@@ -104,17 +110,31 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field users(&executor, from: GraphqlID as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
+    field users(&executor, first: GraphqlID as "First id", after: i32 as "Count of users") -> FieldResult<UsersConnection> as "Fetches users using relay connection." {
         let context = executor.context();
-        let identifier = ID::from_str(&*from)?;
+        let identifier = ID::from_str(&*first)?;
+
         let url = format!("{}/{}/?from={}&count={}",
             Service::Users.to_url(&context.config), 
             Model::User.to_url(),
             identifier.raw_id,
-            count);
+            after);
 
         context.http_client.request::<Vec<User>>(Method::Get, url, None)
             .or_else(|err| Err(err.to_graphql()))
+            .map (|users| {
+                let user_edges: Vec<UsersEdge> = users
+                    .into_iter()
+                    .map(|user| UsersEdge { 
+                                node: user.clone(), 
+                                cursor: ID::new(Service::Users, Model::User, user.id.clone()).to_string()
+                            })
+                    .collect();
+                let has_next_page = user_edges.len() as i32 == after;
+                let has_previous_page = true;
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                UsersConnection {edges: user_edges, page_info: page_info }
+            })
             .wait()
     }
 
