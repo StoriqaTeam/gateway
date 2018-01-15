@@ -1,12 +1,14 @@
+use std::str::FromStr;
+
 use juniper;
 use juniper::FieldResult;
 use hyper::Method;
+use futures::Future;
+use juniper::ID as GraphqlID;
 
 use super::context::Context;
 use super::model::{ID, Service, Model, Provider, User, Node, JWT};
-use futures::Future;
-use juniper::ID as GraphqlID;
-use std::str::FromStr;
+use ::http::client::Error;
 
 
 pub struct Query;
@@ -86,7 +88,9 @@ graphql_object!(Query: Context |&self| {
     (probably because of mismatching types on graphql and microservice)
     or api url parse failed.
 
-    - 400 - Unknown error."
+    - 400 - Unknown error.
+    
+    - 401 - Unauthorized access."
 
     field apiVersion() -> &str as "Current api version." {
         "1.0"
@@ -94,6 +98,11 @@ graphql_object!(Query: Context |&self| {
 
     field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
+
+        if context.authorization_token.is_none() {
+            return Err (Error::UnAuthorized.to_graphql())
+        }
+
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
@@ -104,6 +113,11 @@ graphql_object!(Query: Context |&self| {
 
     field users(&executor, from: GraphqlID as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
         let context = executor.context();
+
+        if context.authorization_token.is_none() {            
+            return Err (Error::UnAuthorized.to_graphql())
+        }
+
         let identifier = ID::from_str(&*from)?;
         let url = format!("{}/{}/?from={}&count={}",
             Service::Users.to_url(&context.config), 

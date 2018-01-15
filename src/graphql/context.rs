@@ -5,12 +5,14 @@ use juniper;
 use super::schema;
 use ::config::Config;
 use ::http::client::ClientHandle;
+use ::http::jwt::TokenPayload;
 
 #[derive(Clone)]
 pub struct Context {
     pub config: Arc<Config>,
     pub schema: Arc<schema::Schema>,
     pub http_client: ClientHandle,
+    pub authorization_token: Option<TokenPayload>
 }
 
 impl Context {
@@ -18,7 +20,8 @@ impl Context {
     Context {
       config,
       schema: Arc::new(schema::create()),
-      http_client: client_handle
+      http_client: client_handle,
+      authorization_token: None
     }
   }
 }
