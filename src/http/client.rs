@@ -28,12 +28,7 @@ impl Client {
         let max_retries = config.gateway.http_client_retries;
         let (tx, rx) = mpsc::channel::<Payload>(config.gateway.http_client_buffer_size);
         let client = hyper::Client::new(handle);
-        Client {
-            client,
-            tx,
-            rx,
-            max_retries,
-        }
+        Client { client, tx, rx, max_retries }
     }
 
     pub fn stream(self) -> Box<Stream<Item = (), Error = ()>> {

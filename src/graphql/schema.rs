@@ -3,7 +3,7 @@ use juniper::FieldResult;
 use hyper::Method;
 
 use super::context::Context;
-use super::model::{ID, Service, Model, Provider, User, Node, JWT, UsersConnection, UsersEdge, PageInfo};
+use super::model::{ID, Service, Model, Provider, User, Node, JWT, Connection, Edge, PageInfo};
 use futures::Future;
 use juniper::ID as GraphqlID;
 use std::str::FromStr;
@@ -60,11 +60,29 @@ graphql_object!(User: () as "User" |&self| {
 });
 
 
+graphql_object!(Connection<User>: () as "UsersConnection" |&self| {
+    description:"Users Connection"
 
+    field edges() -> Vec<Edge<User>> {
+        self.edges.to_vec()
+    }
 
+    field page_info() -> PageInfo {
+        self.page_info.clone()
+    }
+});
 
+graphql_object!(Edge<User>: () as "UsersEdge" |&self| {
+    description:"Users Edge"
+    
+    field cursor() -> juniper::ID {
+        self.cursor.clone()
+    }
 
-
+    field node() -> User {
+        self.node.clone()
+    }
+});
 
 graphql_object!(Query: Context |&self| {
 
@@ -110,7 +128,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field users(&executor, first: GraphqlID as "First id", after: i32 as "Count of users") -> FieldResult<UsersConnection> as "Fetches users using relay connection." {
+    field users(&executor, first: GraphqlID as "First id", after: i32 as "Count of users") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
         let context = executor.context();
         let identifier = ID::from_str(&*first)?;
 
@@ -123,17 +141,17 @@ graphql_object!(Query: Context |&self| {
         context.http_client.request::<Vec<User>>(Method::Get, url, None)
             .or_else(|err| Err(err.to_graphql()))
             .map (|users| {
-                let user_edges: Vec<UsersEdge> = users
+                let user_edges: Vec<Edge<User>> = users
                     .into_iter()
-                    .map(|user| UsersEdge { 
-                                node: user.clone(), 
-                                cursor: ID::new(Service::Users, Model::User, user.id.clone()).to_string()
-                            })
+                    .map(|user| Edge::new(
+                                juniper::ID::from(ID::new(Service::Users, Model::User, user.id.clone()).to_string()),
+                                user.clone()
+                            ))
                     .collect();
                 let has_next_page = user_edges.len() as i32 == after;
                 let has_previous_page = true;
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
-                UsersConnection {edges: user_edges, page_info: page_info }
+                Connection::new(user_edges, page_info)
             })
             .wait()
     }

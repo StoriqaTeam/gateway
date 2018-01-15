@@ -4,11 +4,13 @@ use base64::decode;
 use juniper::FieldError;
 use std::str::FromStr;
 use config::Config;
+use juniper;
 
 #[derive(GraphQLObject, Deserialize, Debug)]
 #[graphql(description = "JWT Token")]
 pub struct JWT {
-    #[graphql(description = "Token")] pub token: String,
+    #[graphql(description = "Token")] 
+    pub token: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -96,8 +98,8 @@ impl FromStr for Model {
 impl Model {
     pub fn to_url(&self) -> String {
         match *self {
-            Model::User => "users".to_owned(),
-            Model::JWT => "jwt".to_owned(),
+            Model::User => "users".to_string(),
+            Model::JWT => "jwt".to_string(),
         }
     }
 }
@@ -194,15 +196,24 @@ impl fmt::Display for Provider {
     }
 }
 
-#[derive(GraphQLObject)]
-#[graphql(name = "MessageEdge", description = "Message Edge")]
-pub struct UsersEdge {
-    pub cursor: String,
-    pub node: User,
+#[derive(Clone)]
+pub struct Edge<T> {
+    pub cursor: juniper::ID,
+    pub node: T,
 }
 
-#[derive(GraphQLObject)]
-#[graphql(name = "PageInfo", description = "Page Info")]
+impl<T> Edge<T> {
+    pub fn new (cursor: juniper::ID, node: T) -> Self {
+        Self {
+            cursor: cursor,
+            node:node
+        }
+    }
+}
+
+
+#[derive(GraphQLObject, Clone)]
+#[graphql(name = "PageInfo", description = "Page Info from relay spec: https://facebook.github.io/relay/graphql/connections.htm")]
 pub struct PageInfo {
     #[graphql(description = "has next page")] 
     pub has_next_page: bool,
@@ -211,12 +222,17 @@ pub struct PageInfo {
     pub has_previous_page: bool,
 }
 
-#[derive(GraphQLObject)]
-#[graphql(name = "UsersConnection", description = "Users Connection")]
-pub struct UsersConnection {
-    #[graphql(description = "edges")] 
-    pub edges: Vec<UsersEdge>,
 
-    #[graphql(description = "PageInfo")] 
+pub struct Connection<T> {
+    pub edges: Vec<Edge<T>>,
     pub page_info: PageInfo,
+}
+
+impl<T> Connection<T> {
+    pub fn new (edges: Vec<Edge<T>>, page_info: PageInfo) -> Self {
+        Self {
+            edges: edges,
+            page_info: page_info
+        }
+    }
 }
