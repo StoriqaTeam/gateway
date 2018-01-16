@@ -5,6 +5,7 @@ mod error;
 mod graphiql;
 mod router;
 mod utils;
+pub mod jwt;
 
 use std::sync::Arc;
 use tokio_core::reactor::{Handle};

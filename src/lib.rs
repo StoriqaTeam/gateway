@@ -17,6 +17,7 @@ extern crate serde_derive;
 extern crate log;
 
 extern crate base64;
+extern crate jsonwebtoken;
 
 pub mod config;
 mod graphql;

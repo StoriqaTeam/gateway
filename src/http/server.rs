@@ -4,12 +4,14 @@ use std::process;
 use hyper;
 use hyper::{Get, Post};
 use hyper::server::{Http, Request, Response, Service};
+use hyper::header::{Authorization, Bearer};
 use futures;
 use futures::future;
 use futures::{Future, Stream};
 use serde_json;
 use juniper::http::GraphQLRequest;
 use tokio_core::reactor::{Handle};
+use jsonwebtoken::{decode, Validation};
 
 use super::router;
 use super::context::Context;
@@ -18,6 +20,8 @@ use super::utils;
 use super::error;
 use super::client;
 use ::config::Config;
+use super::jwt::JWTPayload;
+
 
 struct WebService {
     context: Arc<Context>,
@@ -38,8 +42,20 @@ impl Service for WebService {
             }
 
             (&Post, Some(router::Route::Graphql)) => {
+                let headers = req.headers().clone();
+                let auth_header = headers.get::<Authorization<Bearer>>();
+                let jwt_secret_key = context.graphql_context.config.jwt.secret_key.clone();
+                let token_payload = auth_header.map (move |auth| {
+                        let token = auth.0.token.as_ref();
+                        decode::<JWTPayload>(token, jwt_secret_key.as_ref(), &Validation::default())
+                            .ok()
+                            .map(|t| t.claims)
+                    })
+                    .and_then(|x| x);
+                
                 Box::new(utils::read_body(req.body()).and_then(move |body| {
-                    let graphql_context = context.graphql_context.clone();
+                    let mut graphql_context = context.graphql_context.clone();
+                    graphql_context.user = token_payload;
 
                     let graphql_req = (serde_json::from_str(&body)
                         as Result<GraphQLRequest, serde_json::error::Error>)
@@ -57,10 +73,6 @@ impl Service for WebService {
                     })
                 }))
             }
-
-            (&Get, Some(router::Route::Users(user_id))) => Box::new(future::ok(
-                utils::response_with_body(user_id.to_string()),
-            )),
 
             _ => Box::new(future::ok(utils::response_not_found())),
         }

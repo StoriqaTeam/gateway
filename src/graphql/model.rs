@@ -236,3 +236,5 @@ impl<T> Connection<T> {
         }
     }
 }
+
+pub struct Viewer;

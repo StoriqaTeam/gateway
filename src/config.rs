@@ -47,6 +47,12 @@ pub struct Config {
     pub store_microservice: Microservice,
     pub orders_microservice: Microservice,
     pub billing_microservice: Microservice,
+    pub jwt : JWT
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct JWT {
+    pub secret_key: String,
 }
 
 
