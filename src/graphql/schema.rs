@@ -15,6 +15,8 @@ pub struct Mutation;
 
 pub type Schema = juniper::RootNode<'static, Query, Mutation>;
 
+const MIN_ID: i32 = 0; 
+
 pub fn create() -> Schema {
     let query = Query {};
     let mutation = Mutation {};
@@ -134,14 +136,11 @@ graphql_object!(Query: Context |&self| {
         
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
-            None => 1
+            None => MIN_ID
         };
         
         let records_limit = context.config.gateway.records_limit;
-        let first = match first {
-            Some(f) => cmp::min(records_limit as i32, f),
-            None => records_limit as i32
-        };
+        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}/?from={}&count={}",
             Service::Users.to_url(&context.config), 
@@ -152,7 +151,7 @@ graphql_object!(Query: Context |&self| {
         context.http_client.request::<Vec<User>>(Method::Get, url, None)
             .or_else(|err| Err(err.to_graphql()))
             .map (|users| {
-                let user_edges: Vec<Edge<User>> = users
+                let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
                     .map(|user| Edge::new(
                                 juniper::ID::from(ID::new(Service::Users, Model::User, user.id.clone()).to_string()),
@@ -160,6 +159,9 @@ graphql_object!(Query: Context |&self| {
                             ))
                     .collect();
                 let has_next_page = user_edges.len() as i32 == first + 1;
+                if has_next_page { 
+                    user_edges.pop(); 
+                };
                 let has_previous_page = true;
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
                 Connection::new(user_edges, page_info)
