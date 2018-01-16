@@ -64,7 +64,10 @@ graphql_object!(User: () as "User" |&self| {
 
 
 graphql_object!(Viewer: Context as "Viewer" |&self| {
-    description: "Viewer for users."
+    description: "Viewer for users.
+    To access users data one must receive viewer object, 
+    by passing jwt in bearer authentification header of http request.
+    All requests without it or with wrong jwt will recieve null."
 
     field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
@@ -155,9 +158,6 @@ graphql_object!(Query: Context |&self| {
                 .to_graphql())
         }
     }
-
-
-
 
 });
 

@@ -20,7 +20,7 @@ use super::utils;
 use super::error;
 use super::client;
 use ::config::Config;
-use super::jwt::TokenPayload;
+use super::jwt::JWTPayload;
 
 
 struct WebService {
@@ -47,7 +47,7 @@ impl Service for WebService {
                 let jwt_secret_key = context.graphql_context.config.jwt.secret_key.clone();
                 let token_payload = auth_header.map (move |auth| {
                         let token = auth.0.token.as_ref();
-                        decode::<TokenPayload>(token, jwt_secret_key.as_ref(), &Validation::default())
+                        decode::<JWTPayload>(token, jwt_secret_key.as_ref(), &Validation::default())
                             .ok()
                             .map(|t| t.claims)
                     })

@@ -1,4 +1,4 @@
 #[derive(Serialize, Deserialize, Clone)]
-pub struct TokenPayload {
+pub struct JWTPayload {
     user_email: String,
 }
