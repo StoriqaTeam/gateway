@@ -189,7 +189,6 @@ pub enum Error {
     Network(hyper::Error),
     Parse(String),
     Unknown(String),
-    UnAuthorized
 }
 
 
@@ -210,9 +209,6 @@ impl fmt::Display for Error {
             }
             &Error::Unknown(ref err) => {
                 write!(f, "Http client 400: Unknown error: {}", err)
-            }
-            &Error::UnAuthorized => {
-                write!(f, "Http client 401: Unauthorized access")
             }
         }
     }
@@ -245,11 +241,6 @@ impl Error {
                 FieldError::new(
                     "Unexpected parsing error",
                     graphql_value!({ "code": 300, "details": { message }}),
-                ),
-            Error::UnAuthorized =>
-                FieldError::new(
-                    "Json web token authorization failure!",
-                    graphql_value!({ "code": 401, "details": {"Unauthorized access." }}),
                 ),
             _ =>
                 FieldError::new(

@@ -2,13 +2,14 @@ use std::str::FromStr;
 
 use juniper;
 use juniper::FieldResult;
-use hyper::Method;
+use hyper::{Method, StatusCode};
 use futures::Future;
 use juniper::ID as GraphqlID;
 
 use super::context::Context;
-use super::model::{ID, Service, Model, Provider, User, Node, JWT};
-use ::http::client::Error;
+use super::model::{ID, Service, Model, Provider, User, Node, JWT, Viewer};
+use ::http::client::{Error, ErrorMessage};
+
 
 
 pub struct Query;
@@ -62,46 +63,11 @@ graphql_object!(User: () as "User" |&self| {
 });
 
 
-graphql_object!(Query: Context |&self| {
-
-    description: "Top level query.
-
-    Remote mark
-
-    Some fields are marked as `Remote`. That means that they are
-    part of microservices and their fetching can fail.
-    In this case null will be returned (even if o/w
-    type signature declares not-null type) and corresponding errors
-    will be returned in errors section. Each error is guaranteed
-    to have a `code` field and `details field`.
-
-    Codes:
-    - 100 - microservice responded,
-    but with error http status. In this case `details` is guaranteed
-    to have `status` field with http status and
-    probably some additional details.
-
-    - 200 - there was a network error while connecting to microservice.
-
-    - 300 - there was a parse error - that usually means that
-    graphql couldn't parse api json response
-    (probably because of mismatching types on graphql and microservice)
-    or api url parse failed.
-
-    - 400 - Unknown error.
-    
-    - 401 - Unauthorized access."
-
-    field apiVersion() -> &str as "Current api version." {
-        "1.0"
-    }
+graphql_object!(Viewer: Context as "Viewer" |&self| {
+    description: "Viewer for users."
 
     field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
-
-        if context.authorization_token.is_none() {
-            return Err (Error::UnAuthorized.to_graphql())
-        }
 
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
@@ -113,10 +79,6 @@ graphql_object!(Query: Context |&self| {
 
     field users(&executor, from: GraphqlID as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
         let context = executor.context();
-
-        if context.authorization_token.is_none() {            
-            return Err (Error::UnAuthorized.to_graphql())
-        }
 
         let identifier = ID::from_str(&*from)?;
         let url = format!("{}/{}/?from={}&count={}",
@@ -143,6 +105,59 @@ graphql_object!(Query: Context |&self| {
         }
         
     }
+
+
+});
+
+
+graphql_object!(Query: Context |&self| {
+
+    description: "Top level query.
+
+    Remote mark
+
+    Some fields are marked as `Remote`. That means that they are
+    part of microservices and their fetching can fail.
+    In this case null will be returned (even if o/w
+    type signature declares not-null type) and corresponding errors
+    will be returned in errors section. Each error is guaranteed
+    to have a `code` field and `details field`.
+
+    Codes:
+    - 100 - microservice responded,
+    but with error http status. In this case `details` is guaranteed
+    to have `status` field with http status and
+    probably some additional details.
+
+    - 200 - there was a network error while connecting to microservice.
+
+    - 300 - there was a parse error - that usually means that
+    graphql couldn't parse api json response
+    (probably because of mismatching types on graphql and microservice)
+    or api url parse failed.
+
+    - 400 - Unknown error."
+
+    field apiVersion() -> &str as "Current api version." {
+        "1.0"
+    }
+
+    field viewer(&executor) -> FieldResult<Viewer> as "Fetches viewer for users." {
+        let context = executor.context();
+
+        match context.user {
+            Some(_) => return Ok(Viewer{}),
+            None => return Err (
+                Error::Api( 
+                    StatusCode::Unauthorized, 
+                    Some(ErrorMessage { code: 401, message: "Authentification of Json web token failure".to_string() })
+                    )
+                .to_graphql())
+        }
+    }
+
+
+
 
 });
 

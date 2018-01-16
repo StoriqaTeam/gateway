@@ -55,7 +55,7 @@ impl Service for WebService {
                 
                 Box::new(utils::read_body(req.body()).and_then(move |body| {
                     let mut graphql_context = context.graphql_context.clone();
-                    graphql_context.authorization_token = token_payload;
+                    graphql_context.user = token_payload;
 
                     let graphql_req = (serde_json::from_str(&body)
                         as Result<GraphQLRequest, serde_json::error::Error>)
