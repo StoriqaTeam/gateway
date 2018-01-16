@@ -129,11 +129,16 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field users(&executor, first = None : Option<i32> as "First edges", after : GraphqlID  as "Id of a user") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
+    field users(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a user") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
         let context = executor.context();
-        let identifier = ID::from_str(&*after)?;
+        
+        let raw_id = match after {
+            Some(val) => ID::from_str(&*val)?.raw_id,
+            None => 1
+        };
+        
         let records_limit = context.config.gateway.records_limit;
-        let real_first = match first {
+        let first = match first {
             Some(f) => cmp::min(records_limit as i32, f),
             None => records_limit as i32
         };
@@ -141,8 +146,8 @@ graphql_object!(Query: Context |&self| {
         let url = format!("{}/{}/?from={}&count={}",
             Service::Users.to_url(&context.config), 
             Model::User.to_url(),
-            identifier.raw_id,
-            real_first);
+            raw_id,
+            first + 1);
 
         context.http_client.request::<Vec<User>>(Method::Get, url, None)
             .or_else(|err| Err(err.to_graphql()))
@@ -154,7 +159,7 @@ graphql_object!(Query: Context |&self| {
                                 user.clone()
                             ))
                     .collect();
-                let has_next_page = user_edges.len() as i32 == real_first;
+                let has_next_page = user_edges.len() as i32 == first + 1;
                 let has_previous_page = true;
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
                 Connection::new(user_edges, page_info)
