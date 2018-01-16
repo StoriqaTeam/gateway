@@ -192,3 +192,6 @@ impl fmt::Display for Provider {
         }
     }
 }
+
+
+pub struct Viewer;

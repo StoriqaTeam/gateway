@@ -1,0 +1,2 @@
+[jwt]
+secret_key = "jwt secret key"

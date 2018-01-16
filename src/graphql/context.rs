@@ -5,12 +5,14 @@ use juniper;
 use super::schema;
 use ::config::Config;
 use ::http::client::ClientHandle;
+use ::http::jwt::JWTPayload;
 
 #[derive(Clone)]
 pub struct Context {
     pub config: Arc<Config>,
     pub schema: Arc<schema::Schema>,
     pub http_client: ClientHandle,
+    pub user: Option<JWTPayload>
 }
 
 impl Context {
@@ -18,7 +20,8 @@ impl Context {
     Context {
       config,
       schema: Arc::new(schema::create()),
-      http_client: client_handle
+      http_client: client_handle,
+      user: None
     }
   }
 }

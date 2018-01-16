@@ -1,12 +1,15 @@
+use std::str::FromStr;
+
 use juniper;
 use juniper::FieldResult;
-use hyper::Method;
-
-use super::context::Context;
-use super::model::{ID, Service, Model, Provider, User, Node, JWT};
+use hyper::{Method, StatusCode};
 use futures::Future;
 use juniper::ID as GraphqlID;
-use std::str::FromStr;
+
+use super::context::Context;
+use super::model::{ID, Service, Model, Provider, User, Node, JWT, Viewer};
+use ::http::client::{Error, ErrorMessage};
+
 
 
 pub struct Query;
@@ -60,6 +63,56 @@ graphql_object!(User: () as "User" |&self| {
 });
 
 
+graphql_object!(Viewer: Context as "Viewer" |&self| {
+    description: "Viewer for users.
+    To access users data one must receive viewer object, 
+    by passing jwt in bearer authentification header of http request.
+    All requests without it or with wrong jwt will recieve null."
+
+    field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
+        let context = executor.context();
+
+        let identifier = ID::from_str(&*id)?;
+        let url = identifier.url(&context.config);
+
+        context.http_client.request::<User>(Method::Get, url, None)
+            .or_else(|err| Err(err.to_graphql()))
+            .wait()
+    }
+
+    field users(&executor, from: GraphqlID as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
+        let context = executor.context();
+
+        let identifier = ID::from_str(&*from)?;
+        let url = format!("{}/{}/?from={}&count={}",
+            Service::Users.to_url(&context.config), 
+            Model::User.to_url(),
+            identifier.raw_id,
+            count);
+
+        context.http_client.request::<Vec<User>>(Method::Get, url, None)
+            .or_else(|err| Err(err.to_graphql()))
+            .wait()
+    }
+
+    field node(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
+        let context = executor.context();
+        let identifier = ID::from_str(&*id)?;
+        match (&identifier.service, &identifier.model) {
+            (&Service::Users, _) => {
+                            context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None)
+                                .map(|res| Node::User(res))
+                                .or_else(|err| Err(err.to_graphql()))
+                                .wait()
+            }
+        }
+        
+    }
+
+
+});
+
+
 graphql_object!(Query: Context |&self| {
 
     description: "Top level query.
@@ -92,42 +145,18 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
-    field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
+    field viewer(&executor) -> FieldResult<Viewer> as "Fetches viewer for users." {
         let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
-        let url = identifier.url(&context.config);
 
-        context.http_client.request::<User>(Method::Get, url, None)
-            .or_else(|err| Err(err.to_graphql()))
-            .wait()
-    }
-
-    field users(&executor, from: GraphqlID as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
-        let context = executor.context();
-        let identifier = ID::from_str(&*from)?;
-        let url = format!("{}/{}/?from={}&count={}",
-            Service::Users.to_url(&context.config), 
-            Model::User.to_url(),
-            identifier.raw_id,
-            count);
-
-        context.http_client.request::<Vec<User>>(Method::Get, url, None)
-            .or_else(|err| Err(err.to_graphql()))
-            .wait()
-    }
-
-    field node(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
-        let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
-        match (&identifier.service, &identifier.model) {
-            (&Service::Users, _) => {
-                            context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None)
-                                .map(|res| Node::User(res))
-                                .or_else(|err| Err(err.to_graphql()))
-                                .wait()
-            }
+        match context.user {
+            Some(_) => return Ok(Viewer{}),
+            None => return Err (
+                Error::Api( 
+                    StatusCode::Unauthorized, 
+                    Some(ErrorMessage { code: 401, message: "Authentification of Json web token failure".to_string() })
+                    )
+                .to_graphql())
         }
-        
     }
 
 });
