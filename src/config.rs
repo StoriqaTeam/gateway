@@ -36,6 +36,7 @@ pub struct Gateway {
     pub graphql_thread_pool_size: usize,
     pub http_client_buffer_size: usize,
     pub http_client_retries: usize,
+    pub records_limit: usize
 }
 
 

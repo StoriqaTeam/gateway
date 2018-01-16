@@ -3,8 +3,8 @@ use base64::encode;
 use base64::decode;
 use juniper::FieldError;
 use std::str::FromStr;
-use ::config::Config;
-
+use config::Config;
+use juniper;
 
 #[derive(GraphQLObject, Deserialize, Debug)]
 #[graphql(description = "JWT Token")]
@@ -13,7 +13,7 @@ pub struct JWT {
     pub token: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct User {
     pub id: i32,
     pub email: String,
@@ -57,14 +57,14 @@ impl FromStr for Service {
 impl Service {
     pub fn to_url(&self, config: &Config) -> String {
         match *self {
-                Service::Users => config.users_microservice.url.clone(),
-            }
+            Service::Users => config.users_microservice.url.clone(),
+        }
     }
 }
 
 pub enum Model {
     User,
-    JWT
+    JWT,
 }
 
 impl fmt::Display for Model {
@@ -98,9 +98,9 @@ impl FromStr for Model {
 impl Model {
     pub fn to_url(&self) -> String {
         match *self {
-                Model::User => "users".to_owned(),
-                Model::JWT => "jwt".to_owned(),
-            }
+            Model::User => "users".to_string(),
+            Model::JWT => "jwt".to_string(),
+        }
     }
 }
 
@@ -168,10 +168,12 @@ impl ID {
     }
 
     pub fn url(&self, config: &Config) -> String {
-        format!("{}/{}/{}", 
-            self.service.to_url(config), 
-            self.model.to_url(), 
-            self.raw_id) 
+        format!(
+            "{}/{}/{}",
+            self.service.to_url(config),
+            self.model.to_url(),
+            self.raw_id
+        )
     }
 }
 
@@ -180,6 +182,7 @@ impl ID {
 pub enum Provider {
     #[graphql(description = "Google")] 
     Google,
+
     #[graphql(description = "Facebook")] 
     Facebook,
 }
@@ -193,5 +196,45 @@ impl fmt::Display for Provider {
     }
 }
 
+#[derive(Clone)]
+pub struct Edge<T> {
+    pub cursor: juniper::ID,
+    pub node: T,
+}
+
+impl<T> Edge<T> {
+    pub fn new (cursor: juniper::ID, node: T) -> Self {
+        Self {
+            cursor: cursor,
+            node:node
+        }
+    }
+}
+
+
+#[derive(GraphQLObject, Clone)]
+#[graphql(name = "PageInfo", description = "Page Info from relay spec: https://facebook.github.io/relay/graphql/connections.htm")]
+pub struct PageInfo {
+    #[graphql(description = "has next page")] 
+    pub has_next_page: bool,
+
+    #[graphql(description = "has previous page")] 
+    pub has_previous_page: bool,
+}
+
+
+pub struct Connection<T> {
+    pub edges: Vec<Edge<T>>,
+    pub page_info: PageInfo,
+}
+
+impl<T> Connection<T> {
+    pub fn new (edges: Vec<Edge<T>>, page_info: PageInfo) -> Self {
+        Self {
+            edges: edges,
+            page_info: page_info
+        }
+    }
+}
 
 pub struct Viewer;

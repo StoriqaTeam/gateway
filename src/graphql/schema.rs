@@ -1,13 +1,13 @@
 use std::str::FromStr;
+use std::cmp;
 
 use juniper;
 use juniper::FieldResult;
+use super::context::Context;
+use super::model::{ID, Service, Model, Provider, User, Node, JWT, Connection, Edge, PageInfo, Viewer};
 use hyper::{Method, StatusCode};
 use futures::Future;
 use juniper::ID as GraphqlID;
-
-use super::context::Context;
-use super::model::{ID, Service, Model, Provider, User, Node, JWT, Viewer};
 use ::http::client::{Error, ErrorMessage};
 
 
@@ -16,6 +16,8 @@ pub struct Query;
 pub struct Mutation;
 
 pub type Schema = juniper::RootNode<'static, Query, Mutation>;
+
+const MIN_ID: i32 = 0; 
 
 pub fn create() -> Schema {
     let query = Query {};
@@ -63,6 +65,30 @@ graphql_object!(User: () as "User" |&self| {
 });
 
 
+graphql_object!(Connection<User>: () as "UsersConnection" |&self| {
+    description:"Users Connection"
+
+    field edges() -> Vec<Edge<User>> {
+        self.edges.to_vec()
+    }
+
+    field page_info() -> PageInfo {
+        self.page_info.clone()
+    }
+});
+
+graphql_object!(Edge<User>: () as "UsersEdge" |&self| {
+    description:"Users Edge"
+    
+    field cursor() -> juniper::ID {
+        self.cursor.clone()
+    }
+
+    field node() -> User {
+        self.node.clone()
+    }
+});
+
 graphql_object!(Viewer: Context as "Viewer" |&self| {
     description: "Viewer for users.
     To access users data one must receive viewer object, 
@@ -80,18 +106,41 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
             .wait()
     }
 
-    field users(&executor, from: GraphqlID as "Starting id", count: i32 as "Count of users") -> FieldResult<Vec<User>> as "Fetches users using from and count." {
+    field users(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a user") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
         let context = executor.context();
+        
+        let raw_id = match after {
+            Some(val) => ID::from_str(&*val)?.raw_id,
+            None => MIN_ID
+        };
+        
+        let records_limit = context.config.gateway.records_limit;
+        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let identifier = ID::from_str(&*from)?;
         let url = format!("{}/{}/?from={}&count={}",
             Service::Users.to_url(&context.config), 
             Model::User.to_url(),
-            identifier.raw_id,
-            count);
+            raw_id,
+            first + 1);
 
         context.http_client.request::<Vec<User>>(Method::Get, url, None)
             .or_else(|err| Err(err.to_graphql()))
+            .map (|users| {
+                let mut user_edges: Vec<Edge<User>> = users
+                    .into_iter()
+                    .map(|user| Edge::new(
+                                juniper::ID::from(ID::new(Service::Users, Model::User, user.id.clone()).to_string()),
+                                user.clone()
+                            ))
+                    .collect();
+                let has_next_page = user_edges.len() as i32 == first + 1;
+                if has_next_page { 
+                    user_edges.pop(); 
+                };
+                let has_previous_page = true;
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                Connection::new(user_edges, page_info)
+            })
             .wait()
     }
 
