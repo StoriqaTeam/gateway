@@ -1,19 +1,6 @@
-FROM buildpack-deps:stretch-curl
+FROM rust:1.23.0-stretch
 
-ENV RUSTUP_HOME=/usr/local/rustup \
-    CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:$PATH \
-    USER=root
-
-RUN apt-get update && \
-    apt-get install -y build-essential
-
-RUN curl https://sh.rustup.rs -sSf > /tmp/rust-init.sh && \
-    chmod +x /tmp/rust-init.sh && \
-    /tmp/rust-init.sh -y --no-modify-path --default-toolchain stable
-
+# Install cargo-watch
 RUN cargo install cargo-watch
 
-WORKDIR /app
-
-CMD ["bash"]
+VOLUME /usr/local/cargo
