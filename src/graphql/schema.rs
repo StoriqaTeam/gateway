@@ -144,21 +144,6 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
             .wait()
     }
 
-    field node(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
-        let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
-        match (&identifier.service, &identifier.model) {
-            (&Service::Users, _) => {
-                            context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None)
-                                .map(|res| Node::User(res))
-                                .or_else(|err| Err(err.to_graphql()))
-                                .wait()
-            }
-        }
-        
-    }
-
-
 });
 
 
@@ -208,6 +193,19 @@ graphql_object!(Query: Context |&self| {
         }
     }
 
+    field node(&executor, id: GraphqlID as "Id of a node.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
+        let context = executor.context();
+        let identifier = ID::from_str(&*id)?;
+        match (&identifier.service, &identifier.model) {
+            (&Service::Users, _) => {
+                            context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None)
+                                .map(|res| Node::User(res))
+                                .or_else(|err| Err(err.to_graphql()))
+                                .wait()
+            }
+        }
+        
+    }
 });
 
 graphql_object!(Mutation: Context |&self| {
