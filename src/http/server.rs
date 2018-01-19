@@ -2,9 +2,9 @@ use std::sync::Arc;
 use std::process;
 
 use hyper;
-use hyper::{Get, Post};
+use hyper::Method::{Get, Post, Options};
 use hyper::server::{Http, Request, Response, Service};
-use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin};
+use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin, AccessControlAllowHeaders, AccessControlAllowMethods};
 use futures;
 use futures::future;
 use futures::{Future, Stream};
@@ -45,7 +45,6 @@ impl Service for WebService {
                 let headers = req.headers().clone();
                 let auth_header = headers.get::<Authorization<Bearer>>();
                 let jwt_secret_key = context.graphql_context.config.jwt.secret_key.clone();
-                let allowed_domens = context.graphql_context.config.cors.allowed_domens.clone();
                 let token_payload = auth_header.map (move |auth| {
                         let token = auth.0.token.as_ref();
                         decode::<JWTPayload>(token, jwt_secret_key.as_ref(), &Validation::default())
@@ -71,15 +70,29 @@ impl Service for WebService {
                         Err(err) => {
                             future::ok(utils::response_with_error(error::Error::Json(err)))
                         }
-                    }).and_then(move |resp| {
-                            let mut new_headers = Headers::new();
-                            new_headers.set(
-                                AccessControlAllowOrigin::Value(allowed_domens.to_owned())
-                            );
-                            future::ok(utils::replace_response_headers(resp, new_headers)) 
-                        })
+                    })
                 }))
             }
+
+            (&Options, Some(router::Route::Root)) => {
+                let allowed_domens = context.graphql_context.config.cors.allowed_domens.clone();
+                let req_headers = req.headers().clone();
+                let acah = req_headers.get::<AccessControlAllowHeaders>();
+
+                let resp = Response::new();
+                let mut new_headers = Headers::new();
+                new_headers.set(
+                    AccessControlAllowOrigin::Value(allowed_domens.to_owned())
+                );
+                new_headers.set(
+                    AccessControlAllowMethods(vec![Get, Post])
+                );
+                if let Some(a) = acah {
+                    new_headers.set(AccessControlAllowHeaders(a.to_vec()));  
+                };
+
+                Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
+            }            
 
             _ => Box::new(future::ok(utils::response_not_found())),
         }
