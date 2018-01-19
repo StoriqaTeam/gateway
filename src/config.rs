@@ -47,7 +47,8 @@ pub struct Config {
     pub store_microservice: Microservice,
     pub orders_microservice: Microservice,
     pub billing_microservice: Microservice,
-    pub jwt : JWT
+    pub jwt : JWT,
+    pub cors: CORS,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -55,6 +56,11 @@ pub struct JWT {
     pub secret_key: String,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct CORS {
+    pub domain: String,
+    pub max_age: u32
+}
 
 impl Config {
     /// Creates config from base.toml, which are overwritten by <env>.toml, where

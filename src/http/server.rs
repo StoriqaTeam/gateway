@@ -2,9 +2,9 @@ use std::sync::Arc;
 use std::process;
 
 use hyper;
-use hyper::{Get, Post};
+use hyper::Method::{Get, Post, Options};
 use hyper::server::{Http, Request, Response, Service};
-use hyper::header::{Authorization, Bearer};
+use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin, AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlMaxAge};
 use futures;
 use futures::future;
 use futures::{Future, Stream};
@@ -73,6 +73,30 @@ impl Service for WebService {
                     })
                 }))
             }
+
+            (&Options, Some(router::Route::Root)) => {
+                let domain = context.graphql_context.config.cors.domain.clone();
+                let max_age = context.graphql_context.config.cors.max_age;
+                let req_headers = req.headers().clone();
+                let acah = req_headers.get::<AccessControlAllowHeaders>();
+
+                let resp = Response::new();
+                let mut new_headers = Headers::new();
+                new_headers.set(
+                    AccessControlAllowOrigin::Value(domain.to_owned())
+                );
+                new_headers.set(
+                    AccessControlAllowMethods(vec![Get, Post, Options])
+                );
+                if let Some(a) = acah {
+                    new_headers.set(AccessControlAllowHeaders(a.to_vec()));  
+                };
+                new_headers.set(
+                    AccessControlMaxAge(max_age)
+                );
+
+                Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
+            }            
 
             _ => Box::new(future::ok(utils::response_not_found())),
         }
