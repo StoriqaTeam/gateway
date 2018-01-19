@@ -43,7 +43,7 @@ pub fn response_not_found() -> Response {
     response_with_body("Not found".to_string()).with_status(StatusCode::NotFound)
 }
 
-pub fn add_headers_to_response(mut res: Response, headers: Headers) -> Response {
+pub fn replace_response_headers(mut res: Response, headers: Headers) -> Response {
     mem::replace(res.headers_mut(), headers);
     res
 }

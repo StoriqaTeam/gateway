@@ -71,12 +71,12 @@ impl Service for WebService {
                         Err(err) => {
                             future::ok(utils::response_with_error(error::Error::Json(err)))
                         }
-                    }).and_then(move |r| {
-                            let mut headers = Headers::new();
-                            headers.set(
+                    }).and_then(move |resp| {
+                            let mut new_headers = Headers::new();
+                            new_headers.set(
                                 AccessControlAllowOrigin::Value(allowed_domens.to_owned())
                             );
-                            future::ok(utils::add_headers_to_response(r, headers)) 
+                            future::ok(utils::replace_response_headers(resp, new_headers)) 
                         })
                 }))
             }
