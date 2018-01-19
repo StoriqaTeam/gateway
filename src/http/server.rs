@@ -5,7 +5,7 @@ use hyper;
 use hyper::mime;
 use hyper::Method::{Get, Post, Options};
 use hyper::server::{Http, Request, Response, Service};
-use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin, AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlMaxAge, ContentType};
+use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin, AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlMaxAge, ContentType, AccessControlRequestHeaders};
 use futures;
 use futures::future;
 use futures::{Future, Stream};
@@ -79,7 +79,7 @@ impl Service for WebService {
                 let domain = context.graphql_context.config.cors.domain.clone();
                 let max_age = context.graphql_context.config.cors.max_age;
                 let req_headers = req.headers().clone();
-                let acah = req_headers.get::<AccessControlAllowHeaders>();
+                let acah = req_headers.get::<AccessControlRequestHeaders>();
 
                 let resp = Response::new();
                 let mut new_headers = Headers::new();
