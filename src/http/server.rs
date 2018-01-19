@@ -82,7 +82,7 @@ impl Service for WebService {
                 }))
             }
 
-            (&Options, Some(router::Route::Root)) => {
+            (&Options, Some(router::Route::Graphql)) => {
                 let domain = context.graphql_context.config.cors.domain.clone();
                 let max_age = context.graphql_context.config.cors.max_age;
                 let req_headers = req.headers().clone();
