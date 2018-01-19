@@ -4,7 +4,7 @@ use std::process;
 use hyper;
 use hyper::Method::{Get, Post, Options};
 use hyper::server::{Http, Request, Response, Service};
-use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin, AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlMaxAge};
+use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin, AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlMaxAge, ContentType};
 use futures;
 use futures::future;
 use futures::{Future, Stream};
@@ -93,6 +93,9 @@ impl Service for WebService {
                 };
                 new_headers.set(
                     AccessControlMaxAge(max_age)
+                );
+                new_headers.set(
+                    ContentType::json()
                 );
 
                 Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
