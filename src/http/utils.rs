@@ -1,6 +1,8 @@
+use std::mem;
+
 use hyper;
 use hyper::{StatusCode};
-use hyper::header::ContentLength;
+use hyper::header::{ContentLength, Headers};
 use hyper::server::Response;
 use hyper::error::Error;
 use futures::future::{Future};
@@ -39,4 +41,9 @@ pub fn response_with_error(error: error::Error) -> Response {
 
 pub fn response_not_found() -> Response {
     response_with_body("Not found".to_string()).with_status(StatusCode::NotFound)
+}
+
+pub fn add_headers_to_response(mut res: Response, headers: Headers) -> Response {
+    mem::replace(res.headers_mut(), headers);
+    res
 }

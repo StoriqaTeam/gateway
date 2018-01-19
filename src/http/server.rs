@@ -4,7 +4,7 @@ use std::process;
 use hyper;
 use hyper::{Get, Post};
 use hyper::server::{Http, Request, Response, Service};
-use hyper::header::{Authorization, Bearer};
+use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin};
 use futures;
 use futures::future;
 use futures::{Future, Stream};
@@ -45,6 +45,7 @@ impl Service for WebService {
                 let headers = req.headers().clone();
                 let auth_header = headers.get::<Authorization<Bearer>>();
                 let jwt_secret_key = context.graphql_context.config.jwt.secret_key.clone();
+                let allowed_domens = context.graphql_context.config.cors.allowed_domens.clone();
                 let token_payload = auth_header.map (move |auth| {
                         let token = auth.0.token.as_ref();
                         decode::<JWTPayload>(token, jwt_secret_key.as_ref(), &Validation::default())
@@ -70,7 +71,13 @@ impl Service for WebService {
                         Err(err) => {
                             future::ok(utils::response_with_error(error::Error::Json(err)))
                         }
-                    })
+                    }).and_then(move |r| {
+                            let mut headers = Headers::new();
+                            headers.set(
+                                AccessControlAllowOrigin::Value(allowed_domens.to_owned())
+                            );
+                            future::ok(utils::add_headers_to_response(r, headers)) 
+                        })
                 }))
             }
 

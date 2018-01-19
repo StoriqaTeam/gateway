@@ -1,2 +1,5 @@
 [jwt]
 secret_key = "jwt secret key"
+
+[cors]
+allowed_domens = "http://localhost:3003/registration http://localhost:8000/graphql"
