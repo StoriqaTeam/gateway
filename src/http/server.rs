@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::process;
 
 use hyper;
+use hyper::mime;
 use hyper::Method::{Get, Post, Options};
 use hyper::server::{Http, Request, Response, Service};
 use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin, AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlMaxAge, ContentType};
@@ -95,7 +96,7 @@ impl Service for WebService {
                     AccessControlMaxAge(max_age)
                 );
                 new_headers.set(
-                    ContentType::json()
+                    ContentType(mime::TEXT_HTML)
                 );
 
                 Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
