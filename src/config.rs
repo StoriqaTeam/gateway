@@ -58,7 +58,8 @@ pub struct JWT {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct CORS {
-    pub allowed_domens: String,
+    pub domain: String,
+    pub max_age: u32
 }
 
 impl Config {
