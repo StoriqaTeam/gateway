@@ -6,8 +6,11 @@ use juniper::FieldResult;
 use super::context::Context;
 use super::model::{ID, Service, Model, Provider, User, Node, JWT, Connection, Edge, PageInfo, Viewer};
 use hyper::{Method, StatusCode};
-use futures::Future;
+use hyper::header::{Authorization, Bearer, Headers};
+use jsonwebtoken::{encode, Header};
+use futures::{ Future, IntoFuture };
 use juniper::ID as GraphqlID;
+
 use ::http::client::{Error, ErrorMessage};
 
 
@@ -144,6 +147,24 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
             .wait()
     }
 
+    field current_user(&executor) -> FieldResult<User> as "Fetches current user information." {
+        let context = executor.context();
+        let jwt_secret_key = context.config.jwt.secret_key.clone();
+        let tokenpayload = context.user.clone().unwrap();
+        encode(&Header::default(), &tokenpayload, jwt_secret_key.as_ref())
+            .map_err(|_| Error::Parse(format!("Couldn't encode jwt: {:?}.", tokenpayload)).to_graphql())
+            .into_future()
+            .and_then(move |token| {
+                let mut headers = Headers::new();
+                headers.set(Authorization ( Bearer { token: token } ) );
+                let url = format!("{}/{}/current",
+                    Service::Users.to_url(&context.config), 
+                    Model::User.to_url());
+                context.http_client.request::<User>(Method::Get, url, None)
+                            .or_else(|err| Err(err.to_graphql()))
+                            
+            }).wait()
+    }
 });
 
 
