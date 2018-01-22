@@ -103,7 +103,7 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, user.user_email)
+        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, user)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -126,7 +126,7 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
             raw_id,
             first + 1);
 
-        context.http_client.request_with_auth_header::<Vec<User>>(Method::Get, url, None, user.user_email)
+        context.http_client.request_with_auth_header::<Vec<User>>(Method::Get, url, None, user)
             .or_else(|err| Err(err.to_graphql()))
             .map (|users| {
                 let mut user_edges: Vec<Edge<User>> = users
@@ -153,7 +153,7 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
         let url = format!("{}/{}/current",
             Service::Users.to_url(&context.config), 
             Model::User.to_url());
-        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, user.user_email)
+        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, user)
                     .or_else(|err| Err(err.to_graphql()))
                     .wait()
                             

@@ -2,7 +2,7 @@ use std::fmt;
 use std::mem;
 
 use tokio_core::reactor::{Handle};
-use hyper::header::{Authorization, Bearer, Headers};
+use hyper::header::{Authorization, Headers};
 use hyper;
 use futures::future::IntoFuture;
 use futures::{future, Future};
@@ -14,6 +14,7 @@ use serde::de::Deserialize;
 use juniper::FieldError;
 
 use ::config::Config;
+use ::http::jwt::JWTPayload;
 
 pub type ClientResult = Result<String, Error>;
 pub type HyperClient = hyper::Client<hyper::client::HttpConnector>;
@@ -123,11 +124,11 @@ pub struct ClientHandle {
 
 impl ClientHandle {
 
-    pub fn request_with_auth_header<T>(&self, method: hyper::Method, url: String, body: Option<String>, token: String) -> Box<Future<Item=T, Error=Error>>
+    pub fn request_with_auth_header<T>(&self, method: hyper::Method, url: String, body: Option<String>, token: JWTPayload) -> Box<Future<Item=T, Error=Error>>
         where T: for <'a> Deserialize<'a> + 'static
     {
         let mut headers = Headers::new();
-        headers.set(Authorization ( Bearer { token: token } ) );
+        headers.set(Authorization(token.user_email));
         self.request(method, url, body, Some(headers))
     }
 
