@@ -14,7 +14,6 @@ services:
     ports:
       - 8000:8000
     stdin_open: true
-    tty: true
 
 volumes:
   stq_cargo_cache:
