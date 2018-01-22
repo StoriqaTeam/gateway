@@ -6,9 +6,7 @@ use juniper::FieldResult;
 use super::context::Context;
 use super::model::{ID, Service, Model, Provider, User, Node, JWT, Connection, Edge, PageInfo, Viewer};
 use hyper::{Method, StatusCode};
-use hyper::header::{Authorization, Bearer, Headers};
-use jsonwebtoken::{encode, Header};
-use futures::{ Future, IntoFuture };
+use futures::Future;
 use juniper::ID as GraphqlID;
 
 use ::http::client::{Error, ErrorMessage};
@@ -100,17 +98,19 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
 
     field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
+        let user = context.user.clone().unwrap();
 
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request::<User>(Method::Get, url, None)
+        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, user.user_email)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
     field users(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a user") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
         let context = executor.context();
+        let user = context.user.clone().unwrap();
         
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
@@ -126,7 +126,7 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
             raw_id,
             first + 1);
 
-        context.http_client.request::<Vec<User>>(Method::Get, url, None)
+        context.http_client.request_with_auth_header::<Vec<User>>(Method::Get, url, None, user.user_email)
             .or_else(|err| Err(err.to_graphql()))
             .map (|users| {
                 let mut user_edges: Vec<Edge<User>> = users
@@ -149,21 +149,14 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
 
     field current_user(&executor) -> FieldResult<User> as "Fetches current user information." {
         let context = executor.context();
-        let jwt_secret_key = context.config.jwt.secret_key.clone();
-        let tokenpayload = context.user.clone().unwrap();
-        encode(&Header::default(), &tokenpayload, jwt_secret_key.as_ref())
-            .map_err(|_| Error::Parse(format!("Couldn't encode jwt: {:?}.", tokenpayload)).to_graphql())
-            .into_future()
-            .and_then(move |token| {
-                let mut headers = Headers::new();
-                headers.set(Authorization ( Bearer { token: token } ) );
-                let url = format!("{}/{}/current",
-                    Service::Users.to_url(&context.config), 
-                    Model::User.to_url());
-                context.http_client.request::<User>(Method::Get, url, None)
-                            .or_else(|err| Err(err.to_graphql()))
+        let user = context.user.clone().unwrap();
+        let url = format!("{}/{}/current",
+            Service::Users.to_url(&context.config), 
+            Model::User.to_url());
+        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, user.user_email)
+                    .or_else(|err| Err(err.to_graphql()))
+                    .wait()
                             
-            }).wait()
     }
 });
 
@@ -219,7 +212,7 @@ graphql_object!(Query: Context |&self| {
         let identifier = ID::from_str(&*id)?;
         match (&identifier.service, &identifier.model) {
             (&Service::Users, _) => {
-                            context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None)
+                            context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None, None)
                                 .map(|res| Node::User(res))
                                 .or_else(|err| Err(err.to_graphql()))
                                 .wait()
@@ -256,7 +249,7 @@ graphql_object!(Mutation: Context |&self| {
         let user = json!({"email": email, "password": password});
         let body: String = user.to_string();
 
-        context.http_client.request::<User>(Method::Post, url, Some(body))
+        context.http_client.request::<User>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -268,7 +261,7 @@ graphql_object!(Mutation: Context |&self| {
         let user = json!({"email": email});
         let body: String = user.to_string();
 
-        context.http_client.request::<User>(Method::Put, url, Some(body))
+        context.http_client.request::<User>(Method::Put, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -278,7 +271,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request::<User>(Method::Delete, url, None)
+        context.http_client.request::<User>(Method::Delete, url, None, None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -292,7 +285,7 @@ graphql_object!(Mutation: Context |&self| {
         let account = json!({"email": email, "password": password});
         let body: String = account.to_string();
 
-        context.http_client.request::<JWT>(Method::Post, url, Some(body))
+        context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -306,7 +299,7 @@ graphql_object!(Mutation: Context |&self| {
         let oauth = json!({"token": token});
         let body: String = oauth.to_string();
 
-        context.http_client.request::<JWT>(Method::Post, url, Some(body))
+        context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
