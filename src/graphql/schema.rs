@@ -4,10 +4,11 @@ use std::cmp;
 use juniper;
 use juniper::FieldResult;
 use super::context::Context;
-use super::model::{ID, Service, Model, Provider, User, Node, JWT, Connection, Edge, PageInfo, Viewer};
+use super::model::{ID, Service, Model, Provider, User, Node, JWT, Connection, Edge, PageInfo, Viewer, ProviderOauth};
 use hyper::{Method, StatusCode};
 use futures::Future;
 use juniper::ID as GraphqlID;
+use serde_json;
 
 use ::http::client::{Error, ErrorMessage};
 
@@ -296,8 +297,8 @@ graphql_object!(Mutation: Context |&self| {
             Service::Users.to_url(&context.config), 
             Model::JWT.to_url(),
             provider);
-        let oauth = json!({"token": token});
-        let body: String = oauth.to_string();
+        let oauth = ProviderOauth { code: token };
+        let body: String = serde_json::to_string(&oauth).unwrap();
 
         context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
