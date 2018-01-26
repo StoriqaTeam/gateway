@@ -297,7 +297,7 @@ graphql_object!(Mutation: Context |&self| {
             Service::Users.to_url(&context.config), 
             Model::JWT.to_url(),
             provider);
-        let oauth = ProviderOauth { code: token };
+        let oauth = ProviderOauth { token: token };
         let body: String = serde_json::to_string(&oauth).unwrap();
 
         context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
