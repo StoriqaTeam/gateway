@@ -83,8 +83,8 @@ graphql_object!(Store: () as "Store" |&self| {
         self.id.to_string().into()
     }
 
-    field full_name() -> String as "Full Name" {
-        self.full_name.clone()
+    field name() -> String as "Full Name" {
+        self.name.clone()
     }
 
     field isActive() -> bool as "If the store was disabled (deleted), isActive is false" {
@@ -106,8 +106,8 @@ graphql_object!(Product: () as "Product" |&self| {
         self.id.to_string().into()
     }
 
-    field full_name() -> String as "Full Name" {
-        self.full_name.clone()
+    field name() -> String as "Full Name" {
+        self.name.clone()
     }
 
     field isActive() -> bool as "If the product was disabled (deleted), isActive is false" {
@@ -496,12 +496,12 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createStore(&executor, full_name: String as "Full name of a store.") -> FieldResult<Store> as "Creates new store." {
+    field createStore(&executor, name: String as "Full name of a store.") -> FieldResult<Store> as "Creates new store." {
         let context = executor.context();
         let url = format!("{}/{}", 
             Service::Stores.to_url(&context.config),
             Model::Store.to_url());
-        let store = json!({"full_name": full_name});
+        let store = json!({"name": name});
         let body: String = store.to_string();
 
         context.http_client.request::<Store>(Method::Post, url, Some(body), None)
@@ -509,11 +509,11 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateStore(&executor, id: GraphqlID as "Id of a store." , full_name: String as "New name of a store.") -> FieldResult<Store>  as "Updates existing store."{
+    field updateStore(&executor, id: GraphqlID as "Id of a store." , name: String as "New name of a store.") -> FieldResult<Store>  as "Updates existing store."{
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
-        let store = json!({"full_name": full_name});
+        let store = json!({"name": name});
         let body: String = store.to_string();
 
         context.http_client.request::<Store>(Method::Put, url, Some(body), None)
@@ -531,12 +531,12 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createProduct(&executor, full_name: String as "Full name of a product.") -> FieldResult<Product> as "Creates new product." {
+    field createProduct(&executor, name: String as "Full name of a product.") -> FieldResult<Product> as "Creates new product." {
         let context = executor.context();
         let url = format!("{}/{}", 
             Service::Stores.to_url(&context.config),
             Model::Product.to_url());
-        let product = json!({"full_name": full_name});
+        let product = json!({"name": name});
         let body: String = product.to_string();
 
         context.http_client.request::<Product>(Method::Post, url, Some(body), None)
@@ -544,11 +544,11 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateProduct(&executor, id: GraphqlID as "Id of a product." , full_name: String as "New name of a product.") -> FieldResult<Product>  as "Updates existing product."{
+    field updateProduct(&executor, id: GraphqlID as "Id of a product." , name: String as "New name of a product.") -> FieldResult<Product>  as "Updates existing product."{
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
-        let product = json!({"full_name": full_name});
+        let product = json!({"name": name});
         let body: String = product.to_string();
 
         context.http_client.request::<Product>(Method::Put, url, Some(body), None)

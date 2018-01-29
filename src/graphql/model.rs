@@ -23,7 +23,7 @@ pub struct User {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Store {
     pub id: i32,
-    pub full_name: String,
+    pub name: String,
     pub is_active: bool,
 }
 
@@ -31,7 +31,7 @@ pub struct Store {
 pub struct Product {
     pub id: i32,
     pub store_id: i32,
-    pub full_name: String,
+    pub name: String,
     pub is_active: bool,
 }
 
