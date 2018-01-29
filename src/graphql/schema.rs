@@ -1,10 +1,11 @@
 use std::str::FromStr;
 use std::cmp;
 
+
 use juniper;
 use juniper::FieldResult;
 use super::context::Context;
-use super::model::{ID, Service, Model, Provider, User, Node, JWT, Connection, Edge, PageInfo, Viewer, ProviderOauth,Product, Store};
+use super::model::{ID, Service, Model, Provider, User, Node, JWT, Connection, Edge, PageInfo, Viewer, ProviderOauth, Gender,Product, Store};
 use hyper::{Method, StatusCode};
 use futures::Future;
 use juniper::ID as GraphqlID;
@@ -62,6 +63,30 @@ graphql_object!(User: () as "User" |&self| {
 
     field email() -> String as "Email" {
         self.email.clone()
+    }
+
+    field phone() -> Option<String> as "Phone" {
+        self.phone.clone()
+    }
+
+    field first_name() -> Option<String> as "First name" {
+        self.first_name.clone()
+    }
+
+    field last_name() -> Option<String> as "Last name" {
+        self.last_name.clone()
+    }
+
+    field middle_name() -> Option<String> as "Middle name" {
+        self.middle_name.clone()
+    }
+
+    field gender() -> Gender as "Gender" {
+        self.gender.clone()
+    }
+
+    field birthdate() -> Option<String> as "Birthdate" {
+        self.birthdate.clone()
     }
 
     field isActive() -> bool as "If the user was disabled (deleted), isActive is false" {
@@ -474,11 +499,30 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateUser(&executor, id: GraphqlID as "Id of a user." , email: String as "New email of a user.") -> FieldResult<User>  as "Updates existing user."{
+    field updateUser(
+        &executor, 
+        id: GraphqlID as "Id of a user.", 
+        email: String as "New email of a user.", 
+        phone = None : Option<String> as "New phone of a user",
+        first_name = None : Option<String> as "New first name of a user",
+        last_name = None : Option<String> as "New last name of a user",
+        middle_name = None : Option<String> as "New middle name of a user",
+        gender = None : Option<Gender> as "gender of a user",
+        birthdate = None : Option<String> as "Birthdate of a user") 
+            -> FieldResult<User>  as "Updates existing user."{
+
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
-        let user = json!({"email": email});
+        let user = json!({
+            "email": email, 
+            "phone": phone, 
+            "first_name": first_name, 
+            "last_name": last_name, 
+            "middle_name": middle_name, 
+            "gender": gender, 
+            "birthdate": birthdate, 
+            });
         let body: String = user.to_string();
 
         context.http_client.request::<User>(Method::Put, url, Some(body), None)

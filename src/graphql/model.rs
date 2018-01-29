@@ -1,10 +1,13 @@
 use std::fmt;
+use std::str::FromStr;
+
 use base64::encode;
 use base64::decode;
 use juniper::FieldError;
-use std::str::FromStr;
-use config::Config;
 use juniper;
+
+use config::Config;
+
 
 #[derive(GraphQLObject, Deserialize, Debug)]
 #[graphql(description = "JWT Token")]
@@ -13,11 +16,47 @@ pub struct JWT {
     pub token: String,
 }
 
+#[derive(GraphQLEnum, Deserialize, Serialize, Debug, Clone)]
+#[graphql(name = "Gender", description = "Gender of a user")]
+pub enum Gender {
+   Male,
+   Female,
+   Undefined
+}
+
+impl FromStr for Gender {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "male" => Ok(Gender::Male),
+            "female" => Ok(Gender::Female),
+            _ => Ok(Gender::Undefined),
+        }
+    }
+}
+
+impl fmt::Display for Gender {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Gender::Male => write!(f, "male"),
+            Gender::Female => write!(f, "female"),
+            Gender::Undefined => write!(f, "undefined"),
+        }
+    }
+}
+
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct User {
     pub id: i32,
     pub email: String,
     pub is_active: bool,
+    pub phone: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub middle_name: Option<String>,
+    pub gender: Gender,
+    pub birthdate: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
