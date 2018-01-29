@@ -44,7 +44,7 @@ pub struct Gateway {
 pub struct Config {
     pub gateway: Gateway,
     pub users_microservice: Microservice,
-    pub store_microservice: Microservice,
+    pub stores_microservice: Microservice,
     pub orders_microservice: Microservice,
     pub billing_microservice: Microservice,
     pub jwt : JWT,

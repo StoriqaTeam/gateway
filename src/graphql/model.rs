@@ -20,18 +20,37 @@ pub struct User {
     pub is_active: bool,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+pub struct Store {
+    pub id: i32,
+    pub full_name: String,
+    pub is_active: bool,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct Product {
+    pub id: i32,
+    pub store_id: i32,
+    pub full_name: String,
+    pub is_active: bool,
+}
+
 pub enum Node {
     User(User),
+    Store(Store),
+    Product(Product)
 }
 
 pub enum Service {
     Users,
+    Stores
 }
 
 impl fmt::Display for Service {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Service::Users => write!(f, "users"),
+            Service::Stores => write!(f, "stores"),
         }
     }
 }
@@ -42,6 +61,7 @@ impl FromStr for Service {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "users" => Ok(Service::Users),
+            "stores" => Ok(Service::Stores),
             _ => {
                 return Err(FieldError::new(
                     "Unknown service",
@@ -58,6 +78,7 @@ impl Service {
     pub fn to_url(&self, config: &Config) -> String {
         match *self {
             Service::Users => config.users_microservice.url.clone(),
+            Service::Stores => config.stores_microservice.url.clone(),
         }
     }
 }
@@ -65,6 +86,8 @@ impl Service {
 pub enum Model {
     User,
     JWT,
+    Store,
+    Product
 }
 
 impl fmt::Display for Model {
@@ -72,6 +95,8 @@ impl fmt::Display for Model {
         match *self {
             Model::User => write!(f, "user"),
             Model::JWT => write!(f, "jwt"),
+            Model::Store => write!(f, "store"),
+            Model::Product => write!(f, "product"),
         }
     }
 }
@@ -83,6 +108,8 @@ impl FromStr for Model {
         match s {
             "user" => Ok(Model::User),
             "jwt" => Ok(Model::JWT),
+            "store" => Ok(Model::Store),
+            "product" => Ok(Model::Product),
             _ => {
                 return Err(FieldError::new(
                     "Unknown model",
@@ -100,6 +127,8 @@ impl Model {
         match *self {
             Model::User => "users".to_string(),
             Model::JWT => "jwt".to_string(),
+            Model::Store => "store".to_string(),
+            Model::Product => "product".to_string(),
         }
     }
 }
