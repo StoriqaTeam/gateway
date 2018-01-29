@@ -21,7 +21,7 @@ extern crate jsonwebtoken;
 
 pub mod config;
 mod graphql;
-mod http;
+pub mod http;
 
 use futures::stream::Stream;
 use tokio_core::reactor::Core;

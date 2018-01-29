@@ -12,7 +12,6 @@ pub struct Router {
 pub enum Route {
     Root,
     Graphql,
-    Users(i32) // this is for demo purposes, not needed for graphql
 }
 
 impl Router {
@@ -31,21 +30,6 @@ impl Router {
     /// Adds mapping between regex and route with params
     /// converter is a function with argument being a set of regex matches (strings) for route params in regex
     /// this is needed if you want to convert params from strings to int or some other types
-    ///
-    /// #Example
-    /// 
-    /// ```
-    /// enum Route {
-    ///     Users(i32)
-    /// }
-    ///
-    /// let router = Router::new();
-    /// router.add_route_with_params(r"^/users/(\d+)$", |params| {
-    ///     params.get(0)
-    ///        .and_then(|string_id| string_id.parse::<i32>().ok())
-    ///        .map(|user_id| Route::Users(user_id))
-    /// });
-    /// ```
     pub fn add_route_with_params<F>(&mut self, regex_pattern: &str, converter: F) -> &Self 
         where F: Fn(Vec<&str>) -> Option<Route> + 'static {
         let regex = Regex::new(regex_pattern).unwrap();
@@ -82,10 +66,5 @@ pub fn create_router() -> Router {
     let mut router = Router::new();
     router.add_route(r"^/$", Route::Root);
     router.add_route(r"^/graphql$", Route::Graphql);
-    router.add_route_with_params(r"^/users/(\d+)$", |params| {
-        params.get(0)
-            .and_then(|string_id| string_id.parse::<i32>().ok())
-            .map(|user_id| Route::Users(user_id))
-    });
     router
 }

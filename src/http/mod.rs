@@ -3,7 +3,7 @@ pub mod client;
 mod context;
 mod error;
 mod graphiql;
-mod router;
+pub mod router;
 mod utils;
 pub mod jwt;
 
