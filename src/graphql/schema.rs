@@ -5,7 +5,7 @@ use std::cmp;
 use juniper;
 use juniper::FieldResult;
 use super::context::Context;
-use super::model::{ID, Service, Model, Provider, User, Node, JWT, Connection, Edge, PageInfo, Viewer, ProviderOauth, Gender,Product, Store};
+use super::models::*;
 use hyper::{Method, StatusCode};
 use futures::Future;
 use juniper::ID as GraphqlID;
@@ -514,16 +514,15 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
-        let user = json!({
-            "email": email, 
-            "phone": phone, 
-            "first_name": first_name, 
-            "last_name": last_name, 
-            "middle_name": middle_name, 
-            "gender": gender, 
-            "birthdate": birthdate, 
-            });
-        let body: String = user.to_string();
+        let user = UpdateUser {
+                phone: phone, 
+                first_name: first_name, 
+                last_name: last_name, 
+                middle_name: middle_name, 
+                gender: gender, 
+                birthdate: birthdate, 
+            };
+        let body: String = serde_json::to_string(&user).unwrap().to_string();
 
         context.http_client.request::<User>(Method::Put, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
@@ -540,25 +539,87 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createStore(&executor, name: String as "Full name of a store.") -> FieldResult<Store> as "Creates new store." {
+    field createStore(
+        &executor, 
+        name: String as "Full name of a store.",
+        currency_id : i32 as "Default currency id",
+        short_description : String as "short_description",
+        long_description = None : Option<String> as "long_description",
+        slug : String as "slug",
+        cover = None : Option<String> as "cover",
+        logo = None : Option<String> as "logo",
+        phone : String as "phone",
+        email : String as "email",
+        address : String as "address",
+        facebook_url = None : Option<String> as "facebook_url",
+        twitter_url = None : Option<String> as "twitter_url",
+        instagram_url = None : Option<String> as "instagram_url") 
+            -> FieldResult<Store> as "Creates new store." {
+
         let context = executor.context();
         let url = format!("{}/{}", 
             Service::Stores.to_url(&context.config),
             Model::Store.to_url());
-        let store = json!({"name": name});
-        let body: String = store.to_string();
+        let store = NewStore {
+            name,
+            currency_id,
+            short_description,
+            long_description,
+            slug,
+            cover,
+            logo,
+            phone,
+            email,
+            address,
+            facebook_url,
+            twitter_url,
+            instagram_url,
+        };
+        let body: String = serde_json::to_string(&store).unwrap().to_string();
 
         context.http_client.request::<Store>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field updateStore(&executor, id: GraphqlID as "Id of a store." , name: String as "New name of a store.") -> FieldResult<Store>  as "Updates existing store."{
+    field updateStore(
+        &executor, 
+        id: GraphqlID as "Id of a store.", 
+        name = None : Option<String> as "New name of a store.",
+        currency_id = None : Option<i32> as "currency_id",
+        short_description = None : Option<String> as "short_description",
+        long_description = None : Option<String> as "long_description",
+        slug = None : Option<String> as "slug",
+        cover = None : Option<String> as "cover",
+        logo = None : Option<String> as "logo",
+        phone = None : Option<String> as "phone",
+        email = None : Option<String> as "email",
+        address = None : Option<String> as "address",
+        facebook_url = None : Option<String> as "facebook_url",
+        twitter_url = None : Option<String> as "twitter_url",
+        instagram_url = None : Option<String> as "instagram_url")
+            -> FieldResult<Store>  as "Updates existing store."{
+
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
-        let store = json!({"name": name});
-        let body: String = store.to_string();
+
+        let store = UpdateStore {
+            name,
+            currency_id,
+            short_description,
+            long_description,
+            slug,
+            cover,
+            logo,
+            phone,
+            email,
+            address,
+            facebook_url,
+            twitter_url,
+            instagram_url,
+        };
+        let body: String = serde_json::to_string(&store).unwrap().to_string();
 
         context.http_client.request::<Store>(Method::Put, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
@@ -575,25 +636,70 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createProduct(&executor, name: String as "Full name of a product.") -> FieldResult<Product> as "Creates new product." {
+    field createProduct(
+        &executor, 
+        name: String as "Full name of a product.",
+        store_id: i32 as "store_id",
+        currency_id: i32 as "currency_id",
+        short_description: String as "short_description",
+        long_description = None : Option<String> as "long_description",
+        price: f64 as "price",
+        discount = None : Option<f64> as "discount",
+        category = None : Option<i32> as "category",
+        photo_main = None : Option<String> as "photo_main") 
+            -> FieldResult<Product> as "Creates new product." {
+
         let context = executor.context();
         let url = format!("{}/{}", 
             Service::Stores.to_url(&context.config),
             Model::Product.to_url());
-        let product = json!({"name": name});
-        let body: String = product.to_string();
+
+        let product = NewProduct {
+            name,
+            store_id,
+            currency_id,
+            short_description,
+            long_description,
+            price,
+            discount,
+            category,
+            photo_main,
+        };
+        let body: String = serde_json::to_string(&product).unwrap().to_string();
 
         context.http_client.request::<Product>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field updateProduct(&executor, id: GraphqlID as "Id of a product." , name: String as "New name of a product.") -> FieldResult<Product>  as "Updates existing product."{
+    field updateProduct(
+        &executor, 
+        id: GraphqlID as "Id of a product.", 
+        name = None : Option<String> as "New name of a product.",
+        currency_id = None : Option<i32> as "currency_id",
+        short_description = None : Option<String> as "short_description",
+        long_description = None : Option<String> as "long_description",
+        price = None : Option<f64> as "price",
+        discount = None : Option<f64> as "discount",
+        category = None : Option<i32> as "category",
+        photo_main = None : Option<String> as "photo_main") 
+            -> FieldResult<Product>  as "Updates existing product."{
+
         let context = executor.context();
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
-        let product = json!({"name": name});
-        let body: String = product.to_string();
+        
+        let product = UpdateProduct {
+            name,
+            currency_id,
+            short_description,
+            long_description,
+            price,
+            discount,
+            category,
+            photo_main
+        };
+        let body: String = serde_json::to_string(&product).unwrap().to_string();
 
         context.http_client.request::<Product>(Method::Put, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
