@@ -128,7 +128,7 @@ impl ClientHandle {
         where T: for <'a> Deserialize<'a> + 'static
     {
         let mut headers = Headers::new();
-        headers.set(Authorization(token.user_email));
+        headers.set(Authorization(token.user_id.to_string()));
         self.request(method, url, body, Some(headers))
     }
 
