@@ -22,13 +22,15 @@ pub type Schema = juniper::RootNode<'static, Query, Mutation>;
 
 const MIN_ID: i32 = 0; 
 
+const VIEWER_NODE_ID: i32 = 0;
+
 pub fn create() -> Schema {
     let query = Query {};
     let mutation = Mutation {};
     Schema::new(query, mutation)
 }
 
-graphql_interface!(Node: () as "Node" |&self| {
+graphql_interface!(Node: Context as "Node" |&self| {
     description: "The Node interface contains a single field, 
         id, which is a ID!. The node root field takes a single argument, 
         a ID!, and returns a Node. These two work in concert to allow refetching."
@@ -38,6 +40,7 @@ graphql_interface!(Node: () as "Node" |&self| {
             Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::User, *id).to_string().into(),
             Node::Store(Store { ref id, .. })  => ID::new(Service::Stores, Model::Store, *id).to_string().into(),
             Node::Product(Product { ref id, .. })  => ID::new(Service::Stores, Model::Product, *id).to_string().into(),
+            Node::Viewer(_)  => VIEWER_NODE_ID.to_string().into(),
         }
     }
 
@@ -45,10 +48,11 @@ graphql_interface!(Node: () as "Node" |&self| {
         &User => match *self { Node::User(ref h) => Some(h), _ => None },
         &Store => match *self { Node::Store(ref h) => Some(h), _ => None },
         &Product => match *self { Node::Product(ref h) => Some(h), _ => None },
+        &Viewer => match *self { Node::Viewer(ref h) => Some(h), _ => None },
     }
 });
 
-graphql_object!(User: () as "User" |&self| {
+graphql_object!(User: Context as "User" |&self| {
     description: "User's profile."
 
     interfaces: [&Node]
@@ -95,7 +99,7 @@ graphql_object!(User: () as "User" |&self| {
 
 });
 
-graphql_object!(Store: () as "Store" |&self| {
+graphql_object!(Store: Context as "Store" |&self| {
     description: "Store's profile."
 
     interfaces: [&Node]
@@ -118,7 +122,7 @@ graphql_object!(Store: () as "Store" |&self| {
 
 });
 
-graphql_object!(Product: () as "Product" |&self| {
+graphql_object!(Product: Context as "Product" |&self| {
     description: "Product's profile."
 
     interfaces: [&Node]
@@ -142,7 +146,7 @@ graphql_object!(Product: () as "Product" |&self| {
 });
 
 
-graphql_object!(Connection<User>: () as "UsersConnection" |&self| {
+graphql_object!(Connection<User>: Context as "UsersConnection" |&self| {
     description:"Users Connection"
 
     field edges() -> Vec<Edge<User>> {
@@ -154,7 +158,7 @@ graphql_object!(Connection<User>: () as "UsersConnection" |&self| {
     }
 });
 
-graphql_object!(Edge<User>: () as "UsersEdge" |&self| {
+graphql_object!(Edge<User>: Context as "UsersEdge" |&self| {
     description:"Users Edge"
     
     field cursor() -> juniper::ID {
@@ -166,7 +170,7 @@ graphql_object!(Edge<User>: () as "UsersEdge" |&self| {
     }
 });
 
-graphql_object!(Connection<Store>: () as "StoresConnection" |&self| {
+graphql_object!(Connection<Store>: Context as "StoresConnection" |&self| {
     description:"Stores Connection"
 
     field edges() -> Vec<Edge<Store>> {
@@ -178,7 +182,7 @@ graphql_object!(Connection<Store>: () as "StoresConnection" |&self| {
     }
 });
 
-graphql_object!(Edge<Store>: () as "StoresEdge" |&self| {
+graphql_object!(Edge<Store>: Context as "StoresEdge" |&self| {
     description:"Stores Edge"
     
     field cursor() -> juniper::ID {
@@ -191,7 +195,7 @@ graphql_object!(Edge<Store>: () as "StoresEdge" |&self| {
 });
 
 
-graphql_object!(Connection<Product>: () as "ProductsConnection" |&self| {
+graphql_object!(Connection<Product>: Context as "ProductsConnection" |&self| {
     description:"Products Connection"
 
     field edges() -> Vec<Edge<Product>> {
@@ -203,7 +207,7 @@ graphql_object!(Connection<Product>: () as "ProductsConnection" |&self| {
     }
 });
 
-graphql_object!(Edge<Product>: () as "ProductsEdge" |&self| {
+graphql_object!(Edge<Product>: Context as "ProductsEdge" |&self| {
     description:"Products Edge"
     
     field cursor() -> juniper::ID {
@@ -220,6 +224,12 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
     To access users data one must receive viewer object, 
     by passing jwt in bearer authentification header of http request.
     All requests without it or with wrong jwt will recieve null."
+
+    interfaces: [&Node]
+
+    field id() -> GraphqlID as "Unique id"{
+        VIEWER_NODE_ID.to_string().into()
+    }
 
     field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
@@ -420,6 +430,10 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
+    field static_node_id() -> FieldResult<Vec<String>> as "Static node id dictionary." {
+        Ok(vec![("Viewer".to_string() + "=" + &VIEWER_NODE_ID.to_string())])
+    }
+
     field viewer(&executor) -> FieldResult<Viewer> as "Fetches viewer for users." {
         let context = executor.context();
 
@@ -435,35 +449,38 @@ graphql_object!(Query: Context |&self| {
     }
 
     field node(&executor, id: GraphqlID as "Id of a node.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
-        let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
-        match (&identifier.service, &identifier.model) {
-            (&Service::Users, _) => {
-                            context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None, None)
-                                .map(|res| Node::User(res))
-                                .or_else(|err| Err(err.to_graphql()))
-                                .wait()
-            },
-            (&Service::Stores, &Model::Store) => {
-                            context.http_client.request::<Store>(Method::Get, identifier.url(&context.config), None, None)
-                                .map(|res| Node::Store(res))
-                                .or_else(|err| Err(err.to_graphql()))
-                                .wait()
-            },
-            (&Service::Stores, &Model::Product) => {
-                            context.http_client.request::<Product>(Method::Get, identifier.url(&context.config), None, None)
-                                .map(|res| Node::Product(res))
-                                .or_else(|err| Err(err.to_graphql()))
-                                .wait()
-            },
-            (&Service::Stores, _) => {
-                            context.http_client.request::<Store>(Method::Get, identifier.url(&context.config), None, None)
-                                .map(|res| Node::Store(res))
-                                .or_else(|err| Err(err.to_graphql()))
-                                .wait()
+        if id.to_string() == "0" {
+            return Ok(Node::Viewer(Viewer{}))
+        } else {
+            let context = executor.context();
+            let identifier = ID::from_str(&*id)?;
+            match (&identifier.service, &identifier.model) {
+                (&Service::Users, _) => {
+                                context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None, None)
+                                    .map(|res| Node::User(res))
+                                    .or_else(|err| Err(err.to_graphql()))
+                                    .wait()
+                },
+                (&Service::Stores, &Model::Store) => {
+                                context.http_client.request::<Store>(Method::Get, identifier.url(&context.config), None, None)
+                                    .map(|res| Node::Store(res))
+                                    .or_else(|err| Err(err.to_graphql()))
+                                    .wait()
+                },
+                (&Service::Stores, &Model::Product) => {
+                                context.http_client.request::<Product>(Method::Get, identifier.url(&context.config), None, None)
+                                    .map(|res| Node::Product(res))
+                                    .or_else(|err| Err(err.to_graphql()))
+                                    .wait()
+                },
+                (&Service::Stores, _) => {
+                                context.http_client.request::<Store>(Method::Get, identifier.url(&context.config), None, None)
+                                    .map(|res| Node::Store(res))
+                                    .or_else(|err| Err(err.to_graphql()))
+                                    .wait()
+                }
             }
         }
-        
     }
 });
 
