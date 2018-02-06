@@ -23,6 +23,8 @@ pub use self::jwt::{ProviderOauth, JWT};
 
 pub struct Viewer;
 
+pub struct StaticNodeIds;
+
 pub enum Node {
     User(User),
     Store(Store),

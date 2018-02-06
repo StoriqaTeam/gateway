@@ -397,6 +397,11 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
     }
 });
 
+graphql_object!(StaticNodeIds: Context as "StaticNodeIds" |&self| {
+    field viewer_id(&executor) -> FieldResult<i32> as "Fetches current user information." {
+        Ok(VIEWER_NODE_ID)
+    }
+});
 
 graphql_object!(Query: Context |&self| {
 
@@ -430,8 +435,8 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
-    field static_node_id() -> FieldResult<Vec<String>> as "Static node id dictionary." {
-        Ok(vec![("Viewer".to_string() + "=" + &VIEWER_NODE_ID.to_string())])
+    field static_node_id() -> FieldResult<StaticNodeIds> as "Static node id dictionary." {
+        Ok(StaticNodeIds{})
     }
 
     field viewer(&executor) -> FieldResult<Viewer> as "Fetches viewer for users." {
