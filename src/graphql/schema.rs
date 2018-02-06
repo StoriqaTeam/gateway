@@ -14,15 +14,24 @@ use serde_json;
 use ::http::client::{Error, ErrorMessage};
 
 
-
+pub struct Viewer;
+pub struct StaticNodeIds;
 pub struct Query;
 pub struct Mutation;
+pub enum Node {
+    User(User),
+    Store(Store),
+    Product(Product),
+    Viewer(Viewer),
+    Query(Query)
+}
 
 pub type Schema = juniper::RootNode<'static, Query, Mutation>;
 
 const MIN_ID: i32 = 0; 
-
 const VIEWER_NODE_ID: i32 = 0;
+const QUERY_NODE_ID: i32 = 1;
+
 
 pub fn create() -> Schema {
     let query = Query {};
@@ -41,6 +50,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::Store(Store { ref id, .. })  => ID::new(Service::Stores, Model::Store, *id).to_string().into(),
             Node::Product(Product { ref id, .. })  => ID::new(Service::Stores, Model::Product, *id).to_string().into(),
             Node::Viewer(_)  => VIEWER_NODE_ID.to_string().into(),
+            Node::Query(_)  => QUERY_NODE_ID.to_string().into(),
         }
     }
 
@@ -49,6 +59,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &Store => match *self { Node::Store(ref h) => Some(h), _ => None },
         &Product => match *self { Node::Product(ref h) => Some(h), _ => None },
         &Viewer => match *self { Node::Viewer(ref h) => Some(h), _ => None },
+        &Query => match *self { Node::Query(ref h) => Some(h), _ => None },
     }
 });
 
@@ -431,6 +442,12 @@ graphql_object!(Query: Context |&self| {
 
     - 400 - Unknown error."
 
+    interfaces: [&Node]
+
+    field id() -> GraphqlID as "Unique id"{
+        QUERY_NODE_ID.to_string().into()
+    }
+
     field apiVersion() -> &str as "Current api version." {
         "1.0"
     }
@@ -455,7 +472,7 @@ graphql_object!(Query: Context |&self| {
 
     field node(&executor, id: GraphqlID as "Id of a node.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
         let context = executor.context();
-        if id.to_string() == "0" {
+        if id.to_string() == VIEWER_NODE_ID.to_string() {
              match context.user {
                 Some(_) => return Ok(Node::Viewer(Viewer{})),
                 None => return Err (
@@ -465,6 +482,8 @@ graphql_object!(Query: Context |&self| {
                         )
                     .to_graphql())
             }
+        } else if id.to_string() == QUERY_NODE_ID.to_string() {
+             Ok(Node::Query(Query{}))
         } else {
             let identifier = ID::from_str(&*id)?;
             match (&identifier.service, &identifier.model) {
