@@ -409,8 +409,12 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
 });
 
 graphql_object!(StaticNodeIds: Context as "StaticNodeIds" |&self| {
-    field viewer_id(&executor) -> FieldResult<i32> as "Fetches current user information." {
+    field viewer_id(&executor) -> FieldResult<i32> as "Static viewer id." {
         Ok(VIEWER_NODE_ID)
+    }
+
+    field query_id(&executor) -> FieldResult<i32> as "Static query id." {
+        Ok(QUERY_NODE_ID)
     }
 });
 
