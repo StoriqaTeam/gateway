@@ -21,11 +21,13 @@ pub use self::provider::Provider;
 pub use self::service::Service;
 pub use self::jwt::{ProviderOauth, JWT};
 
-
 pub struct Viewer;
+
+pub struct StaticNodeIds;
 
 pub enum Node {
     User(User),
     Store(Store),
     Product(Product),
+    Viewer(Viewer),
 }
