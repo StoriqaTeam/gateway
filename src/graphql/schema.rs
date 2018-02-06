@@ -460,11 +460,11 @@ graphql_object!(Query: Context |&self| {
         Ok(StaticNodeIds{})
     }
 
-    field viewer(&executor) -> FieldResult<Viewer> as "Fetches viewer for users." {
+    field viewer(&executor) -> FieldResult<Option<Viewer>> as "Fetches viewer for users." {
         let context = executor.context();
 
         match context.user {
-            Some(_) => return Ok(Viewer{}),
+            Some(_) => return Ok(Some(Viewer{})),
             None => return Err (
                 Error::Api( 
                     StatusCode::Unauthorized, 
