@@ -8,6 +8,7 @@ use hyper::server::{Http, Request, Response, Service};
 use hyper::header::{Authorization, Bearer, Headers, AccessControlAllowOrigin, AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlMaxAge, ContentType, AccessControlRequestHeaders};
 use futures;
 use futures::future;
+use futures::IntoFuture;
 use futures::{Future, Stream};
 use serde_json;
 use juniper::http::GraphQLRequest;
@@ -58,16 +59,16 @@ impl Service for WebService {
                 Box::new(utils::read_body(req.body()).and_then(move |body| {
                     let mut graphql_context = context.graphql_context.clone();
                     graphql_context.user = token_payload;
-
-                    let graphql_req = (serde_json::from_str(&body)
-                        as Result<GraphQLRequest, serde_json::error::Error>)
-                        .unwrap();
-
-                    context.graphql_thread_pool.spawn_fn(move || {
-                        let ctx = graphql_context.clone();
-                        let graphql_resp = graphql_req.execute(&ctx.schema, &ctx);
-                        serde_json::to_string(&graphql_resp)
-                    }).then(|r| match r {
+                    serde_json::from_str::<GraphQLRequest>(&body)
+                    .into_future()
+                    .and_then (move |graphql_req| {
+                        context.graphql_thread_pool.spawn_fn(move || {
+                            let ctx = graphql_context.clone();
+                            let graphql_resp = graphql_req.execute(&ctx.schema, &ctx);
+                            serde_json::to_string(&graphql_resp)
+                        })
+                    })
+                    .then(|r| match r {
                         Ok(data) => future::ok(utils::response_with_body(data)),
                         Err(err) => {
                             future::ok(utils::response_with_error(error::Error::Json(err)))
