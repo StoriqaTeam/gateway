@@ -555,7 +555,7 @@ graphql_object!(Mutation: Context |&self| {
     field updateUser(
         &executor, 
         id: GraphqlID as "Id of a user.", 
-        email: String as "New email of a user.", 
+        is_active: Option<bool> as "Activate/deactivate user.", 
         phone = None : Option<String> as "New phone of a user",
         first_name = None : Option<String> as "New first name of a user",
         last_name = None : Option<String> as "New last name of a user",
@@ -568,12 +568,13 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
         let user = UpdateUser {
-                phone: phone, 
-                first_name: first_name, 
-                last_name: last_name, 
-                middle_name: middle_name, 
-                gender: gender, 
-                birthdate: birthdate, 
+                is_active,
+                phone, 
+                first_name, 
+                last_name, 
+                middle_name, 
+                gender, 
+                birthdate, 
             };
         let body: String = serde_json::to_string(&user)?.to_string();
 
