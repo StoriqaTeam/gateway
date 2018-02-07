@@ -596,6 +596,7 @@ graphql_object!(Mutation: Context |&self| {
     field createStore(
         &executor, 
         name: String as "Full name of a store.",
+        user_id : i32 as "User id",
         currency_id : i32 as "Default currency id",
         short_description : String as "short_description",
         long_description = None : Option<String> as "long_description",
@@ -616,6 +617,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::Store.to_url());
         let store = NewStore {
             name,
+            user_id,
             currency_id,
             short_description,
             long_description,
