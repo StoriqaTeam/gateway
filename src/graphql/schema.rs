@@ -244,19 +244,17 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
 
     field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
-        let user = context.user.clone().ok_or("Authentification of Json web token failure")?;
 
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, user)
+        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
     field users(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a user") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
         let context = executor.context();
-        let user = context.user.clone().ok_or("Authentification of Json web token failure")?;
         
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
@@ -272,7 +270,7 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
             raw_id,
             first + 1);
 
-        context.http_client.request_with_auth_header::<Vec<User>>(Method::Get, url, None, user)
+        context.http_client.request_with_auth_header::<Vec<User>>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .map (|users| {
                 let mut user_edges: Vec<Edge<User>> = users
@@ -295,19 +293,17 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
 
     field store(&executor, id: GraphqlID as "Id of a store.") -> FieldResult<Store> as "Fetches store by id." {
         let context = executor.context();
-        let user = context.user.clone().ok_or("Authentification of Json web token failure")?;
 
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<Store>(Method::Get, url, None, user)
+        context.http_client.request_with_auth_header::<Store>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
     field stores(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a store") -> FieldResult<Connection<Store>> as "Fetches stores using relay connection." {
         let context = executor.context();
-        let user = context.user.clone().ok_or("Authentification of Json web token failure")?;
         
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
@@ -323,7 +319,7 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
             raw_id,
             first + 1);
 
-        context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, user)
+        context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .map (|stores| {
                 let mut store_edges: Vec<Edge<Store>> = stores
@@ -346,19 +342,17 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
 
     field product(&executor, id: GraphqlID as "Id of a product.") -> FieldResult<Product> as "Fetches product by id." {
         let context = executor.context();
-        let user = context.user.clone().ok_or("Authentification of Json web token failure")?;
 
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<Product>(Method::Get, url, None, user)
+        context.http_client.request_with_auth_header::<Product>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
     field products(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a product") -> FieldResult<Connection<Product>> as "Fetches products using relay connection." {
         let context = executor.context();
-        let user = context.user.clone().ok_or("Authentification of Json web token failure")?;
         
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
@@ -374,7 +368,7 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
             raw_id,
             first + 1);
 
-        context.http_client.request_with_auth_header::<Vec<Product>>(Method::Get, url, None, user)
+        context.http_client.request_with_auth_header::<Vec<Product>>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .map (|products| {
                 let mut product_edges: Vec<Edge<Product>> = products
@@ -397,11 +391,10 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
 
     field current_user(&executor) -> FieldResult<User> as "Fetches current user information." {
         let context = executor.context();
-        let user = context.user.clone().ok_or("Authentification of Json web token failure")?;
         let url = format!("{}/{}/current",
             Service::Users.to_url(&context.config), 
             Model::User.to_url());
-        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, user)
+        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.clone())
                     .or_else(|err| Err(err.to_graphql()))
                     .wait()
                             
@@ -492,25 +485,25 @@ graphql_object!(Query: Context |&self| {
             let identifier = ID::from_str(&*id)?;
             match (&identifier.service, &identifier.model) {
                 (&Service::Users, _) => {
-                                context.http_client.request::<User>(Method::Get, identifier.url(&context.config), None, None)
+                                context.http_client.request_with_auth_header::<User>(Method::Get, identifier.url(&context.config), None, context.user.clone())
                                     .map(|res| Node::User(res))
                                     .or_else(|err| Err(err.to_graphql()))
                                     .wait()
                 },
                 (&Service::Stores, &Model::Store) => {
-                                context.http_client.request::<Store>(Method::Get, identifier.url(&context.config), None, None)
+                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.clone())
                                     .map(|res| Node::Store(res))
                                     .or_else(|err| Err(err.to_graphql()))
                                     .wait()
                 },
                 (&Service::Stores, &Model::Product) => {
-                                context.http_client.request::<Product>(Method::Get, identifier.url(&context.config), None, None)
+                                context.http_client.request_with_auth_header::<Product>(Method::Get, identifier.url(&context.config), None, context.user.clone())
                                     .map(|res| Node::Product(res))
                                     .or_else(|err| Err(err.to_graphql()))
                                     .wait()
                 },
                 (&Service::Stores, _) => {
-                                context.http_client.request::<Store>(Method::Get, identifier.url(&context.config), None, None)
+                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.clone())
                                     .map(|res| Node::Store(res))
                                     .or_else(|err| Err(err.to_graphql()))
                                     .wait()
@@ -578,7 +571,7 @@ graphql_object!(Mutation: Context |&self| {
             };
         let body: String = serde_json::to_string(&user)?.to_string();
 
-        context.http_client.request::<User>(Method::Put, url, Some(body), None)
+        context.http_client.request_with_auth_header::<User>(Method::Put, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -588,7 +581,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request::<User>(Method::Delete, url, None, None)
+        context.http_client.request_with_auth_header::<User>(Method::Delete, url, None, context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -633,7 +626,7 @@ graphql_object!(Mutation: Context |&self| {
         };
         let body: String = serde_json::to_string(&store)?.to_string();
 
-        context.http_client.request::<Store>(Method::Post, url, Some(body), None)
+        context.http_client.request_with_auth_header::<Store>(Method::Post, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -677,7 +670,7 @@ graphql_object!(Mutation: Context |&self| {
         };
         let body: String = serde_json::to_string(&store)?.to_string();
 
-        context.http_client.request::<Store>(Method::Put, url, Some(body), None)
+        context.http_client.request_with_auth_header::<Store>(Method::Put, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -723,7 +716,7 @@ graphql_object!(Mutation: Context |&self| {
         };
         let body: String = serde_json::to_string(&product)?.to_string();
 
-        context.http_client.request::<Product>(Method::Post, url, Some(body), None)
+        context.http_client.request_with_auth_header::<Product>(Method::Post, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -757,7 +750,7 @@ graphql_object!(Mutation: Context |&self| {
         };
         let body: String = serde_json::to_string(&product)?.to_string();
 
-        context.http_client.request::<Product>(Method::Put, url, Some(body), None)
+        context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
@@ -767,7 +760,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request::<Product>(Method::Delete, url, None, None)
+        context.http_client.request_with_auth_header::<Product>(Method::Delete, url, None, context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
