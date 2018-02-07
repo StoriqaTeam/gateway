@@ -6,15 +6,12 @@ use juniper;
 use juniper::FieldResult;
 use super::context::Context;
 use super::models::*;
-use hyper::{Method, StatusCode};
+use hyper::Method;
 use futures::Future;
 use juniper::ID as GraphqlID;
 use serde_json;
 
-use ::http::client::{Error, ErrorMessage};
 
-
-pub struct Viewer;
 pub struct StaticNodeIds;
 pub struct Query;
 pub struct Mutation;
@@ -22,14 +19,12 @@ pub enum Node {
     User(User),
     Store(Store),
     Product(Product),
-    Viewer(Viewer),
     Query(Query)
 }
 
 pub type Schema = juniper::RootNode<'static, Query, Mutation>;
 
 const MIN_ID: i32 = 0; 
-const VIEWER_NODE_ID: i32 = 0;
 const QUERY_NODE_ID: i32 = 1;
 
 
@@ -49,7 +44,6 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::User, *id).to_string().into(),
             Node::Store(Store { ref id, .. })  => ID::new(Service::Stores, Model::Store, *id).to_string().into(),
             Node::Product(Product { ref id, .. })  => ID::new(Service::Stores, Model::Product, *id).to_string().into(),
-            Node::Viewer(_)  => VIEWER_NODE_ID.to_string().into(),
             Node::Query(_)  => QUERY_NODE_ID.to_string().into(),
         }
     }
@@ -58,7 +52,6 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &User => match *self { Node::User(ref h) => Some(h), _ => None },
         &Store => match *self { Node::Store(ref h) => Some(h), _ => None },
         &Product => match *self { Node::Product(ref h) => Some(h), _ => None },
-        &Viewer => match *self { Node::Viewer(ref h) => Some(h), _ => None },
         &Query => match *self { Node::Query(ref h) => Some(h), _ => None },
     }
 });
@@ -108,139 +101,6 @@ graphql_object!(User: Context as "User" |&self| {
         self.is_active
     }
 
-});
-
-graphql_object!(Store: Context as "Store" |&self| {
-    description: "Store's profile."
-
-    interfaces: [&Node]
-
-    field id() -> GraphqlID as "Unique id"{
-        ID::new(Service::Stores, Model::Store, self.id).to_string().into()
-    }
-
-    field raw_id() -> GraphqlID as "Unique id"{
-        self.id.to_string().into()
-    }
-
-    field name() -> String as "Full Name" {
-        self.name.clone()
-    }
-
-    field isActive() -> bool as "If the store was disabled (deleted), isActive is false" {
-        self.is_active
-    }
-
-});
-
-graphql_object!(Product: Context as "Product" |&self| {
-    description: "Product's profile."
-
-    interfaces: [&Node]
-
-    field id() -> GraphqlID as "Unique id"{
-        ID::new(Service::Stores, Model::Product, self.id).to_string().into()
-    }
-
-    field raw_id() -> GraphqlID as "Unique id"{
-        self.id.to_string().into()
-    }
-
-    field name() -> String as "Full Name" {
-        self.name.clone()
-    }
-
-    field isActive() -> bool as "If the product was disabled (deleted), isActive is false" {
-        self.is_active
-    }
-
-});
-
-
-graphql_object!(Connection<User>: Context as "UsersConnection" |&self| {
-    description:"Users Connection"
-
-    field edges() -> Vec<Edge<User>> {
-        self.edges.to_vec()
-    }
-
-    field page_info() -> PageInfo {
-        self.page_info.clone()
-    }
-});
-
-graphql_object!(Edge<User>: Context as "UsersEdge" |&self| {
-    description:"Users Edge"
-    
-    field cursor() -> juniper::ID {
-        self.cursor.clone()
-    }
-
-    field node() -> User {
-        self.node.clone()
-    }
-});
-
-graphql_object!(Connection<Store>: Context as "StoresConnection" |&self| {
-    description:"Stores Connection"
-
-    field edges() -> Vec<Edge<Store>> {
-        self.edges.to_vec()
-    }
-
-    field page_info() -> PageInfo {
-        self.page_info.clone()
-    }
-});
-
-graphql_object!(Edge<Store>: Context as "StoresEdge" |&self| {
-    description:"Stores Edge"
-    
-    field cursor() -> juniper::ID {
-        self.cursor.clone()
-    }
-
-    field node() -> Store {
-        self.node.clone()
-    }
-});
-
-
-graphql_object!(Connection<Product>: Context as "ProductsConnection" |&self| {
-    description:"Products Connection"
-
-    field edges() -> Vec<Edge<Product>> {
-        self.edges.to_vec()
-    }
-
-    field page_info() -> PageInfo {
-        self.page_info.clone()
-    }
-});
-
-graphql_object!(Edge<Product>: Context as "ProductsEdge" |&self| {
-    description:"Products Edge"
-    
-    field cursor() -> juniper::ID {
-        self.cursor.clone()
-    }
-
-    field node() -> Product {
-        self.node.clone()
-    }
-});
-
-graphql_object!(Viewer: Context as "Viewer" |&self| {
-    description: "Viewer for users, stores, products.
-    To access users data one must receive viewer object, 
-    by passing jwt in bearer authentification header of http request.
-    All requests without it or with wrong jwt will recieve null."
-
-    interfaces: [&Node]
-
-    field id() -> GraphqlID as "Unique id"{
-        VIEWER_NODE_ID.to_string().into()
-    }
 
     field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
@@ -389,22 +249,131 @@ graphql_object!(Viewer: Context as "Viewer" |&self| {
             .wait()
     }
 
-    field current_user(&executor) -> FieldResult<User> as "Fetches current user information." {
-        let context = executor.context();
-        let url = format!("{}/{}/current",
-            Service::Users.to_url(&context.config), 
-            Model::User.to_url());
-        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.clone())
-                    .or_else(|err| Err(err.to_graphql()))
-                    .wait()
-                            
+});
+
+graphql_object!(Store: Context as "Store" |&self| {
+    description: "Store's profile."
+
+    interfaces: [&Node]
+
+    field id() -> GraphqlID as "Unique id"{
+        ID::new(Service::Stores, Model::Store, self.id).to_string().into()
+    }
+
+    field raw_id() -> GraphqlID as "Unique id"{
+        self.id.to_string().into()
+    }
+
+    field name() -> String as "Full Name" {
+        self.name.clone()
+    }
+
+    field isActive() -> bool as "If the store was disabled (deleted), isActive is false" {
+        self.is_active
+    }
+
+});
+
+graphql_object!(Product: Context as "Product" |&self| {
+    description: "Product's profile."
+
+    interfaces: [&Node]
+
+    field id() -> GraphqlID as "Unique id"{
+        ID::new(Service::Stores, Model::Product, self.id).to_string().into()
+    }
+
+    field raw_id() -> GraphqlID as "Unique id"{
+        self.id.to_string().into()
+    }
+
+    field name() -> String as "Full Name" {
+        self.name.clone()
+    }
+
+    field isActive() -> bool as "If the product was disabled (deleted), isActive is false" {
+        self.is_active
+    }
+
+});
+
+
+graphql_object!(Connection<User>: Context as "UsersConnection" |&self| {
+    description:"Users Connection"
+
+    field edges() -> Vec<Edge<User>> {
+        self.edges.to_vec()
+    }
+
+    field page_info() -> PageInfo {
+        self.page_info.clone()
     }
 });
 
-graphql_object!(StaticNodeIds: Context as "StaticNodeIds" |&self| {
-    field viewer_id(&executor) -> FieldResult<i32> as "Static viewer id." {
-        Ok(VIEWER_NODE_ID)
+graphql_object!(Edge<User>: Context as "UsersEdge" |&self| {
+    description:"Users Edge"
+    
+    field cursor() -> juniper::ID {
+        self.cursor.clone()
     }
+
+    field node() -> User {
+        self.node.clone()
+    }
+});
+
+graphql_object!(Connection<Store>: Context as "StoresConnection" |&self| {
+    description:"Stores Connection"
+
+    field edges() -> Vec<Edge<Store>> {
+        self.edges.to_vec()
+    }
+
+    field page_info() -> PageInfo {
+        self.page_info.clone()
+    }
+});
+
+graphql_object!(Edge<Store>: Context as "StoresEdge" |&self| {
+    description:"Stores Edge"
+    
+    field cursor() -> juniper::ID {
+        self.cursor.clone()
+    }
+
+    field node() -> Store {
+        self.node.clone()
+    }
+});
+
+
+graphql_object!(Connection<Product>: Context as "ProductsConnection" |&self| {
+    description:"Products Connection"
+
+    field edges() -> Vec<Edge<Product>> {
+        self.edges.to_vec()
+    }
+
+    field page_info() -> PageInfo {
+        self.page_info.clone()
+    }
+});
+
+graphql_object!(Edge<Product>: Context as "ProductsEdge" |&self| {
+    description:"Products Edge"
+    
+    field cursor() -> juniper::ID {
+        self.cursor.clone()
+    }
+
+    field node() -> Product {
+        self.node.clone()
+    }
+});
+
+
+
+graphql_object!(StaticNodeIds: Context as "StaticNodeIds" |&self| {
 
     field query_id(&executor) -> FieldResult<i32> as "Static query id." {
         Ok(QUERY_NODE_ID)
@@ -453,33 +422,20 @@ graphql_object!(Query: Context |&self| {
         Ok(StaticNodeIds{})
     }
 
-    field viewer(&executor) -> FieldResult<Option<Viewer>> as "Fetches viewer for users." {
+    field me(&executor) -> FieldResult<Option<User>> as "Fetches viewer for users." {
         let context = executor.context();
-
-        match context.user {
-            Some(_) => return Ok(Some(Viewer{})),
-            None => return Err (
-                Error::Api( 
-                    StatusCode::Unauthorized, 
-                    Some(ErrorMessage { code: 401, message: "Authentification of Json web token failure".to_string() })
-                    )
-                .to_graphql())
-        }
+        let url = format!("{}/{}/current",
+            Service::Users.to_url(&context.config), 
+            Model::User.to_url());
+        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.clone())
+                    .or_else(|err| Err(err.to_graphql()))
+                    .wait()
+                    .map(|u| Some(u))
     }
 
     field node(&executor, id: GraphqlID as "Id of a node.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
         let context = executor.context();
-        if id.to_string() == VIEWER_NODE_ID.to_string() {
-             match context.user {
-                Some(_) => return Ok(Node::Viewer(Viewer{})),
-                None => return Err (
-                    Error::Api( 
-                        StatusCode::Unauthorized, 
-                        Some(ErrorMessage { code: 401, message: "Authentification of Json web token failure".to_string() })
-                        )
-                    .to_graphql())
-            }
-        } else if id.to_string() == QUERY_NODE_ID.to_string() {
+        if id.to_string() == QUERY_NODE_ID.to_string() {
              Ok(Node::Query(Query{}))
         } else {
             let identifier = ID::from_str(&*id)?;
