@@ -48,8 +48,8 @@ impl Model {
         match *self {
             Model::User => "users".to_string(),
             Model::JWT => "jwt".to_string(),
-            Model::Store => "store".to_string(),
-            Model::Product => "product".to_string(),
+            Model::Store => "stores".to_string(),
+            Model::Product => "products".to_string(),
         }
     }
 }
