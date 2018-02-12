@@ -1,3 +1,5 @@
+use juniper::ID as GraphqlID;
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Store {
     pub id: i32,
@@ -17,37 +19,87 @@ pub struct Store {
     pub instagram_url: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct NewStore {
-    pub name: String,
-    pub user_id: i32,
-    pub currency_id: i32,
-    pub short_description: String,
+
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description="Update store input object")]
+pub struct UpdateStoreInput {
+    #[graphql(description="Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description="Id of a store.")]
+    #[serde(skip_serializing)]
+    pub id: GraphqlID,
+    #[graphql(description="New name of a store.")]
+    pub name: Option<String>,
+    #[graphql(description="Currency id.")]
+    pub currency_id: Option<i32>,
+    #[graphql(description="Short description")]
+    pub short_description: Option<String>,
+    #[graphql(description="Long description")]
     pub long_description: Option<String>,
-    pub slug: String,
+    #[graphql(description="Slug")]
+    pub slug: Option<String>,
+    #[graphql(description="Cover")]
     pub cover: Option<String>,
+    #[graphql(description="Logo")]
     pub logo: Option<String>,
-    pub phone: String,
-    pub email: String,
-    pub address: String,
+    #[graphql(description="Phone number")]
+    pub phone: Option<String>,
+    #[graphql(description="E-mail")]
+    pub email: Option<String>,
+    #[graphql(description="Address")]
+    pub address: Option<String>,
+    #[graphql(description="Facebook url")]
     pub facebook_url: Option<String>,
+    #[graphql(description="Twitter url")]
     pub twitter_url: Option<String>,
+    #[graphql(description="Instagram url")]
     pub instagram_url: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct UpdateStore {
-    pub name: Option<String>,
-    pub currency_id: Option<i32>,
-    pub short_description: Option<String>,
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone)]
+#[graphql(description="Create store input object")]
+pub struct CreateStoreInput {
+    #[graphql(description="Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description="New name of a store.")]
+    pub name: String,
+    #[graphql(description="User id.")]
+    pub user_id: i32,
+    #[graphql(description="Currency id.")]
+    pub currency_id: i32,
+    #[graphql(description="Short description")]
+    pub short_description: String,
+    #[graphql(description="Long description")]
     pub long_description: Option<String>,
-    pub slug: Option<String>,
+    #[graphql(description="Slug")]
+    pub slug: String,
+    #[graphql(description="Cover")]
     pub cover: Option<String>,
+    #[graphql(description="Logo")]
     pub logo: Option<String>,
-    pub phone: Option<String>,
-    pub email: Option<String>,
-    pub address: Option<String>,
+    #[graphql(description="Phone number")]
+    pub phone: String,
+    #[graphql(description="E-mail")]
+    pub email: String,
+    #[graphql(description="Address")]
+    pub address: String,
+    #[graphql(description="Facebook url")]
     pub facebook_url: Option<String>,
+    #[graphql(description="Twitter url")]
     pub twitter_url: Option<String>,
+    #[graphql(description="Instagram url")]
     pub instagram_url: Option<String>,
+}
+
+#[derive(GraphQLInputObject, Debug, Clone)]
+#[graphql(description="Deactivate store input object")]
+pub struct DeactivateStoreInput {
+    #[graphql(description="Client mutation id.")]
+    pub client_mutation_id: String,
+    #[graphql(description="Id of a store.")]
+    pub id: GraphqlID,
 }
