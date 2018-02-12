@@ -14,8 +14,16 @@ pub struct User {
     pub birthdate: Option<String>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone)]
-pub struct UpdateUser {
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description="Update user input object")]
+pub struct UpdateUserInput {
+    #[graphql(description="Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description="Id of a user.")]
+    #[serde(skip_serializing)]
+    pub id: GraphqlID,
     #[graphql(description="Activate/deactivate user.")]
     pub is_active: Option<bool>,
     #[graphql(description="New phone of a user")]
@@ -33,55 +41,24 @@ pub struct UpdateUser {
 }
 
 
-#[derive(GraphQLInputObject, Debug, Clone)]
-#[graphql(description="Update user input object")]
-pub struct UpdateUserInput {
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description="Create user input object")]
+pub struct CreateUserInput {
     #[graphql(description="Client mutation id.")]
+    #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description="Input field update user.")]
-    pub input_fields: UpdateUserWithIdInput
-}
-
-#[derive(GraphQLInputObject, Debug, Clone)]
-#[graphql(description="Update user with id input object")]
-pub struct UpdateUserWithIdInput {
-    #[graphql(description="Id of a user.")]
-    pub id: GraphqlID,
-    #[graphql(description="Input field update user.")]
-    pub update_user: UpdateUser
-}
-
-
-#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone)]
-#[graphql(description="New user")]
-pub struct NewUser {
     #[graphql(description="Email of a user.")]
     pub email: String,
     #[graphql(description="Password of a user.")]
     pub password: String
 }
 
-#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone)]
-#[graphql(description="Create user input object")]
-pub struct CreateUserInput {
-    #[graphql(description="Client mutation id.")]
-    pub client_mutation_id: String,
-    #[graphql(description="Input field new user.")]
-    pub input_fields: NewUser
-}
-
-#[derive(GraphQLInputObject, Debug, Clone)]
-#[graphql(description="Delete user")]
-pub struct DeleteUser {
-    #[graphql(description="Email of a user.")]
-    pub id: GraphqlID,
-}
 
 #[derive(GraphQLInputObject, Debug, Clone)]
 #[graphql(description="Deactivate user input object")]
 pub struct DeactivateUserInput {
     #[graphql(description="Client mutation id.")]
     pub client_mutation_id: String,
-    #[graphql(description="Input field Delete user.")]
-    pub input_fields: DeleteUser
+    #[graphql(description="id of a user.")]
+    pub id: GraphqlID,
 }

@@ -12,12 +12,12 @@ pub mod jwt;
 
 pub use self::model::Model;
 pub use self::gender::Gender;
-pub use self::user::{UpdateUser, User, CreateUserInput, NewUser, UpdateUserInput, UpdateUserWithIdInput, DeleteUser, DeactivateUserInput};
-pub use self::product::{NewProduct, Product, CreateProductInput, UpdateProduct, UpdateProductInput, UpdateProductWithIdInput, DeleteProduct, DeactivateProductInput};
-pub use self::store::{NewStore, Store, CreateStoreInput, UpdateStore, UpdateStoreInput, UpdateStoreWithIdInput, DeleteStore, DeactivateStoreInput};
+pub use self::user::{User, CreateUserInput, UpdateUserInput, DeactivateUserInput};
+pub use self::product::{Product, CreateProductInput, UpdateProductInput, DeactivateProductInput};
+pub use self::store::{Store, CreateStoreInput, UpdateStoreInput, DeactivateStoreInput};
 pub use self::connection::{Connection, Edge, PageInfo};
 pub use self::id::ID;
 pub use self::provider::Provider;
 pub use self::service::Service;
-pub use self::jwt::{ProviderOauth, JWT, NewJWTEmail, CreateJWTEmailInput, NewJWTProvider, CreateJWTProviderInput};
+pub use self::jwt::{ProviderOauth, JWT, CreateJWTEmailInput, CreateJWTProviderInput};
 

@@ -493,7 +493,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}", 
             Service::Users.to_url(&context.config),
             Model::User.to_url());
-        let body: String = serde_json::to_string(&input.input_fields)?.to_string();
+        let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request::<User>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
@@ -502,10 +502,10 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateUser(&executor, input: UpdateUserInput as "Create user input.") -> FieldResult<User>  as "Updates existing user."{
         let context = executor.context();
-        let identifier = ID::from_str(&*input.input_fields.id)?;
+        let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
         
-        let body: String = serde_json::to_string(&input.input_fields.update_user)?.to_string();
+        let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<User>(Method::Put, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
@@ -514,7 +514,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field deactivateUser(&executor, input: DeactivateUserInput as "Deactivate user input.") -> FieldResult<User>  as "Deactivates existing user." {
         let context = executor.context();
-        let identifier = ID::from_str(&*input.input_fields.id)?;
+        let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
         context.http_client.request_with_auth_header::<User>(Method::Delete, url, None, context.user.clone())
@@ -527,7 +527,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}", 
             Service::Stores.to_url(&context.config),
             Model::Store.to_url());
-        let body: String = serde_json::to_string(&input.input_fields)?.to_string();
+        let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Store>(Method::Post, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
@@ -536,10 +536,10 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateStore(&executor, input: UpdateStoreInput as "Update store input.") -> FieldResult<Store>  as "Updates existing store."{
         let context = executor.context();
-        let identifier = ID::from_str(&*input.input_fields.id)?;
+        let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
         
-        let body: String = serde_json::to_string(&input.input_fields.update_store)?.to_string();
+        let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Store>(Method::Put, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
@@ -548,7 +548,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field deactivateStore(&executor, input: DeactivateStoreInput as "Deactivate store input.") -> FieldResult<Store>  as "Deactivates existing store." {
         let context = executor.context();
-        let identifier = ID::from_str(&*input.input_fields.id)?;
+        let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
         context.http_client.request::<Store>(Method::Delete, url, None, None)
@@ -562,7 +562,7 @@ graphql_object!(Mutation: Context |&self| {
             Service::Stores.to_url(&context.config),
             Model::Product.to_url());
 
-        let body: String = serde_json::to_string(&input.input_fields)?.to_string();
+        let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Product>(Method::Post, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
@@ -572,10 +572,10 @@ graphql_object!(Mutation: Context |&self| {
     field updateProduct(&executor, input: UpdateProductInput as "Update product input.") -> FieldResult<Product>  as "Updates existing product."{
        
         let context = executor.context();
-        let identifier = ID::from_str(&*input.input_fields.id)?;
+        let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
         
-        let body: String = serde_json::to_string(&input.input_fields.update_product)?.to_string();
+        let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
@@ -584,7 +584,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field deactivateProduct(&executor, input: DeactivateProductInput as "Deactivate product input.") -> FieldResult<Product>  as "Deactivates existing product." {
         let context = executor.context();
-        let identifier = ID::from_str(&*input.input_fields.id)?;
+        let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
         context.http_client.request_with_auth_header::<Product>(Method::Delete, url, None, context.user.clone())
@@ -598,7 +598,7 @@ graphql_object!(Mutation: Context |&self| {
             Service::Users.to_url(&context.config),
             Model::JWT.to_url());
 
-        let body: String = serde_json::to_string(&input.input_fields)?.to_string();
+        let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
@@ -610,8 +610,8 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}/{}", 
             Service::Users.to_url(&context.config), 
             Model::JWT.to_url(),
-            input.input_fields.provider);
-        let oauth = ProviderOauth { token: input.input_fields.token };
+            input.provider);
+        let oauth = ProviderOauth { token: input.token };
         let body: String = serde_json::to_string(&oauth)?;
 
         context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
