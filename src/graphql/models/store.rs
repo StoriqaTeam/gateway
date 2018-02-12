@@ -19,87 +19,84 @@ pub struct Store {
     pub instagram_url: Option<String>,
 }
 
-
-
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description="Update store input object")]
+#[graphql(description = "Update store input object")]
 pub struct UpdateStoreInput {
-    #[graphql(description="Client mutation id.")]
+    #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description="Id of a store.")]
+    #[graphql(description = "Id of a store.")]
     #[serde(skip_serializing)]
     pub id: GraphqlID,
-    #[graphql(description="New name of a store.")]
+    #[graphql(description = "New name of a store.")]
     pub name: Option<String>,
-    #[graphql(description="Currency id.")]
+    #[graphql(description = "Currency id.")]
     pub currency_id: Option<i32>,
-    #[graphql(description="Short description")]
+    #[graphql(description = "Short description")]
     pub short_description: Option<String>,
-    #[graphql(description="Long description")]
+    #[graphql(description = "Long description")]
     pub long_description: Option<String>,
-    #[graphql(description="Slug")]
+    #[graphql(description = "Slug")]
     pub slug: Option<String>,
-    #[graphql(description="Cover")]
+    #[graphql(description = "Cover")]
     pub cover: Option<String>,
-    #[graphql(description="Logo")]
+    #[graphql(description = "Logo")]
     pub logo: Option<String>,
-    #[graphql(description="Phone number")]
+    #[graphql(description = "Phone number")]
     pub phone: Option<String>,
-    #[graphql(description="E-mail")]
+    #[graphql(description = "E-mail")]
     pub email: Option<String>,
-    #[graphql(description="Address")]
+    #[graphql(description = "Address")]
     pub address: Option<String>,
-    #[graphql(description="Facebook url")]
+    #[graphql(description = "Facebook url")]
     pub facebook_url: Option<String>,
-    #[graphql(description="Twitter url")]
+    #[graphql(description = "Twitter url")]
     pub twitter_url: Option<String>,
-    #[graphql(description="Instagram url")]
+    #[graphql(description = "Instagram url")]
     pub instagram_url: Option<String>,
 }
 
-
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone)]
-#[graphql(description="Create store input object")]
+#[graphql(description = "Create store input object")]
 pub struct CreateStoreInput {
-    #[graphql(description="Client mutation id.")]
+    #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description="New name of a store.")]
+    #[graphql(description = "New name of a store.")]
     pub name: String,
-    #[graphql(description="User id.")]
+    #[graphql(description = "User id.")]
     pub user_id: i32,
-    #[graphql(description="Currency id.")]
+    #[graphql(description = "Currency id.")]
     pub currency_id: i32,
-    #[graphql(description="Short description")]
+    #[graphql(description = "Short description")]
     pub short_description: String,
-    #[graphql(description="Long description")]
+    #[graphql(description = "Long description")]
     pub long_description: Option<String>,
-    #[graphql(description="Slug")]
+    #[graphql(description = "Slug")]
     pub slug: String,
-    #[graphql(description="Cover")]
+    #[graphql(description = "Cover")]
     pub cover: Option<String>,
-    #[graphql(description="Logo")]
+    #[graphql(description = "Logo")]
     pub logo: Option<String>,
-    #[graphql(description="Phone number")]
+    #[graphql(description = "Phone number")]
     pub phone: String,
-    #[graphql(description="E-mail")]
+    #[graphql(description = "E-mail")]
     pub email: String,
-    #[graphql(description="Address")]
+    #[graphql(description = "Address")]
     pub address: String,
-    #[graphql(description="Facebook url")]
+    #[graphql(description = "Facebook url")]
     pub facebook_url: Option<String>,
-    #[graphql(description="Twitter url")]
+    #[graphql(description = "Twitter url")]
     pub twitter_url: Option<String>,
-    #[graphql(description="Instagram url")]
+    #[graphql(description = "Instagram url")]
     pub instagram_url: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
-#[graphql(description="Deactivate store input object")]
+#[graphql(description = "Deactivate store input object")]
 pub struct DeactivateStoreInput {
-    #[graphql(description="Client mutation id.")]
+    #[graphql(description = "Client mutation id.")]
     pub client_mutation_id: String,
-    #[graphql(description="Id of a store.")]
+    #[graphql(description = "Id of a store.")]
     pub id: GraphqlID,
 }

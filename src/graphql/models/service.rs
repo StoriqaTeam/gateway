@@ -7,7 +7,7 @@ use config::Config;
 
 pub enum Service {
     Users,
-    Stores
+    Stores,
 }
 
 impl fmt::Display for Service {

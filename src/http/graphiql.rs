@@ -40,7 +40,8 @@ pub fn source(graphql_endpoint_url: &str) -> String {
     </script>
     "#;
 
-    format!(r#"
+    format!(
+        r#"
 <!DOCTYPE html>
 <html>
 <head>
@@ -61,6 +62,6 @@ pub fn source(graphql_endpoint_url: &str) -> String {
 "#,
         graphql_url = graphql_endpoint_url,
         stylesheet_source = stylesheet_source,
-        fetcher_source = fetcher_source)
-
+        fetcher_source = fetcher_source
+    )
 }

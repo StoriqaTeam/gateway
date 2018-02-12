@@ -6,7 +6,7 @@ use base64::encode;
 use base64::decode;
 
 use config::Config;
-use super::{Service, Model};
+use super::{Model, Service};
 
 pub struct ID {
     pub service: Service,

@@ -37,9 +37,7 @@ pub fn start(config: Config) {
     let client = http::client::Client::new(&config, &handle);
     let client_handle = client.handle();
     let client_stream = client.stream();
-    handle.spawn(
-        client_stream.for_each(|_| Ok(()))
-    );
+    handle.spawn(client_stream.for_each(|_| Ok(())));
 
     http::start_server(config, handle, client_handle);
 

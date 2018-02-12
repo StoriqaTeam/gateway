@@ -14,51 +14,48 @@ pub struct User {
     pub birthdate: Option<String>,
 }
 
-
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description="Update user input object")]
+#[graphql(description = "Update user input object")]
 pub struct UpdateUserInput {
-    #[graphql(description="Client mutation id.")]
+    #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description="Id of a user.")]
+    #[graphql(description = "Id of a user.")]
     #[serde(skip_serializing)]
     pub id: GraphqlID,
-    #[graphql(description="Activate/deactivate user.")]
+    #[graphql(description = "Activate/deactivate user.")]
     pub is_active: Option<bool>,
-    #[graphql(description="New phone of a user")]
+    #[graphql(description = "New phone of a user")]
     pub phone: Option<String>,
-    #[graphql(description="New first name of a user")]
+    #[graphql(description = "New first name of a user")]
     pub first_name: Option<String>,
-    #[graphql(description="New last name of a user")]
+    #[graphql(description = "New last name of a user")]
     pub last_name: Option<String>,
-    #[graphql(description="New middle name of a user")]
+    #[graphql(description = "New middle name of a user")]
     pub middle_name: Option<String>,
-    #[graphql(description="Gender of a user")]
+    #[graphql(description = "Gender of a user")]
     pub gender: Option<Gender>,
-    #[graphql(description="Birthdate of a user")]
+    #[graphql(description = "Birthdate of a user")]
     pub birthdate: Option<String>,
 }
 
-
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description="Create user input object")]
+#[graphql(description = "Create user input object")]
 pub struct CreateUserInput {
-    #[graphql(description="Client mutation id.")]
+    #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description="Email of a user.")]
+    #[graphql(description = "Email of a user.")]
     pub email: String,
-    #[graphql(description="Password of a user.")]
-    pub password: String
+    #[graphql(description = "Password of a user.")]
+    pub password: String,
 }
 
-
 #[derive(GraphQLInputObject, Debug, Clone)]
-#[graphql(description="Deactivate user input object")]
+#[graphql(description = "Deactivate user input object")]
 pub struct DeactivateUserInput {
-    #[graphql(description="Client mutation id.")]
+    #[graphql(description = "Client mutation id.")]
     pub client_mutation_id: String,
-    #[graphql(description="id of a user.")]
+    #[graphql(description = "id of a user.")]
     pub id: GraphqlID,
 }
