@@ -124,12 +124,15 @@ pub struct ClientHandle {
 
 impl ClientHandle {
 
-    pub fn request_with_auth_header<T>(&self, method: hyper::Method, url: String, body: Option<String>, token: JWTPayload) -> Box<Future<Item=T, Error=Error>>
+    pub fn request_with_auth_header<T>(&self, method: hyper::Method, url: String, body: Option<String>, token: Option<JWTPayload>) -> Box<Future<Item=T, Error=Error>>
         where T: for <'a> Deserialize<'a> + 'static
     {
-        let mut headers = Headers::new();
-        headers.set(Authorization(token.user_id.to_string()));
-        self.request(method, url, body, Some(headers))
+        let headers = token.and_then(|t| {
+            let mut headers = Headers::new();
+            headers.set(Authorization(t.user_id.to_string()));
+            Some(headers)
+        });
+        self.request(method, url, body, headers)
     }
 
     pub fn request<T>(&self, method: hyper::Method, url: String, body: Option<String>, headers: Option<Headers>) -> Box<Future<Item=T, Error=Error>>

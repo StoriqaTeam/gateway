@@ -20,6 +20,7 @@ pub struct Store {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewStore {
     pub name: String,
+    pub user_id: i32,
     pub currency_id: i32,
     pub short_description: String,
     pub long_description: Option<String>,

@@ -15,6 +15,7 @@ pub struct User {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UpdateUser {
+    pub is_active: Option<bool>,
     pub phone: Option<String>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
