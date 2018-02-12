@@ -3,10 +3,10 @@ use std::fmt;
 #[derive(GraphQLEnum, Debug, Clone)]
 #[graphql(name = "Provider", description = "Token providers")]
 pub enum Provider {
-    #[graphql(description = "Google")] 
+    #[graphql(description = "Google")]
     Google,
 
-    #[graphql(description = "Facebook")] 
+    #[graphql(description = "Facebook")]
     Facebook,
 }
 

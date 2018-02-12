@@ -7,25 +7,23 @@ pub struct Edge<T> {
 }
 
 impl<T> Edge<T> {
-    pub fn new (cursor: juniper::ID, node: T) -> Self {
+    pub fn new(cursor: juniper::ID, node: T) -> Self {
         Self {
             cursor: cursor,
-            node:node
+            node: node,
         }
     }
 }
 
-
 #[derive(GraphQLObject, Clone)]
 #[graphql(name = "PageInfo", description = "Page Info from relay spec: https://facebook.github.io/relay/graphql/connections.htm")]
 pub struct PageInfo {
-    #[graphql(description = "has next page")] 
+    #[graphql(description = "has next page")]
     pub has_next_page: bool,
 
-    #[graphql(description = "has previous page")] 
+    #[graphql(description = "has previous page")]
     pub has_previous_page: bool,
 }
-
 
 pub struct Connection<T> {
     pub edges: Vec<Edge<T>>,
@@ -33,10 +31,10 @@ pub struct Connection<T> {
 }
 
 impl<T> Connection<T> {
-    pub fn new (edges: Vec<Edge<T>>, page_info: PageInfo) -> Self {
+    pub fn new(edges: Vec<Edge<T>>, page_info: PageInfo) -> Self {
         Self {
             edges: edges,
-            page_info: page_info
+            page_info: page_info,
         }
     }
 }

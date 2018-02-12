@@ -4,7 +4,7 @@ use std::sync::Arc;
 use super::router;
 use config::Config;
 use super::client::ClientHandle;
-use ::graphql;
+use graphql;
 
 pub struct Context {
     pub router: Arc<router::Router>,

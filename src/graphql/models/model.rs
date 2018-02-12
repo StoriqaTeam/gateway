@@ -3,12 +3,11 @@ use std::str::FromStr;
 
 use juniper::FieldError;
 
-
 pub enum Model {
     User,
     JWT,
     Store,
-    Product
+    Product,
 }
 
 impl fmt::Display for Model {

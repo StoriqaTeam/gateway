@@ -1,7 +1,6 @@
 use std::str::FromStr;
 use std::cmp;
 
-
 use juniper;
 use juniper::FieldResult;
 use super::context::Context;
@@ -11,7 +10,6 @@ use futures::Future;
 use juniper::ID as GraphqlID;
 use serde_json;
 
-
 pub struct StaticNodeIds;
 pub struct Query;
 pub struct Mutation;
@@ -19,14 +17,13 @@ pub enum Node {
     User(User),
     Store(Store),
     Product(Product),
-    Query(Query)
+    Query(Query),
 }
 
 pub type Schema = juniper::RootNode<'static, Query, Mutation>;
 
-const MIN_ID: i32 = 0; 
+const MIN_ID: i32 = 0;
 const QUERY_NODE_ID: i32 = 1;
-
 
 pub fn create() -> Schema {
     let query = Query {};
@@ -297,7 +294,6 @@ graphql_object!(Product: Context as "Product" |&self| {
 
 });
 
-
 graphql_object!(Connection<User>: Context as "UsersConnection" |&self| {
     description:"Users Connection"
 
@@ -346,7 +342,6 @@ graphql_object!(Edge<Store>: Context as "StoresEdge" |&self| {
     }
 });
 
-
 graphql_object!(Connection<Product>: Context as "ProductsConnection" |&self| {
     description:"Products Connection"
 
@@ -370,8 +365,6 @@ graphql_object!(Edge<Product>: Context as "ProductsEdge" |&self| {
         self.node.clone()
     }
 });
-
-
 
 graphql_object!(StaticNodeIds: Context as "StaticNodeIds" |&self| {
 

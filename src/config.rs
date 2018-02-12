@@ -4,7 +4,7 @@ use config_crate::{Config as RawConfig, ConfigError, Environment, File};
 enum Env {
     Development,
     Test,
-    Production
+    Production,
 }
 
 impl Env {
@@ -12,7 +12,7 @@ impl Env {
         match env::var("RUN_MODE") {
             Ok(ref s) if s == "test" => Env::Test,
             Ok(ref s) if s == "production" => Env::Production,
-            _ => Env::Development
+            _ => Env::Development,
         }
     }
 
@@ -20,7 +20,7 @@ impl Env {
         match self {
             &Env::Development => "development",
             &Env::Production => "production",
-            &Env::Test => "test"
+            &Env::Test => "test",
         }
     }
 }
@@ -36,9 +36,8 @@ pub struct Gateway {
     pub graphql_thread_pool_size: usize,
     pub http_client_buffer_size: usize,
     pub http_client_retries: usize,
-    pub records_limit: usize
+    pub records_limit: usize,
 }
-
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
@@ -47,7 +46,7 @@ pub struct Config {
     pub stores_microservice: Microservice,
     pub orders_microservice: Microservice,
     pub billing_microservice: Microservice,
-    pub jwt : JWT,
+    pub jwt: JWT,
     pub cors: CORS,
 }
 
@@ -59,7 +58,7 @@ pub struct JWT {
 #[derive(Debug, Deserialize, Clone)]
 pub struct CORS {
     pub domain: String,
-    pub max_age: u32
+    pub max_age: u32,
 }
 
 impl Config {

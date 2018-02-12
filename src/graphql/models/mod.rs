@@ -9,15 +9,13 @@ pub mod provider;
 pub mod service;
 pub mod jwt;
 
-
 pub use self::model::Model;
 pub use self::gender::Gender;
-pub use self::user::{User, CreateUserInput, UpdateUserInput, DeactivateUserInput};
-pub use self::product::{Product, CreateProductInput, UpdateProductInput, DeactivateProductInput};
-pub use self::store::{Store, CreateStoreInput, UpdateStoreInput, DeactivateStoreInput};
+pub use self::user::{CreateUserInput, DeactivateUserInput, UpdateUserInput, User};
+pub use self::product::{CreateProductInput, DeactivateProductInput, Product, UpdateProductInput};
+pub use self::store::{CreateStoreInput, DeactivateStoreInput, Store, UpdateStoreInput};
 pub use self::connection::{Connection, Edge, PageInfo};
 pub use self::id::ID;
 pub use self::provider::Provider;
 pub use self::service::Service;
-pub use self::jwt::{ProviderOauth, JWT, CreateJWTEmailInput, CreateJWTProviderInput};
-
+pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, JWT};
