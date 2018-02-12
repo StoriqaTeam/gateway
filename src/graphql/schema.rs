@@ -488,53 +488,33 @@ graphql_object!(Mutation: Context |&self| {
 
     - 400 - Unknown error."
 
-    field createUser(&executor, email: String as "Email of a user.", password: String as "Password of a user.") -> FieldResult<User> as "Creates new user." {
+    field createUser(&executor, input: CreateUserInput as "Create user input.") -> FieldResult<User> as "Creates new user." {
         let context = executor.context();
         let url = format!("{}/{}", 
             Service::Users.to_url(&context.config),
             Model::User.to_url());
-        let user = json!({"email": email, "password": password});
-        let body: String = user.to_string();
+        let body: String = serde_json::to_string(&input.input_fields)?.to_string();
 
         context.http_client.request::<User>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field updateUser(
-        &executor, 
-        id: GraphqlID as "Id of a user.", 
-        is_active: Option<bool> as "Activate/deactivate user.", 
-        phone = None : Option<String> as "New phone of a user",
-        first_name = None : Option<String> as "New first name of a user",
-        last_name = None : Option<String> as "New last name of a user",
-        middle_name = None : Option<String> as "New middle name of a user",
-        gender = None : Option<Gender> as "gender of a user",
-        birthdate = None : Option<String> as "Birthdate of a user") 
-            -> FieldResult<User>  as "Updates existing user."{
-
+    field updateUser(&executor, input: UpdateUserInput as "Create user input.") -> FieldResult<User>  as "Updates existing user."{
         let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
+        let identifier = ID::from_str(&*input.input_fields.id)?;
         let url = identifier.url(&context.config);
-        let user = UpdateUser {
-                is_active,
-                phone, 
-                first_name, 
-                last_name, 
-                middle_name, 
-                gender, 
-                birthdate, 
-            };
-        let body: String = serde_json::to_string(&user)?.to_string();
+        
+        let body: String = serde_json::to_string(&input.input_fields.update_user)?.to_string();
 
         context.http_client.request_with_auth_header::<User>(Method::Put, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field deactivateUser(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User>  as "Deactivates existing user." {
+    field deactivateUser(&executor, input: DeactivateUserInput as "Deactivate user input.") -> FieldResult<User>  as "Deactivates existing user." {
         let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
+        let identifier = ID::from_str(&*input.input_fields.id)?;
         let url = identifier.url(&context.config);
 
         context.http_client.request_with_auth_header::<User>(Method::Delete, url, None, context.user.clone())
@@ -542,98 +522,33 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createStore(
-        &executor, 
-        name: String as "Full name of a store.",
-        user_id : i32 as "User id",
-        currency_id : i32 as "Default currency id",
-        short_description : String as "short_description",
-        long_description = None : Option<String> as "long_description",
-        slug : String as "slug",
-        cover = None : Option<String> as "cover",
-        logo = None : Option<String> as "logo",
-        phone : String as "phone",
-        email : String as "email",
-        address : String as "address",
-        facebook_url = None : Option<String> as "facebook_url",
-        twitter_url = None : Option<String> as "twitter_url",
-        instagram_url = None : Option<String> as "instagram_url") 
-            -> FieldResult<Store> as "Creates new store." {
-
+    field createStore(&executor, input: CreateStoreInput as "Create store input.") -> FieldResult<Store> as "Creates new store." {
         let context = executor.context();
         let url = format!("{}/{}", 
             Service::Stores.to_url(&context.config),
             Model::Store.to_url());
-        let store = NewStore {
-            name,
-            user_id,
-            currency_id,
-            short_description,
-            long_description,
-            slug,
-            cover,
-            logo,
-            phone,
-            email,
-            address,
-            facebook_url,
-            twitter_url,
-            instagram_url,
-        };
-        let body: String = serde_json::to_string(&store)?.to_string();
+        let body: String = serde_json::to_string(&input.input_fields)?.to_string();
 
         context.http_client.request_with_auth_header::<Store>(Method::Post, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field updateStore(
-        &executor, 
-        id: GraphqlID as "Id of a store.", 
-        name = None : Option<String> as "New name of a store.",
-        currency_id = None : Option<i32> as "currency_id",
-        short_description = None : Option<String> as "short_description",
-        long_description = None : Option<String> as "long_description",
-        slug = None : Option<String> as "slug",
-        cover = None : Option<String> as "cover",
-        logo = None : Option<String> as "logo",
-        phone = None : Option<String> as "phone",
-        email = None : Option<String> as "email",
-        address = None : Option<String> as "address",
-        facebook_url = None : Option<String> as "facebook_url",
-        twitter_url = None : Option<String> as "twitter_url",
-        instagram_url = None : Option<String> as "instagram_url")
-            -> FieldResult<Store>  as "Updates existing store."{
-
+    field updateStore(&executor, input: UpdateStoreInput as "Update store input.") -> FieldResult<Store>  as "Updates existing store."{
         let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
+        let identifier = ID::from_str(&*input.input_fields.id)?;
         let url = identifier.url(&context.config);
-
-        let store = UpdateStore {
-            name,
-            currency_id,
-            short_description,
-            long_description,
-            slug,
-            cover,
-            logo,
-            phone,
-            email,
-            address,
-            facebook_url,
-            twitter_url,
-            instagram_url,
-        };
-        let body: String = serde_json::to_string(&store)?.to_string();
+        
+        let body: String = serde_json::to_string(&input.input_fields.update_store)?.to_string();
 
         context.http_client.request_with_auth_header::<Store>(Method::Put, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field deactivateStore(&executor, id: GraphqlID as "Id of a store.") -> FieldResult<Store>  as "Deactivates existing store." {
+    field deactivateStore(&executor, input: DeactivateStoreInput as "Deactivate store input.") -> FieldResult<Store>  as "Deactivates existing store." {
         let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
+        let identifier = ID::from_str(&*input.input_fields.id)?;
         let url = identifier.url(&context.config);
 
         context.http_client.request::<Store>(Method::Delete, url, None, None)
@@ -641,79 +556,35 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createProduct(
-        &executor, 
-        name: String as "Full name of a product.",
-        store_id: i32 as "store_id",
-        currency_id: i32 as "currency_id",
-        short_description: String as "short_description",
-        long_description = None : Option<String> as "long_description",
-        price: f64 as "price",
-        discount = None : Option<f64> as "discount",
-        category = None : Option<i32> as "category",
-        photo_main = None : Option<String> as "photo_main") 
-            -> FieldResult<Product> as "Creates new product." {
-
+    field createProduct(&executor, input: CreateProductInput as "Create product input.") -> FieldResult<Product> as "Creates new product." {
         let context = executor.context();
         let url = format!("{}/{}", 
             Service::Stores.to_url(&context.config),
             Model::Product.to_url());
 
-        let product = NewProduct {
-            name,
-            store_id,
-            currency_id,
-            short_description,
-            long_description,
-            price,
-            discount,
-            category,
-            photo_main,
-        };
-        let body: String = serde_json::to_string(&product)?.to_string();
+        let body: String = serde_json::to_string(&input.input_fields)?.to_string();
 
         context.http_client.request_with_auth_header::<Product>(Method::Post, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field updateProduct(
-        &executor, 
-        id: GraphqlID as "Id of a product.", 
-        name = None : Option<String> as "New name of a product.",
-        currency_id = None : Option<i32> as "currency_id",
-        short_description = None : Option<String> as "short_description",
-        long_description = None : Option<String> as "long_description",
-        price = None : Option<f64> as "price",
-        discount = None : Option<f64> as "discount",
-        category = None : Option<i32> as "category",
-        photo_main = None : Option<String> as "photo_main") 
-            -> FieldResult<Product>  as "Updates existing product."{
-
+    field updateProduct(&executor, input: UpdateProductInput as "Update product input.") -> FieldResult<Product>  as "Updates existing product."{
+       
         let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
+        let identifier = ID::from_str(&*input.input_fields.id)?;
         let url = identifier.url(&context.config);
         
-        let product = UpdateProduct {
-            name,
-            currency_id,
-            short_description,
-            long_description,
-            price,
-            discount,
-            category,
-            photo_main
-        };
-        let body: String = serde_json::to_string(&product)?.to_string();
+        let body: String = serde_json::to_string(&input.input_fields.update_product)?.to_string();
 
         context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.clone())
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field deactivateProduct(&executor, id: GraphqlID as "Id of a product.") -> FieldResult<Product>  as "Deactivates existing product." {
+    field deactivateProduct(&executor, input: DeactivateProductInput as "Deactivate product input.") -> FieldResult<Product>  as "Deactivates existing product." {
         let context = executor.context();
-        let identifier = ID::from_str(&*id)?;
+        let identifier = ID::from_str(&*input.input_fields.id)?;
         let url = identifier.url(&context.config);
 
         context.http_client.request_with_auth_header::<Product>(Method::Delete, url, None, context.user.clone())
@@ -721,26 +592,26 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field getJWTByEmail(&executor, email: String as "Email of a user.", password: String as "Password of a user") -> FieldResult<JWT> as "Get JWT Token by email." {
+    field getJWTByEmail(&executor, input: CreateJWTEmailInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by email." {
         let context = executor.context();
         let url = format!("{}/{}/email", 
             Service::Users.to_url(&context.config),
             Model::JWT.to_url());
-        let account = json!({"email": email, "password": password});
-        let body: String = account.to_string();
+
+        let body: String = serde_json::to_string(&input.input_fields)?.to_string();
 
         context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
     }
 
-    field getJWTByProvider(&executor, provider: Provider as "Token provider", token: String as "Token.") -> FieldResult<JWT> as "Get JWT Token from token provider." {
+    field getJWTByProvider(&executor, input: CreateJWTProviderInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by provider." {
         let context = executor.context();
         let url = format!("{}/{}/{}", 
             Service::Users.to_url(&context.config), 
             Model::JWT.to_url(),
-            provider);
-        let oauth = ProviderOauth { token: token };
+            input.input_fields.provider);
+        let oauth = ProviderOauth { token: input.input_fields.token };
         let body: String = serde_json::to_string(&oauth)?;
 
         context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
