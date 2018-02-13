@@ -3,7 +3,7 @@ use juniper::ID as GraphqlID;
 #[derive(Deserialize, Debug, Clone)]
 pub struct Product {
     pub id: i32,
-    pub product_id: i32,
+    pub store_id: i32,
     pub name: String,
     pub is_active: bool,
     pub short_description: String,
