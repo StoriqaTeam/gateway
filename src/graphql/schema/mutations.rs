@@ -39,6 +39,24 @@ graphql_object!(Mutation: Context |&self| {
         context.http_client.request::<User>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
+            .and_then(|res| {
+                let url = format!("{}/{}", 
+                    Service::Users.to_url(&context.config),
+                    Model::UserRoles.to_url());
+                
+                let user_role = NewUserRole {
+                    user_id: res.id,
+                    role: Role::User,
+                };
+
+                let body = serde_json::to_string(&user_role)?.to_string();
+
+                context.http_client.request::<UserRole>(Method::Post, url, Some(body), None)
+                    .or_else(|err| Err(err.to_graphql()))
+                    .wait()?;
+
+                Ok(res)
+            })
     }
 
     field updateUser(&executor, input: UpdateUserInput as "Create user input.") -> FieldResult<User>  as "Updates existing user."{

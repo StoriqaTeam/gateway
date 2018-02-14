@@ -8,6 +8,7 @@ pub enum Model {
     JWT,
     Store,
     Product,
+    UserRoles,
 }
 
 impl fmt::Display for Model {
@@ -17,6 +18,7 @@ impl fmt::Display for Model {
             Model::JWT => write!(f, "jwt"),
             Model::Store => write!(f, "store"),
             Model::Product => write!(f, "product"),
+            Model::UserRoles => write!(f, "user_roles"),
         }
     }
 }
@@ -30,6 +32,7 @@ impl FromStr for Model {
             "jwt" => Ok(Model::JWT),
             "store" => Ok(Model::Store),
             "product" => Ok(Model::Product),
+            "user_roles" => Ok(Model::UserRoles),
             _ => {
                 return Err(FieldError::new(
                     "Unknown model",
@@ -49,6 +52,7 @@ impl Model {
             Model::JWT => "jwt".to_string(),
             Model::Store => "stores".to_string(),
             Model::Product => "products".to_string(),
+            Model::UserRoles => "user_roles".to_string(),
         }
     }
 }
