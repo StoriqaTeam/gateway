@@ -7,6 +7,26 @@ pub struct JWT {
     pub token: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub enum UserStatus {
+    New (i32),
+    Exists
+}
+
+#[derive(Deserialize, Debug)]
+pub struct JWTExt {
+    pub token: String,
+    pub status: UserStatus
+}
+
+impl From<JWTExt> for JWT {
+    fn from(jwt: JWTExt) -> Self {
+        JWT {
+            token:jwt.token
+        }
+    }
+}
+
 /// Payload for creating JWT token by provider
 #[derive(Serialize, Deserialize)]
 pub struct ProviderOauth {
