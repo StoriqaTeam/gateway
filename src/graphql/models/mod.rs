@@ -8,6 +8,7 @@ pub mod id;
 pub mod provider;
 pub mod service;
 pub mod jwt;
+pub mod user_role;
 
 pub use self::model::Model;
 pub use self::gender::Gender;
@@ -19,3 +20,4 @@ pub use self::id::ID;
 pub use self::provider::Provider;
 pub use self::service::Service;
 pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, JWT};
+pub use self::user_role::{NewUserRole, Role, UserRole};
