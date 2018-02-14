@@ -1,30 +1,32 @@
 use super::Provider;
+use juniper::Value;
 
 #[derive(GraphQLObject, Deserialize, Debug)]
 #[graphql(description = "JWT Token")]
 pub struct JWT {
     #[graphql(description = "Token")]
     pub token: String,
+
+    #[graphql(deprecation="Not in use")]
+    pub status: UserStatus
 }
+
+graphql_scalar!(UserStatus {
+    description: "DEPRACATED"
+
+    resolve(&self) -> Value {
+        Value::string("deprecated!!!!")
+    }
+
+    from_input_value(v: &InputValue) -> Option<UserStatus> {
+        None
+    }
+});
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum UserStatus {
     New (i32),
     Exists
-}
-
-#[derive(Deserialize, Debug)]
-pub struct JWTExt {
-    pub token: String,
-    pub status: UserStatus
-}
-
-impl From<JWTExt> for JWT {
-    fn from(jwt: JWTExt) -> Self {
-        JWT {
-            token:jwt.token
-        }
-    }
 }
 
 /// Payload for creating JWT token by provider

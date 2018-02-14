@@ -173,7 +173,7 @@ graphql_object!(Mutation: Context |&self| {
         let oauth = ProviderOauth { token: input.token };
         let body: String = serde_json::to_string(&oauth)?;
 
-        context.http_client.request::<JWTExt>(Method::Post, url, Some(body), None)
+        context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.to_graphql()))
             .wait()
             .and_then(|jwt| {
