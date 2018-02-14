@@ -72,17 +72,17 @@ graphql_object!(User: Context as "User" |&self| {
 
     field users(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a user") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
         let context = executor.context();
-        
+
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
             None => MIN_ID
         };
-        
+
         let records_limit = context.config.gateway.records_limit;
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}/?from={}&count={}",
-            Service::Users.to_url(&context.config), 
+            Service::Users.to_url(&context.config),
             Model::User.to_url(),
             raw_id,
             first + 1);
@@ -98,8 +98,8 @@ graphql_object!(User: Context as "User" |&self| {
                             ))
                     .collect();
                 let has_next_page = user_edges.len() as i32 == first + 1;
-                if has_next_page { 
-                    user_edges.pop(); 
+                if has_next_page {
+                    user_edges.pop();
                 };
                 let has_previous_page = true;
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
@@ -121,17 +121,17 @@ graphql_object!(User: Context as "User" |&self| {
 
     field stores(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a store") -> FieldResult<Connection<Store>> as "Fetches stores using relay connection." {
         let context = executor.context();
-        
+
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
             None => MIN_ID
         };
-        
+
         let records_limit = context.config.gateway.records_limit;
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}/?from={}&count={}",
-            Service::Stores.to_url(&context.config), 
+            Service::Stores.to_url(&context.config),
             Model::Store.to_url(),
             raw_id,
             first + 1);
@@ -147,8 +147,8 @@ graphql_object!(User: Context as "User" |&self| {
                             ))
                     .collect();
                 let has_next_page = store_edges.len() as i32 == first + 1;
-                if has_next_page { 
-                    store_edges.pop(); 
+                if has_next_page {
+                    store_edges.pop();
                 };
                 let has_previous_page = true;
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
@@ -170,17 +170,17 @@ graphql_object!(User: Context as "User" |&self| {
 
     field products(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a product") -> FieldResult<Connection<Product>> as "Fetches products using relay connection." {
         let context = executor.context();
-        
+
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
             None => MIN_ID
         };
-        
+
         let records_limit = context.config.gateway.records_limit;
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}/?from={}&count={}",
-            Service::Stores.to_url(&context.config), 
+            Service::Stores.to_url(&context.config),
             Model::Product.to_url(),
             raw_id,
             first + 1);
@@ -196,8 +196,8 @@ graphql_object!(User: Context as "User" |&self| {
                             ))
                     .collect();
                 let has_next_page = product_edges.len() as i32 == first + 1;
-                if has_next_page { 
-                    product_edges.pop(); 
+                if has_next_page {
+                    product_edges.pop();
                 };
                 let has_previous_page = true;
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
@@ -222,7 +222,7 @@ graphql_object!(Connection<User>: Context as "UsersConnection" |&self| {
 
 graphql_object!(Edge<User>: Context as "UsersEdge" |&self| {
     description:"Users Edge"
-    
+
     field cursor() -> juniper::ID {
         self.cursor.clone()
     }
