@@ -1,3 +1,5 @@
+//! File containing node object of graphql schema
+//! File containing store object of graphql schema
 use juniper;
 use graphql::context::Context;
 use graphql::models::*;

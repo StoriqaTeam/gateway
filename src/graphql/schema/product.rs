@@ -1,3 +1,4 @@
+//! File containing product object of graphql schema
 use juniper;
 use graphql::context::Context;
 use graphql::models::*;

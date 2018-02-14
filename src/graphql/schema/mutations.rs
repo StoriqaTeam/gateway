@@ -1,3 +1,4 @@
+//! File containing mutations object of graphql schema
 use std::str::FromStr;
 
 use juniper::FieldResult;

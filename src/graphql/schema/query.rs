@@ -1,3 +1,4 @@
+//! File containing query object of graphql schema
 use std::str::FromStr;
 
 use juniper::FieldResult;

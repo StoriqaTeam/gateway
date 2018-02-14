@@ -1,3 +1,4 @@
+//! File containing node object of graphql schema
 use juniper::FieldResult;
 use graphql::context::Context;
 use graphql::models::*;

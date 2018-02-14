@@ -1,3 +1,4 @@
+//! Mod containing all graphql schema
 pub mod query;
 pub mod mutations;
 pub mod user;

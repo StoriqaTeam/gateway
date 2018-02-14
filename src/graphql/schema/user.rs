@@ -1,3 +1,4 @@
+//! File containing user object of graphql schema
 use std::str::FromStr;
 use std::cmp;
 
