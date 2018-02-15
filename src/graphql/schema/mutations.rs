@@ -51,6 +51,16 @@ graphql_object!(Mutation: Context |&self| {
 
                 let body = serde_json::to_string(&user_role)?.to_string();
 
+                // sending role to users microservice
+                context.http_client.request::<UserRole>(Method::Post, url, Some(body.clone()), None)
+                    .or_else(|err| Err(err.to_graphql()))
+                    .wait()?;
+
+                let url = format!("{}/{}", 
+                    Service::Stores.to_url(&context.config),
+                    Model::UserRoles.to_url());
+
+                // sending role to stores microservice
                 context.http_client.request::<UserRole>(Method::Post, url, Some(body), None)
                     .or_else(|err| Err(err.to_graphql()))
                     .wait()?;
@@ -190,6 +200,16 @@ graphql_object!(Mutation: Context |&self| {
 
                         let body = serde_json::to_string(&user_role)?.to_string();
 
+                        // sending role to users microservice
+                        context.http_client.request::<UserRole>(Method::Post, url, Some(body.clone()), None)
+                            .or_else(|err| Err(err.to_graphql()))
+                            .wait()?;
+
+                        let url = format!("{}/{}", 
+                            Service::Stores.to_url(&context.config),
+                            Model::UserRoles.to_url());
+
+                        // sending role to stores microservice
                         context.http_client.request::<UserRole>(Method::Post, url, Some(body), None)
                             .or_else(|err| Err(err.to_graphql()))
                             .wait()?;

@@ -19,5 +19,5 @@ pub use self::connection::{Connection, Edge, PageInfo};
 pub use self::id::ID;
 pub use self::provider::Provider;
 pub use self::service::Service;
-pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, JWT, UserStatus};
+pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, UserStatus, JWT};
 pub use self::user_role::{NewUserRole, Role, UserRole};

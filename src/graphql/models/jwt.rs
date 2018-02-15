@@ -7,8 +7,8 @@ pub struct JWT {
     #[graphql(description = "Token")]
     pub token: String,
 
-    #[graphql(deprecation="Not in use")]
-    pub status: UserStatus
+    #[graphql(deprecation = "Not in use")]
+    pub status: UserStatus,
 }
 
 graphql_scalar!(UserStatus {
@@ -25,8 +25,8 @@ graphql_scalar!(UserStatus {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum UserStatus {
-    New (i32),
-    Exists
+    New(i32),
+    Exists,
 }
 
 /// Payload for creating JWT token by provider
