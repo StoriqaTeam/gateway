@@ -16,14 +16,14 @@ use juniper::http::GraphQLRequest;
 use tokio_core::reactor::Handle;
 use jsonwebtoken::{decode, Validation};
 
+use stq_http::{ClientHandle, JWTPayload};
+
 use super::router;
 use super::context::Context;
 use super::graphiql;
 use super::utils;
 use super::error;
-use super::client;
 use config::Config;
-use super::jwt::JWTPayload;
 
 struct WebService {
     context: Arc<Context>,
@@ -111,7 +111,7 @@ impl Service for WebService {
     }
 }
 
-pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: client::ClientHandle) {
+pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: ClientHandle) {
     let addr = config
         .gateway
         .url
