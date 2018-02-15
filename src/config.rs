@@ -1,5 +1,6 @@
 use std::env;
 use config_crate::{Config as RawConfig, ConfigError, Environment, File};
+use stq_http;
 
 enum Env {
     Development,
@@ -77,5 +78,12 @@ impl Config {
         s.merge(Environment::with_prefix("STQ_GATEWAY"))?;
 
         s.try_into()
+    }
+
+    pub fn to_http_config(&self) -> stq_http::Config {
+        stq_http::Config {
+            http_client_buffer_size: self.gateway.http_client_buffer_size,
+            http_client_retries: self.gateway.http_client_retries,
+        }
     }
 }

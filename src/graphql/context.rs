@@ -4,8 +4,8 @@ use juniper;
 
 use super::schema;
 use config::Config;
-use http::client::ClientHandle;
-use http::jwt::JWTPayload;
+use stq_http::ClientHandle;
+use stq_http::JWTPayload;
 
 #[derive(Clone)]
 pub struct Context {

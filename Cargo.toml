@@ -14,6 +14,7 @@ path = "src/main.rs"
 
 
 [dependencies]
+stq_http = { git = "ssh://git@github.com/StoriqaTeam/libstqbackend", version = "0.1" }
 juniper = "0.9.0"
 hyper = "0.11.9"
 futures = "0.1.17"

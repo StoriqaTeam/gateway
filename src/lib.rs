@@ -1,3 +1,5 @@
+extern crate stq_http;
+
 extern crate config as config_crate;
 extern crate futures;
 extern crate futures_cpupool;
@@ -26,6 +28,8 @@ use futures::stream::Stream;
 use tokio_core::reactor::Core;
 use std::sync::Arc;
 
+use stq_http::Client as HttpClient;
+
 use config::Config;
 
 pub fn start(config: Config) {
@@ -34,7 +38,7 @@ pub fn start(config: Config) {
     let mut core = Core::new().expect("Unexpected error creating main event loop");
     let handle = Arc::new(core.handle());
 
-    let client = http::client::Client::new(&config, &handle);
+    let client = HttpClient::new(&config.to_http_config(), &handle);
     let client_handle = client.handle();
     let client_stream = client.stream();
     handle.spawn(client_stream.for_each(|_| Ok(())));

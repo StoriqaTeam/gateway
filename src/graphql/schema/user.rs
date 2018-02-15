@@ -66,7 +66,7 @@ graphql_object!(User: Context as "User" |&self| {
         let url = identifier.url(&context.config);
 
         context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -88,7 +88,7 @@ graphql_object!(User: Context as "User" |&self| {
             first + 1);
 
         context.http_client.request_with_auth_header::<Vec<User>>(Method::Get, url, None, context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .map (|users| {
                 let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
@@ -115,7 +115,7 @@ graphql_object!(User: Context as "User" |&self| {
         let url = identifier.url(&context.config);
 
         context.http_client.request_with_auth_header::<Store>(Method::Get, url, None, context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -137,7 +137,7 @@ graphql_object!(User: Context as "User" |&self| {
             first + 1);
 
         context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .map (|stores| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
@@ -164,7 +164,7 @@ graphql_object!(User: Context as "User" |&self| {
         let url = identifier.url(&context.config);
 
         context.http_client.request_with_auth_header::<Product>(Method::Get, url, None, context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -186,7 +186,7 @@ graphql_object!(User: Context as "User" |&self| {
             first + 1);
 
         context.http_client.request_with_auth_header::<Vec<Product>>(Method::Get, url, None, context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .map (|products| {
                 let mut product_edges: Vec<Edge<Product>> = products
                     .into_iter()

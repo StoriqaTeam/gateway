@@ -37,7 +37,7 @@ graphql_object!(Mutation: Context |&self| {
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request::<User>(Method::Post, url, Some(body), None)
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
             .and_then(|res| {
                 let url = format!("{}/{}",
@@ -53,7 +53,7 @@ graphql_object!(Mutation: Context |&self| {
 
                 // sending role to users microservice
                 context.http_client.request::<UserRole>(Method::Post, url, Some(body.clone()), None)
-                    .or_else(|err| Err(err.to_graphql()))
+                    .or_else(|err| Err(err.into_graphql()))
                     .wait()?;
 
                 let url = format!("{}/{}",
@@ -62,7 +62,7 @@ graphql_object!(Mutation: Context |&self| {
 
                 // sending role to stores microservice
                 context.http_client.request::<UserRole>(Method::Post, url, Some(body), None)
-                    .or_else(|err| Err(err.to_graphql()))
+                    .or_else(|err| Err(err.into_graphql()))
                     .wait()?;
 
                 Ok(res)
@@ -73,11 +73,11 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
-        
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<User>(Method::Put, url, Some(body), context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -87,7 +87,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = identifier.url(&context.config);
 
         context.http_client.request_with_auth_header::<User>(Method::Delete, url, None, context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -99,7 +99,7 @@ graphql_object!(Mutation: Context |&self| {
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Store>(Method::Post, url, Some(body), context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -107,11 +107,11 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
-        
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Store>(Method::Put, url, Some(body), context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -121,7 +121,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = identifier.url(&context.config);
 
         context.http_client.request::<Store>(Method::Delete, url, None, None)
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -134,7 +134,7 @@ graphql_object!(Mutation: Context |&self| {
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Product>(Method::Post, url, Some(body), context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -147,7 +147,7 @@ graphql_object!(Mutation: Context |&self| {
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -157,7 +157,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = identifier.url(&context.config);
 
         context.http_client.request_with_auth_header::<Product>(Method::Delete, url, None, context.user.clone())
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -170,7 +170,7 @@ graphql_object!(Mutation: Context |&self| {
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 
@@ -184,7 +184,7 @@ graphql_object!(Mutation: Context |&self| {
         let body: String = serde_json::to_string(&oauth)?;
 
         context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
-            .or_else(|err| Err(err.to_graphql()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
             .and_then(|jwt| {
                 match &jwt.status {
@@ -202,7 +202,7 @@ graphql_object!(Mutation: Context |&self| {
 
                         // sending role to users microservice
                         context.http_client.request::<UserRole>(Method::Post, url, Some(body.clone()), None)
-                            .or_else(|err| Err(err.to_graphql()))
+                            .or_else(|err| Err(err.into_graphql()))
                             .wait()?;
 
                         let url = format!("{}/{}",
@@ -211,7 +211,7 @@ graphql_object!(Mutation: Context |&self| {
 
                         // sending role to stores microservice
                         context.http_client.request::<UserRole>(Method::Post, url, Some(body), None)
-                            .or_else(|err| Err(err.to_graphql()))
+                            .or_else(|err| Err(err.into_graphql()))
                             .wait()?;
 
                         Ok(jwt.into())
