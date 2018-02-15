@@ -59,7 +59,7 @@ graphql_object!(Query: Context |&self| {
     field me(&executor) -> FieldResult<Option<User>> as "Fetches viewer for users." {
         let context = executor.context();
         let url = format!("{}/{}/current",
-            Service::Users.to_url(&context.config), 
+            Service::Users.to_url(&context.config),
             Model::User.to_url());
         context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.clone())
                     .or_else(|err| Err(err.to_graphql()))

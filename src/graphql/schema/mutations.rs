@@ -11,7 +11,7 @@ use serde_json;
 pub struct Mutation;
 
 graphql_object!(Mutation: Context |&self| {
-     
+
     description: "Top level mutation.
 
     Codes:
@@ -31,7 +31,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field createUser(&executor, input: CreateUserInput as "Create user input.") -> FieldResult<User> as "Creates new user." {
         let context = executor.context();
-        let url = format!("{}/{}", 
+        let url = format!("{}/{}",
             Service::Users.to_url(&context.config),
             Model::User.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
@@ -40,10 +40,10 @@ graphql_object!(Mutation: Context |&self| {
             .or_else(|err| Err(err.to_graphql()))
             .wait()
             .and_then(|res| {
-                let url = format!("{}/{}", 
+                let url = format!("{}/{}",
                     Service::Users.to_url(&context.config),
                     Model::UserRoles.to_url());
-                
+
                 let user_role = NewUserRole {
                     user_id: res.id,
                     role: Role::User,
@@ -56,7 +56,7 @@ graphql_object!(Mutation: Context |&self| {
                     .or_else(|err| Err(err.to_graphql()))
                     .wait()?;
 
-                let url = format!("{}/{}", 
+                let url = format!("{}/{}",
                     Service::Stores.to_url(&context.config),
                     Model::UserRoles.to_url());
 
@@ -93,7 +93,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field createStore(&executor, input: CreateStoreInput as "Create store input.") -> FieldResult<Store> as "Creates new store." {
         let context = executor.context();
-        let url = format!("{}/{}", 
+        let url = format!("{}/{}",
             Service::Stores.to_url(&context.config),
             Model::Store.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
@@ -127,7 +127,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field createProduct(&executor, input: CreateProductInput as "Create product input.") -> FieldResult<Product> as "Creates new product." {
         let context = executor.context();
-        let url = format!("{}/{}", 
+        let url = format!("{}/{}",
             Service::Stores.to_url(&context.config),
             Model::Product.to_url());
 
@@ -139,11 +139,11 @@ graphql_object!(Mutation: Context |&self| {
     }
 
     field updateProduct(&executor, input: UpdateProductInput as "Update product input.") -> FieldResult<Product>  as "Updates existing product."{
-       
+
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
-        
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.clone())
@@ -163,7 +163,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field getJWTByEmail(&executor, input: CreateJWTEmailInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by email." {
         let context = executor.context();
-        let url = format!("{}/{}/email", 
+        let url = format!("{}/{}/email",
             Service::Users.to_url(&context.config),
             Model::JWT.to_url());
 
@@ -176,8 +176,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field getJWTByProvider(&executor, input: CreateJWTProviderInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by provider." {
         let context = executor.context();
-        let url = format!("{}/{}/{}", 
-            Service::Users.to_url(&context.config), 
+        let url = format!("{}/{}/{}",
+            Service::Users.to_url(&context.config),
             Model::JWT.to_url(),
             input.provider);
         let oauth = ProviderOauth { token: input.token };
@@ -189,10 +189,10 @@ graphql_object!(Mutation: Context |&self| {
             .and_then(|jwt| {
                 match &jwt.status {
                     &UserStatus::New(user_id) => {
-                        let url = format!("{}/{}", 
+                        let url = format!("{}/{}",
                             Service::Users.to_url(&context.config),
                             Model::UserRoles.to_url());
-                        
+
                         let user_role = NewUserRole {
                             user_id: user_id,
                             role: Role::User,
@@ -205,7 +205,7 @@ graphql_object!(Mutation: Context |&self| {
                             .or_else(|err| Err(err.to_graphql()))
                             .wait()?;
 
-                        let url = format!("{}/{}", 
+                        let url = format!("{}/{}",
                             Service::Stores.to_url(&context.config),
                             Model::UserRoles.to_url());
 
