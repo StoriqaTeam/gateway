@@ -81,7 +81,7 @@ graphql_object!(User: Context as "User" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/?from={}&count={}",
+        let url = format!("{}/{}?from={}&count={}",
             Service::Users.to_url(&context.config),
             Model::User.to_url(),
             raw_id,
@@ -130,7 +130,7 @@ graphql_object!(User: Context as "User" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/?from={}&count={}",
+        let url = format!("{}/{}?from={}&count={}",
             Service::Stores.to_url(&context.config),
             Model::Store.to_url(),
             raw_id,
@@ -179,7 +179,7 @@ graphql_object!(User: Context as "User" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/?from={}&count={}",
+        let url = format!("{}/{}?from={}&count={}",
             Service::Stores.to_url(&context.config),
             Model::Product.to_url(),
             raw_id,
