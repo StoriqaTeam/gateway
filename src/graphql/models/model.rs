@@ -7,6 +7,8 @@ pub enum Model {
     User,
     JWT,
     Store,
+    Search,
+    AutoComplete,
     Product,
     UserRoles,
 }
@@ -19,6 +21,8 @@ impl fmt::Display for Model {
             Model::Store => write!(f, "store"),
             Model::Product => write!(f, "product"),
             Model::UserRoles => write!(f, "user_roles"),
+            Model::Search => write!(f, "search"),
+            Model::AutoComplete => write!(f, "auto_complete"),
         }
     }
 }
@@ -33,6 +37,8 @@ impl FromStr for Model {
             "store" => Ok(Model::Store),
             "product" => Ok(Model::Product),
             "user_roles" => Ok(Model::UserRoles),
+            "search" => Ok(Model::Search),
+            "auto_complete" => Ok(Model::AutoComplete),
             _ => {
                 return Err(FieldError::new(
                     "Unknown model",
@@ -53,6 +59,8 @@ impl Model {
             Model::Store => "stores".to_string(),
             Model::Product => "products".to_string(),
             Model::UserRoles => "user_roles".to_string(),
+            Model::Search => "search".to_string(),
+            Model::AutoComplete => "auto_complete".to_string(),
         }
     }
 }
