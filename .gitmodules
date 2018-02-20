@@ -1,0 +1,3 @@
+[submodule "vendor/libstqbackend"]
+	path = vendor/libstqbackend
+	url = ssh://git@github.com/StoriqaTeam/libstqbackend

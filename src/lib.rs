@@ -28,7 +28,7 @@ use futures::stream::Stream;
 use tokio_core::reactor::Core;
 use std::sync::Arc;
 
-use stq_http::Client as HttpClient;
+use stq_http::client::Client as HttpClient;
 
 use config::Config;
 

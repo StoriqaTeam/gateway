@@ -2,13 +2,14 @@ pub mod server;
 mod context;
 mod error;
 mod graphiql;
+pub mod jwt;
 pub mod router;
 mod utils;
 
 use std::sync::Arc;
 use tokio_core::reactor::Handle;
 
-use stq_http::ClientHandle;
+use stq_http::client::ClientHandle;
 
 use config::Config;
 
