@@ -104,31 +104,36 @@ graphql_object!(Query: Context |&self| {
     }
 
 
-    field stores_find_by_name(&executor, first = None : Option<i32> as "First edges", after = None : Option<String>  as "Store name") -> FieldResult<Connection<Store>> as "Finds stores by name using relay connection." {
+    field stores_find_by_name(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Store name", search_term = None : Option<String> as "Name part") -> FieldResult<Connection<Store>> as "Finds stores by name using relay connection." {
         let context = executor.context();
 
-        let name = after.unwrap_or_default();
+        let name = search_term.unwrap_or_default();
+
+        let offset = after.unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
-        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/search?name={}&count={}",
+        let url = format!("{}/{}/search?name={}&count={}&offset={}",
             Service::Stores.to_url(&context.config),
             Model::Store.to_url(),
             name,
-            first + 1);
+            count + 1,
+            offset
+            );
 
         context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.into_graphql()))
             .map (|stores| {
-                let mut store_edges: Vec<Edge<Store>> = stores
-                    .into_iter()
-                    .map(|store| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.clone()).to_string()),
-                                store.clone()
-                            ))
-                    .collect();
-                let has_next_page = store_edges.len() as i32 == first + 1;
+                let mut store_edges: Vec<Edge<Store>> =  vec![];
+                for i in 0..stores.len() {
+                    let edge = Edge::new(
+                            juniper::ID::from( (i as i32 + offset).to_string()),
+                            stores[i].clone()
+                        );
+                    store_edges.push(edge);
+                }
+                let has_next_page = store_edges.len() as i32 == count + 1;
                 if has_next_page {
                     store_edges.pop();
                 };
@@ -139,37 +144,42 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field stores_name_auto_complete(&executor, first = None : Option<i32> as "First edges", after = None : Option<String>  as "Part of store name") -> FieldResult<Connection<String>> as "Finds stores full name by part of the name." {
+    field stores_name_auto_complete(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Store name", search_term = None : Option<String> as "Name part") -> FieldResult<Connection<String>> as "Finds stores full name by part of the name." {
         let context = executor.context();
 
-        let name_part = after.unwrap_or_default();
+        let name_part = search_term.unwrap_or_default();
+
+        let offset = after.unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
-        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/auto_complete?name_part={}&count={}",
+        let url = format!("{}/{}/auto_complete?name_part={}&count={}&offset={}",
             Service::Stores.to_url(&context.config),
             Model::Store.to_url(),
             name_part,
-            first + 1);
+            count + 1,
+            offset
+            );
 
         context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.into_graphql()))
             .map (|full_names| {
-                let mut store_edges: Vec<Edge<String>> = full_names
-                    .into_iter()
-                    .map(|full_name| Edge::new(
-                                juniper::ID::from(full_name.clone()),
-                                full_name
-                            ))
-                    .collect();
-                let has_next_page = store_edges.len() as i32 == first + 1;
+                let mut full_name_edges: Vec<Edge<String>> =  vec![];
+                for i in 0..full_names.len() {
+                    let edge = Edge::new(
+                            juniper::ID::from( (i as i32 + offset).to_string()),
+                            full_names[i].clone()
+                        );
+                    full_name_edges.push(edge);
+                }
+                let has_next_page = full_name_edges.len() as i32 == count + 1;
                 if has_next_page {
-                    store_edges.pop();
+                    full_name_edges.pop();
                 };
                 let has_previous_page = true;
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
-                Connection::new(store_edges, page_info)
+                Connection::new(full_name_edges, page_info)
             })
             .wait()
     }
