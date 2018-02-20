@@ -101,3 +101,27 @@ graphql_object!(Edge<Store>: Context as "StoresEdge" |&self| {
         self.node.clone()
     }
 });
+
+graphql_object!(Connection<String>: Context as "NameConnection" |&self| {
+    description:"Name Connection"
+
+    field edges() -> Vec<Edge<String>> {
+        self.edges.to_vec()
+    }
+
+    field page_info() -> PageInfo {
+        self.page_info.clone()
+    }
+});
+
+graphql_object!(Edge<String>: Context as "Name Edge" |&self| {
+    description:"Name Edge"
+    
+    field cursor() -> juniper::ID {
+        self.cursor.clone()
+    }
+
+    field node() -> String {
+        self.node.clone()
+    }
+});

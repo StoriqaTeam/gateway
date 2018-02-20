@@ -1,5 +1,6 @@
 //! File containing query object of graphql schema
 use std::str::FromStr;
+use std::cmp;
 
 use juniper::FieldResult;
 use graphql::context::Context;
@@ -103,29 +104,73 @@ graphql_object!(Query: Context |&self| {
     }
 
 
-    field stores_find(&executor, name = None : Option<String> as "Store name") -> FieldResult<Vec<Store>> as "Fetches stores by name using relay connection." {
+    field stores_find_by_name(&executor, first = None : Option<i32> as "First edges", after = None : Option<String>  as "Store name") -> FieldResult<Connection<Store>> as "Finds stores by name using relay connection." {
         let context = executor.context();
 
-        let url = format!("{}/{}/search?name={}",
+        let name = after.unwrap_or_default();
+
+        let records_limit = context.config.gateway.records_limit;
+        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}/search?name={}&count={}",
             Service::Stores.to_url(&context.config),
             Model::Store.to_url(),
-            name.unwrap_or_default());
+            name,
+            first + 1);
 
         context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.into_graphql()))
+            .map (|stores| {
+                let mut store_edges: Vec<Edge<Store>> = stores
+                    .into_iter()
+                    .map(|store| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.clone()).to_string()),
+                                store.clone()
+                            ))
+                    .collect();
+                let has_next_page = store_edges.len() as i32 == first + 1;
+                if has_next_page {
+                    store_edges.pop();
+                };
+                let has_previous_page = true;
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                Connection::new(store_edges, page_info)
+            })
             .wait()
     }
 
-    field stores_auto_complete(&executor, name_part = None : Option<String> as "Store name") -> FieldResult<Vec<String>> as "Fetches stores full name by name part using relay connection." {
+    field stores_name_auto_complete(&executor, first = None : Option<i32> as "First edges", after = None : Option<String>  as "Part of store name") -> FieldResult<Connection<String>> as "Finds stores full name by part of the name." {
         let context = executor.context();
 
-        let url = format!("{}/{}/auto_complete?name_part={}",
+        let name_part = after.unwrap_or_default();
+
+        let records_limit = context.config.gateway.records_limit;
+        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}/auto_complete?name_part={}&count={}",
             Service::Stores.to_url(&context.config),
             Model::Store.to_url(),
-            name_part.unwrap_or_default());
+            name_part,
+            first + 1);
 
         context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, None, context.user.clone())
             .or_else(|err| Err(err.into_graphql()))
+            .map (|full_names| {
+                let mut store_edges: Vec<Edge<String>> = full_names
+                    .into_iter()
+                    .map(|full_name| Edge::new(
+                                juniper::ID::from(full_name.clone()),
+                                full_name
+                            ))
+                    .collect();
+                let has_next_page = store_edges.len() as i32 == first + 1;
+                if has_next_page {
+                    store_edges.pop();
+                };
+                let has_previous_page = true;
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                Connection::new(store_edges, page_info)
+            })
             .wait()
     }
 
