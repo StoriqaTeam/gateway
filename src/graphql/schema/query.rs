@@ -102,13 +102,13 @@ graphql_object!(Query: Context |&self| {
         }
     }
 
+
     field stores_find(&executor, name = None : Option<String> as "Store name") -> FieldResult<Vec<Store>> as "Fetches stores by name using relay connection." {
         let context = executor.context();
 
-        let url = format!("{}/{}/{}?name={}",
+        let url = format!("{}/{}/search?name={}",
             Service::Stores.to_url(&context.config),
             Model::Store.to_url(),
-            Model::Search.to_url(),
             name.unwrap_or_default());
 
         context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, context.user.clone())
@@ -119,10 +119,9 @@ graphql_object!(Query: Context |&self| {
     field stores_auto_complete(&executor, name_part = None : Option<String> as "Store name") -> FieldResult<Vec<String>> as "Fetches stores full name by name part using relay connection." {
         let context = executor.context();
 
-        let url = format!("{}/{}/{}?name_part={}",
+        let url = format!("{}/{}/auto_complete?name_part={}",
             Service::Stores.to_url(&context.config),
             Model::Store.to_url(),
-            Model::AutoComplete.to_url(),
             name_part.unwrap_or_default());
 
         context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, None, context.user.clone())
