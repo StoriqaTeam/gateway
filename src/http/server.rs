@@ -16,7 +16,7 @@ use juniper::http::GraphQLRequest;
 use tokio_core::reactor::Handle;
 use jsonwebtoken::{decode, Validation};
 
-use stq_http::{ClientHandle, JWTPayload};
+use stq_http::client::ClientHandle;
 
 use super::router;
 use super::context::Context;
@@ -24,6 +24,7 @@ use super::graphiql;
 use super::utils;
 use super::error;
 use config::Config;
+use super::jwt::JWTPayload;
 
 struct WebService {
     context: Arc<Context>,

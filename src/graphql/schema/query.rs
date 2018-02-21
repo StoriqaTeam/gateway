@@ -1,5 +1,6 @@
 //! File containing query object of graphql schema
 use std::str::FromStr;
+use std::cmp;
 
 use juniper::FieldResult;
 use graphql::context::Context;
@@ -61,7 +62,7 @@ graphql_object!(Query: Context |&self| {
         let url = format!("{}/{}/current",
             Service::Users.to_url(&context.config),
             Model::User.to_url());
-        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.clone())
+        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
                     .or_else(|err| Err(err.into_graphql()))
                     .wait()
                     .map(|u| Some(u))
@@ -75,25 +76,25 @@ graphql_object!(Query: Context |&self| {
             let identifier = ID::from_str(&*id)?;
             match (&identifier.service, &identifier.model) {
                 (&Service::Users, _) => {
-                                context.http_client.request_with_auth_header::<User>(Method::Get, identifier.url(&context.config), None, context.user.clone())
+                                context.http_client.request_with_auth_header::<User>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
                                     .map(|res| Node::User(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
                 },
                 (&Service::Stores, &Model::Store) => {
-                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.clone())
+                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
                                     .map(|res| Node::Store(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
                 },
                 (&Service::Stores, &Model::Product) => {
-                                context.http_client.request_with_auth_header::<Product>(Method::Get, identifier.url(&context.config), None, context.user.clone())
+                                context.http_client.request_with_auth_header::<Product>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
                                     .map(|res| Node::Product(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
                 },
                 (&Service::Stores, _) => {
-                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.clone())
+                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
                                     .map(|res| Node::Store(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
@@ -101,4 +102,86 @@ graphql_object!(Query: Context |&self| {
             }
         }
     }
+
+
+    field stores_find_by_name(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Store name", search_term = None : Option<String> as "Name part") -> FieldResult<Connection<Store>> as "Finds stores by name using relay connection." {
+        let context = executor.context();
+
+        let name = search_term.unwrap_or_default();
+
+        let offset = after.unwrap_or_default();
+
+        let records_limit = context.config.gateway.records_limit;
+        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}/search?name={}&count={}&offset={}",
+            Service::Stores.to_url(&context.config),
+            Model::Store.to_url(),
+            name,
+            count + 1,
+            offset
+            );
+
+        context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .map (|stores| {
+                let mut store_edges: Vec<Edge<Store>> =  vec![];
+                for i in 0..stores.len() {
+                    let edge = Edge::new(
+                            juniper::ID::from( (i as i32 + offset).to_string()),
+                            stores[i].clone()
+                        );
+                    store_edges.push(edge);
+                }
+                let has_next_page = store_edges.len() as i32 == count + 1;
+                if has_next_page {
+                    store_edges.pop();
+                };
+                let has_previous_page = true;
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                Connection::new(store_edges, page_info)
+            })
+            .wait()
+    }
+
+    field stores_name_auto_complete(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Store name", search_term = None : Option<String> as "Name part") -> FieldResult<Connection<String>> as "Finds stores full name by part of the name." {
+        let context = executor.context();
+
+        let name_part = search_term.unwrap_or_default();
+
+        let offset = after.unwrap_or_default();
+
+        let records_limit = context.config.gateway.records_limit;
+        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}/auto_complete?name_part={}&count={}&offset={}",
+            Service::Stores.to_url(&context.config),
+            Model::Store.to_url(),
+            name_part,
+            count + 1,
+            offset
+            );
+
+        context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .map (|full_names| {
+                let mut full_name_edges: Vec<Edge<String>> =  vec![];
+                for i in 0..full_names.len() {
+                    let edge = Edge::new(
+                            juniper::ID::from( (i as i32 + offset).to_string()),
+                            full_names[i].clone()
+                        );
+                    full_name_edges.push(edge);
+                }
+                let has_next_page = full_name_edges.len() as i32 == count + 1;
+                if has_next_page {
+                    full_name_edges.pop();
+                };
+                let has_previous_page = true;
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                Connection::new(full_name_edges, page_info)
+            })
+            .wait()
+    }
+
 });

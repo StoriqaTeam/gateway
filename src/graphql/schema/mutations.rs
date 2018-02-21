@@ -76,7 +76,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<User>(Method::Put, url, Some(body), context.user.clone())
+        context.http_client.request_with_auth_header::<User>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
@@ -86,7 +86,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<User>(Method::Delete, url, None, context.user.clone())
+        context.http_client.request_with_auth_header::<User>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
@@ -98,7 +98,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::Store.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Store>(Method::Post, url, Some(body), context.user.clone())
+        context.http_client.request_with_auth_header::<Store>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
@@ -110,7 +110,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Store>(Method::Put, url, Some(body), context.user.clone())
+        context.http_client.request_with_auth_header::<Store>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
@@ -133,7 +133,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Product>(Method::Post, url, Some(body), context.user.clone())
+        context.http_client.request_with_auth_header::<Product>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
@@ -146,7 +146,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.clone())
+        context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
@@ -156,7 +156,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<Product>(Method::Delete, url, None, context.user.clone())
+        context.http_client.request_with_auth_header::<Product>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
