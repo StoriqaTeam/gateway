@@ -102,7 +102,7 @@ graphql_object!(Edge<Store>: Context as "StoresEdge" |&self| {
     }
 });
 
-graphql_object!(Connection<String>: Context as "NameConnection" |&self| {
+graphql_object!(Connection<String>: Context as "FullNameConnection" |&self| {
     description:"Name Connection"
 
     field edges() -> Vec<Edge<String>> {
@@ -114,7 +114,7 @@ graphql_object!(Connection<String>: Context as "NameConnection" |&self| {
     }
 });
 
-graphql_object!(Edge<String>: Context as "Name Edge" |&self| {
+graphql_object!(Edge<String>: Context as "FullNameEdge" |&self| {
     description:"Name Edge"
     
     field cursor() -> juniper::ID {

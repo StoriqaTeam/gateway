@@ -80,8 +80,8 @@ impl Config {
         s.try_into()
     }
 
-    pub fn to_http_config(&self) -> stq_http::Config {
-        stq_http::Config {
+    pub fn to_http_config(&self) -> stq_http::client::Config {
+        stq_http::client::Config {
             http_client_buffer_size: self.gateway.http_client_buffer_size,
             http_client_retries: self.gateway.http_client_retries,
         }

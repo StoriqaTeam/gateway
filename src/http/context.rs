@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use super::router;
 use config::Config;
-use stq_http::ClientHandle;
+use stq_http::client::ClientHandle;
 use graphql;
 
 pub struct Context {

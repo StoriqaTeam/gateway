@@ -62,7 +62,7 @@ graphql_object!(Query: Context |&self| {
         let url = format!("{}/{}/current",
             Service::Users.to_url(&context.config),
             Model::User.to_url());
-        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.clone())
+        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
                     .or_else(|err| Err(err.into_graphql()))
                     .wait()
                     .map(|u| Some(u))
@@ -76,25 +76,25 @@ graphql_object!(Query: Context |&self| {
             let identifier = ID::from_str(&*id)?;
             match (&identifier.service, &identifier.model) {
                 (&Service::Users, _) => {
-                                context.http_client.request_with_auth_header::<User>(Method::Get, identifier.url(&context.config), None, context.user.clone())
+                                context.http_client.request_with_auth_header::<User>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
                                     .map(|res| Node::User(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
                 },
                 (&Service::Stores, &Model::Store) => {
-                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.clone())
+                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
                                     .map(|res| Node::Store(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
                 },
                 (&Service::Stores, &Model::Product) => {
-                                context.http_client.request_with_auth_header::<Product>(Method::Get, identifier.url(&context.config), None, context.user.clone())
+                                context.http_client.request_with_auth_header::<Product>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
                                     .map(|res| Node::Product(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
                 },
                 (&Service::Stores, _) => {
-                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.clone())
+                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
                                     .map(|res| Node::Store(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
@@ -122,7 +122,7 @@ graphql_object!(Query: Context |&self| {
             offset
             );
 
-        context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, context.user.clone())
+        context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .map (|stores| {
                 let mut store_edges: Vec<Edge<Store>> =  vec![];
@@ -162,7 +162,7 @@ graphql_object!(Query: Context |&self| {
             offset
             );
 
-        context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, None, context.user.clone())
+        context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .map (|full_names| {
                 let mut full_name_edges: Vec<Edge<String>> =  vec![];
