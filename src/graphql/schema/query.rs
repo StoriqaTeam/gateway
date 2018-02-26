@@ -184,4 +184,31 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
+
+    field languages(&executor) -> FieldResult<Vec<String>> as "Fetches languages." {
+        let context = executor.context();
+
+        let url = format!("{}/{}/languages",
+            Service::Stores.to_url(&context.config),
+            Model::Store.to_url(),
+            );
+
+        context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
+    field currencies(&executor) -> FieldResult<Vec<String>> as "Fetches currencies." {
+        let context = executor.context();
+
+        let url = format!("{}/{}/currencies",
+            Service::Stores.to_url(&context.config),
+            Model::Store.to_url(),
+            );
+
+        context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
 });
