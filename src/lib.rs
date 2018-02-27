@@ -1,4 +1,5 @@
 extern crate stq_http;
+extern crate stq_static_resources;
 
 extern crate config as config_crate;
 extern crate futures;

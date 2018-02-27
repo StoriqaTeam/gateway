@@ -2,12 +2,15 @@
 use std::str::FromStr;
 use std::cmp;
 
+use stq_static_resources;
 use juniper::FieldResult;
 use graphql::context::Context;
 use graphql::models::*;
 use hyper::Method;
 use futures::Future;
 use juniper::ID as GraphqlID;
+use stq_static_resources::language::LanguageGraphQl;
+use stq_static_resources::currency::CurrencyGraphQl;
 
 use super::*;
 
@@ -185,28 +188,13 @@ graphql_object!(Query: Context |&self| {
     }
 
 
-    field languages(&executor) -> FieldResult<Vec<Language>> as "Fetches languages." {
-        let context = executor.context();
-
-        let url = format!("{}/languages",
-            Service::Stores.to_url(&context.config),
-            );
-
-        context.http_client.request_with_auth_header::<Vec<Language>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
-            .wait()
+    field languages(&executor) -> FieldResult<Vec<LanguageGraphQl>> as "Fetches languages." {
+        Ok(stq_static_resources::Language::as_vec())
     }
 
-    field currencies(&executor) -> FieldResult<Vec<Currency>> as "Fetches currencies." {
-        let context = executor.context();
 
-        let url = format!("{}/currencies",
-            Service::Stores.to_url(&context.config),
-            );
-
-        context.http_client.request_with_auth_header::<Vec<Currency>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
-            .wait()
+    field currencies(&executor) -> FieldResult<Vec<CurrencyGraphQl>> as "Fetches currencies." {
+        Ok(stq_static_resources::Currency::as_vec())
     }
 
 });

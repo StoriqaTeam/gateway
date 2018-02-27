@@ -230,6 +230,7 @@ dependencies = [
  "serde_derive 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "stq_http 0.1.0",
+ "stq_static_resources 0.1.0",
  "tokio-core 0.1.11 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -675,6 +676,15 @@ dependencies = [
  "serde_json 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-core 0.1.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "validator 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "stq_static_resources"
+version = "0.1.0"
+dependencies = [
+ "juniper 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
