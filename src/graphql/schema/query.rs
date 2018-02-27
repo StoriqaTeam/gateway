@@ -2,12 +2,15 @@
 use std::str::FromStr;
 use std::cmp;
 
+use stq_static_resources;
 use juniper::FieldResult;
 use graphql::context::Context;
 use graphql::models::*;
 use hyper::Method;
 use futures::Future;
 use juniper::ID as GraphqlID;
+use stq_static_resources::language::LanguageGraphQl;
+use stq_static_resources::currency::CurrencyGraphQl;
 
 use super::*;
 
@@ -182,6 +185,16 @@ graphql_object!(Query: Context |&self| {
                 Connection::new(full_name_edges, page_info)
             })
             .wait()
+    }
+
+
+    field languages(&executor) -> FieldResult<Vec<LanguageGraphQl>> as "Fetches languages." {
+        Ok(stq_static_resources::Language::as_vec())
+    }
+
+
+    field currencies(&executor) -> FieldResult<Vec<CurrencyGraphQl>> as "Fetches currencies." {
+        Ok(stq_static_resources::Currency::as_vec())
     }
 
 });
