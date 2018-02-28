@@ -4,11 +4,14 @@ use std::cmp;
 
 use juniper;
 use juniper::FieldResult;
-use graphql::context::Context;
-use graphql::models::*;
+use juniper::ID as GraphqlID;
 use hyper::Method;
 use futures::Future;
-use juniper::ID as GraphqlID;
+use stq_routes::model::Model;
+use stq_routes::service::Service;
+
+use graphql::context::Context;
+use graphql::models::*;
 use super::*;
 
 const MIN_ID: i32 = 0;
@@ -82,7 +85,7 @@ graphql_object!(User: Context as "User" |&self| {
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}?from={}&count={}",
-            Service::Users.to_url(&context.config),
+            context.config.service_url(Service::Users),
             Model::User.to_url(),
             raw_id,
             first + 1);
@@ -131,7 +134,7 @@ graphql_object!(User: Context as "User" |&self| {
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}?from={}&count={}",
-            Service::Stores.to_url(&context.config),
+            context.config.service_url(Service::Stores),
             Model::Store.to_url(),
             raw_id,
             first + 1);
@@ -180,7 +183,7 @@ graphql_object!(User: Context as "User" |&self| {
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}?from={}&count={}",
-            Service::Stores.to_url(&context.config),
+            context.config.service_url(Service::Stores),
             Model::Product.to_url(),
             raw_id,
             first + 1);

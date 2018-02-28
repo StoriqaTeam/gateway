@@ -3,17 +3,18 @@ use std::str::FromStr;
 use std::cmp;
 
 use serde_json;
-
-use stq_static_resources;
+use juniper::ID as GraphqlID;
 use juniper::FieldResult;
-use graphql::context::Context;
-use graphql::models::*;
 use hyper::Method;
 use futures::Future;
-use juniper::ID as GraphqlID;
+use stq_static_resources;
 use stq_static_resources::language::LanguageGraphQl;
 use stq_static_resources::currency::CurrencyGraphQl;
+use stq_routes::model::Model;
+use stq_routes::service::Service;
 
+use graphql::context::Context;
+use graphql::models::*;
 use super::*;
 
 pub const QUERY_NODE_ID: i32 = 1;
@@ -65,7 +66,7 @@ graphql_object!(Query: Context |&self| {
     field me(&executor) -> FieldResult<Option<User>> as "Fetches viewer for users." {
         let context = executor.context();
         let url = format!("{}/{}/current",
-            Service::Users.to_url(&context.config),
+            context.config.service_url(Service::Users),
             Model::User.to_url());
         context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
                     .or_else(|err| Err(err.into_graphql()))
@@ -120,7 +121,7 @@ graphql_object!(Query: Context |&self| {
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}/search?name={}&count={}&offset={}",
-            Service::Stores.to_url(&context.config),
+            context.config.service_url(Service::Stores),
             Model::Store.to_url(),
             name,
             count + 1,
@@ -160,7 +161,7 @@ graphql_object!(Query: Context |&self| {
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}/auto_complete?name_part={}&count={}&offset={}",
-            Service::Stores.to_url(&context.config),
+            context.config.service_url(Service::Stores),
             Model::Store.to_url(),
             name_part,
             count + 1,
@@ -198,7 +199,7 @@ graphql_object!(Query: Context |&self| {
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!("{}/{}/search?count={}&offset={}",
-            Service::Stores.to_url(&context.config),
+            context.config.service_url(Service::Stores),
             Model::Product.to_url(),
             count + 1,
             offset

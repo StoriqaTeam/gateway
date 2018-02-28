@@ -2,11 +2,11 @@ use std::fmt;
 use std::str::FromStr;
 
 use juniper::FieldError;
-use base64::encode;
-use base64::decode;
+use base64::{decode, encode};
+use stq_routes::model::Model;
+use stq_routes::service::Service;
 
 use config::Config;
-use super::{Model, Service};
 
 pub struct ID {
     pub service: Service,
@@ -71,10 +71,10 @@ impl ID {
         }
     }
 
-    pub fn url(&self, config: &Config) -> String {
+    pub fn url(self, config: &Config) -> String {
         format!(
             "{}/{}/{}",
-            self.service.to_url(config),
+            config.service_url(self.service),
             self.model.to_url(),
             self.raw_id
         )
