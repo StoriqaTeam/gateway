@@ -1,5 +1,6 @@
-use super::Provider;
 use juniper::Value;
+
+use super::Provider;
 
 #[derive(GraphQLObject, Deserialize, Debug)]
 #[graphql(description = "JWT Token")]

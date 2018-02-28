@@ -125,7 +125,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createProduct(&executor, input: CreateProductInput as "Create product input.") -> FieldResult<Product> as "Creates new product." {
+    field createProduct(&executor, input: CreateProductWithAttributesInput as "Create product with attributes input.") -> FieldResult<Product> as "Creates new product." {
         let context = executor.context();
         let url = format!("{}/{}",
             Service::Stores.to_url(&context.config),
