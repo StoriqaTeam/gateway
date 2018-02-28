@@ -17,6 +17,8 @@ pub struct Store {
     pub facebook_url: Option<String>,
     pub twitter_url: Option<String>,
     pub instagram_url: Option<String>,
+    pub language_id: i32,
+    pub slogan: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -54,6 +56,10 @@ pub struct UpdateStoreInput {
     pub twitter_url: Option<String>,
     #[graphql(description = "Instagram url")]
     pub instagram_url: Option<String>,
+    #[graphql(description = "Language id")]
+    pub language_id: Option<i32>,
+    #[graphql(description = "Slogan")]
+    pub slogan: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone)]
@@ -90,6 +96,10 @@ pub struct CreateStoreInput {
     pub twitter_url: Option<String>,
     #[graphql(description = "Instagram url")]
     pub instagram_url: Option<String>,
+    #[graphql(description = "Language id")]
+    pub language_id: i32,
+    #[graphql(description = "Slogan")]
+    pub slogan: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
