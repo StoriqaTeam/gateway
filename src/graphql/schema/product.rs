@@ -1,9 +1,11 @@
 //! File containing product object of graphql schema
 use juniper;
+use juniper::ID as GraphqlID;
+use stq_routes::model::Model;
+use stq_routes::service::Service;
+
 use graphql::context::Context;
 use graphql::models::*;
-use juniper::ID as GraphqlID;
-
 use super::*;
 
 graphql_object!(Product: Context as "Product" |&self| {

@@ -1,6 +1,9 @@
 use std::env;
-use config_crate::{Config as RawConfig, ConfigError, Environment, File};
+
+use stq_routes::service::Service as StqService;
 use stq_http;
+
+use config_crate::{Config as RawConfig, ConfigError, Environment, File};
 
 enum Env {
     Development,
@@ -84,6 +87,13 @@ impl Config {
         stq_http::client::Config {
             http_client_buffer_size: self.gateway.http_client_buffer_size,
             http_client_retries: self.gateway.http_client_retries,
+        }
+    }
+
+    pub fn service_url(&self, service: StqService) -> String {
+        match service {
+            StqService::Users => self.users_microservice.url.clone(),
+            StqService::Stores => self.stores_microservice.url.clone(),
         }
     }
 }

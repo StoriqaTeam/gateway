@@ -1,9 +1,11 @@
 //! File containing node object of graphql schema
+use juniper::ID as GraphqlID;
 use juniper::FieldResult;
+use stq_routes::model::Model;
+use stq_routes::service::Service;
+
 use graphql::context::Context;
 use graphql::models::*;
-use juniper::ID as GraphqlID;
-
 use super::*;
 
 pub struct StaticNodeIds;

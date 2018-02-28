@@ -7,6 +7,8 @@ use graphql::models::*;
 use hyper::Method;
 use futures::Future;
 use serde_json;
+use stq_routes::model::Model;
+use stq_routes::service::Service;
 
 pub struct Mutation;
 
@@ -32,7 +34,7 @@ graphql_object!(Mutation: Context |&self| {
     field createUser(&executor, input: CreateUserInput as "Create user input.") -> FieldResult<User> as "Creates new user." {
         let context = executor.context();
         let url = format!("{}/{}",
-            Service::Users.to_url(&context.config),
+            context.config.service_url(Service::Users),
             Model::User.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
@@ -41,7 +43,8 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
             .and_then(|res| {
                 let url = format!("{}/{}",
-                    Service::Users.to_url(&context.config),
+                    context.config.service_url(Service::Users),
+                    
                     Model::UserRoles.to_url());
 
                 let user_role = NewUserRole {
@@ -57,7 +60,7 @@ graphql_object!(Mutation: Context |&self| {
                     .wait()?;
 
                 let url = format!("{}/{}",
-                    Service::Stores.to_url(&context.config),
+                    context.config.service_url(Service::Stores),
                     Model::UserRoles.to_url());
 
                 // sending role to stores microservice
@@ -94,7 +97,7 @@ graphql_object!(Mutation: Context |&self| {
     field createStore(&executor, input: CreateStoreInput as "Create store input.") -> FieldResult<Store> as "Creates new store." {
         let context = executor.context();
         let url = format!("{}/{}",
-            Service::Stores.to_url(&context.config),
+            context.config.service_url(Service::Stores),
             Model::Store.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
@@ -125,10 +128,10 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createProduct(&executor, input: CreateProductInput as "Create product input.") -> FieldResult<Product> as "Creates new product." {
+    field createProduct(&executor, input: CreateProductWithAttributesInput as "Create product with attributes input.") -> FieldResult<Product> as "Creates new product." {
         let context = executor.context();
         let url = format!("{}/{}",
-            Service::Stores.to_url(&context.config),
+            context.config.service_url(Service::Stores),
             Model::Product.to_url());
 
         let body: String = serde_json::to_string(&input)?.to_string();
@@ -164,7 +167,7 @@ graphql_object!(Mutation: Context |&self| {
     field getJWTByEmail(&executor, input: CreateJWTEmailInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by email." {
         let context = executor.context();
         let url = format!("{}/{}/email",
-            Service::Users.to_url(&context.config),
+            context.config.service_url(Service::Users),
             Model::JWT.to_url());
 
         let body: String = serde_json::to_string(&input)?.to_string();
@@ -177,7 +180,7 @@ graphql_object!(Mutation: Context |&self| {
     field getJWTByProvider(&executor, input: CreateJWTProviderInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by provider." {
         let context = executor.context();
         let url = format!("{}/{}/{}",
-            Service::Users.to_url(&context.config),
+            context.config.service_url(Service::Users),
             Model::JWT.to_url(),
             input.provider);
         let oauth = ProviderOauth { token: input.token };
@@ -190,7 +193,7 @@ graphql_object!(Mutation: Context |&self| {
                 match &jwt.status {
                     &UserStatus::New(user_id) => {
                         let url = format!("{}/{}",
-                            Service::Users.to_url(&context.config),
+                            context.config.service_url(Service::Users),
                             Model::UserRoles.to_url());
 
                         let user_role = NewUserRole {
@@ -206,7 +209,7 @@ graphql_object!(Mutation: Context |&self| {
                             .wait()?;
 
                         let url = format!("{}/{}",
-                            Service::Stores.to_url(&context.config),
+                            context.config.service_url(Service::Stores),
                             Model::UserRoles.to_url());
 
                         // sending role to stores microservice
