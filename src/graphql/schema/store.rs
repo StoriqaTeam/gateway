@@ -22,7 +22,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         self.id.to_string().into()
     }
 
-    field name() -> String as "Full Name" {
+    field name() -> Vec<TranslatedText> as "Full Name" {
         self.name.clone()
     }
 
@@ -34,11 +34,11 @@ graphql_object!(Store: Context as "Store" |&self| {
         self.currency_id.clone()
     }
 
-    field short_description() -> String as "Short description" {
+    field short_description() -> Vec<TranslatedText> as "Short description" {
         self.short_description.clone()
     }
 
-    field long_description() -> Option<String> as "Long description" {
+    field long_description() -> Option<Vec<TranslatedText>> as "Long description" {
         self.long_description.clone()
     }
 
@@ -54,15 +54,15 @@ graphql_object!(Store: Context as "Store" |&self| {
         self.logo.clone()
     }
 
-    field phone() -> String as "Phone" {
+    field phone() -> Option<String> as "Phone" {
         self.phone.clone()
     }
 
-    field email() -> String as "Email" {
+    field email() -> Option<String> as "Email" {
         self.email.clone()
     }
 
-    field address() -> String as "Address" {
+    field address() -> Option<String> as "Address" {
         self.address.clone()
     }
 
@@ -78,6 +78,13 @@ graphql_object!(Store: Context as "Store" |&self| {
         self.instagram_url.clone()
     }
 
+    field default_language() -> Language as "Default language" {
+        self.default_language.clone()
+    }
+
+    field slogan() -> Option<String> as "Slogan" {
+        self.slogan.clone()
+    }
 });
 
 graphql_object!(Connection<Store>: Context as "StoresConnection" |&self| {
