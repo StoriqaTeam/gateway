@@ -112,3 +112,11 @@ pub struct DeactivateStoreInput {
     #[graphql(description = "Id of a store.")]
     pub id: GraphqlID,
 }
+
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Clone)]
+#[graphql(description = "Search store input object")]
+pub struct SearchStoreInput {
+    #[graphql(description = "Name part of the store.")]
+    pub name: String,
+}

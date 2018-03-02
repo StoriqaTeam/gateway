@@ -6,52 +6,44 @@ use std::str::FromStr;
 
 use juniper::FieldError;
 use serde::ser::{Serialize, SerializeMap, Serializer};
-use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
+use serde::de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor};
 
 #[derive(GraphQLEnum, Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[graphql(name = "Language", description = "Applicable Languages")]
+#[serde(rename_all = "lowercase")]
 pub enum Language {
     #[graphql(description = "English")]
-    #[serde(rename = "en")]
-    English,
+    En,
     #[graphql(description = "Chinese")]
-    #[serde(rename = "ch")]
-    Chinese,
+    Ch,
     #[graphql(description = "German")]
-    #[serde(rename = "ge")]
-    German,
+    De,
     #[graphql(description = "Russian")]
-    #[serde(rename = "ru")]
-    Russian,
+    Ru,
     #[graphql(description = "Spanish")]
-    #[serde(rename = "es")]
-    Spanish,
+    Es,
     #[graphql(description = "French")]
-    #[serde(rename = "fr")]
-    French,
+    Fr,
     #[graphql(description = "Korean")]
-    #[serde(rename = "ko")]
-    Korean,
+    Ko,
     #[graphql(description = "Portuguese")]
-    #[serde(rename = "po")]
-    Portuguese,
+    Po,
     #[graphql(description = "Japanese")]
-    #[serde(rename = "ja")]
-    Japanese,
+    Ja,
 }
 
 impl fmt::Display for Language {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let lang = match *self {
-            Language::English => "en",
-            Language::Chinese => "ch",
-            Language::German => "ge",
-            Language::Russian => "ru",
-            Language::Spanish => "es",
-            Language::French => "fr",
-            Language::Korean => "ko",
-            Language::Portuguese => "po",
-            Language::Japanese => "ja",
+            Language::En => "en",
+            Language::Ch => "ch",
+            Language::De => "de",
+            Language::Ru => "ru",
+            Language::Es => "es",
+            Language::Fr => "fr",
+            Language::Ko => "ko",
+            Language::Po => "po",
+            Language::Ja => "ja",
         };
         write!(f, "{}", lang)
     }
@@ -62,15 +54,15 @@ impl FromStr for Language {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
-            "en" => Language::English,
-            "ch" => Language::Chinese,
-            "ge" => Language::German,
-            "ru" => Language::Russian,
-            "es" => Language::Spanish,
-            "fr" => Language::French,
-            "ko" => Language::Korean,
-            "po" => Language::Portuguese,
-            "ja" => Language::Japanese,
+            "en" => Language::En,
+            "ch" => Language::Ch,
+            "de" => Language::De,
+            "ru" => Language::Ru,
+            "es" => Language::Es,
+            "fr" => Language::Fr,
+            "ko" => Language::Ko,
+            "po" => Language::Po,
+            "ja" => Language::Ja,
             _ => {
                 return Err(FieldError::new(
                     "Unknown service",
@@ -81,6 +73,26 @@ impl FromStr for Language {
             }
         })
     }
+}
+
+
+impl Language {
+    pub fn as_vec() -> Vec<LanguageGraphQl> {
+        vec![
+            Language::En,
+            Language::Ch,
+            Language::De,
+            Language::Ru,
+            Language::Es,
+            Language::Fr,
+            Language::Ko,
+            Language::Po,
+            Language::Ja,
+        ].into_iter()
+            .map(|value| LanguageGraphQl::new(value.to_string()))
+            .collect()
+    }
+    
 }
 
 #[derive(GraphQLInputObject, Clone, Debug)]
@@ -98,8 +110,9 @@ impl Serialize for TranslationInput {
         S: Serializer,
     {
         let lang = self.lang.to_string();
-        let mut map = serializer.serialize_map(Some(1))?;
-        map.serialize_entry(&lang, &self.text)?;
+        let mut map = serializer.serialize_map(Some(2))?;
+        map.serialize_entry("lang", &lang)?;
+        map.serialize_entry("text", &self.text)?;
         map.end()
     }
 }
@@ -140,15 +153,38 @@ impl<'de> Deserialize<'de> for Translation {
                 formatter.write_str("struct Translation")
             }
 
+            fn visit_seq<V>(self, mut seq: V) -> Result<Translation, V::Error>
+                where V: SeqAccess<'de>
+            {
+                let lang = seq.next_element()?
+                              .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let text = seq.next_element()?
+                               .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+                Ok(Translation::new(lang, text))
+            }
+
             fn visit_map<V>(self, mut map: V) -> Result<Translation, V::Error>
-            where
-                V: MapAccess<'de>,
+                where V: MapAccess<'de>
             {
                 let mut lang = None;
                 let mut text = None;
-                if let Some(key) = map.next_key()? {
-                    lang = Some(Language::from_str(key).map_err(|_| de::Error::missing_field("lang"))?);
-                    text = Some(map.next_value()?);
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Lang => {
+                            if lang.is_some() {
+                                return Err(de::Error::duplicate_field("lang"));
+                            }
+                            let val = map.next_value()?;
+                            let language = Language::from_str(val).map_err(|_| de::Error::missing_field("lang"))?;
+                            lang = Some(language);
+                        }
+                        Field::Text => {
+                            if text.is_some() {
+                                return Err(de::Error::duplicate_field("text"));
+                            }
+                            text = Some(map.next_value()?);
+                        }
+                    }
                 }
                 let lang = lang.ok_or_else(|| de::Error::missing_field("lang"))?;
                 let text = text.ok_or_else(|| de::Error::missing_field("text"))?;
@@ -158,5 +194,19 @@ impl<'de> Deserialize<'de> for Translation {
 
         const FIELDS: &'static [&'static str] = &["lang", "text"];
         deserializer.deserialize_struct("Translation", FIELDS, TranslationVisitor)
+    }
+}
+
+
+
+#[derive(GraphQLObject, Serialize, Deserialize, Debug)]
+pub struct LanguageGraphQl {
+    #[graphql(description="ISO 639-1 code")]
+    pub iso_code: String,
+}
+
+impl LanguageGraphQl {
+    pub fn new(iso_code: String) -> Self {
+        Self { iso_code}
     }
 }

@@ -1,7 +1,7 @@
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use super::{Language, Translation, TranslationInput};
+use super::{Translation, TranslationInput};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Product {
@@ -128,9 +128,7 @@ pub struct DeactivateProductInput {
 #[graphql(description = "Search product input object")]
 pub struct SearchProductInput {
     #[graphql(description = "Name part of the product.")]
-    pub name: Option<String>,
-    #[graphql(description = "Product name language.")]
-    pub lang: Language,
+    pub name: String,
     #[graphql(description = "Attribute filters.")]
     pub attr_filters: Option<Vec<AttributeFilterInput>>,
 }
@@ -163,7 +161,7 @@ pub enum FilterTypeInput {
 
 #[derive(Serialize, Clone, Debug)]
 pub struct SearchProduct {
-    pub name: Option<String>,
+    pub name: String,
     pub attr_filters: Option<Vec<AttributeFilter>>,
 }
 
