@@ -141,7 +141,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateProduct(&executor, input: UpdateProductInput as "Update product input.") -> FieldResult<Product>  as "Updates existing product."{
+    field updateProduct(&executor, input: UpdateProductWithAttributesInput as "Update product input.") -> FieldResult<Product>  as "Updates existing product."{
 
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;

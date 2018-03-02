@@ -1,46 +1,60 @@
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
+use super::{Language, Translation, TranslationInput};
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Product {
     pub id: i32,
     pub store_id: i32,
-    pub name: String,
+    pub name: Vec<Translation>,
     pub is_active: bool,
-    pub short_description: String,
-    pub long_description: Option<String>,
+    pub short_description: Vec<Translation>,
+    pub long_description: Option<Vec<Translation>>,
     pub price: f64,
     pub currency_id: i32,
     pub discount: Option<f64>,
-    pub category: Option<i32>,
     pub photo_main: Option<String>,
+    pub vendor_code: Option<String>,
+    pub cashback: Option<f64>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description = "Update product input object")]
-pub struct UpdateProductInput {
+#[graphql(description = "Update product with attributes input object")]
+pub struct UpdateProductWithAttributesInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
     #[graphql(description = "Id of a product.")]
     #[serde(skip_serializing)]
     pub id: GraphqlID,
+    #[graphql(description = "Update Product")]
+    pub product: UpdateProduct,
+    #[graphql(description = "Attributes")]
+    pub attributes: Vec<AttrValue>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Update product input object")]
+pub struct UpdateProduct {
     #[graphql(description = "New name of a product.")]
-    pub name: Option<String>,
+    pub name: Option<Vec<TranslationInput>>,
     #[graphql(description = "currency_id")]
     pub currency_id: Option<i32>,
     #[graphql(description = "short_description")]
-    pub short_description: Option<String>,
+    pub short_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "long_description")]
-    pub long_description: Option<String>,
+    pub long_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "price")]
     pub price: Option<f64>,
     #[graphql(description = "discount")]
     pub discount: Option<f64>,
-    #[graphql(description = "category")]
-    pub category: Option<i32>,
     #[graphql(description = "photo_main")]
     pub photo_main: Option<String>,
+    #[graphql(description = "vendor code")]
+    pub vendor_code: Option<String>,
+    #[graphql(description = "cashback")]
+    pub cashback: Option<f64>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -56,17 +70,18 @@ pub struct CreateProductWithAttributesInput {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "New Product")]
 pub struct NewProduct {
     #[graphql(description = "Name of new product.")]
-    pub name: String,
+    pub name: Vec<TranslationInput>,
     #[graphql(description = "Store id product belonging to.")]
     pub store_id: i32,
     #[graphql(description = "Sale currency id.")]
     pub currency_id: i32,
     #[graphql(description = "Short description")]
-    pub short_description: String,
+    pub short_description: Vec<TranslationInput>,
     #[graphql(description = "Long description")]
-    pub long_description: Option<String>,
+    pub long_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "Price of the product.")]
     pub price: f64,
     #[graphql(description = "Discount.")]
@@ -77,11 +92,10 @@ pub struct NewProduct {
     pub vendor_code: Option<String>,
     #[graphql(description = "Cashback.")]
     pub cashback: Option<f64>,
-    #[graphql(description = "Language of the descriptions.")]
-    pub language_id: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(name = "AttributeValue", description = "Product attributes with values")]
 pub struct AttrValue {
     #[graphql(description = "Attribute name")]
     pub name: String,
@@ -92,9 +106,12 @@ pub struct AttrValue {
 }
 
 #[derive(GraphQLEnum, Serialize, Clone, Debug)]
+#[graphql(name = "AttributeType", description = "Attribute Type")]
 #[serde(tag = "attribute_type")]
 pub enum AttributeType {
+    #[graphql(description = "String type. Can represent enums, bool, int and strings.")]
     Str,
+    #[graphql(description = "Float type.")]
     Float,
 }
 
@@ -112,11 +129,14 @@ pub struct DeactivateProductInput {
 pub struct SearchProductInput {
     #[graphql(description = "Name part of the product.")]
     pub name: Option<String>,
+    #[graphql(description = "Product name language.")]
+    pub lang: Language,
     #[graphql(description = "Attribute filters.")]
     pub attr_filters: Option<Vec<AttributeFilterInput>>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
+#[graphql(description = "Attribute Filter")]
 pub struct AttributeFilterInput {
     #[graphql(description = "Attribute name")]
     pub name: String,
@@ -129,10 +149,15 @@ pub struct AttributeFilterInput {
 #[derive(GraphQLEnum, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "Filter type. Equal can be used for strings, enums, bool, ints: value will be interpreted as string. Other filters will be applied to float values.")]
 pub enum FilterTypeInput {
+    #[graphql(description = "Equal")]
     Equal,
+    #[graphql(description = "Less than Equal")]
     Lte,
+    #[graphql(description = "Less or Equal")]
     Le,
+    #[graphql(description = "Greater or Equal")]
     Ge,
+    #[graphql(description = "Greater than Equal")]
     Gte,
 }
 

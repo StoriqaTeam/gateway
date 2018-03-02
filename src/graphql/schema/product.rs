@@ -21,7 +21,7 @@ graphql_object!(Product: Context as "Product" |&self| {
         self.id.to_string().into()
     }
 
-    field name() -> String as "Full Name" {
+    field name() -> Vec<Translation> as "Full Name" {
         self.name.clone()
     }
 
@@ -29,11 +29,11 @@ graphql_object!(Product: Context as "Product" |&self| {
         self.is_active
     }
 
-    field short_description() -> String as "Short description" {
+    field short_description() -> Vec<Translation> as "Short description" {
         self.short_description.clone()
     }
 
-    field long_description() -> Option<String> as "Long Description" {
+    field long_description() -> Option<Vec<Translation>> as "Long Description" {
         self.long_description.clone()
     }
 
@@ -49,14 +49,15 @@ graphql_object!(Product: Context as "Product" |&self| {
         self.discount.clone()
     }
 
-    field category() -> Option<i32> as "Category" {
-        self.category.clone()
-    }
-
     field photo_main() -> Option<String> as "Photo main" {
         self.photo_main.clone()
     }
-
+    field vendor_code() -> Option<String> as "Vendor code" {
+        self.vendor_code.clone()
+    }
+    field cashback() -> Option<f64> as "Cashback" {
+        self.cashback.clone()
+    }
 });
 
 graphql_object!(Connection<Product>: Context as "ProductsConnection" |&self| {

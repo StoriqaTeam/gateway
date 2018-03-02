@@ -7,6 +7,7 @@ pub mod id;
 pub mod provider;
 pub mod jwt;
 pub mod user_role;
+pub mod translation;
 
 pub use self::gender::Gender;
 pub use self::user::{CreateUserInput, DeactivateUserInput, UpdateUserInput, User};
@@ -17,3 +18,4 @@ pub use self::id::ID;
 pub use self::provider::Provider;
 pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, UserStatus, JWT};
 pub use self::user_role::{NewUserRole, Role, UserRole};
+pub use self::translation::{Language, Translation, TranslationInput};
