@@ -1,16 +1,16 @@
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use super::{Language, TranslatedText, TranslatedTextInput};
+use super::{Language, Translation, TranslationInput};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Product {
     pub id: i32,
     pub store_id: i32,
-    pub name: Vec<TranslatedText>,
+    pub name: Vec<Translation>,
     pub is_active: bool,
-    pub short_description: Vec<TranslatedText>,
-    pub long_description: Option<Vec<TranslatedText>>,
+    pub short_description: Vec<Translation>,
+    pub long_description: Option<Vec<Translation>>,
     pub price: f64,
     pub currency_id: i32,
     pub discount: Option<f64>,
@@ -38,13 +38,13 @@ pub struct UpdateProductWithAttributesInput {
 #[graphql(description = "Update product input object")]
 pub struct UpdateProduct {
     #[graphql(description = "New name of a product.")]
-    pub name: Option<Vec<TranslatedTextInput>>,
+    pub name: Option<Vec<TranslationInput>>,
     #[graphql(description = "currency_id")]
     pub currency_id: Option<i32>,
     #[graphql(description = "short_description")]
-    pub short_description: Option<Vec<TranslatedTextInput>>,
+    pub short_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "long_description")]
-    pub long_description: Option<Vec<TranslatedTextInput>>,
+    pub long_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "price")]
     pub price: Option<f64>,
     #[graphql(description = "discount")]
@@ -73,15 +73,15 @@ pub struct CreateProductWithAttributesInput {
 #[graphql(description = "New Product")]
 pub struct NewProduct {
     #[graphql(description = "Name of new product.")]
-    pub name: Vec<TranslatedTextInput>,
+    pub name: Vec<TranslationInput>,
     #[graphql(description = "Store id product belonging to.")]
     pub store_id: i32,
     #[graphql(description = "Sale currency id.")]
     pub currency_id: i32,
     #[graphql(description = "Short description")]
-    pub short_description: Vec<TranslatedTextInput>,
+    pub short_description: Vec<TranslationInput>,
     #[graphql(description = "Long description")]
-    pub long_description: Option<Vec<TranslatedTextInput>>,
+    pub long_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "Price of the product.")]
     pub price: f64,
     #[graphql(description = "Discount.")]

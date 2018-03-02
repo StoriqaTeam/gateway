@@ -1,6 +1,6 @@
 //! Module containing structs to work with languages and translations.
 //! To work correctly GraphQL wants to InputObject and OutputObjects to be separate,
-//! so TranslatedTextInput and TranslatedText were created.
+//! so TranslationInput and Translation were created.
 use std::fmt;
 use std::str::FromStr;
 
@@ -62,15 +62,15 @@ impl FromStr for Language {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
-            "english" => Language::English,
-            "chinese" => Language::Chinese,
-            "german" => Language::German,
-            "russian" => Language::Russian,
-            "spanish" => Language::Spanish,
-            "french" => Language::French,
-            "korean" => Language::Korean,
-            "portuguese" => Language::Portuguese,
-            "japanese" => Language::Japanese,
+            "en" => Language::English,
+            "ch" => Language::Chinese,
+            "ge" => Language::German,
+            "ru" => Language::Russian,
+            "es" => Language::Spanish,
+            "fr" => Language::French,
+            "ko" => Language::Korean,
+            "po" => Language::Portuguese,
+            "ja" => Language::Japanese,
             _ => {
                 return Err(FieldError::new(
                     "Unknown service",
@@ -85,14 +85,14 @@ impl FromStr for Language {
 
 #[derive(GraphQLInputObject, Clone, Debug)]
 #[graphql(description = "Text with language")]
-pub struct TranslatedTextInput {
+pub struct TranslationInput {
     #[graphql(description = "Language")]
     pub lang: Language,
     #[graphql(description = "Text")]
     pub text: String,
 }
 
-impl Serialize for TranslatedTextInput {
+impl Serialize for TranslationInput {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -106,20 +106,20 @@ impl Serialize for TranslatedTextInput {
 
 #[derive(GraphQLObject, Clone, Debug)]
 #[graphql(description = "Text with language")]
-pub struct TranslatedText {
+pub struct Translation {
     #[graphql(description = "Language")]
     pub lang: Language,
     #[graphql(description = "Text")]
     pub text: String,
 }
 
-impl TranslatedText {
+impl Translation {
     pub fn new(lang: Language, text: String) -> Self {
         Self { lang, text }
     }
 }
 
-impl<'de> Deserialize<'de> for TranslatedText {
+impl<'de> Deserialize<'de> for Translation {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -131,16 +131,16 @@ impl<'de> Deserialize<'de> for TranslatedText {
             Text,
         }
 
-        struct TranslatedTextVisitor;
+        struct TranslationVisitor;
 
-        impl<'de> Visitor<'de> for TranslatedTextVisitor {
-            type Value = TranslatedText;
+        impl<'de> Visitor<'de> for TranslationVisitor {
+            type Value = Translation;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("struct TranslatedText")
+                formatter.write_str("struct Translation")
             }
 
-            fn visit_map<V>(self, mut map: V) -> Result<TranslatedText, V::Error>
+            fn visit_map<V>(self, mut map: V) -> Result<Translation, V::Error>
             where
                 V: MapAccess<'de>,
             {
@@ -152,11 +152,11 @@ impl<'de> Deserialize<'de> for TranslatedText {
                 }
                 let lang = lang.ok_or_else(|| de::Error::missing_field("lang"))?;
                 let text = text.ok_or_else(|| de::Error::missing_field("text"))?;
-                Ok(TranslatedText::new(lang, text))
+                Ok(Translation::new(lang, text))
             }
         }
 
         const FIELDS: &'static [&'static str] = &["lang", "text"];
-        deserializer.deserialize_struct("TranslatedText", FIELDS, TranslatedTextVisitor)
+        deserializer.deserialize_struct("Translation", FIELDS, TranslationVisitor)
     }
 }

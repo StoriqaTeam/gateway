@@ -21,7 +21,7 @@ graphql_object!(Product: Context as "Product" |&self| {
         self.id.to_string().into()
     }
 
-    field name() -> Vec<TranslatedText> as "Full Name" {
+    field name() -> Vec<Translation> as "Full Name" {
         self.name.clone()
     }
 
@@ -29,11 +29,11 @@ graphql_object!(Product: Context as "Product" |&self| {
         self.is_active
     }
 
-    field short_description() -> Vec<TranslatedText> as "Short description" {
+    field short_description() -> Vec<Translation> as "Short description" {
         self.short_description.clone()
     }
 
-    field long_description() -> Option<Vec<TranslatedText>> as "Long Description" {
+    field long_description() -> Option<Vec<Translation>> as "Long Description" {
         self.long_description.clone()
     }
 

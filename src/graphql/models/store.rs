@@ -1,15 +1,15 @@
 use juniper::ID as GraphqlID;
 
-use super::{Language, TranslatedText, TranslatedTextInput};
+use super::{Language, Translation, TranslationInput};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Store {
     pub id: i32,
-    pub name: Vec<TranslatedText>,
+    pub name: Vec<Translation>,
     pub is_active: bool,
     pub currency_id: i32,
-    pub short_description: Vec<TranslatedText>,
-    pub long_description: Option<Vec<TranslatedText>>,
+    pub short_description: Vec<Translation>,
+    pub long_description: Option<Vec<Translation>>,
     pub slug: String,
     pub cover: Option<String>,
     pub logo: Option<String>,
@@ -33,13 +33,13 @@ pub struct UpdateStoreInput {
     #[serde(skip_serializing)]
     pub id: GraphqlID,
     #[graphql(description = "New name of a store.")]
-    pub name: Option<Vec<TranslatedTextInput>>,
+    pub name: Option<Vec<TranslationInput>>,
     #[graphql(description = "Currency id.")]
     pub currency_id: Option<i32>,
     #[graphql(description = "Short description")]
-    pub short_description: Option<Vec<TranslatedTextInput>>,
+    pub short_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "Long description")]
-    pub long_description: Option<Vec<TranslatedTextInput>>,
+    pub long_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "Slug")]
     pub slug: Option<String>,
     #[graphql(description = "Cover")]
@@ -71,15 +71,15 @@ pub struct CreateStoreInput {
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
     #[graphql(description = "New name of a store.")]
-    pub name: Vec<TranslatedTextInput>,
+    pub name: Vec<TranslationInput>,
     #[graphql(description = "User id.")]
     pub user_id: i32,
     #[graphql(description = "Currency id.")]
     pub currency_id: i32,
     #[graphql(description = "Short description")]
-    pub short_description: Vec<TranslatedTextInput>,
+    pub short_description: Vec<TranslationInput>,
     #[graphql(description = "Long description")]
-    pub long_description: Option<Vec<TranslatedTextInput>>,
+    pub long_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "Slug")]
     pub slug: String,
     #[graphql(description = "Cover")]
