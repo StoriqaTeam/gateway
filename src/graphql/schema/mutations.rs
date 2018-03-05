@@ -36,7 +36,13 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}",
             context.config.service_url(Service::Users),
             Model::User.to_url());
-        let body: String = serde_json::to_string(&input)?.to_string();
+
+        let new_ident = NewIdentity {
+            provider: Provider::Email,
+            email: input.email,
+            password: input.password
+        };
+        let body: String = serde_json::to_string(&new_ident)?.to_string();
 
         context.http_client.request::<User>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.into_graphql()))

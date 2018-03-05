@@ -1,4 +1,5 @@
-use super::gender::Gender;
+use super::Gender;
+use super::Provider;
 use juniper::ID as GraphqlID;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -49,6 +50,14 @@ pub struct CreateUserInput {
     pub email: String,
     #[graphql(description = "Password of a user.")]
     pub password: String,
+}
+
+/// Payload for creating identity
+#[derive(Serialize, Clone)]
+pub struct NewIdentity {
+    pub email: String,
+    pub password: String,
+    pub provider: Provider,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]

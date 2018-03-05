@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(GraphQLEnum, Debug, Clone)]
+#[derive(GraphQLEnum, Debug, Clone, Serialize)]
 #[graphql(name = "Provider", description = "Token providers")]
 pub enum Provider {
     #[graphql(description = "Google")]
@@ -8,6 +8,10 @@ pub enum Provider {
 
     #[graphql(description = "Facebook")]
     Facebook,
+
+    #[graphql(description = "Email")]
+    Email,
+
 }
 
 impl fmt::Display for Provider {
@@ -15,6 +19,7 @@ impl fmt::Display for Provider {
         match *self {
             Provider::Facebook => write!(f, "facebook"),
             Provider::Google => write!(f, "google"),
+            Provider::Email => write!(f, "email"),
         }
     }
 }
