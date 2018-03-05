@@ -130,7 +130,7 @@ pub struct SearchProductInput {
     #[graphql(description = "Name part of the product.")]
     pub name: String,
     #[graphql(description = "Attribute filters.")]
-    pub attr_filters: Option<Vec<AttributeFilterInput>>,
+    pub attr_filters: Vec<AttributeFilterInput>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
@@ -162,7 +162,7 @@ pub enum FilterTypeInput {
 #[derive(Serialize, Clone, Debug)]
 pub struct SearchProduct {
     pub name: String,
-    pub attr_filters: Option<Vec<AttributeFilter>>,
+    pub attr_filters: Vec<AttributeFilter>,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -212,16 +212,10 @@ impl AttributeFilter {
 
 impl SearchProduct {
     pub fn from_input(s: SearchProductInput) -> FieldResult<Self> {
-        let filters = match s.attr_filters {
-            None => None,
-            Some(filters) => {
-                let f = filters
+        let filters = s.attr_filters
                     .into_iter()
                     .map(|filter| AttributeFilter::from_input(filter))
                     .collect::<FieldResult<Vec<AttributeFilter>>>()?;
-                Some(f)
-            }
-        };
 
         Ok(Self {
             name: s.name,
