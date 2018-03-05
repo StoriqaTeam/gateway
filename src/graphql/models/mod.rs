@@ -10,7 +10,7 @@ pub mod user_role;
 pub mod translation;
 
 pub use self::gender::Gender;
-pub use self::user::{CreateUserInput, DeactivateUserInput, UpdateUserInput, User};
+pub use self::user::*;
 pub use self::product::*;
 pub use self::store::*;
 pub use self::connection::{Connection, Edge, PageInfo};
