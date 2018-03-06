@@ -1,6 +1,6 @@
 use juniper::ID as GraphqlID;
 
-use super::{Language, Translation, TranslationInput};
+use stq_static_resources::{Language, Translation, TranslationInput};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Store {
@@ -112,7 +112,6 @@ pub struct DeactivateStoreInput {
     #[graphql(description = "Id of a store.")]
     pub id: GraphqlID,
 }
-
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone)]
 #[graphql(description = "Search store input object")]

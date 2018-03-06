@@ -21,7 +21,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
     description: "The Node interface contains a single field, 
         id, which is a ID!. The node root field takes a single argument, 
         a ID!, and returns a Node. These two work in concert to allow refetching."
-    
+
     field id() -> GraphqlID {
         match *self {
             Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::User, *id).to_string().into(),

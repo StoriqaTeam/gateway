@@ -3,6 +3,7 @@ use juniper;
 use juniper::ID as GraphqlID;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::Translation;
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -74,7 +75,7 @@ graphql_object!(Connection<Product>: Context as "ProductsConnection" |&self| {
 
 graphql_object!(Edge<Product>: Context as "ProductsEdge" |&self| {
     description:"Products Edge"
-    
+
     field cursor() -> juniper::ID {
         self.cursor.clone()
     }
