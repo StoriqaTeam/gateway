@@ -103,6 +103,8 @@ pub struct AttrValue {
     pub value: String,
     #[graphql(description = "Attribute type")]
     pub value_type: AttributeType,
+    #[graphql(description = "Meta field")]
+    pub meta_field: Option<String>,
 }
 
 #[derive(GraphQLEnum, Serialize, Clone, Debug)]
