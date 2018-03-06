@@ -11,7 +11,6 @@ pub enum Provider {
 
     #[graphql(description = "Email")]
     Email,
-
 }
 
 impl fmt::Display for Provider {

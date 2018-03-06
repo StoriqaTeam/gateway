@@ -7,7 +7,8 @@ use juniper::ID as GraphqlID;
 use juniper::FieldResult;
 use hyper::Method;
 use futures::Future;
-use stq_static_resources::currency::{CurrencyGraphQl, Currency};
+use stq_static_resources::currency::{Currency, CurrencyGraphQl};
+use stq_static_resources::{Language, LanguageGraphQl};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
@@ -200,7 +201,7 @@ graphql_object!(Query: Context |&self| {
             count + 1,
             offset
             );
-        
+
         let search_product = SearchProduct::from_input(search_term)?;
         let body = serde_json::to_string(&search_product)?;
 

@@ -1,7 +1,7 @@
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use super::{Translation, TranslationInput};
+use stq_static_resources::{Translation, TranslationInput};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Product {
@@ -215,9 +215,9 @@ impl AttributeFilter {
 impl SearchProduct {
     pub fn from_input(s: SearchProductInput) -> FieldResult<Self> {
         let filters = s.attr_filters
-                    .into_iter()
-                    .map(|filter| AttributeFilter::from_input(filter))
-                    .collect::<FieldResult<Vec<AttributeFilter>>>()?;
+            .into_iter()
+            .map(|filter| AttributeFilter::from_input(filter))
+            .collect::<FieldResult<Vec<AttributeFilter>>>()?;
 
         Ok(Self {
             name: s.name,

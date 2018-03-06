@@ -50,7 +50,7 @@ graphql_object!(Mutation: Context |&self| {
             .and_then(|res| {
                 let url = format!("{}/{}",
                     context.config.service_url(Service::Users),
-                    
+
                     Model::UserRoles.to_url());
 
                 let user_role = NewUserRole {
