@@ -275,4 +275,15 @@ graphql_object!(Query: Context |&self| {
         Ok(Currency::as_vec())
     }
 
+    field categories_tree(&executor) -> FieldResult<Vec<CategoryTree>> as "Fetches categories tree." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Category.to_url());
+
+        context.http_client.request_with_auth_header::<Vec<CategoryTree>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
 });

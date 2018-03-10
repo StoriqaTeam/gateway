@@ -230,4 +230,28 @@ graphql_object!(Mutation: Context |&self| {
             })
     }
 
+    field createCategory(&executor, input: CreateCategoryInput as "Create category input.") -> FieldResult<Category> as "Creates new category." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Category.to_url());
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request_with_auth_header::<Category>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
+    field updateCategory(&executor, input: UpdateCategoryInput as "Update category input.") -> FieldResult<Category>  as "Updates existing category."{
+        let context = executor.context();
+        let identifier = ID::from_str(&*input.id)?;
+        let url = identifier.url(&context.config);
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request_with_auth_header::<Category>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
 });

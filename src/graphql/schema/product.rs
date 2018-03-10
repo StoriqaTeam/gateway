@@ -53,11 +53,17 @@ graphql_object!(Product: Context as "Product" |&self| {
     field photo_main() -> Option<String> as "Photo main" {
         self.photo_main.clone()
     }
+
     field vendor_code() -> Option<String> as "Vendor code" {
         self.vendor_code.clone()
     }
+
     field cashback() -> Option<f64> as "Cashback" {
         self.cashback.clone()
+    }
+
+    field category_id() -> i32 as "Category id" {
+        self.category_id
     }
 });
 
