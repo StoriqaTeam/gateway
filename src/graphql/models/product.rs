@@ -138,6 +138,8 @@ pub struct SearchProductInput {
     pub name: String,
     #[graphql(description = "Attribute filters.")]
     pub attr_filters: Vec<AttributeFilterInput>,
+    #[graphql(description = "Categories ids.")]
+    pub categories_ids: Vec<i32>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
