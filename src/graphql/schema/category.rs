@@ -31,7 +31,7 @@ graphql_object!(Category: Context as "Category" |&self| {
     }
 });
 
-graphql_object!(CategoryTree: Context as "Category Tree" |&self| {
+graphql_object!(CategoryTree: Context as "CategoryTree" |&self| {
     description: "Category tree info."
 
     field id() -> GraphqlID as "Unique id"{
