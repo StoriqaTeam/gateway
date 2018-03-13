@@ -1,6 +1,7 @@
 pub mod gender;
 pub mod user;
 pub mod product;
+pub mod base_product;
 pub mod store;
 pub mod connection;
 pub mod id;
@@ -13,6 +14,7 @@ pub mod attribute;
 pub use self::gender::Gender;
 pub use self::user::*;
 pub use self::product::*;
+pub use self::base_product::*;
 pub use self::store::*;
 pub use self::attribute::*;
 pub use self::connection::{Connection, Edge, PageInfo};

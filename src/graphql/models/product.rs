@@ -1,23 +1,15 @@
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_static_resources::{Translation, TranslationInput};
-
 #[derive(Deserialize, Debug, Clone)]
 pub struct Product {
     pub id: i32,
-    pub store_id: i32,
-    pub name: Vec<Translation>,
+    pub base_product_id: i32,
     pub is_active: bool,
-    pub short_description: Vec<Translation>,
-    pub long_description: Option<Vec<Translation>>,
-    pub price: f64,
-    pub currency_id: i32,
     pub discount: Option<f64>,
     pub photo_main: Option<String>,
     pub vendor_code: Option<String>,
     pub cashback: Option<f64>,
-    pub category_id: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -38,16 +30,6 @@ pub struct UpdateProductWithAttributesInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Update product input object")]
 pub struct UpdateProduct {
-    #[graphql(description = "New name of a product.")]
-    pub name: Option<Vec<TranslationInput>>,
-    #[graphql(description = "currency_id")]
-    pub currency_id: Option<i32>,
-    #[graphql(description = "short_description")]
-    pub short_description: Option<Vec<TranslationInput>>,
-    #[graphql(description = "long_description")]
-    pub long_description: Option<Vec<TranslationInput>>,
-    #[graphql(description = "price")]
-    pub price: Option<f64>,
     #[graphql(description = "discount")]
     pub discount: Option<f64>,
     #[graphql(description = "photo_main")]
@@ -56,8 +38,6 @@ pub struct UpdateProduct {
     pub vendor_code: Option<String>,
     #[graphql(description = "cashback")]
     pub cashback: Option<f64>,
-    #[graphql(description = "Category id.")]
-    pub category_id: Option<i32>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -75,18 +55,8 @@ pub struct CreateProductWithAttributesInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "New Product")]
 pub struct NewProduct {
-    #[graphql(description = "Name of new product.")]
-    pub name: Vec<TranslationInput>,
-    #[graphql(description = "Store id product belonging to.")]
-    pub store_id: i32,
-    #[graphql(description = "Sale currency id.")]
-    pub currency_id: i32,
-    #[graphql(description = "Short description")]
-    pub short_description: Vec<TranslationInput>,
-    #[graphql(description = "Long description")]
-    pub long_description: Option<Vec<TranslationInput>>,
-    #[graphql(description = "Price of the product.")]
-    pub price: f64,
+    #[graphql(description = "Base product id variant belonging to.")]
+    pub base_product_id: i32,
     #[graphql(description = "Discount.")]
     pub discount: Option<f64>,
     #[graphql(description = "Main photo of the product.")]
@@ -95,8 +65,6 @@ pub struct NewProduct {
     pub vendor_code: Option<String>,
     #[graphql(description = "Cashback.")]
     pub cashback: Option<f64>,
-    #[graphql(description = "Category id.")]
-    pub category_id: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

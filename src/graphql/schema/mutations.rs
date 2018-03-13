@@ -170,6 +170,42 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field createBaseProduct(&executor, input: CreateBaseProductInput as "Create base product with attributes input.") -> FieldResult<BaseProduct> as "Creates new base product." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request_with_auth_header::<BaseProduct>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
+    field updateBaseProduct(&executor, input: UpdateBaseProductInput as "Update base product input.") -> FieldResult<BaseProduct>  as "Updates existing base product."{
+
+        let context = executor.context();
+        let identifier = ID::from_str(&*input.id)?;
+        let url = identifier.url(&context.config);
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request_with_auth_header::<BaseProduct>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
+    field deactivateBaseProduct(&executor, input: DeactivateBaseProductInput as "Deactivate base product input.") -> FieldResult<BaseProduct>  as "Deactivates existing base product." {
+        let context = executor.context();
+        let identifier = ID::from_str(&*input.id)?;
+        let url = identifier.url(&context.config);
+
+        context.http_client.request_with_auth_header::<BaseProduct>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
     field getJWTByEmail(&executor, input: CreateJWTEmailInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by email." {
         let context = executor.context();
         let url = format!("{}/{}/email",

@@ -148,7 +148,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field stores_name_auto_complete(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", name : String as "name part") -> FieldResult<Connection<String>> as "Finds stores full name by part of the name." {
+    field stores_name_auto_complete(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", name : String as "Name part") -> FieldResult<Connection<String>> as "Finds stores full name by part of the name." {
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -225,15 +225,13 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field products_name_auto_complete(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", search_term : SearchProductInput as "Search product input") -> FieldResult<Connection<String>> as "Finds products full name by part of the name." {
+    field products_name_auto_complete(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", name : String as "Name part") -> FieldResult<Connection<String>> as "Finds products full name by part of the name." {
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
-
-        let body = serde_json::to_string(&search_term)?;
 
         let url = format!("{}/{}/auto_complete?count={}&offset={}",
             context.config.service_url(Service::Stores),
@@ -242,7 +240,7 @@ graphql_object!(Query: Context |&self| {
             offset
             );
 
-        context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+        context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, Some(name), context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .map (|full_names| {
                 let mut full_name_edges: Vec<Edge<String>> =  vec![];
