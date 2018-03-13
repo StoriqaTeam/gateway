@@ -185,7 +185,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field products_find(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", search_term : SearchProductInput as "Search pattern") -> FieldResult<Connection<Product>> as "Finds stores by name using relay connection." {
+    field products_find(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", search_term : SearchProductInput as "Search pattern") -> FieldResult<Connection<SearchResultProduct>> as "Find products by name using relay connection." {
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -203,10 +203,10 @@ graphql_object!(Query: Context |&self| {
         let search_product = SearchProduct::from_input(search_term)?;
         let body = serde_json::to_string(&search_product)?;
 
-        context.http_client.request_with_auth_header::<Vec<Product>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+        context.http_client.request_with_auth_header::<Vec<SearchResultProduct>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .map (|stores| {
-                let mut store_edges: Vec<Edge<Product>> =  vec![];
+                let mut store_edges: Vec<Edge<SearchResultProduct>> =  vec![];
                 for i in 0..stores.len() {
                     let edge = Edge::new(
                             juniper::ID::from( (i as i32 + offset).to_string()),
