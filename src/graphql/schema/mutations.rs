@@ -230,4 +230,30 @@ graphql_object!(Mutation: Context |&self| {
             })
     }
 
+    field createAttribute(&executor, input: CreateAttributeInput as "Create attribute input.") -> FieldResult<Attribute> as "Creates new attribute." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Attribute.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request_with_auth_header::<Attribute>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
+    field updateAttribute(&executor, input: UpdateAttributeInput as "Update attribute input.") -> FieldResult<Attribute>  as "Updates existing attribute."{
+
+        let context = executor.context();
+        let identifier = ID::from_str(&*input.id)?;
+        let url = identifier.url(&context.config);
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request_with_auth_header::<Attribute>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
 });
