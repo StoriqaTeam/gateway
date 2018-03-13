@@ -5,6 +5,7 @@ pub mod user;
 pub mod node;
 pub mod product;
 pub mod store;
+pub mod category;
 pub mod attribute;
 
 use juniper;
