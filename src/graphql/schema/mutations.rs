@@ -33,16 +33,21 @@ graphql_object!(Mutation: Context |&self| {
 
     field createUser(&executor, input: CreateUserInput as "Create user input.") -> FieldResult<User> as "Creates new user." {
         let context = executor.context();
+        let saga_addr = context.config.saga_microservice.url.clone();
         let url = format!("{}/{}",
-            "saga",
+            saga_addr,
             "create_account");
 
         let new_ident = NewIdentity {
             provider: Provider::Email,
             email: input.email,
-            password: input.password
+            password: input.password,
+            saga_id: "".to_string(),
         };
-        let body: String = serde_json::to_string(&new_ident)?.to_string();
+        let saga_profile = SagaCreateProfile {
+            identity: new_ident,
+        };
+        let body: String = serde_json::to_string(&saga_profile)?.to_string();
 
         context.http_client.request::<User>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.into_graphql()))
