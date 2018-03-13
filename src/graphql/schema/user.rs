@@ -209,6 +209,55 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
+    field base_product(&executor, id: GraphqlID as "Id of a base product.") -> FieldResult<BaseProduct> as "Fetches base product by id." {
+        let context = executor.context();
+
+        let identifier = ID::from_str(&*id)?;
+        let url = identifier.url(&context.config);
+
+        context.http_client.request_with_auth_header::<BaseProduct>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
+    field base_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of base product") -> FieldResult<Connection<BaseProduct>> as "Fetches base products using relay connection." {
+        let context = executor.context();
+
+        let raw_id = match after {
+            Some(val) => ID::from_str(&*val)?.raw_id,
+            None => MIN_ID
+        };
+
+        let records_limit = context.config.gateway.records_limit;
+        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}?from={}&count={}",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            raw_id,
+            first + 1);
+
+        context.http_client.request_with_auth_header::<Vec<BaseProduct>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .map (|products| {
+                let mut product_edges: Vec<Edge<BaseProduct>> = products
+                    .into_iter()
+                    .map(|product| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, product.id.clone()).to_string()),
+                                product.clone()
+                            ))
+                    .collect();
+                let has_next_page = product_edges.len() as i32 == first + 1;
+                if has_next_page {
+                    product_edges.pop();
+                };
+                let has_previous_page = true;
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                Connection::new(product_edges, page_info)
+            })
+            .wait()
+    }
+
 });
 
 graphql_object!(Connection<User>: Context as "UsersConnection" |&self| {

@@ -23,13 +23,6 @@ pub struct UpdateBaseProductInput {
     #[graphql(description = "Id of a base_product.")]
     #[serde(skip_serializing)]
     pub id: GraphqlID,
-    #[graphql(description = "Update Base Product")]
-    pub base_product: UpdateBaseProduct,
-}
-
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description = "Update base_product input object")]
-pub struct UpdateBaseProduct {
     #[graphql(description = "New name of a base product.")]
     pub name: Option<Vec<TranslationInput>>,
     #[graphql(description = "short description")]
@@ -48,13 +41,6 @@ pub struct CreateBaseProductInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "New BaseProduct")]
-    pub base_product: NewBaseProduct,
-}
-
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description = "New BaseProduct")]
-pub struct NewBaseProduct {
     #[graphql(description = "Name of new base_product.")]
     pub name: Vec<TranslationInput>,
     #[graphql(description = "Store id base_product belonging to.")]
