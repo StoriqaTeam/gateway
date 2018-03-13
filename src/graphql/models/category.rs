@@ -6,15 +6,7 @@ pub struct Category {
     pub id: i32,
     pub name: Vec<Translation>,
     pub meta_field: Option<String>,
-    pub parent_id: Option<i32>,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct CategoryTree {
-    pub id: i32,
-    pub name: Vec<Translation>,
-    pub meta_field: Option<String>,
-    pub childs: Vec<CategoryTree>,
+    pub children: Vec<Category>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
