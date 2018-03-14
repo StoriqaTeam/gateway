@@ -31,10 +31,3 @@ impl SearchProduct {
         })
     }
 }
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct SearchResultProduct {
-    pub base_product: BaseProduct,
-    pub variant: Product,
-    pub attrs: Vec<AttrValue>, 
-}

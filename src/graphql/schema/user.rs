@@ -114,8 +114,12 @@ graphql_object!(User: Context as "User" |&self| {
     field store(&executor, id: GraphqlID as "Id of a store.") -> FieldResult<Store> as "Fetches store by id." {
         let context = executor.context();
 
-        let identifier = ID::from_str(&*id)?;
-        let url = identifier.url(&context.config);
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            id.to_string()
+        );
 
         context.http_client.request_with_auth_header::<Store>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
@@ -163,8 +167,12 @@ graphql_object!(User: Context as "User" |&self| {
     field product(&executor, id: GraphqlID as "Id of a product.") -> FieldResult<Product> as "Fetches product by id." {
         let context = executor.context();
 
-        let identifier = ID::from_str(&*id)?;
-        let url = identifier.url(&context.config);
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::Product.to_url(),
+            id.to_string()
+        );
 
         context.http_client.request_with_auth_header::<Product>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
@@ -212,8 +220,12 @@ graphql_object!(User: Context as "User" |&self| {
     field base_product(&executor, id: GraphqlID as "Id of a base product.") -> FieldResult<BaseProduct> as "Fetches base product by id." {
         let context = executor.context();
 
-        let identifier = ID::from_str(&*id)?;
-        let url = identifier.url(&context.config);
+       let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::Product.to_url(),
+            id.to_string()
+        );
 
         context.http_client.request_with_auth_header::<BaseProduct>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
@@ -255,6 +267,21 @@ graphql_object!(User: Context as "User" |&self| {
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
                 Connection::new(product_edges, page_info)
             })
+            .wait()
+    }
+
+    field base_product_with_variants(&executor, id: GraphqlID as "Id of a base product.") -> FieldResult<BaseProductWithVariants> as "Fetches base product with variants by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}/with_variants",
+            &context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            id.to_string()
+        );
+
+        context.http_client.request_with_auth_header::<BaseProductWithVariants>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
 

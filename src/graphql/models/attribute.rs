@@ -38,10 +38,23 @@ pub struct CreateAttributeInput {
 }
 
 #[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone)]
+#[graphql(name = "AttrValueInput", description = "Product attributes with values input object")]
+pub struct AttrValueInput {
+    #[graphql(description = "Attribute id")]
+    pub attr_id: i32,
+    #[graphql(description = "Attribute value")]
+    pub value: String,
+    #[graphql(description = "Attribute type")]
+    pub value_type: AttributeType,
+    #[graphql(description = "Meta field")]
+    pub meta_field: Option<String>,
+}
+
+#[derive(GraphQLObject, Deserialize, Serialize, Debug, Clone)]
 #[graphql(name = "AttributeValue", description = "Product attributes with values")]
 pub struct AttrValue {
-    #[graphql(description = "Attribute name")]
-    pub name: String,
+    #[graphql(description = "Attribute id")]
+    pub attr_id: i32,
     #[graphql(description = "Attribute value")]
     pub value: String,
     #[graphql(description = "Attribute type")]
@@ -52,7 +65,6 @@ pub struct AttrValue {
 
 #[derive(GraphQLEnum, Deserialize, Serialize, Clone, Debug)]
 #[graphql(name = "AttributeType", description = "Attribute Type")]
-#[serde(tag = "attribute_type")]
 pub enum AttributeType {
     #[graphql(description = "String type. Can represent enums, bool, int and strings.")]
     Str,

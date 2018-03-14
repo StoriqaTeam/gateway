@@ -1,6 +1,7 @@
 use juniper::ID as GraphqlID;
-
 use stq_static_resources::{Translation, TranslationInput};
+
+use super::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct BaseProduct {
@@ -62,4 +63,16 @@ pub struct DeactivateBaseProductInput {
     pub client_mutation_id: String,
     #[graphql(description = "Id of a base_product.")]
     pub id: GraphqlID,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct BaseProductWithVariants {
+    pub base_product: BaseProduct,
+    pub variants: Vec<VariantsWithAttributes>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct VariantsWithAttributes {
+    pub product: Product,
+    pub attrs: Vec<AttrValue>,
 }

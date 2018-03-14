@@ -70,3 +70,45 @@ graphql_object!(Edge<BaseProduct>: Context as "BaseProductsEdge" |&self| {
         self.node.clone()
     }
 });
+
+graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&self| {
+    description: "Base product with variantsinfo."
+
+    field id() -> GraphqlID as "Unique id"{
+        ID::new(Service::Stores, Model::BaseProduct, self.base_product.id).to_string().into()
+    }
+
+    field raw_id() -> GraphqlID as "Unique id"{
+        self.base_product.id.to_string().into()
+    }
+
+    field base_product() -> BaseProduct as "Base product info." {
+        self.base_product.clone()
+    }
+
+    field variants() -> Vec<VariantsWithAttributes> as "Variants info." {
+        self.variants.clone()
+    }
+
+});
+
+graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&self| {
+    description: "Variants with attributes info."
+
+    field id() -> GraphqlID as "Unique id"{
+        ID::new(Service::Stores, Model::Product, self.product.id).to_string().into()
+    }
+
+    field raw_id() -> GraphqlID as "Unique id"{
+        self.product.id.to_string().into()
+    }
+
+    field product() -> Product as "Base product info." {
+        self.product.clone()
+    }
+
+    field attributes() -> Vec<AttrValue> as "Variants info." {
+        self.attrs.clone()
+    }
+
+});
