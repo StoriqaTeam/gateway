@@ -260,4 +260,30 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field addAttributeToCategory(&executor, input: AddAttributeToCategoryInput as "Create category input.") -> FieldResult<Mock> as "Creates new category." {
+        let context = executor.context();
+        let url = format!("{}/{}/attributes",
+            context.config.service_url(Service::Stores),
+            Model::Category.to_url());
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request_with_auth_header::<()>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+           .or_else(|err| Err(err.into_graphql()))
+            .wait()?;
+        Ok(Mock{})
+    }
+
+    field deleteAttributeFromCategory(&executor, input: DeleteAttributeFromCategory as "Update category input.") -> FieldResult<Mock>  as "Updates existing category."{
+        let context = executor.context();
+        let url = format!("{}/{}/attributes",
+            context.config.service_url(Service::Stores),
+            Model::Category.to_url());
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request_with_auth_header::<()>(Method::Delete, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()?;
+        Ok(Mock{})
+    }
+
 });
