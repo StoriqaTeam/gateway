@@ -17,6 +17,7 @@ pub struct Product {
     pub photo_main: Option<String>,
     pub vendor_code: Option<String>,
     pub cashback: Option<f64>,
+    pub category_id: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -55,6 +56,8 @@ pub struct UpdateProduct {
     pub vendor_code: Option<String>,
     #[graphql(description = "cashback")]
     pub cashback: Option<f64>,
+    #[graphql(description = "Category id.")]
+    pub category_id: Option<i32>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -92,6 +95,8 @@ pub struct NewProduct {
     pub vendor_code: Option<String>,
     #[graphql(description = "Cashback.")]
     pub cashback: Option<f64>,
+    #[graphql(description = "Category id.")]
+    pub category_id: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -133,6 +138,8 @@ pub struct SearchProductInput {
     pub name: String,
     #[graphql(description = "Attribute filters.")]
     pub attr_filters: Vec<AttributeFilterInput>,
+    #[graphql(description = "Categories ids.")]
+    pub categories_ids: Vec<i32>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
