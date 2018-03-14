@@ -58,6 +58,13 @@ pub struct NewIdentity {
     pub email: String,
     pub password: String,
     pub provider: Provider,
+    pub saga_id: String,
+}
+
+/// Payload for creating identity
+#[derive(Serialize, Clone)]
+pub struct SagaCreateProfile {
+    pub identity: NewIdentity,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]

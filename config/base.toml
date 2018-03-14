@@ -16,3 +16,6 @@ url="http://orders:8002"
 
 [billing_microservice]
 url="http://billing:8003"
+
+[saga_microservice]
+url="http://saga:8004"

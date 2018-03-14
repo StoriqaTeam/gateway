@@ -33,49 +33,25 @@ graphql_object!(Mutation: Context |&self| {
 
     field createUser(&executor, input: CreateUserInput as "Create user input.") -> FieldResult<User> as "Creates new user." {
         let context = executor.context();
+        let saga_addr = context.config.saga_microservice.url.clone();
         let url = format!("{}/{}",
-            context.config.service_url(Service::Users),
-            Model::User.to_url());
+            saga_addr,
+            "create_account");
 
         let new_ident = NewIdentity {
             provider: Provider::Email,
             email: input.email,
-            password: input.password
+            password: input.password,
+            saga_id: "".to_string(),
         };
-        let body: String = serde_json::to_string(&new_ident)?.to_string();
+        let saga_profile = SagaCreateProfile {
+            identity: new_ident,
+        };
+        let body: String = serde_json::to_string(&saga_profile)?.to_string();
 
         context.http_client.request::<User>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.into_graphql()))
             .wait()
-            .and_then(|res| {
-                let url = format!("{}/{}",
-                    context.config.service_url(Service::Users),
-
-                    Model::UserRoles.to_url());
-
-                let user_role = NewUserRole {
-                    user_id: res.id,
-                    role: Role::User,
-                };
-
-                let body = serde_json::to_string(&user_role)?.to_string();
-
-                // sending role to users microservice
-                context.http_client.request::<UserRole>(Method::Post, url, Some(body.clone()), None)
-                    .or_else(|err| Err(err.into_graphql()))
-                    .wait()?;
-
-                let url = format!("{}/{}",
-                    context.config.service_url(Service::Stores),
-                    Model::UserRoles.to_url());
-
-                // sending role to stores microservice
-                context.http_client.request::<UserRole>(Method::Post, url, Some(body), None)
-                    .or_else(|err| Err(err.into_graphql()))
-                    .wait()?;
-
-                Ok(res)
-            })
     }
 
     field updateUser(&executor, input: UpdateUserInput as "Create user input.") -> FieldResult<User>  as "Updates existing user."{
@@ -231,39 +207,6 @@ graphql_object!(Mutation: Context |&self| {
         context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.into_graphql()))
             .wait()
-            .and_then(|jwt| {
-                match &jwt.status {
-                    &UserStatus::New(user_id) => {
-                        let url = format!("{}/{}",
-                            context.config.service_url(Service::Users),
-                            Model::UserRoles.to_url());
-
-                        let user_role = NewUserRole {
-                            user_id: user_id,
-                            role: Role::User,
-                        };
-
-                        let body = serde_json::to_string(&user_role)?.to_string();
-
-                        // sending role to users microservice
-                        context.http_client.request::<UserRole>(Method::Post, url, Some(body.clone()), None)
-                            .or_else(|err| Err(err.into_graphql()))
-                            .wait()?;
-
-                        let url = format!("{}/{}",
-                            context.config.service_url(Service::Stores),
-                            Model::UserRoles.to_url());
-
-                        // sending role to stores microservice
-                        context.http_client.request::<UserRole>(Method::Post, url, Some(body), None)
-                            .or_else(|err| Err(err.into_graphql()))
-                            .wait()?;
-
-                        Ok(jwt.into())
-                    },
-                    &UserStatus::Exists => Ok(jwt.into()),
-                }
-            })
     }
 
     field createAttribute(&executor, input: CreateAttributeInput as "Create attribute input.") -> FieldResult<Attribute> as "Creates new attribute." {
