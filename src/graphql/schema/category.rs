@@ -43,4 +43,17 @@ graphql_object!(Category: Context as "Category" |&self| {
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
+
+    field get_attributes(&executor) -> FieldResult<Vec<Attribute>> as "Fetches category attributes." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/attributes",
+            context.config.service_url(Service::Stores),
+            Model::Category.to_url(),
+            self.id
+            );
+
+        context.http_client.request_with_auth_header::<Vec<Attribute>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
 });

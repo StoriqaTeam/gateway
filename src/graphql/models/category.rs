@@ -39,3 +39,29 @@ pub struct CreateCategoryInput {
     #[graphql(description = "Parent category id.")]
     pub parent_id: Option<i32>,
 }
+
+/// Payload for adding category attributes
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Add Attribute To Category Input input object")]
+pub struct AddAttributeToCategoryInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of Category.")]
+    pub cat_id: i32,
+    #[graphql(description = "Id of Attribute.")]
+    pub attr_id: i32,
+}
+
+/// Payload for deleting category attributes
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Delete Attribute To Category Input input object")]
+pub struct DeleteAttributeFromCategory {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of Category.")]
+    pub cat_id: i32,
+    #[graphql(description = "Id of Attribute.")]
+    pub attr_id: i32,
+}
