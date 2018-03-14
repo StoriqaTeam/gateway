@@ -19,7 +19,7 @@ impl fmt::Display for ID {
         write!(
             f,
             "{}",
-            encode(&*format!("{}_{}_{}", self.service, self.model, self.raw_id))
+            encode(&*format!("{}|{}|{}", self.service, self.model, self.raw_id))
         )
     }
 }
@@ -42,7 +42,7 @@ impl FromStr for ID {
             )
         })?;
 
-        let v: Vec<&str> = id.split('_').collect();
+        let v: Vec<&str> = id.split('|').collect();
         if v.len() != 3 {
             return Err(FieldError::new(
                 "Id parsing error",

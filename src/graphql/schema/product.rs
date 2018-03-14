@@ -3,7 +3,6 @@ use juniper;
 use juniper::ID as GraphqlID;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::Translation;
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -22,28 +21,8 @@ graphql_object!(Product: Context as "Product" |&self| {
         self.id.to_string().into()
     }
 
-    field name() -> Vec<Translation> as "Full Name" {
-        self.name.clone()
-    }
-
     field is_active() -> bool as "If the product was disabled (deleted), isActive is false" {
         self.is_active
-    }
-
-    field short_description() -> Vec<Translation> as "Short description" {
-        self.short_description.clone()
-    }
-
-    field long_description() -> Option<Vec<Translation>> as "Long Description" {
-        self.long_description.clone()
-    }
-
-    field price() -> f64 as "Price" {
-        self.price.clone()
-    }
-
-    field currency_id() -> i32 as "Currency Id" {
-        self.currency_id.clone()
     }
 
     field discount() -> Option<f64> as "Discount" {
@@ -62,9 +41,6 @@ graphql_object!(Product: Context as "Product" |&self| {
         self.cashback.clone()
     }
 
-    field category_id() -> i32 as "Category id" {
-        self.category_id
-    }
 });
 
 graphql_object!(Connection<Product>: Context as "ProductsConnection" |&self| {
