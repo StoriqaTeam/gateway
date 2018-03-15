@@ -8,6 +8,7 @@ pub mod base_product;
 pub mod store;
 pub mod category;
 pub mod attribute;
+pub mod search;
 
 use juniper;
 

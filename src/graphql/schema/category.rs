@@ -33,17 +33,6 @@ graphql_object!(Category: Context as "Category" |&self| {
         self.children.clone()
     }
 
-    field full_tree(&executor) -> FieldResult<Category> as "Fetches categories tree." {
-        let context = executor.context();
-        let url = format!("{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::Category.to_url());
-
-        context.http_client.request_with_auth_header::<Category>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
-            .wait()
-    }
-
     field get_attributes(&executor) -> FieldResult<Vec<Attribute>> as "Fetches category attributes." {
         let context = executor.context();
         let url = format!("{}/{}/{}/attributes",

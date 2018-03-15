@@ -38,3 +38,5 @@ graphql_object!(Mock: Context as "Mock" |&self| {
     }
 
 });
+
+pub struct Search;
