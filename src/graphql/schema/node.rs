@@ -11,10 +11,13 @@ use super::*;
 pub struct StaticNodeIds;
 
 pub enum Node {
+    Query(Query),
     User(User),
     Store(Store),
     Product(Product),
-    Query(Query),
+    BaseProduct(BaseProduct),
+    Category(Category),
+    Attribute(Attribute)
 }
 
 graphql_interface!(Node: Context as "Node" |&self| {
@@ -24,18 +27,24 @@ graphql_interface!(Node: Context as "Node" |&self| {
 
     field id() -> GraphqlID {
         match *self {
+            Node::Query(_)  => QUERY_NODE_ID.to_string().into(),
             Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::User, *id).to_string().into(),
             Node::Store(Store { ref id, .. })  => ID::new(Service::Stores, Model::Store, *id).to_string().into(),
             Node::Product(Product { ref id, .. })  => ID::new(Service::Stores, Model::Product, *id).to_string().into(),
-            Node::Query(_)  => QUERY_NODE_ID.to_string().into(),
+            Node::BaseProduct(BaseProduct { ref id, .. })  => ID::new(Service::Stores, Model::BaseProduct, *id).to_string().into(),
+            Node::Category(Category { ref id, .. })  => ID::new(Service::Stores, Model::Category, *id).to_string().into(),
+            Node::Attribute(Attribute { ref id, .. })  => ID::new(Service::Stores, Model::Attribute, *id).to_string().into(),
         }
     }
 
     instance_resolvers: |_| {
+        &Query => match *self { Node::Query(ref h) => Some(h), _ => None },
         &User => match *self { Node::User(ref h) => Some(h), _ => None },
         &Store => match *self { Node::Store(ref h) => Some(h), _ => None },
         &Product => match *self { Node::Product(ref h) => Some(h), _ => None },
-        &Query => match *self { Node::Query(ref h) => Some(h), _ => None },
+        &BaseProduct => match *self { Node::BaseProduct(ref h) => Some(h), _ => None },
+        &Category => match *self { Node::Category(ref h) => Some(h), _ => None },
+        &Attribute => match *self { Node::Attribute(ref h) => Some(h), _ => None },
     }
 });
 

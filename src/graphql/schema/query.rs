@@ -2,7 +2,7 @@
 use std::str::FromStr;
 
 use juniper::ID as GraphqlID;
-use juniper::FieldResult;
+use juniper::{FieldResult, FieldError};
 use hyper::Method;
 use futures::Future;
 use stq_static_resources::currency::{Currency, CurrencyGraphQl};
@@ -78,11 +78,17 @@ graphql_object!(Query: Context |&self| {
         } else {
             let identifier = ID::from_str(&*id)?;
             match (&identifier.service, &identifier.model) {
-                (&Service::Users, _) => {
+                (&Service::Users, &Model::User) => {
                                 context.http_client.request_with_auth_header::<User>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
                                     .map(|res| Node::User(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
+                },
+                (&Service::Users, _) => {
+                                Err(FieldError::new(
+                                    "Could not get model from users microservice.",
+                                    graphql_value!({ "internal_error": "Unknown model" })
+                                ))
                 },
                 (&Service::Stores, &Model::Store) => {
                                 context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
@@ -96,11 +102,29 @@ graphql_object!(Query: Context |&self| {
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
                 },
-                (&Service::Stores, _) => {
-                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
-                                    .map(|res| Node::Store(res))
+                (&Service::Stores, &Model::BaseProduct) => {
+                                context.http_client.request_with_auth_header::<BaseProduct>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
+                                    .map(|res| Node::BaseProduct(res))
                                     .or_else(|err| Err(err.into_graphql()))
                                     .wait()
+                },
+                (&Service::Stores, &Model::Category) => {
+                                context.http_client.request_with_auth_header::<Category>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
+                                    .map(|res| Node::Category(res))
+                                    .or_else(|err| Err(err.into_graphql()))
+                                    .wait()
+                },
+                (&Service::Stores, &Model::Attribute) => {
+                                context.http_client.request_with_auth_header::<Attribute>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
+                                    .map(|res| Node::Attribute(res))
+                                    .or_else(|err| Err(err.into_graphql()))
+                                    .wait()
+                },
+                (&Service::Stores, _) => {
+                                Err(FieldError::new(
+                                    "Could not get model from stores microservice.",
+                                    graphql_value!({ "internal_error": "Unknown model" })
+                                ))
                 }
             }
         }

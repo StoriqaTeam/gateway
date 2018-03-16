@@ -61,6 +61,19 @@ graphql_object!(User: Context as "User" |&self| {
         self.is_active
     }
 
+    field roles(&executor) -> FieldResult<Vec<Role>> as "Fetches user by id." {
+        let context = executor.context();
+
+       let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Users),
+            Model::UserRoles.to_url(),
+            self.id);
+
+        context.http_client.request_with_auth_header::<Vec<Role>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
 
     field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
