@@ -6,9 +6,12 @@ use stq_routes::service::Service;
 
 use graphql::context::Context;
 use graphql::models::*;
+use super::*;
 
 graphql_object!(Attribute: Context as "Attribute" |&self| {
     description: "Attribute's info."
+
+    interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
         ID::new(Service::Stores, Model::Attribute, self.id).to_string().into()

@@ -19,7 +19,7 @@ graphql_scalar!(UserStatus {
         Value::string("deprecated!!!!")
     }
 
-    from_input_value(v: &InputValue) -> Option<UserStatus> {
+    from_input_value(_v: &InputValue) -> Option<UserStatus> {
         None
     }
 });

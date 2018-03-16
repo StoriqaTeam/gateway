@@ -23,7 +23,7 @@ pub use self::connection::{Connection, Edge, PageInfo};
 pub use self::id::ID;
 pub use self::provider::Provider;
 pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, UserStatus, JWT};
-pub use self::user_role::{NewUserRole, Role, UserRole};
+pub use self::user_role::{NewUserRoleInput, Role, UserRoles};
 pub use self::category::*;
 
 use graphql::context::Context;

@@ -76,6 +76,18 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field addRoleToUser(&executor, input: NewUserRoleInput as "New User Role Input.") -> FieldResult<UserRoles>  as "Adds role to user." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Users),
+            Model::UserRoles.to_url());
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request_with_auth_header::<UserRoles>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
     field createStore(&executor, input: CreateStoreInput as "Create store input.") -> FieldResult<Store> as "Creates new store." {
         let context = executor.context();
         let url = format!("{}/{}",

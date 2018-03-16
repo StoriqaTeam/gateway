@@ -1,17 +1,20 @@
 //! File containing Category object of graphql schema
 use juniper::ID as GraphqlID;
-use stq_routes::model::Model;
-use stq_routes::service::Service;
-use stq_static_resources::Translation;
 use juniper::FieldResult;
 use hyper::Method;
 use futures::Future;
+use stq_routes::model::Model;
+use stq_routes::service::Service;
+use stq_static_resources::Translation;
 
 use graphql::context::Context;
 use graphql::models::*;
+use super::*;
 
 graphql_object!(Category: Context as "Category" |&self| {
     description: "Category info."
+
+    interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
         ID::new(Service::Stores, Model::Category, self.id).to_string().into()

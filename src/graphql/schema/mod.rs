@@ -9,6 +9,7 @@ pub mod store;
 pub mod category;
 pub mod attribute;
 pub mod search;
+pub mod user_role;
 
 use juniper;
 
