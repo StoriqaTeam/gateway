@@ -82,8 +82,6 @@ pub struct AttributeFilter {
 pub enum Filter {
     Equal(String),
     Lte(f32),
-    Le(f32),
-    Ge(f32),
     Gte(f32),
 }
 
@@ -103,8 +101,6 @@ impl AttributeFilter {
 
                 match v {
                     FilterTypeInput::Lte => Filter::Lte(val),
-                    FilterTypeInput::Le => Filter::Le(val),
-                    FilterTypeInput::Ge => Filter::Ge(val),
                     FilterTypeInput::Gte => Filter::Gte(val),
                     _ => unreachable!(),
                 }
@@ -135,10 +131,6 @@ pub enum FilterTypeInput {
     Equal,
     #[graphql(description = "Less than Equal")]
     Lte,
-    #[graphql(description = "Less or Equal")]
-    Le,
-    #[graphql(description = "Greater or Equal")]
-    Ge,
     #[graphql(description = "Greater than Equal")]
     Gte,
 }
