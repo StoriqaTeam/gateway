@@ -5,6 +5,6 @@ WORKDIR /app
 
 COPY gateway_runner /app
 COPY config /app/config
-EXPOSE 8004
+EXPOSE 8000
 
 ENTRYPOINT ["/app/gateway_runner"]
