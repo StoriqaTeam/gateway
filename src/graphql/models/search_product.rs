@@ -16,6 +16,7 @@ pub struct SearchProductInput {
 pub struct SearchProduct {
     pub name: String,
     pub attr_filters: Vec<AttributeFilter>,
+    pub categories_ids: Vec<i32>,
 }
 
 impl SearchProduct {
@@ -28,6 +29,7 @@ impl SearchProduct {
         Ok(Self {
             name: s.name,
             attr_filters: filters,
+            categories_ids: s.categories_ids
         })
     }
 }
