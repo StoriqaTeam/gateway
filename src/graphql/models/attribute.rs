@@ -74,7 +74,7 @@ pub enum AttributeType {
 
 #[derive(Serialize, Clone, Debug)]
 pub struct AttributeFilter {
-    pub name: String,
+    pub id: i32,
     pub filter: Filter,
 }
 
@@ -82,8 +82,6 @@ pub struct AttributeFilter {
 pub enum Filter {
     Equal(String),
     Lte(f32),
-    Le(f32),
-    Ge(f32),
     Gte(f32),
 }
 
@@ -103,15 +101,13 @@ impl AttributeFilter {
 
                 match v {
                     FilterTypeInput::Lte => Filter::Lte(val),
-                    FilterTypeInput::Le => Filter::Le(val),
-                    FilterTypeInput::Ge => Filter::Ge(val),
                     FilterTypeInput::Gte => Filter::Gte(val),
                     _ => unreachable!(),
                 }
             }
         };
         Ok(Self {
-            name: attr.name,
+            id: attr.id,
             filter: filter,
         })
     }
@@ -120,8 +116,8 @@ impl AttributeFilter {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "Attribute Filter")]
 pub struct AttributeFilterInput {
-    #[graphql(description = "Attribute name")]
-    pub name: String,
+    #[graphql(description = "Attribute id")]
+    pub id: i32,
     #[graphql(description = "Attribute type")]
     pub filter_type: FilterTypeInput,
     #[graphql(description = "Attribute value")]
@@ -135,10 +131,6 @@ pub enum FilterTypeInput {
     Equal,
     #[graphql(description = "Less than Equal")]
     Lte,
-    #[graphql(description = "Less or Equal")]
-    Le,
-    #[graphql(description = "Greater or Equal")]
-    Ge,
     #[graphql(description = "Greater than Equal")]
     Gte,
 }
