@@ -74,7 +74,7 @@ pub enum AttributeType {
 
 #[derive(Serialize, Clone, Debug)]
 pub struct AttributeFilter {
-    pub name: String,
+    pub id: i32,
     pub filter: Filter,
 }
 
@@ -111,7 +111,7 @@ impl AttributeFilter {
             }
         };
         Ok(Self {
-            name: attr.name,
+            id: attr.id,
             filter: filter,
         })
     }
@@ -120,8 +120,8 @@ impl AttributeFilter {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "Attribute Filter")]
 pub struct AttributeFilterInput {
-    #[graphql(description = "Attribute name")]
-    pub name: String,
+    #[graphql(description = "Attribute id")]
+    pub id: i32,
     #[graphql(description = "Attribute type")]
     pub filter_type: FilterTypeInput,
     #[graphql(description = "Attribute value")]
