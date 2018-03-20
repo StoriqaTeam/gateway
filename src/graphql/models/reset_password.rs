@@ -20,7 +20,7 @@ pub struct ResetApply {
     pub password: String,
 }
 
-#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone)]
-pub struct ResetActionResp {
+#[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
+pub struct ResetActionOutput{
     pub success: bool
 }

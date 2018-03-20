@@ -95,7 +95,7 @@ graphql_object!(Mutation: Context |&self| {
             .or_else(|err| Err(err.into_graphql()))
             .wait()?;
 
-        Ok(ResetActionResp{
+        Ok(ResetActionResp {
             success: true,
         })
     }
@@ -112,7 +112,7 @@ graphql_object!(Mutation: Context |&self| {
             .or_else(|err| Err(err.into_graphql()))
             .wait()?;
 
-        Ok(ResetActionResp{
+        Ok(ResetActionResp {
             success: true,
         })
     }
