@@ -1,35 +1,32 @@
-use juniper::FieldResult;
 use super::*;
 
-#[derive(GraphQLInputObject, Serialize, Deserialize, Clone)]
-#[graphql(description = "Search product input object")]
-pub struct SearchProductNameInput {
-    #[graphql(description = "Name part of the product.")]
-    pub name: String,
+#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
+pub struct SearchOptionsInput {
     #[graphql(description = "Attribute filters.")]
     pub attr_filters: Vec<AttributeFilterInput>,
     #[graphql(description = "Categories ids.")]
     pub categories_ids: Vec<i32>,
 }
 
-#[derive(Serialize, Clone, Debug)]
-pub struct SearchProductName {
+#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
+#[graphql(description = "Search product input object")]
+pub struct SearchProductsByNameInput {
+    #[graphql(description = "Name part of the product.")]
     pub name: String,
-    pub attr_filters: Vec<AttributeFilter>,
-    pub categories_ids: Vec<i32>,
+    #[graphql(description = "Searching options")]
+    pub options: Option<SearchOptionsInput>,
 }
 
-impl SearchProductName {
-    pub fn from_input(s: SearchProductNameInput) -> FieldResult<Self> {
-        let filters = s.attr_filters
-            .into_iter()
-            .map(|filter| AttributeFilter::from_input(filter))
-            .collect::<FieldResult<Vec<AttributeFilter>>>()?;
+#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
+#[graphql(description = "Search product input object")]
+pub struct MostViewedProductsInput {
+    #[graphql(description = "Searching options")]
+    pub options: Option<SearchOptionsInput>,
+}
 
-        Ok(Self {
-            name: s.name,
-            attr_filters: filters,
-            categories_ids: s.categories_ids
-        })
-    }
+#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
+#[graphql(description = "Search product input object")]
+pub struct MostDiscountProductsInput {
+    #[graphql(description = "Searching options")]
+    pub options: Option<SearchOptionsInput>,
 }

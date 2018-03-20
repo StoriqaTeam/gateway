@@ -64,8 +64,6 @@ pub struct UpdateStoreInput {
     pub slogan: Option<String>,
 }
 
-
-
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create store input object")]
 pub struct CreateStoreInput {

@@ -17,7 +17,7 @@ pub struct NewUserRoleInput {
     pub role: Role,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash )]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UserRoles {
     pub user_id: i32,
     pub roles: Vec<Role>,

@@ -15,7 +15,7 @@ use graphql::models::*;
 graphql_object!(MainPage: Context as "MainPage" |&self| {
     description: "Main Page endpoint."
 
-    field find_most_viewed_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining", search_term : MostViewedProductInput as "Most viewed search pattern") -> FieldResult<Connection<BaseProduct>> as "Find most viewed products." {
+    field find_most_viewed_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining", search_term : MostViewedProductsInput as "Most viewed search pattern") -> FieldResult<Connection<BaseProduct>> as "Find most viewed products." {
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -30,8 +30,7 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
             offset
             );
 
-        let search_product = MostViewedProduct::from_input(search_term)?;
-        let body = serde_json::to_string(&search_product)?;
+        let body = serde_json::to_string(&search_term)?;
 
         context.http_client.request_with_auth_header::<Vec<BaseProduct>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
@@ -56,7 +55,7 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
     }
 
 
-    field find_most_discount_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining", search_term : MostDiscountProductInput as "Most discount search pattern") -> FieldResult<Connection<BaseProduct>> as "Find most discount products." {
+    field find_most_discount_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining", search_term : MostDiscountProductsInput as "Most discount search pattern") -> FieldResult<Connection<BaseProduct>> as "Find most discount products." {
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -71,8 +70,7 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
             offset
             );
 
-        let search_product = MostDiscountProduct::from_input(search_term)?;
-        let body = serde_json::to_string(&search_product)?;
+        let body = serde_json::to_string(&search_term)?;
 
         context.http_client.request_with_auth_header::<Vec<BaseProduct>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))

@@ -21,7 +21,6 @@ pub use self::node::*;
 use graphql::context::Context;
 use graphql::models::Mock;
 
-
 pub type Schema = juniper::RootNode<'static, Query, Mutation>;
 
 pub fn create() -> Schema {

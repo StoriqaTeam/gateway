@@ -2,7 +2,7 @@
 use std::str::FromStr;
 
 use juniper::ID as GraphqlID;
-use juniper::{FieldResult, FieldError};
+use juniper::{FieldError, FieldResult};
 use hyper::Method;
 use futures::Future;
 use stq_static_resources::currency::{Currency, CurrencyGraphQl};

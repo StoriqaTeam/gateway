@@ -26,7 +26,6 @@ pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, 
 pub use self::user_role::{NewUserRoleInput, Role, UserRoles};
 pub use self::category::*;
 
-
 //Mock object, made to return from graphql when microservices responce contains nothing - '()'
 pub struct Mock;
 
