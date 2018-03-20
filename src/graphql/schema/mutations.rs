@@ -1,7 +1,7 @@
 //! File containing mutations object of graphql schema
 use std::str::FromStr;
 
-use juniper::FieldResult;
+use juniper::{FieldError, FieldResult};
 use graphql::context::Context;
 use graphql::models::*;
 use hyper::Method;
@@ -59,6 +59,13 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<User>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
@@ -105,6 +112,13 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Store>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
@@ -141,6 +155,13 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
@@ -176,6 +197,13 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
@@ -240,6 +268,13 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Attribute>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
@@ -265,6 +300,13 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+        
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Category>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))

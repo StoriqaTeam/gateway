@@ -23,7 +23,7 @@ pub struct Store {
     pub slogan: Option<String>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update store input object")]
 pub struct UpdateStoreInput {
     #[graphql(description = "Client mutation id.")]
@@ -62,6 +62,30 @@ pub struct UpdateStoreInput {
     pub default_language: Option<Language>,
     #[graphql(description = "Slogan")]
     pub slogan: Option<String>,
+}
+
+impl UpdateStoreInput {
+    pub fn is_none(&self) -> bool {
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            id: self.id.clone(),
+            name: None,
+            currency_id: None,
+            short_description: None,
+            long_description: None,
+            slug: None,
+            cover: None,
+            logo: None,
+            phone: None,
+            email: None,
+            address: None,
+            facebook_url: None,
+            twitter_url: None,
+            instagram_url: None,
+            default_language: None,
+            slogan: None,
+        } == self.clone()
+    }
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
