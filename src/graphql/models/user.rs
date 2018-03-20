@@ -15,7 +15,7 @@ pub struct User {
     pub birthdate: Option<String>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update user input object")]
 pub struct UpdateUserInput {
     #[graphql(description = "Client mutation id.")]
@@ -38,6 +38,22 @@ pub struct UpdateUserInput {
     pub gender: Option<Gender>,
     #[graphql(description = "Birthdate of a user")]
     pub birthdate: Option<String>,
+}
+
+impl UpdateUserInput {
+    pub fn is_none(&self) -> bool {
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            id: self.id.clone(),
+            is_active: None,
+            phone: None,
+            first_name: None,
+            last_name: None,
+            middle_name: None,
+            gender: None,
+            birthdate: None,
+        } == self.clone()
+    }
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

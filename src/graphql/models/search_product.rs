@@ -29,7 +29,7 @@ impl SearchProduct {
         Ok(Self {
             name: s.name,
             attr_filters: filters,
-            categories_ids: s.categories_ids
+            categories_ids: s.categories_ids,
         })
     }
 }

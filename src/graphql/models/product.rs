@@ -12,7 +12,7 @@ pub struct Product {
     pub cashback: Option<f64>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update product with attributes input object")]
 pub struct UpdateProductWithAttributesInput {
     #[graphql(description = "Client mutation id.")]
@@ -27,7 +27,7 @@ pub struct UpdateProductWithAttributesInput {
     pub attributes: Vec<AttrValueInput>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update product input object")]
 pub struct UpdateProduct {
     #[graphql(description = "discount")]
@@ -38,6 +38,22 @@ pub struct UpdateProduct {
     pub vendor_code: Option<String>,
     #[graphql(description = "cashback")]
     pub cashback: Option<f64>,
+}
+
+impl UpdateProductWithAttributesInput {
+    pub fn is_none(&self) -> bool {
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            id: self.id.clone(),
+            product: UpdateProduct {
+                discount: None,
+                photo_main: None,
+                vendor_code: None,
+                cashback: None,
+            },
+            attributes: vec![],
+        } == self.clone()
+    }
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
