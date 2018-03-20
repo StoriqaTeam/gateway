@@ -298,6 +298,19 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
+    field cart(&executor) -> FieldResult<Cart> as "Fetches user cart" {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/cart/products",
+            &context.config.service_url(Service::Orders)
+        );
+
+        context.http_client.request_with_auth_header::<OrdersCart>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .map(cart_from_orders_reply)
+            .wait()
+    }
 });
 
 graphql_object!(Connection<User>: Context as "UsersConnection" |&self| {
