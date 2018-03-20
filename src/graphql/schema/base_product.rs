@@ -45,6 +45,10 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     field category_id() -> i32 as "Category id" {
         self.category_id
     }
+
+    field views() -> i32 as "Views" {
+        self.views
+    }
 });
 
 graphql_object!(Connection<BaseProduct>: Context as "BaseProductsConnection" |&self| {

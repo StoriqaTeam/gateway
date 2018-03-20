@@ -13,6 +13,7 @@ pub struct BaseProduct {
     pub long_description: Option<Vec<Translation>>,
     pub currency_id: i32,
     pub category_id: i32,
+    pub views: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
