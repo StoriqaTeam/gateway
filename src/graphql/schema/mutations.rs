@@ -87,7 +87,7 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
-            Model::UserRoles.to_url(),
+            Model::User.to_url(),
             "password_reset/request");
         let body: String = serde_json::to_string(&input)?.to_string();
 
@@ -101,7 +101,7 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
-            Model::UserRoles.to_url(),
+            Model::User.to_url(),
             "password_reset/apply");
         let body: String = serde_json::to_string(&input)?.to_string();
 
@@ -334,7 +334,7 @@ graphql_object!(Mutation: Context |&self| {
                 graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
             ));
         }
-        
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Category>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
