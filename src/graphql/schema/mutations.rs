@@ -78,9 +78,10 @@ graphql_object!(Mutation: Context |&self| {
 
     field requestPasswordReset(&executor, input: ResetRequest as "Password reset request input.") -> FieldResult<Mock>  as "Requests password reset." {
         let context = executor.context();
-        let url = format!("{}/{}",
+        let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
-            "users/password_reset/request");
+            Model::UserRoles.to_url(),
+            "password_reset/request");
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request::<bool>(Method::Post, url, Some(body), None)
@@ -91,9 +92,10 @@ graphql_object!(Mutation: Context |&self| {
 
     field applyPasswordReset(&executor, input: ResetApply as "Password reset apply input.") -> FieldResult<Mock>  as "Applies password reset." {
         let context = executor.context();
-        let url = format!("{}/{}",
+        let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
-            "users/password_reset/apply");
+            Model::UserRoles.to_url(),
+            "password_reset/apply");
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request::<bool>(Method::Post, url, Some(body), None)
