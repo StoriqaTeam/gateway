@@ -19,3 +19,8 @@ pub struct ResetApply {
     #[graphql(description = "Password of a user.")]
     pub password: String,
 }
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone)]
+pub struct ResetActionResp {
+    pub success: bool
+}

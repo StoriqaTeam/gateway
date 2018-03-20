@@ -83,7 +83,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field requestPasswordReset(&executor, input: ResetRequest as "Password reset request input.") -> FieldResult<Mock>  as "Requests password reset." {
+    field requestPasswordReset(&executor, input: ResetRequest as "Password reset request input.") -> FieldResult<ResetActionResp>  as "Requests password reset." {
         let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
@@ -94,10 +94,13 @@ graphql_object!(Mutation: Context |&self| {
         context.http_client.request::<bool>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.into_graphql()))
             .wait()?;
-        Ok(Mock{})
+
+        Ok(ResetActionResp{
+            success: true,
+        })
     }
 
-    field applyPasswordReset(&executor, input: ResetApply as "Password reset apply input.") -> FieldResult<Mock>  as "Applies password reset." {
+    field applyPasswordReset(&executor, input: ResetApply as "Password reset apply input.") -> FieldResult<ResetActionResp>  as "Applies password reset." {
         let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
@@ -108,7 +111,10 @@ graphql_object!(Mutation: Context |&self| {
         context.http_client.request::<bool>(Method::Post, url, Some(body), None)
             .or_else(|err| Err(err.into_graphql()))
             .wait()?;
-        Ok(Mock{})
+
+        Ok(ResetActionResp{
+            success: true,
+        })
     }
 
     field addRoleToUser(&executor, input: NewUserRoleInput as "New User Role Input.") -> FieldResult<UserRoles>  as "Adds role to user." {
