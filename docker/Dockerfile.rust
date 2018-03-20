@@ -1,14 +1,6 @@
-FROM rust:1.23.0-stretch
+FROM rust:1.24.1-stretch
 
 # Install cargo-watch
 RUN cargo install cargo-watch
 
-ENV RUN_MODE=development
-
-COPY . /app
-WORKDIR /app
-RUN cargo build
-
-EXPOSE 8000
-
-ENTRYPOINT ["cargo", "run"]
+VOLUME /usr/local/cargo
