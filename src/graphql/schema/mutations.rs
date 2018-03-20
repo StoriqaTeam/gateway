@@ -83,6 +83,34 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field requestPasswordReset(&executor, input: ResetRequest as "Password reset request input.") -> FieldResult<Mock>  as "Requests password reset." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Users),
+            Model::UserRoles.to_url(),
+            "password_reset/request");
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request::<bool>(Method::Post, url, Some(body), None)
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()?;
+        Ok(Mock{})
+    }
+
+    field applyPasswordReset(&executor, input: ResetApply as "Password reset apply input.") -> FieldResult<Mock>  as "Applies password reset." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Users),
+            Model::UserRoles.to_url(),
+            "password_reset/apply");
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request::<bool>(Method::Post, url, Some(body), None)
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()?;
+        Ok(Mock{})
+    }
+
     field addRoleToUser(&executor, input: NewUserRoleInput as "New User Role Input.") -> FieldResult<UserRoles>  as "Adds role to user." {
         let context = executor.context();
         let url = format!("{}/{}",
@@ -261,7 +289,7 @@ graphql_object!(Mutation: Context |&self| {
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
-    
+
     field updateAttribute(&executor, input: UpdateAttributeInput as "Update attribute input.") -> FieldResult<Attribute>  as "Updates existing attribute."{
 
         let context = executor.context();
