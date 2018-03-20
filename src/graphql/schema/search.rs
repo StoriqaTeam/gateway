@@ -15,7 +15,7 @@ use graphql::models::*;
 graphql_object!(Search: Context as "Search" |&self| {
     description: "Searching endpoint."
 
-    field find_product(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", search_term : SearchProductInput as "Search pattern") -> FieldResult<Connection<BaseProduct>> as "Find products by name using relay connection." {
+    field find_product(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", search_term : SearchProductNameInput as "Search pattern") -> FieldResult<Connection<BaseProduct>> as "Find products by name using relay connection." {
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -30,7 +30,7 @@ graphql_object!(Search: Context as "Search" |&self| {
             offset
             );
 
-        let search_product = SearchProduct::from_input(search_term)?;
+        let search_product = SearchProductName::from_input(search_term)?;
         let body = serde_json::to_string(&search_product)?;
 
         context.http_client.request_with_auth_header::<Vec<BaseProduct>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))

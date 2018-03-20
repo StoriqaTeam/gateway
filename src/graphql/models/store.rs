@@ -23,7 +23,7 @@ pub struct Store {
     pub slogan: Option<String>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update store input object")]
 pub struct UpdateStoreInput {
     #[graphql(description = "Client mutation id.")]
@@ -63,6 +63,8 @@ pub struct UpdateStoreInput {
     #[graphql(description = "Slogan")]
     pub slogan: Option<String>,
 }
+
+
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create store input object")]

@@ -152,6 +152,10 @@ graphql_object!(Query: Context |&self| {
 
     field search(&executor) -> FieldResult<Search> as "Search endpoint" {
         Ok(Search{})
+    }
+
+    field main_page(&executor) -> FieldResult<MainPage> as "Main page endpoint" {
+        Ok(MainPage{})
     }    
 
 });
