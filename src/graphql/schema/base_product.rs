@@ -37,6 +37,14 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     field long_description() -> Option<Vec<Translation>> as "Long Description" {
         self.long_description.clone()
     }
+    
+    field seo_title() -> Option<Vec<Translation>> as "SEO title" {
+        self.seo_title.clone()
+    }
+    
+    field seo_description() -> Option<Vec<Translation>> as "SEO Description" {
+        self.seo_description.clone()
+    }
 
     field currency_id() -> i32 as "Currency Id" {
         self.currency_id.clone()
