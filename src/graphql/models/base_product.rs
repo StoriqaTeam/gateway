@@ -11,6 +11,8 @@ pub struct BaseProduct {
     pub name: Vec<Translation>,
     pub short_description: Vec<Translation>,
     pub long_description: Option<Vec<Translation>>,
+    pub seo_title: Option<Vec<Translation>>,
+    pub seo_description: Option<Vec<Translation>>,
     pub currency_id: i32,
     pub category_id: i32,
     pub views: i32,
@@ -31,6 +33,10 @@ pub struct UpdateBaseProductInput {
     pub short_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "long description")]
     pub long_description: Option<Vec<TranslationInput>>,
+    #[graphql(description = "seo title")]
+    pub seo_title: Option<Vec<TranslationInput>>,
+    #[graphql(description = "seo description")]
+    pub seo_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "currency_id")]
     pub currency_id: Option<i32>,
     #[graphql(description = "Category id.")]
@@ -45,6 +51,8 @@ impl UpdateBaseProductInput {
             name: None,
             short_description: None,
             long_description: None,
+            seo_title: None,
+            seo_description: None,
             currency_id: None,
             category_id: None,
         } == self.clone()
@@ -65,6 +73,10 @@ pub struct CreateBaseProductInput {
     pub short_description: Vec<TranslationInput>,
     #[graphql(description = "Long description")]
     pub long_description: Option<Vec<TranslationInput>>,
+    #[graphql(description = "SEO title")]
+    pub seo_title: Option<Vec<TranslationInput>>,
+    #[graphql(description = "SEO description")]
+    pub seo_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "Sale currency id.")]
     pub currency_id: i32,
     #[graphql(description = "Category id.")]
