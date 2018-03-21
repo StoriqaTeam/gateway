@@ -24,8 +24,12 @@ graphql_object!(Attribute: Context as "Attribute" |&self| {
     field name() -> Vec<Translation> as "Full Name" {
         self.name.clone()
     }
+    
+    field value_type() -> AttributeType as "Attribute Type" {
+        self.value_type.clone()
+    }
 
-    field meta_field() -> Option<String> as "Meta field of product" {
+    field meta_field() -> Option<AttributeMetaField> as "Meta field of product" {
         self.meta_field.clone()
     }
 });
