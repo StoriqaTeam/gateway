@@ -1,7 +1,7 @@
 //! EAV model attributes
-use stq_static_resources::{Translation, TranslationInput};
+use serde::ser::{Error, Serialize, SerializeStruct, Serializer};
 use juniper::ID as GraphqlID;
-use juniper::{FieldError, FieldResult};
+use stq_static_resources::{Translation, TranslationInput};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Attribute {
@@ -83,12 +83,6 @@ pub enum AttributeType {
     Float,
 }
 
-#[derive(Serialize, Clone, Debug)]
-pub struct AttributeFilter {
-    pub id: i32,
-    pub filter: Filter,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Filter {
     Equal(String),
@@ -96,35 +90,7 @@ pub enum Filter {
     Gte(f32),
 }
 
-impl AttributeFilter {
-    pub fn from_input(attr: AttributeFilterInput) -> FieldResult<Self> {
-        let filter = match attr.filter_type {
-            FilterTypeInput::Equal => Filter::Equal(attr.value),
-            v => {
-                let val = attr.value.parse().map_err(|_| {
-                    FieldError::new(
-                        "Validation error",
-                        graphql_value!({ "code": 300, "details": {
-                            format!("Can not parse filter value as float.")
-                            }}),
-                    )
-                })?;
-
-                match v {
-                    FilterTypeInput::Lte => Filter::Lte(val),
-                    FilterTypeInput::Gte => Filter::Gte(val),
-                    _ => unreachable!(),
-                }
-            }
-        };
-        Ok(Self {
-            id: attr.id,
-            filter: filter,
-        })
-    }
-}
-
-#[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
+#[derive(GraphQLInputObject, Deserialize, Clone, Debug)]
 #[graphql(description = "Attribute Filter")]
 pub struct AttributeFilterInput {
     #[graphql(description = "Attribute id")]
@@ -133,6 +99,30 @@ pub struct AttributeFilterInput {
     pub filter_type: FilterTypeInput,
     #[graphql(description = "Attribute value")]
     pub value: String,
+}
+
+impl Serialize for AttributeFilterInput {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // 4 is the number of fields in the struct.
+        let mut state = serializer.serialize_struct("AttributeFilter", 2)?;
+        state.serialize_field("id", &self.id)?;
+        let filter = match &self.filter_type {
+            &FilterTypeInput::Equal => Filter::Equal(self.value.clone()),
+            v => {
+                let val = self.value.parse().map_err(S::Error::custom)?;
+                match v {
+                    &FilterTypeInput::Lte => Filter::Lte(val),
+                    &FilterTypeInput::Gte => Filter::Gte(val),
+                    _ => unreachable!(),
+                }
+            }
+        };
+        state.serialize_field("filter", &filter)?;
+        state.end()
+    }
 }
 
 #[derive(GraphQLEnum, Serialize, Deserialize, Clone, Debug)]

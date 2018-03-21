@@ -28,17 +28,11 @@ pub use self::user_role::{NewUserRoleInput, Role, UserRoles};
 pub use self::category::*;
 pub use self::reset_password::*;
 
-use graphql::context::Context;
-
+//Mock object, made to return from graphql when microservices responce contains nothing - '()'
 pub struct Mock;
 
-graphql_object!(Mock: Context as "Mock" |&self| {
-    description: "Mock field."
-
-    field mock() -> String as "Mock"{
-        "Mock".to_string()
-    }
-
-});
-
+//Search object, made to add endpoints for searching for unauthorized users
 pub struct Search;
+
+//MainPage object, made for displaying info at main page
+pub struct MainPage;
