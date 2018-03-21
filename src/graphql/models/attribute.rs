@@ -1,13 +1,33 @@
 //! EAV model attributes
 use serde::ser::{Error, Serialize, SerializeStruct, Serializer};
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
 use stq_static_resources::{Translation, TranslationInput};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Attribute {
     pub id: i32,
     pub name: Vec<Translation>,
-    pub meta_field: Option<String>,
+    pub value_type: AttributeType,
+    pub meta_field: Option<AttributeMetaField>,
+}
+
+#[derive(GraphQLObject, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Attribute meta field")]
+pub struct AttributeMetaField {
+    #[graphql(description = "Possible values of attribute")]
+    pub values: Option<Vec<String>>,
+    #[graphql(description = "Possible values of attribute with translation")]
+    pub translated_values: Option<Vec<Vec<Translation>>>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Attribute meta field input object")]
+pub struct AttributeMetaFieldInput {
+    #[graphql(description = "Possible values of attribute")]
+    pub values: Option<Vec<String>>,
+    #[graphql(description = "Possible values of attribute with translation")]
+    pub translated_values: Option<Vec<Vec<TranslationInput>>>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -22,7 +42,7 @@ pub struct UpdateAttributeInput {
     #[graphql(description = "New name of an attribute")]
     pub name: Option<Vec<TranslationInput>>,
     #[graphql(description = "New meta_field of an attribute")]
-    pub meta_field: Option<String>,
+    pub meta_field: Option<AttributeMetaFieldInput>,
 }
 
 impl UpdateAttributeInput {
@@ -44,8 +64,45 @@ pub struct CreateAttributeInput {
     pub client_mutation_id: String,
     #[graphql(description = "Name of an attribute.")]
     pub name: Vec<TranslationInput>,
+    #[graphql(description = "Attribute type")]
+    pub value_type: AttributeType,
     #[graphql(description = "Meta field of an attribute.")]
-    pub meta_field: Option<String>,
+    pub meta_field: Option<AttributeMetaFieldInput>,
+}
+
+impl CreateAttributeInput {
+    pub fn validate(&self) -> FieldResult<Self> {
+        if self.value_type == AttributeType::Str {
+            if let Some(meta) = self.meta_field.clone() {
+                if let Some(vals) = meta.values.clone() {
+                    if vals.is_empty() {
+                        return Err(FieldError::new(
+                            "Parsing attributes meta_field error",
+                            graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field values." }}),
+                        ))    
+                    }
+                } else if let Some(tr_vals) = meta.translated_values.clone() {
+                    if tr_vals.is_empty() {
+                        return Err(FieldError::new(
+                            "Parsing attributes meta_field error",
+                            graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field translated values." }}),
+                        ))    
+                    }
+                } else {
+                    return Err(FieldError::new(
+                        "Parsing attributes meta_field error",
+                        graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field." }}),
+                    ))    
+                }
+            } else {
+                return Err(FieldError::new(
+                    "Parsing attributes meta_field error",
+                    graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field." }}),
+                ))
+            }
+        }
+        Ok(self.clone())
+    }
 }
 
 #[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone, PartialEq)]
@@ -55,8 +112,6 @@ pub struct AttrValueInput {
     pub attr_id: i32,
     #[graphql(description = "Attribute value")]
     pub value: String,
-    #[graphql(description = "Attribute type")]
-    pub value_type: AttributeType,
     #[graphql(description = "Meta field")]
     pub meta_field: Option<String>,
 }
@@ -68,8 +123,6 @@ pub struct AttrValue {
     pub attr_id: i32,
     #[graphql(description = "Attribute value")]
     pub value: String,
-    #[graphql(description = "Attribute type")]
-    pub value_type: AttributeType,
     #[graphql(description = "Meta field")]
     pub meta_field: Option<String>,
 }
