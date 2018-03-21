@@ -1,0 +1,10 @@
+FROM debian:stable-slim
+
+RUN mkdir -p /app/config
+WORKDIR /app
+
+COPY gateway_runner /app
+COPY config /app/config
+EXPOSE 8000
+
+ENTRYPOINT ["/app/gateway_runner"]
