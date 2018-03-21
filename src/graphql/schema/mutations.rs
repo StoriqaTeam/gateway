@@ -1,7 +1,7 @@
 //! File containing mutations object of graphql schema
 use std::str::FromStr;
 
-use juniper::FieldResult;
+use juniper::{FieldError, FieldResult};
 use graphql::context::Context;
 use graphql::models::*;
 use hyper::Method;
@@ -59,6 +59,13 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<User>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
@@ -74,6 +81,34 @@ graphql_object!(Mutation: Context |&self| {
         context.http_client.request_with_auth_header::<User>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
             .wait()
+    }
+
+    field requestPasswordReset(&executor, input: ResetRequest as "Password reset request input.") -> FieldResult<Mock>  as "Requests password reset." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Users),
+            Model::UserRoles.to_url(),
+            "password_reset/request");
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request::<bool>(Method::Post, url, Some(body), None)
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()?;
+        Ok(Mock{})
+    }
+
+    field applyPasswordReset(&executor, input: ResetApply as "Password reset apply input.") -> FieldResult<Mock>  as "Applies password reset." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Users),
+            Model::UserRoles.to_url(),
+            "password_reset/apply");
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.http_client.request::<bool>(Method::Post, url, Some(body), None)
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()?;
+        Ok(Mock{})
     }
 
     field addRoleToUser(&executor, input: NewUserRoleInput as "New User Role Input.") -> FieldResult<UserRoles>  as "Adds role to user." {
@@ -104,6 +139,13 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
@@ -141,6 +183,13 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
@@ -176,6 +225,13 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
@@ -233,12 +289,19 @@ graphql_object!(Mutation: Context |&self| {
             .or_else(|err| Err(err.into_graphql()))
             .wait()
     }
-    
+
     field updateAttribute(&executor, input: UpdateAttributeInput as "Update attribute input.") -> FieldResult<Attribute>  as "Updates existing attribute."{
 
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
@@ -265,6 +328,13 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+        
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.http_client.request_with_auth_header::<Category>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))

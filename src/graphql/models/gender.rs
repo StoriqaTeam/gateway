@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(GraphQLEnum, Deserialize, Serialize, Debug, Clone)]
+#[derive(GraphQLEnum, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[graphql(name = "Gender", description = "Gender of a user")]
 pub enum Gender {
     Male,

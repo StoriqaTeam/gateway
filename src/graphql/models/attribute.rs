@@ -10,7 +10,7 @@ pub struct Attribute {
     pub meta_field: Option<String>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update attribute input object")]
 pub struct UpdateAttributeInput {
     #[graphql(description = "Client mutation id.")]
@@ -25,6 +25,17 @@ pub struct UpdateAttributeInput {
     pub meta_field: Option<String>,
 }
 
+impl UpdateAttributeInput {
+    pub fn is_none(&self) -> bool {
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            id: self.id.clone(),
+            name: None,
+            meta_field: None,
+        } == self.clone()
+    }
+}
+
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create attribute input object")]
 pub struct CreateAttributeInput {
@@ -37,7 +48,7 @@ pub struct CreateAttributeInput {
     pub meta_field: Option<String>,
 }
 
-#[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[graphql(name = "AttrValueInput", description = "Product attributes with values input object")]
 pub struct AttrValueInput {
     #[graphql(description = "Attribute id")]
@@ -63,7 +74,7 @@ pub struct AttrValue {
     pub meta_field: Option<String>,
 }
 
-#[derive(GraphQLEnum, Deserialize, Serialize, Clone, Debug)]
+#[derive(GraphQLEnum, Deserialize, Serialize, Clone, Debug, PartialEq)]
 #[graphql(name = "AttributeType", description = "Attribute Type")]
 pub enum AttributeType {
     #[graphql(description = "String type. Can represent enums, bool, int and strings.")]

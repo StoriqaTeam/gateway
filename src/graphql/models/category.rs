@@ -9,7 +9,7 @@ pub struct Category {
     pub children: Vec<Category>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update Category input object")]
 pub struct UpdateCategoryInput {
     #[graphql(description = "Client mutation id.")]
@@ -24,6 +24,18 @@ pub struct UpdateCategoryInput {
     pub meta_field: Option<String>,
     #[graphql(description = "Parent category id.")]
     pub parent_id: Option<i32>,
+}
+
+impl UpdateCategoryInput {
+    pub fn is_none(&self) -> bool {
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            id: self.id.clone(),
+            name: None,
+            meta_field: None,
+            parent_id: None,
+        } == self.clone()
+    }
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

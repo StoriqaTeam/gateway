@@ -16,7 +16,7 @@ pub struct BaseProduct {
     pub views: i32,
 }
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update base_product with attributes input object")]
 pub struct UpdateBaseProductInput {
     #[graphql(description = "Client mutation id.")]
@@ -35,6 +35,20 @@ pub struct UpdateBaseProductInput {
     pub currency_id: Option<i32>,
     #[graphql(description = "Category id.")]
     pub category_id: Option<i32>,
+}
+
+impl UpdateBaseProductInput {
+    pub fn is_none(&self) -> bool {
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            id: self.id.clone(),
+            name: None,
+            short_description: None,
+            long_description: None,
+            currency_id: None,
+            category_id: None,
+        } == self.clone()
+    }
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

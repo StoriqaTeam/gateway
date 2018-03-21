@@ -64,6 +64,30 @@ pub struct UpdateStoreInput {
     pub slogan: Option<String>,
 }
 
+impl UpdateStoreInput {
+    pub fn is_none(&self) -> bool {
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            id: self.id.clone(),
+            name: None,
+            currency_id: None,
+            short_description: None,
+            long_description: None,
+            slug: None,
+            cover: None,
+            logo: None,
+            phone: None,
+            email: None,
+            address: None,
+            facebook_url: None,
+            twitter_url: None,
+            instagram_url: None,
+            default_language: None,
+            slogan: None,
+        } == self.clone()
+    }
+}
+
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create store input object")]
 pub struct CreateStoreInput {
