@@ -31,10 +31,6 @@ graphql_object!(Store: Context as "Store" |&self| {
         self.is_active
     }
 
-    field currency_id() -> i32 as "Currency Id" {
-        self.currency_id.clone()
-    }
-
     field short_description() -> Vec<Translation> as "Short description" {
         self.short_description.clone()
     }
