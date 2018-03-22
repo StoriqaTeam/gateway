@@ -7,7 +7,6 @@ pub struct Store {
     pub id: i32,
     pub name: Vec<Translation>,
     pub is_active: bool,
-    pub currency_id: i32,
     pub short_description: Vec<Translation>,
     pub long_description: Option<Vec<Translation>>,
     pub slug: String,
@@ -34,8 +33,6 @@ pub struct UpdateStoreInput {
     pub id: GraphqlID,
     #[graphql(description = "New name of a store.")]
     pub name: Option<Vec<TranslationInput>>,
-    #[graphql(description = "Currency id.")]
-    pub currency_id: Option<i32>,
     #[graphql(description = "Short description")]
     pub short_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "Long description")]
@@ -70,7 +67,6 @@ impl UpdateStoreInput {
             client_mutation_id: self.client_mutation_id.clone(),
             id: self.id.clone(),
             name: None,
-            currency_id: None,
             short_description: None,
             long_description: None,
             slug: None,
@@ -98,8 +94,6 @@ pub struct CreateStoreInput {
     pub name: Vec<TranslationInput>,
     #[graphql(description = "User id.")]
     pub user_id: i32,
-    #[graphql(description = "Currency id.")]
-    pub currency_id: i32,
     #[graphql(description = "Short description")]
     pub short_description: Vec<TranslationInput>,
     #[graphql(description = "Long description")]
