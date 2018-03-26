@@ -8,6 +8,7 @@ pub struct Product {
     pub is_active: bool,
     pub discount: Option<f64>,
     pub photo_main: Option<String>,
+    pub additional_photos: Option<Vec<String>>,
     pub vendor_code: Option<String>,
     pub cashback: Option<f64>,
 }
@@ -34,6 +35,8 @@ pub struct UpdateProduct {
     pub discount: Option<f64>,
     #[graphql(description = "photo_main")]
     pub photo_main: Option<String>,
+    #[graphql(description = "Additional photos of the product.")]
+    pub additional_photos: Option<Vec<String>>,
     #[graphql(description = "vendor code")]
     pub vendor_code: Option<String>,
     #[graphql(description = "cashback")]
@@ -48,6 +51,7 @@ impl UpdateProductWithAttributesInput {
             product: UpdateProduct {
                 discount: None,
                 photo_main: None,
+                additional_photos: None,
                 vendor_code: None,
                 cashback: None,
             },
@@ -77,6 +81,8 @@ pub struct NewProduct {
     pub discount: Option<f64>,
     #[graphql(description = "Main photo of the product.")]
     pub photo_main: Option<String>,
+    #[graphql(description = "Additional photos of the product.")]
+    pub additional_photos: Option<Vec<String>>,
     #[graphql(description = "Vendor code.")]
     pub vendor_code: Option<String>,
     #[graphql(description = "Cashback.")]

@@ -124,3 +124,28 @@ graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&se
     }
 
 });
+
+
+graphql_object!(Connection<BaseProductWithVariants>: Context as "BaseProductWithVariantsConnection" |&self| {
+    description:"Base Products Connection"
+
+    field edges() -> Vec<Edge<BaseProductWithVariants>> {
+        self.edges.to_vec()
+    }
+
+    field page_info() -> PageInfo {
+        self.page_info.clone()
+    }
+});
+
+graphql_object!(Edge<BaseProductWithVariants>: Context as "BaseProductWithVariantsEdge" |&self| {
+    description:"Base Products Edge"
+
+    field cursor() -> juniper::ID {
+        self.cursor.clone()
+    }
+
+    field node() -> BaseProductWithVariants {
+        self.node.clone()
+    }
+});
