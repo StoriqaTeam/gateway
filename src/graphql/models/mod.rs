@@ -12,6 +12,7 @@ pub mod user_role;
 pub mod category;
 pub mod attribute;
 pub mod reset_password;
+pub mod email_verify;
 
 pub use self::gender::Gender;
 pub use self::user::*;
@@ -27,6 +28,7 @@ pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, 
 pub use self::user_role::{NewUserRoleInput, Role, UserRoles};
 pub use self::category::*;
 pub use self::reset_password::*;
+pub use self::email_verify::*;
 
 //Mock object, made to return from graphql when microservices responce contains nothing - '()'
 pub struct Mock;

@@ -117,6 +117,38 @@ graphql_object!(Mutation: Context |&self| {
         })
     }
 
+    field resendEmailVerificationLink(&executor, input: VerifyEmailResend as "Password reset request input.") -> FieldResult<VerifyEmailOutput>  as "Requests password reset." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Users),
+            "email_verify/resend",
+            input.email);
+
+        context.http_client.request::<bool>(Method::Post, url, None, None)
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()?;
+
+        Ok(VerifyEmailOutput {
+            success: true,
+        })
+    }
+
+    field verifyEmail(&executor, input: VerifyEmailApply as "Password reset request input.") -> FieldResult<VerifyEmailOutput>  as "Requests password reset." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Users),
+            "email_verify/apply",
+            input.token);
+
+        context.http_client.request::<bool>(Method::Post, url, None, None)
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()?;
+
+        Ok(VerifyEmailOutput {
+            success: true,
+        })
+    }
+
     field addRoleToUser(&executor, input: NewUserRoleInput as "New User Role Input.") -> FieldResult<UserRoles>  as "Adds role to user." {
         let context = executor.context();
         let url = format!("{}/{}",
