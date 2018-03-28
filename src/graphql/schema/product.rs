@@ -33,6 +33,10 @@ graphql_object!(Product: Context as "Product" |&self| {
         self.photo_main.clone()
     }
 
+    field additional_photos() -> Option<Vec<String>> as "Additional photos of the product." {
+        self.additional_photos.clone()
+    }
+
     field vendor_code() -> Option<String> as "Vendor code" {
         self.vendor_code.clone()
     }
