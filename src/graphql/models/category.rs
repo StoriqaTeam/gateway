@@ -7,6 +7,8 @@ pub struct Category {
     pub name: Vec<Translation>,
     pub meta_field: Option<String>,
     pub children: Vec<Category>,
+    pub parent_id: Option<i32>,
+    pub level: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -24,6 +26,8 @@ pub struct UpdateCategoryInput {
     pub meta_field: Option<String>,
     #[graphql(description = "Parent category id.")]
     pub parent_id: Option<i32>,
+    #[graphql(description = "Category level.")]
+    pub level: Option<i32>,
 }
 
 impl UpdateCategoryInput {
@@ -34,6 +38,7 @@ impl UpdateCategoryInput {
             name: None,
             meta_field: None,
             parent_id: None,
+            level: None
         } == self.clone()
     }
 }
@@ -50,6 +55,8 @@ pub struct CreateCategoryInput {
     pub meta_field: Option<String>,
     #[graphql(description = "Parent category id.")]
     pub parent_id: Option<i32>,
+    #[graphql(description = "Category level.")]
+    pub level: i32,
 }
 
 /// Payload for adding category attributes
