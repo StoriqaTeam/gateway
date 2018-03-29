@@ -1,5 +1,4 @@
 //! EAV model attributes
-use serde::ser::{Error, Serialize, SerializeStruct, Serializer};
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 use stq_static_resources::{Translation, TranslationInput};
@@ -19,6 +18,16 @@ pub struct AttributeMetaField {
     pub values: Option<Vec<String>>,
     #[graphql(description = "Possible values of attribute with translation")]
     pub translated_values: Option<Vec<Vec<Translation>>>,
+    #[graphql(description = "UI element type ")]
+    pub ui_element: Option<UIType>,
+}
+
+#[derive(GraphQLEnum, Deserialize, Serialize, Clone, Debug, PartialEq)]
+#[graphql(name = "UIType", description = "UI element type")]
+pub enum UIType {
+    Combobox, 
+    Radiobutton, 
+    Checkbox
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -28,6 +37,8 @@ pub struct AttributeMetaFieldInput {
     pub values: Option<Vec<String>>,
     #[graphql(description = "Possible values of attribute with translation")]
     pub translated_values: Option<Vec<Vec<TranslationInput>>>,
+    #[graphql(description = "UI element type ")]
+    pub ui_element: Option<UIType>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -71,7 +82,7 @@ pub struct CreateAttributeInput {
 }
 
 impl CreateAttributeInput {
-    pub fn validate(&self) -> FieldResult<Self> {
+    pub fn validate(&self) -> FieldResult<()> {
         if self.value_type == AttributeType::Str {
             if let Some(meta) = self.meta_field.clone() {
                 if let Some(vals) = meta.values.clone() {
@@ -101,7 +112,7 @@ impl CreateAttributeInput {
                 ))
             }
         }
-        Ok(self.clone())
+        Ok(())
     }
 }
 
@@ -116,14 +127,10 @@ pub struct AttrValueInput {
     pub meta_field: Option<String>,
 }
 
-#[derive(GraphQLObject, Deserialize, Serialize, Debug, Clone)]
-#[graphql(name = "AttributeValue", description = "Product attributes with values")]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct AttrValue {
-    #[graphql(description = "Attribute id")]
     pub attr_id: i32,
-    #[graphql(description = "Attribute value")]
     pub value: String,
-    #[graphql(description = "Meta field")]
     pub meta_field: Option<String>,
 }
 
@@ -136,55 +143,29 @@ pub enum AttributeType {
     Float,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum Filter {
-    Equal(String),
-    Lte(f32),
-    Gte(f32),
-}
-
-#[derive(GraphQLInputObject, Deserialize, Clone, Debug)]
+#[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "Attribute Filter")]
 pub struct AttributeFilterInput {
     #[graphql(description = "Attribute id")]
     pub id: i32,
-    #[graphql(description = "Attribute type")]
-    pub filter_type: FilterTypeInput,
-    #[graphql(description = "Attribute value")]
-    pub value: String,
+    #[graphql(description = "Values to be equal")]
+    pub equal: Option<EqualFilterInput>,
+    #[graphql(description = "Range values to compare")]
+    pub range: Option<RangeFilterInput>,
 }
 
-impl Serialize for AttributeFilterInput {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        // 4 is the number of fields in the struct.
-        let mut state = serializer.serialize_struct("AttributeFilter", 2)?;
-        state.serialize_field("id", &self.id)?;
-        let filter = match &self.filter_type {
-            &FilterTypeInput::Equal => Filter::Equal(self.value.clone()),
-            v => {
-                let val = self.value.parse().map_err(S::Error::custom)?;
-                match v {
-                    &FilterTypeInput::Lte => Filter::Lte(val),
-                    &FilterTypeInput::Gte => Filter::Gte(val),
-                    _ => unreachable!(),
-                }
-            }
-        };
-        state.serialize_field("filter", &filter)?;
-        state.end()
-    }
+#[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
+#[graphql(description = "Equality Filter input")]
+pub struct EqualFilterInput {
+    #[graphql(description = "Values to be equal")]
+    pub values: Vec<String>,
 }
 
-#[derive(GraphQLEnum, Serialize, Deserialize, Clone, Debug)]
-#[graphql(description = "Filter type. Equal can be used for strings, enums, bool, ints: value will be interpreted as string. Other filters will be applied to float values.")]
-pub enum FilterTypeInput {
-    #[graphql(description = "Equal")]
-    Equal,
-    #[graphql(description = "Less than Equal")]
-    Lte,
-    #[graphql(description = "Greater than Equal")]
-    Gte,
+#[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
+#[graphql(description = "Range Filter input")]
+pub struct RangeFilterInput {
+    #[graphql(description = "Min value")]
+    pub min_value: Option<f64>,
+    #[graphql(description = "Max value")]
+    pub max_value: Option<f64>,
 }

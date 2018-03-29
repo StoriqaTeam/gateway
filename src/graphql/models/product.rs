@@ -11,6 +11,7 @@ pub struct Product {
     pub additional_photos: Option<Vec<String>>,
     pub vendor_code: Option<String>,
     pub cashback: Option<f64>,
+    pub price: f64,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -41,6 +42,8 @@ pub struct UpdateProduct {
     pub vendor_code: Option<String>,
     #[graphql(description = "cashback")]
     pub cashback: Option<f64>,
+    #[graphql(description = "price")]
+    pub price: Option<f64>,
 }
 
 impl UpdateProductWithAttributesInput {
@@ -54,6 +57,7 @@ impl UpdateProductWithAttributesInput {
                 additional_photos: None,
                 vendor_code: None,
                 cashback: None,
+                price: None,
             },
             attributes: vec![],
         } == self.clone()
@@ -87,6 +91,8 @@ pub struct NewProduct {
     pub vendor_code: Option<String>,
     #[graphql(description = "Cashback.")]
     pub cashback: Option<f64>,
+    #[graphql(description = "Price.")]
+    pub price: f64,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
