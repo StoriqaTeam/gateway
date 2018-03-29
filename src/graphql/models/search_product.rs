@@ -4,6 +4,8 @@ use super::*;
 pub struct SearchOptionsInput {
     #[graphql(description = "Attribute filters.")]
     pub attr_filters: Vec<AttributeFilterInput>,
+    #[graphql(description = "Price filter.")]
+    pub price_filter: Option<RangeFilterInput>,
     #[graphql(description = "Categories ids.")]
     pub categories_ids: Vec<i32>,
 }

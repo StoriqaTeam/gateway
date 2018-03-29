@@ -319,7 +319,7 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::Attribute.to_url());
 
-        let input = input.validate()?;
+        input.validate()?;
 
         let body: String = serde_json::to_string(&input)?.to_string();
 

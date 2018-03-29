@@ -45,6 +45,10 @@ graphql_object!(Product: Context as "Product" |&self| {
         self.cashback.clone()
     }
 
+    field price() -> f64 as "Price" {
+        self.price
+    }
+
 });
 
 graphql_object!(Connection<Product>: Context as "ProductsConnection" |&self| {
