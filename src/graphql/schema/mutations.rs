@@ -406,4 +406,35 @@ graphql_object!(Mutation: Context |&self| {
         Ok(Mock{})
     }
 
+    field setInCart(&executor, input: SetInCartInput as "Set product in cart input.") -> FieldResult<Cart> as "Sets product data in cart." {
+        let context = executor.context();
+        let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
+
+        let body = serde_json::to_string(&input)?;
+
+        context.http_client.request_with_auth_header::<OrdersCart>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .map(|resp| cart_from_orders_reply(resp))
+            .wait()
+    }
+
+    field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Cart> as "Deletes products from cart." {
+        let context = executor.context();
+
+        if let Some(product_id) = input.product_id {
+            let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), product_id);
+
+            context.http_client.request_with_auth_header::<OrdersCart>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
+                .or_else(|err| Err(err.into_graphql()))
+                .map(|resp| cart_from_orders_reply(resp))
+                .wait()
+        } else {
+            let url = format!("{}/cart/clear", context.config.service_url(Service::Orders));
+
+            context.http_client.request_with_auth_header::<OrdersCart>(Method::Post, url, None, context.user.as_ref().map(|t| t.to_string()))
+                .or_else(|err| Err(err.into_graphql()))
+                .map(|resp| cart_from_orders_reply(resp))
+                .wait()
+        }
+    }
 });
