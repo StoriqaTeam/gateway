@@ -1,0 +1,17 @@
+node {
+    def bin
+
+    stage('Clone repository') {
+        checkout scm
+        sh 'git submodule update --init --recursive'
+    }
+
+    stage('Test app') {
+        sh 'cp -f docker/Dockerfile.test Dockerfile'
+        bin = docker.build("storiqateam/stq-gw-test:${env.GIT_COMMIT}")
+        sh 'rm -f Dockerfile'
+    }
+
+    stage('Clean up') {
+        sh "docker rmi storiqateam/stq-gw-test:${env.GIT_COMMIT}"
+}
