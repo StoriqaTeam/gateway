@@ -236,7 +236,7 @@ graphql_object!(User: Context as "User" |&self| {
        let url = format!(
             "{}/{}/{}",
             &context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
+            Model::BaseProduct.to_url(),
             id.to_string()
         );
 
