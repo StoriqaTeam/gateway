@@ -14,12 +14,12 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
 
     interfaces: [&Node]
 
-    field id() -> GraphqlID as "Unique id"{
+    field id() -> GraphqlID as "Base64 Unique id"{
         ID::new(Service::Stores, Model::BaseProduct, self.id).to_string().into()
     }
 
-    field raw_id() -> GraphqlID as "Unique id"{
-        self.id.to_string().into()
+    field raw_id() -> i32 as "Unique int id"{
+        self.id
     }
 
     field name() -> Vec<Translation> as "Full Name" {
@@ -86,12 +86,12 @@ graphql_object!(Edge<BaseProduct>: Context as "BaseProductsEdge" |&self| {
 graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&self| {
     description: "Base product with variantsinfo."
 
-    field id() -> GraphqlID as "Unique id"{
+    field id() -> GraphqlID as "Base64 Unique id"{
         ID::new(Service::Stores, Model::BaseProduct, self.base_product.id).to_string().into()
     }
 
-    field raw_id() -> GraphqlID as "Unique id"{
-        self.base_product.id.to_string().into()
+    field raw_id() -> i32 as "Unique int id"{
+        self.base_product.id
     }
 
     field base_product() -> BaseProduct as "Base product info." {
@@ -107,12 +107,12 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
 graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&self| {
     description: "Variants with attributes info."
 
-    field id() -> GraphqlID as "Unique id"{
+    field id() -> GraphqlID as "Base64 Unique id"{
         ID::new(Service::Stores, Model::Product, self.product.id).to_string().into()
     }
 
-    field raw_id() -> GraphqlID as "Unique id"{
-        self.product.id.to_string().into()
+    field raw_id() -> i32 as "Unique int id"{
+        self.product.id
     }
 
     field product() -> Product as "Base product info." {

@@ -48,7 +48,7 @@ graphql_object!(Query: Context |&self| {
 
     interfaces: [&Node]
 
-    field id() -> GraphqlID as "Unique id"{
+    field id() -> GraphqlID as "Base64 Unique id"{
         QUERY_NODE_ID.to_string().into()
     }
 
@@ -71,7 +71,7 @@ graphql_object!(Query: Context |&self| {
                     .map(|u| Some(u))
     }
 
-    field node(&executor, id: GraphqlID as "Id of a node.") -> FieldResult<Node> as "Fetches graphql interface node by id."  {
+    field node(&executor, id: GraphqlID as "Base64 Id of a node.") -> FieldResult<Node> as "Fetches graphql interface node by Base64 id."  {
         let context = executor.context();
         if id.to_string() == QUERY_NODE_ID.to_string() {
              Ok(Node::Query(Query{}))

@@ -21,12 +21,12 @@ graphql_object!(User: Context as "User" |&self| {
 
     interfaces: [&Node]
 
-    field id() -> GraphqlID as "Unique id"{
+    field id() -> GraphqlID as "Base64 Unique id"{
         ID::new(Service::Users, Model::User, self.id).to_string().into()
     }
 
-    field raw_id() -> GraphqlID as "Unique id"{
-        self.id.to_string().into()
+    field raw_id() -> i32 as "Unique int id"{
+        self.id
     }
 
     field email() -> String as "Email" {
@@ -75,7 +75,7 @@ graphql_object!(User: Context as "User" |&self| {
     }
 
 
-    field user(&executor, id: GraphqlID as "Id of a user.") -> FieldResult<User> as "Fetches user by id." {
+    field user(&executor, id: GraphqlID as "Base64 Id of a user.") -> FieldResult<User> as "Fetches user by id." {
         let context = executor.context();
 
         let identifier = ID::from_str(&*id)?;
@@ -86,7 +86,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field users(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a user") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
+    field users(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Base64 Id of a user") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -124,7 +124,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field store(&executor, id: GraphqlID as "Id of a store.") -> FieldResult<Store> as "Fetches store by id." {
+    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Store> as "Fetches store by id." {
         let context = executor.context();
 
         let url = format!(
@@ -177,7 +177,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field product(&executor, id: GraphqlID as "Id of a product.") -> FieldResult<Product> as "Fetches product by id." {
+    field product(&executor, id: i32 as "Int id of a product.") -> FieldResult<Product> as "Fetches product by id." {
         let context = executor.context();
 
         let url = format!(
@@ -230,7 +230,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field base_product(&executor, id: GraphqlID as "Id of a base product.") -> FieldResult<BaseProduct> as "Fetches base product by id." {
+    field base_product(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<BaseProduct> as "Fetches base product by id." {
         let context = executor.context();
 
        let url = format!(
@@ -245,7 +245,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field base_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of base product") -> FieldResult<Connection<BaseProduct>> as "Fetches base products using relay connection." {
+    field base_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Base64 Id of base product") -> FieldResult<Connection<BaseProduct>> as "Fetches base products using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -283,7 +283,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field base_product_with_variants(&executor, id: GraphqlID as "Id of a base product.") -> FieldResult<BaseProductWithVariants> as "Fetches base product with variants by id." {
+    field base_product_with_variants(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<BaseProductWithVariants> as "Fetches base product with variants by id." {
         let context = executor.context();
 
         let url = format!(

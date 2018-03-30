@@ -79,7 +79,7 @@ pub struct CreateProductWithAttributesInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "New Product")]
 pub struct NewProduct {
-    #[graphql(description = "Base product id variant belonging to.")]
+    #[graphql(description = "Int Base product id variant belonging to.")]
     pub base_product_id: i32,
     #[graphql(description = "Discount.")]
     pub discount: Option<f64>,
