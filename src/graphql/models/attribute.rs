@@ -119,7 +119,7 @@ impl CreateAttributeInput {
 #[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[graphql(name = "AttrValueInput", description = "Product attributes with values input object")]
 pub struct AttrValueInput {
-    #[graphql(description = "Attribute id")]
+    #[graphql(description = "Int Attribute id")]
     pub attr_id: i32,
     #[graphql(description = "Attribute value")]
     pub value: String,
@@ -146,7 +146,7 @@ pub enum AttributeType {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "Attribute Filter")]
 pub struct AttributeFilterInput {
-    #[graphql(description = "Attribute id")]
+    #[graphql(description = "Int Attribute id")]
     pub id: i32,
     #[graphql(description = "Values to be equal")]
     pub equal: Option<EqualFilterInput>,

@@ -67,7 +67,7 @@ pub struct CreateBaseProductInput {
     pub client_mutation_id: String,
     #[graphql(description = "Name of new base_product.")]
     pub name: Vec<TranslationInput>,
-    #[graphql(description = "Store id base_product belonging to.")]
+    #[graphql(description = "Int Store id base_product belonging to.")]
     pub store_id: i32,
     #[graphql(description = "Short description")]
     pub short_description: Vec<TranslationInput>,
@@ -77,9 +77,9 @@ pub struct CreateBaseProductInput {
     pub seo_title: Option<Vec<TranslationInput>>,
     #[graphql(description = "SEO description")]
     pub seo_description: Option<Vec<TranslationInput>>,
-    #[graphql(description = "Sale currency id.")]
+    #[graphql(description = "Int Sale currency id.")]
     pub currency_id: i32,
-    #[graphql(description = "Category id.")]
+    #[graphql(description = "Int Category id.")]
     pub category_id: i32,
 }
 

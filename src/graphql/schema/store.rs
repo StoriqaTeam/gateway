@@ -15,12 +15,12 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     interfaces: [&Node]
 
-    field id() -> GraphqlID as "Unique id"{
+    field id() -> GraphqlID as "Base64 Unique id"{
         ID::new(Service::Stores, Model::Store, self.id).to_string().into()
     }
 
-    field raw_id() -> GraphqlID as "Unique id"{
-        self.id.to_string().into()
+    field raw_id() -> i32 as "Unique int id"{
+        self.id
     }
 
     field name() -> Vec<Translation> as "Full Name" {
