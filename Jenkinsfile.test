@@ -1,17 +1,47 @@
 node {
-    def bin
+  stage('Clone repository') {
+    checkout scm
+    sh 'git submodule update --init --recursive'
+  }
 
-    stage('Clone repository') {
-        checkout scm
-        sh 'git submodule update --init --recursive'
-    }
-
-    stage('Test app') {
-        sh 'cp -f docker/Dockerfile.test Dockerfile'
-        bin = docker.build("storiqateam/stq-gw-test:${env.GIT_COMMIT}")
-        sh 'rm -f Dockerfile'
+  if (env.BRANCH_NAME.startsWith('PR-')) {
+    stage('Test build') {
+      sh 'cp -f docker/Dockerfile.test Dockerfile'
+      test_img = docker.build("storiqateam/stq-gw-test:${env.GIT_COMMIT}")
+      sh 'rm -f Dockerfile'
     }
 
     stage('Clean up') {
-        sh "docker rmi storiqateam/stq-gw-test:${env.GIT_COMMIT}"
+      sh "docker rmi ${build_img.imageName}"
+    }
+  }
+  else {
+    stage('Build app') {
+      sh 'cp -f docker/Dockerfile.build Dockerfile'
+      build_img = docker.build("storiqateam/stq-gw-interm:${env.BRANCH_NAME}")
+      sh 'rm -f Dockerfile'
+    }
+
+    stage('Get binary') {
+      sh "docker run -i --rm --volume ${env.WORKSPACE}:/mnt/ ${build_img.imageName} cp -f /app/target/release/gateway_runner /mnt/"
+    }
+
+    stage('Build app image') {
+      sh 'cp -f docker/Dockerfile.run Dockerfile'
+      app = docker.build("storiqateam/stq-gw:${env.BRANCH_NAME}")
+      sh 'rm -f Dockerfile'
+      sh 'rm -f gateway_runner'
+    }
+
+    stage('Push image') {
+      docker.withRegistry('https://registry.hub.docker.com', '4ca2ddae-a205-45f5-aaf7-333789c385cd') {
+        app.push("${env.BRANCH_NAME}${env.BUILD_NUMBER}")
+        app.push("${env.BRANCH_NAME}")
+      }
+    }
+
+    stage('Clean up') {
+      sh "docker rmi ${app.imageName}"
+    }
+  }
 }
