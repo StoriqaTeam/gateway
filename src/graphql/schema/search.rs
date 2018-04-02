@@ -167,4 +167,17 @@ graphql_object!(Search: Context as "Search" |&self| {
             .wait()
     }
 
+    field find_product_search_filters(&executor, name : String as "Product name search pattern") -> FieldResult<SearchFilters> as "Find search filters by product name." {
+        let context = executor.context();
+
+        let url = format!("{}/{}/search_filters",
+            context.config.service_url(Service::Stores),
+            Model::Product.to_url(),
+            );
+
+        context.http_client.request_with_auth_header::<SearchFilters>(Method::Get, url, Some(name), context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
 });
