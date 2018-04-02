@@ -1,6 +1,10 @@
 //! File containing product object of graphql schema
 use juniper;
 use juniper::ID as GraphqlID;
+use juniper::FieldResult;
+use hyper::Method;
+use futures::Future;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Translation;
@@ -47,7 +51,11 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     }
 
     field currency_id() -> i32 as "Currency Id" {
-        self.currency_id.clone()
+        self.currency_id
+    }
+    
+    field store_id() -> i32 as "Store Id" {
+        self.store_id
     }
 
     field category_id() -> i32 as "Category id" {
@@ -101,6 +109,23 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
     field variants() -> Vec<VariantsWithAttributes> as "Variants info." {
         self.variants.clone()
     }
+
+    field base_products_same_store(&executor) -> FieldResult<Vec<BaseProductWithVariants>> as "Fetches base product with same store id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/with_variants?store_id={}&base_product_id={}",
+            &context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            self.base_product.store_id,
+            self.base_product.id
+        );
+
+        context.http_client.request_with_auth_header::<Vec<BaseProductWithVariants>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
+            .or_else(|err| Err(err.into_graphql()))
+            .wait()
+    }
+
 
 });
 
