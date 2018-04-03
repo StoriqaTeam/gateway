@@ -14,7 +14,8 @@ pub struct OrdersCart {
 }
 
 pub fn cart_from_orders_reply(v: OrdersCart) -> Cart {
-    v.products.into_iter()
+    v.products
+        .into_iter()
         .map(|(product_id, quantity)| CartProduct {
             product_id,
             quantity,

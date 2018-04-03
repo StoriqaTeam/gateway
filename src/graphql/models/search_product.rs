@@ -43,3 +43,20 @@ pub struct MostDiscountProductsInput {
     #[graphql(description = "Searching options")]
     pub options: Option<SearchOptionsInput>,
 }
+<<<<<<< HEAD
+
+#[derive(GraphQLObject, Deserialize, Serialize, Clone, Debug)]
+pub struct SearchFilters {
+    #[graphql(description = "Categories ids.")]
+    pub categories_ids: Vec<i32>,
+    #[graphql(description = "Attributes with values.")]
+    pub attributes_values: Vec<AttributeValues>,
+}
+
+#[derive(GraphQLObject, Deserialize, Serialize, Debug, Clone)]
+pub struct AttributeValues {
+    pub attr_id: i32,
+    pub values: Vec<String>,
+}
+=======
+>>>>>>> master
