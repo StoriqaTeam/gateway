@@ -169,3 +169,30 @@ pub struct RangeFilterInput {
     #[graphql(description = "Max value")]
     pub max_value: Option<f64>,
 }
+
+#[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug)]
+#[graphql(description = "Attribute Filter")]
+pub struct AttributeFilter {
+    #[graphql(description = "Int Attribute id")]
+    pub id: i32,
+    #[graphql(description = "Values to be equal")]
+    pub equal: Option<EqualFilter>,
+    #[graphql(description = "Range values to compare")]
+    pub range: Option<RangeFilter>,
+}
+
+#[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug)]
+#[graphql(description = "Equality Filter input")]
+pub struct EqualFilter {
+    #[graphql(description = "Values to be equal")]
+    pub values: Vec<String>,
+}
+
+#[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug)]
+#[graphql(description = "Range Filter input")]
+pub struct RangeFilter {
+    #[graphql(description = "Min value")]
+    pub min_value: Option<f64>,
+    #[graphql(description = "Max value")]
+    pub max_value: Option<f64>,
+}
