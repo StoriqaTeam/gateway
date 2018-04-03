@@ -20,5 +20,5 @@ pub struct VerifyEmailApply {
 
 #[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
 pub struct VerifyEmailOutput {
-    pub success: bool
+    pub success: bool,
 }

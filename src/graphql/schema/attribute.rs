@@ -1,6 +1,6 @@
 //! File containing product object of graphql schema
 use juniper::ID as GraphqlID;
-use juniper::{FieldResult};
+use juniper::FieldResult;
 use hyper::Method;
 use futures::Future;
 
@@ -37,7 +37,6 @@ graphql_object!(Attribute: Context as "Attribute" |&self| {
         self.meta_field.clone()
     }
 });
-
 
 graphql_object!(AttrValue: Context as "AttributeValue" |&self| {
     description: "Product variant attributes with values."

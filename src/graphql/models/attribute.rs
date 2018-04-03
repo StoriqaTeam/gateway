@@ -25,9 +25,9 @@ pub struct AttributeMetaField {
 #[derive(GraphQLEnum, Deserialize, Serialize, Clone, Debug, PartialEq)]
 #[graphql(name = "UIType", description = "UI element type")]
 pub enum UIType {
-    Combobox, 
-    Radiobutton, 
-    Checkbox
+    Combobox,
+    Radiobutton,
+    Checkbox,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -90,26 +90,26 @@ impl CreateAttributeInput {
                         return Err(FieldError::new(
                             "Parsing attributes meta_field error",
                             graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field values." }}),
-                        ))    
+                        ));
                     }
                 } else if let Some(tr_vals) = meta.translated_values.clone() {
                     if tr_vals.is_empty() {
                         return Err(FieldError::new(
                             "Parsing attributes meta_field error",
                             graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field translated values." }}),
-                        ))    
+                        ));
                     }
                 } else {
                     return Err(FieldError::new(
                         "Parsing attributes meta_field error",
                         graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field." }}),
-                    ))    
+                    ));
                 }
             } else {
                 return Err(FieldError::new(
                     "Parsing attributes meta_field error",
                     graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field." }}),
-                ))
+                ));
             }
         }
         Ok(())

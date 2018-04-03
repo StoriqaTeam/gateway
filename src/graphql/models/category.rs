@@ -38,7 +38,7 @@ impl UpdateCategoryInput {
             name: None,
             meta_field: None,
             parent_id: None,
-            level: None
+            level: None,
         } == self.clone()
     }
 }

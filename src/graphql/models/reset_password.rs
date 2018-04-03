@@ -21,6 +21,6 @@ pub struct ResetApply {
 }
 
 #[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
-pub struct ResetActionOutput{
-    pub success: bool
+pub struct ResetActionOutput {
+    pub success: bool,
 }

@@ -1,4 +1,6 @@
 //! File containing product object of graphql schema
+use std::cmp;
+
 use juniper;
 use juniper::ID as GraphqlID;
 use juniper::FieldResult;
@@ -110,23 +112,45 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
         self.variants.clone()
     }
 
-    field base_products_same_store(&executor) -> FieldResult<Vec<BaseProductWithVariants>> as "Fetches base product with same store id." {
+    field base_products_same_store(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining") -> FieldResult<Connection<BaseProductWithVariants>> as "Fetches base product with same store id." {
         let context = executor.context();
+        
+        let offset = after.unwrap_or_default();
+
+        let records_limit = context.config.gateway.records_limit;
+        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!(
-            "{}/{}/with_variants?store_id={}&base_product_id={}",
+            "{}/{}/with_variants?store_id={}&skip_base_product_id={}&count={}&offset={}",
             &context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             self.base_product.store_id,
-            self.base_product.id
+            self.base_product.id,
+            count + 1,
+            offset
         );
 
         context.http_client.request_with_auth_header::<Vec<BaseProductWithVariants>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
             .or_else(|err| Err(err.into_graphql()))
+            .map (|base_products| {
+                let mut base_product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
+                for i in 0..base_products.len() {
+                    let edge = Edge::new(
+                            juniper::ID::from( (i as i32 + offset).to_string()),
+                            base_products[i].clone()
+                        );
+                    base_product_edges.push(edge);
+                }
+                let has_next_page = base_product_edges.len() as i32 == count + 1;
+                if has_next_page {
+                    base_product_edges.pop();
+                };
+                let has_previous_page = true;
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                Connection::new(base_product_edges, page_info)
+            })
             .wait()
     }
-
-
 });
 
 graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&self| {
@@ -149,7 +173,6 @@ graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&se
     }
 
 });
-
 
 graphql_object!(Connection<BaseProductWithVariants>: Context as "BaseProductWithVariantsConnection" |&self| {
     description:"Base Products Connection"

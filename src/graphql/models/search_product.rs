@@ -33,7 +33,6 @@ pub struct MostDiscountProductsInput {
     pub options: Option<SearchOptionsInput>,
 }
 
-
 #[derive(GraphQLObject, Deserialize, Serialize, Clone, Debug)]
 pub struct SearchFilters {
     #[graphql(description = "Categories ids.")]
