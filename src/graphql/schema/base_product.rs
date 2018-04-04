@@ -121,17 +121,16 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!(
-            "{}/{}/with_variants?store_id={}&skip_base_product_id={}&count={}&offset={}",
+            "{}/{}/with_variants?store_id={}&skip_base_product_id={}&offset={}&count={}",
             &context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             self.base_product.store_id,
             self.base_product.id,
-            count + 1,
-            offset
+            offset,
+            count + 1
         );
 
-        context.http_client.request_with_auth_header::<Vec<BaseProductWithVariants>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<BaseProductWithVariants>>(Method::Get, url, None)
             .map (|base_products| {
                 let mut base_product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
                 for i in 0..base_products.len() {

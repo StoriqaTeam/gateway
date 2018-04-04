@@ -89,7 +89,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         self.slogan.clone()
     }
 
-    field base_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining") -> FieldResult<Connection<BaseProductWithVariants>> as "Fetches base product with same store id." {
+    field base_products_with_variants(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining") -> FieldResult<Connection<BaseProductWithVariants>> as "Fetches base product with same store id." {
         let context = executor.context();
         
         let offset = after.unwrap_or_default();
@@ -98,16 +98,15 @@ graphql_object!(Store: Context as "Store" |&self| {
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!(
-            "{}/{}/with_variants?store_id={}&count={}&offset={}",
+            "{}/{}/with_variants?store_id={}&offset={}&count={}",
             &context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             self.id,
-            count + 1,
-            offset
+            offset,
+            count + 1
         );
 
-        context.http_client.request_with_auth_header::<Vec<BaseProductWithVariants>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<BaseProductWithVariants>>(Method::Get, url, None)
             .map (|base_products| {
                 let mut base_product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
                 for i in 0..base_products.len() {

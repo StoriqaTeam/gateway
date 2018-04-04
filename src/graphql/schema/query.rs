@@ -65,8 +65,8 @@ graphql_object!(Query: Context |&self| {
         let url = format!("{}/{}/current",
             context.config.service_url(Service::Users),
             Model::User.to_url());
-        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-                    .or_else(|err| Err(err.into_graphql()))
+        context.request::<User>(Method::Get, url, None)
+                    
                     .wait()
                     .map(|u| Some(u))
     }
@@ -79,9 +79,9 @@ graphql_object!(Query: Context |&self| {
             let identifier = ID::from_str(&*id)?;
             match (&identifier.service, &identifier.model) {
                 (&Service::Users, &Model::User) => {
-                                context.http_client.request_with_auth_header::<User>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
+                                context.request::<User>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::User(res))
-                                    .or_else(|err| Err(err.into_graphql()))
+                                    
                                     .wait()
                 },
                 (&Service::Users, _) => {
@@ -91,33 +91,33 @@ graphql_object!(Query: Context |&self| {
                                 ))
                 },
                 (&Service::Stores, &Model::Store) => {
-                                context.http_client.request_with_auth_header::<Store>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
+                                context.request::<Store>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::Store(res))
-                                    .or_else(|err| Err(err.into_graphql()))
+                                    
                                     .wait()
                 },
                 (&Service::Stores, &Model::Product) => {
-                                context.http_client.request_with_auth_header::<Product>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
+                                context.request::<Product>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::Product(res))
-                                    .or_else(|err| Err(err.into_graphql()))
+                                    
                                     .wait()
                 },
                 (&Service::Stores, &Model::BaseProduct) => {
-                                context.http_client.request_with_auth_header::<BaseProduct>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
+                                context.request::<BaseProduct>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::BaseProduct(res))
-                                    .or_else(|err| Err(err.into_graphql()))
+                                    
                                     .wait()
                 },
                 (&Service::Stores, &Model::Category) => {
-                                context.http_client.request_with_auth_header::<Category>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
+                                context.request::<Category>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::Category(res))
-                                    .or_else(|err| Err(err.into_graphql()))
+                                    
                                     .wait()
                 },
                 (&Service::Stores, &Model::Attribute) => {
-                                context.http_client.request_with_auth_header::<Attribute>(Method::Get, identifier.url(&context.config), None, context.user.as_ref().map(|t| t.to_string()))
+                                context.request::<Attribute>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::Attribute(res))
-                                    .or_else(|err| Err(err.into_graphql()))
+                                    
                                     .wait()
                 },
                 (&Service::Stores, _) => {
@@ -151,8 +151,8 @@ graphql_object!(Query: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::Category.to_url());
 
-        context.http_client.request_with_auth_header::<Category>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Category>(Method::Get, url, None)
+            
             .wait()
     }
 

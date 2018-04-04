@@ -7,8 +7,7 @@ use hyper::server::Response;
 use hyper::error::Error;
 use futures::future::Future;
 use futures::{future, Stream};
-
-use super::error;
+use serde_json;
 
 pub fn read_body(body: hyper::Body) -> Box<Future<Item = String, Error = hyper::Error>> {
     Box::new(body.fold(Vec::new(), |mut acc, chunk| {
@@ -26,11 +25,9 @@ pub fn response_with_body(body: String) -> Response {
         .with_body(body)
 }
 
-pub fn response_with_error(error: error::Error) -> Response {
-    use super::error::Error::*;
-    match error {
-        Json(err) => response_with_body(err.to_string()).with_status(StatusCode::UnprocessableEntity),
-    }
+pub fn response_with_error(error: serde_json::error::Error) -> Response {
+    error!("Sending response with error: {}", error);
+    response_with_body(error.to_string()).with_status(StatusCode::UnprocessableEntity)
 }
 
 pub fn response_not_found() -> Response {

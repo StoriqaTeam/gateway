@@ -17,6 +17,7 @@ path = "src/main.rs"
 stq_http = { path = "vendor/libstqbackend/http" }
 stq_static_resources = { path = "vendor/libstqbackend/static_resources" }
 stq_routes = { path = "vendor/libstqbackend/routes" }
+stq_router = { path = "vendor/libstqbackend/router" }
 juniper = "0.9.2"
 hyper = "0.11.22"
 futures = "0.1.17"
@@ -32,3 +33,4 @@ futures-cpupool="*"
 base64="0.9"
 jsonwebtoken = "4.0.0"
 chrono = "0.4"
+uuid = { version = "*", features = ["use_std", "v4", "serde"] }

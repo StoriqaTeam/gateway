@@ -23,17 +23,16 @@ graphql_object!(Search: Context as "Search" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/search?count={}&offset={}",
+        let url = format!("{}/{}/search?offset={}&count={}",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
-            count + 1,
-            offset
+            offset,
+            count + 1
             );
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.http_client.request_with_auth_header::<Vec<BaseProductWithVariants>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
             .map (|stores| {
                 let mut store_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
                 for i in 0..stores.len() {
@@ -62,15 +61,14 @@ graphql_object!(Search: Context as "Search" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/auto_complete?count={}&offset={}",
+        let url = format!("{}/{}/auto_complete?offset={}&count={}",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
+            offset,
             count + 1,
-            offset
             );
 
-        context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, Some(name), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<String>>(Method::Post, url, Some(name))
             .map (|full_names| {
                 let mut full_name_edges: Vec<Edge<String>> =  vec![];
                 for i in 0..full_names.len() {
@@ -101,15 +99,16 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         let body = serde_json::to_string(&search_term)?;
 
-        let url = format!("{}/{}/search?count={}&offset={}",
+        println!("{}", body);
+
+        let url = format!("{}/{}/search?offset={}&count={}",
             context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            count + 1,
-            offset
+            offset,
+            count + 1
             );
 
-        context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
             .map (|stores| {
                 let mut store_edges: Vec<Edge<Store>> =  vec![];
                 for i in 0..stores.len() {
@@ -138,15 +137,14 @@ graphql_object!(Search: Context as "Search" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/auto_complete?count={}&offset={}",
+        let url = format!("{}/{}/auto_complete?offset={}&count={}",
             context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            count + 1,
-            offset
+            offset,
+            count + 1
             );
 
-        context.http_client.request_with_auth_header::<Vec<String>>(Method::Get, url, Some(name), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<String>>(Method::Post, url, Some(name))
             .map (|full_names| {
                 let mut full_name_edges: Vec<Edge<String>> =  vec![];
                 for i in 0..full_names.len() {
@@ -175,8 +173,7 @@ graphql_object!(Search: Context as "Search" |&self| {
             Model::Product.to_url(),
             );
 
-        context.http_client.request_with_auth_header::<SearchOptions>(Method::Get, url, Some(name), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<SearchOptions>(Method::Post, url, Some(name))
             .wait()
     }
 

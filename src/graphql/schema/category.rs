@@ -52,8 +52,7 @@ graphql_object!(Category: Context as "Category" |&self| {
             self.id
             );
 
-        context.http_client.request_with_auth_header::<Vec<Attribute>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<Attribute>>(Method::Get, url, None)
             .wait()
     }
 });

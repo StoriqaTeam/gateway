@@ -61,16 +61,16 @@ graphql_object!(User: Context as "User" |&self| {
         self.is_active
     }
 
-    field roles(&executor) -> FieldResult<Vec<Role>> as "Fetches user by id." {
+    field roles(&executor) -> FieldResult<Vec<Role>> as "Fetches roles for user." {
         let context = executor.context();
 
-       let url = format!("{}/{}/{}",
+        let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
             Model::UserRoles.to_url(),
             self.id);
 
-        context.http_client.request_with_auth_header::<Vec<Role>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<Role>>(Method::Get, url, None)
+            
             .wait()
     }
 
@@ -81,8 +81,8 @@ graphql_object!(User: Context as "User" |&self| {
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<User>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<User>(Method::Get, url, None)
+            
             .wait()
     }
 
@@ -103,8 +103,8 @@ graphql_object!(User: Context as "User" |&self| {
             raw_id,
             first + 1);
 
-        context.http_client.request_with_auth_header::<Vec<User>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<User>>(Method::Get, url, None)
+            
             .map (|users| {
                 let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
@@ -134,8 +134,8 @@ graphql_object!(User: Context as "User" |&self| {
             id.to_string()
         );
 
-        context.http_client.request_with_auth_header::<Store>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Store>(Method::Get, url, None)
+            
             .wait()
     }
 
@@ -156,8 +156,8 @@ graphql_object!(User: Context as "User" |&self| {
             raw_id,
             first + 1);
 
-        context.http_client.request_with_auth_header::<Vec<Store>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<Store>>(Method::Get, url, None)
+            
             .map (|stores| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
@@ -187,12 +187,12 @@ graphql_object!(User: Context as "User" |&self| {
             id.to_string()
         );
 
-        context.http_client.request_with_auth_header::<Product>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Product>(Method::Get, url, None)
+            
             .wait()
     }
 
-    field products(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a product") -> FieldResult<Connection<Product>> as "Fetches products using relay connection." {
+    field products(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Base64 Id of a product") -> FieldResult<Connection<Product>> as "Fetches products using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -209,8 +209,8 @@ graphql_object!(User: Context as "User" |&self| {
             raw_id,
             first + 1);
 
-        context.http_client.request_with_auth_header::<Vec<Product>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<Product>>(Method::Get, url, None)
+            
             .map (|products| {
                 let mut product_edges: Vec<Edge<Product>> = products
                     .into_iter()
@@ -240,8 +240,8 @@ graphql_object!(User: Context as "User" |&self| {
             id.to_string()
         );
 
-        context.http_client.request_with_auth_header::<BaseProduct>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<BaseProduct>(Method::Get, url, None)
+            
             .wait()
     }
 
@@ -262,8 +262,8 @@ graphql_object!(User: Context as "User" |&self| {
             raw_id,
             first + 1);
 
-        context.http_client.request_with_auth_header::<Vec<BaseProduct>>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<BaseProduct>>(Method::Get, url, None)
+            
             .map (|products| {
                 let mut product_edges: Vec<Edge<BaseProduct>> = products
                     .into_iter()
@@ -293,8 +293,8 @@ graphql_object!(User: Context as "User" |&self| {
             id.to_string()
         );
 
-        context.http_client.request_with_auth_header::<BaseProductWithVariants>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<BaseProductWithVariants>(Method::Get, url, None)
+            
             .wait()
     }
 
@@ -306,8 +306,8 @@ graphql_object!(User: Context as "User" |&self| {
             &context.config.service_url(Service::Orders)
         );
 
-        context.http_client.request_with_auth_header::<OrdersCart>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<OrdersCart>(Method::Get, url, None)
+            
             .map(cart_from_orders_reply)
             .wait()
     }

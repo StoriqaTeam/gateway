@@ -23,17 +23,16 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/most_viewed?count={}&offset={}",
+        let url = format!("{}/{}/most_viewed?offset={}&count={}",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
-            count + 1,
-            offset
+            offset,
+            count + 1
             );
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.http_client.request_with_auth_header::<Vec<BaseProductWithVariants>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
             .map (|base_products| {
                 let mut base_product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
                 for i in 0..base_products.len() {
@@ -63,17 +62,16 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/most_discount?count={}&offset={}",
+        let url = format!("{}/{}/most_discount?offset={}&count={}",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
-            count + 1,
-            offset
+            offset,
+            count + 1
             );
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.http_client.request_with_auth_header::<Vec<BaseProductWithVariants>>(Method::Get, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
             .map (|base_products| {
                 let mut base_product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
                 for i in 0..base_products.len() {
