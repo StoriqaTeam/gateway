@@ -10,7 +10,6 @@ pub struct SearchOptionsInput {
     pub categories_ids: Vec<i32>,
 }
 
-
 #[derive(GraphQLObject, Deserialize, Clone, Debug)]
 pub struct SearchOptions {
     #[graphql(description = "Attribute filters.")]

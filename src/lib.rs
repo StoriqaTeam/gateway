@@ -1,25 +1,27 @@
 extern crate stq_http;
+extern crate stq_router;
 extern crate stq_routes;
 extern crate stq_static_resources;
 
+extern crate base64;
+extern crate chrono;
 extern crate config as config_crate;
+extern crate env_logger;
 extern crate futures;
 extern crate futures_cpupool;
 extern crate hyper;
+extern crate jsonwebtoken;
 #[macro_use]
 extern crate juniper;
-extern crate regex;
-extern crate serde;
-extern crate serde_json;
-extern crate tokio_core;
-#[macro_use]
-extern crate serde_derive;
 #[macro_use]
 extern crate log;
-extern crate base64;
-extern crate jsonwebtoken;
-extern crate env_logger;
-extern crate chrono;
+extern crate regex;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+extern crate tokio_core;
+extern crate uuid;
 
 use std::sync::Arc;
 use std::env;
@@ -44,7 +46,13 @@ pub fn start(config: Config) {
     builder
         .format(|formatter, record| {
             let now = Utc::now();
-            writeln!(formatter, "{} - {} - {}", now.to_rfc3339(), record.level(), record.args())
+            writeln!(
+                formatter,
+                "{} - {} - {}",
+                now.to_rfc3339(),
+                record.level(),
+                record.args()
+            )
         })
         .filter(None, LogLevelFilter::Info);
 

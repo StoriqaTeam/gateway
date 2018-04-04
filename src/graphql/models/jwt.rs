@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::Display;
+
 use juniper::Value;
 
 use super::Provider;
@@ -57,4 +60,15 @@ pub struct CreateJWTProviderInput {
     pub provider: Provider,
     #[graphql(description = "Token recevied from provider.")]
     pub token: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct JWTPayload {
+    pub user_id: i32,
+}
+
+impl Display for JWTPayload {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.user_id.fmt(f)
+    }
 }

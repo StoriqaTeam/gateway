@@ -15,6 +15,7 @@ use serde_json;
 use juniper::http::GraphQLRequest;
 use tokio_core::reactor::Handle;
 use jsonwebtoken::{decode, Validation};
+use uuid::Uuid;
 
 use stq_http::client::ClientHandle;
 
@@ -22,9 +23,8 @@ use super::router;
 use super::context::Context;
 use super::graphiql;
 use super::utils;
-use super::error;
 use config::Config;
-use super::jwt::JWTPayload;
+use graphql::models::jwt::JWTPayload;
 
 struct WebService {
     context: Arc<Context>,
@@ -61,18 +61,18 @@ impl Service for WebService {
                 Box::new(utils::read_body(req.body()).and_then(move |body| {
                     let mut graphql_context = context.graphql_context.clone();
                     graphql_context.user = token_payload;
+                    graphql_context.uuid = Uuid::new_v4().to_string();
                     serde_json::from_str::<GraphQLRequest>(&body)
                         .into_future()
                         .and_then(move |graphql_req| {
                             context.graphql_thread_pool.spawn_fn(move || {
-                                let ctx = graphql_context.clone();
-                                let graphql_resp = graphql_req.execute(&ctx.schema, &ctx);
+                                let graphql_resp = graphql_req.execute(&graphql_context.schema, &graphql_context);
                                 serde_json::to_string(&graphql_resp)
                             })
                         })
                         .then(|r| match r {
                             Ok(data) => future::ok(utils::response_with_body(data)),
-                            Err(err) => future::ok(utils::response_with_error(error::Error::Json(err))),
+                            Err(err) => future::ok(utils::response_with_error(err)),
                         })
                         .and_then(move |resp| {
                             let mut new_headers = Headers::new();

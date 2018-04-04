@@ -47,10 +47,9 @@ graphql_object!(AttrValue: Context as "AttributeValue" |&self| {
             context.config.service_url(Service::Stores),
             Model::Attribute.to_url(),
             self.attr_id);
-        context.http_client.request_with_auth_header::<Attribute>(Method::Get, url, None, context.user.as_ref().map(|t| t.to_string()))
-                    .or_else(|err| Err(err.into_graphql()))
-                    .wait()
-                    .map(|u| Some(u))
+        context.request::<Attribute>(Method::Get, url, None)
+            .wait()
+            .map(|u| Some(u))
     }
     
     field value() -> String as "Attribute value of product variant" {

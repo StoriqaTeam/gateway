@@ -1,10 +1,8 @@
 pub mod server;
-mod context;
-mod error;
-mod graphiql;
-pub mod jwt;
+pub mod context;
+pub mod graphiql;
 pub mod router;
-mod utils;
+pub mod utils;
 
 use std::sync::Arc;
 use tokio_core::reactor::Handle;

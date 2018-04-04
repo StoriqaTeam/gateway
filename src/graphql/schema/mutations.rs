@@ -49,8 +49,7 @@ graphql_object!(Mutation: Context |&self| {
         };
         let body: String = serde_json::to_string(&saga_profile)?.to_string();
 
-        context.http_client.request::<User>(Method::Post, url, Some(body), None)
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<User>(Method::Post, url, Some(body))
             .wait()
     }
 
@@ -68,8 +67,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<User>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<User>(Method::Put, url, Some(body))
             .wait()
     }
 
@@ -78,8 +76,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<User>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<User>(Method::Delete, url, None)
             .wait()
     }
 
@@ -91,8 +88,7 @@ graphql_object!(Mutation: Context |&self| {
             "password_reset/request");
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request::<bool>(Method::Post, url, Some(body), None)
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<bool>(Method::Post, url, Some(body))
             .wait()?;
 
         Ok(ResetActionOutput {
@@ -108,8 +104,7 @@ graphql_object!(Mutation: Context |&self| {
             "password_reset/apply");
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request::<bool>(Method::Post, url, Some(body), None)
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<bool>(Method::Post, url, Some(body))
             .wait()?;
 
         Ok(ResetActionOutput {
@@ -123,8 +118,7 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Users),
             input.email);
 
-        context.http_client.request::<bool>(Method::Post, url, None, None)
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<bool>(Method::Post, url, None)
             .wait()?;
 
         Ok(VerifyEmailOutput {
@@ -138,8 +132,7 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Users),
             input.token);
 
-        context.http_client.request::<bool>(Method::Post, url, None, None)
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<bool>(Method::Post, url, None)
             .wait()?;
 
         Ok(VerifyEmailOutput {
@@ -154,8 +147,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::UserRoles.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<UserRoles>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<UserRoles>(Method::Delete, url, Some(body))
             .wait()
     }
 
@@ -166,8 +158,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::Store.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Store>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Store>(Method::Post, url, Some(body))
             .wait()
     }
 
@@ -185,8 +176,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Store>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Store>(Method::Put, url, Some(body))
             .wait()
     }
 
@@ -195,8 +185,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request::<Store>(Method::Delete, url, None, None)
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Store>(Method::Delete, url, None)
             .wait()
     }
 
@@ -208,8 +197,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Product>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Product>(Method::Post, url, Some(body))
             .wait()
     }
 
@@ -228,8 +216,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Product>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Product>(Method::Put, url, Some(body))
             .wait()
     }
 
@@ -238,8 +225,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<Product>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Product>(Method::Delete, url, None)
             .wait()
     }
 
@@ -251,8 +237,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<BaseProduct>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<BaseProduct>(Method::Post, url, Some(body))
             .wait()
     }
 
@@ -271,8 +256,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<BaseProduct>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<BaseProduct>(Method::Put, url, Some(body))
             .wait()
     }
 
@@ -281,8 +265,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
-        context.http_client.request_with_auth_header::<BaseProduct>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<BaseProduct>(Method::Delete, url, None)
             .wait()
     }
 
@@ -294,8 +277,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<JWT>(Method::Post, url, Some(body))
             .wait()
     }
 
@@ -308,8 +290,7 @@ graphql_object!(Mutation: Context |&self| {
         let oauth = ProviderOauth { token: input.token };
         let body: String = serde_json::to_string(&oauth)?;
 
-        context.http_client.request::<JWT>(Method::Post, url, Some(body), None)
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<JWT>(Method::Post, url, Some(body))
             .wait()
     }
 
@@ -323,8 +304,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Attribute>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Attribute>(Method::Post, url, Some(body))
             .wait()
     }
 
@@ -343,8 +323,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Attribute>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Attribute>(Method::Put, url, Some(body))
             .wait()
     }
 
@@ -355,8 +334,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::Category.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Category>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-           .or_else(|err| Err(err.into_graphql()))
+        context.request::<Category>(Method::Post, url, Some(body))
             .wait()
     }
 
@@ -375,8 +353,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<Category>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<Category>(Method::Put, url, Some(body))
             .wait()
     }
 
@@ -387,8 +364,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::Category.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<()>(Method::Post, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-           .or_else(|err| Err(err.into_graphql()))
+        context.request::<()>(Method::Post, url, Some(body))
             .wait()?;
         Ok(Mock{})
     }
@@ -400,8 +376,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::Category.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.http_client.request_with_auth_header::<()>(Method::Delete, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<()>(Method::Delete, url, Some(body))
             .wait()?;
         Ok(Mock{})
     }
@@ -412,8 +387,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body = serde_json::to_string(&input)?;
 
-        context.http_client.request_with_auth_header::<OrdersCart>(Method::Put, url, Some(body), context.user.as_ref().map(|t| t.to_string()))
-            .or_else(|err| Err(err.into_graphql()))
+        context.request::<OrdersCart>(Method::Put, url, Some(body))
             .map(|resp| cart_from_orders_reply(resp))
             .wait()
     }
@@ -424,15 +398,13 @@ graphql_object!(Mutation: Context |&self| {
         if let Some(product_id) = input.product_id {
             let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), product_id);
 
-            context.http_client.request_with_auth_header::<OrdersCart>(Method::Delete, url, None, context.user.as_ref().map(|t| t.to_string()))
-                .or_else(|err| Err(err.into_graphql()))
+            context.request::<OrdersCart>(Method::Delete, url, None)
                 .map(|resp| cart_from_orders_reply(resp))
                 .wait()
         } else {
             let url = format!("{}/cart/clear", context.config.service_url(Service::Orders));
 
-            context.http_client.request_with_auth_header::<OrdersCart>(Method::Post, url, None, context.user.as_ref().map(|t| t.to_string()))
-                .or_else(|err| Err(err.into_graphql()))
+            context.request::<OrdersCart>(Method::Post, url, None)
                 .map(|resp| cart_from_orders_reply(resp))
                 .wait()
         }
