@@ -60,8 +60,15 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         self.store_id
     }
 
-    field category_id() -> i32 as "Category id" {
-        self.category_id
+    field category(&executor) -> FieldResult<Category> as "Category" {
+       let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Category.to_url(),
+            self.category_id);
+
+        context.request::<Category>(Method::Get, url, None)
+            .wait()
     }
 
     field views() -> i32 as "Views" {

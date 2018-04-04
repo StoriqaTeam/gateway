@@ -66,7 +66,6 @@ graphql_object!(Query: Context |&self| {
             context.config.service_url(Service::Users),
             Model::User.to_url());
         context.request::<User>(Method::Get, url, None)
-                    
                     .wait()
                     .map(|u| Some(u))
     }
@@ -152,7 +151,6 @@ graphql_object!(Query: Context |&self| {
             Model::Category.to_url());
 
         context.request::<Category>(Method::Get, url, None)
-            
             .wait()
     }
 
