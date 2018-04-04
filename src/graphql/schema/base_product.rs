@@ -121,9 +121,9 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
         let url = format!(
-            "{}/{}/with_variants?store_id={}&skip_base_product_id={}&offset={}&count={}",
+            "{}/{}/{}/products?skip_base_product_id={}&offset={}&count={}",
             &context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
+            Model::Store.to_url(),
             self.base_product.store_id,
             self.base_product.id,
             offset,
