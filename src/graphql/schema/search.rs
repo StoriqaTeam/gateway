@@ -168,12 +168,24 @@ graphql_object!(Search: Context as "Search" |&self| {
     field find_product_search_filters(&executor, name : String as "Product name search pattern") -> FieldResult<SearchOptions> as "Find search filters by product name." {
         let context = executor.context();
 
-        let url = format!("{}/{}/search_filters",
+        let url = format!("{}/{}/search/filters",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
             );
 
         context.request::<SearchOptions>(Method::Post, url, Some(name))
+            .wait()
+    }
+    
+    field find_stores_count(&executor, name : String as "Store name search pattern") -> FieldResult<i32> as "Find stores count containing name pattern." {
+        let context = executor.context();
+
+        let url = format!("{}/{}/search/count",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            );
+
+        context.request::<i32>(Method::Post, url, Some(name))
             .wait()
     }
 

@@ -28,6 +28,7 @@ pub enum UIType {
     Combobox,
     Radiobutton,
     Checkbox,
+    ColorPicker
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
