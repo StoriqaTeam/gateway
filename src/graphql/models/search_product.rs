@@ -45,3 +45,9 @@ pub struct MostDiscountProductsInput {
     #[graphql(description = "Searching options")]
     pub options: Option<SearchOptionsInput>,
 }
+
+#[derive(Debug, Clone)]
+pub struct SearchProductResult {
+    pub base_product_with_variants: Connection<BaseProductWithVariants>,
+    pub search_filters: Option<SearchOptions>,
+}

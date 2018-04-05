@@ -19,7 +19,7 @@ graphql_object!(Search: Context as "Search" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<i32>  as "Offset form begining", 
         search_term : SearchProductsByNameInput as "Search pattern") 
-        -> FieldResult<SearchProductResult> as "Find products by name using relay connection." {
+            -> FieldResult<SearchProductResult> as "Find products by name using relay connection." {
 
         let context = executor.context();
 
@@ -80,7 +80,7 @@ graphql_object!(Search: Context as "Search" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<i32>  as "Offset form begining", 
         name : String as "Name part") 
-        -> FieldResult<Connection<String>> as "Finds products full name by part of the name." {
+            -> FieldResult<Connection<String>> as "Finds products full name by part of the name." {
 
         let context = executor.context();
 
@@ -117,7 +117,12 @@ graphql_object!(Search: Context as "Search" |&self| {
             .wait()
     }
 
-    field find_store(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", search_term : SearchStoreInput as "Search store input") -> FieldResult<Connection<Store>> as "Finds stores by name using relay connection." {
+    field find_store(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<i32>  as "Offset form begining", 
+        search_term : SearchStoreInput as "Search store input") 
+            -> FieldResult<SearchStoreResult> as "Finds stores by name using relay connection." {
+
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -136,7 +141,7 @@ graphql_object!(Search: Context as "Search" |&self| {
             count + 1
             );
 
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+        let stores = context.request::<Vec<Store>>(Method::Post, url, Some(body))
             .map (|stores| {
                 let mut store_edges: Vec<Edge<Store>> =  vec![];
                 for i in 0..stores.len() {
@@ -154,10 +159,32 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
                 Connection::new(store_edges, page_info)
             })
-            .wait()
+            .wait()?;
+
+        let total_count = if search_term.get_stores_total_count {
+            let url = format!("{}/{}/search/count",
+                context.config.service_url(Service::Stores),
+                Model::Store.to_url(),
+                );
+
+            let res = context.request::<i32>(Method::Post, url, Some(search_term.name))
+                .wait()?;
+            Some(res)
+        } else {
+            None
+        };
+
+        Ok(SearchStoreResult {
+            stores,
+            total_count
+        }) 
     }
 
-    field auto_complete_store_name(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", name : String as "Name part") -> FieldResult<Connection<String>> as "Finds stores full name by part of the name." {
+    field auto_complete_store_name(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<i32>  as "Offset form begining", 
+        name : String as "Name part") 
+            -> FieldResult<Connection<String>> as "Finds stores full name by part of the name." {
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -193,30 +220,6 @@ graphql_object!(Search: Context as "Search" |&self| {
             .wait()
     }
 
-    field find_product_search_filters(&executor, name : String as "Product name search pattern") -> FieldResult<SearchOptions> as "Find search filters by product name." {
-        let context = executor.context();
-
-        let url = format!("{}/{}/search/filters",
-            context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
-            );
-
-        context.request::<SearchOptions>(Method::Post, url, Some(name))
-            .wait()
-    }
-    
-    field find_stores_count(&executor, name : String as "Store name search pattern") -> FieldResult<i32> as "Find stores count containing name pattern." {
-        let context = executor.context();
-
-        let url = format!("{}/{}/search/count",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url(),
-            );
-
-        context.request::<i32>(Method::Post, url, Some(name))
-            .wait()
-    }
-
 });
 
 graphql_object!(SearchProductResult: Context as "SearchProductResult" |&self| {
@@ -228,5 +231,17 @@ graphql_object!(SearchProductResult: Context as "SearchProductResult" |&self| {
 
     field search_filters() -> Option<SearchOptions> as "Searching options"{
         self.search_filters.clone()
+    }
+});
+
+graphql_object!(SearchStoreResult: Context as "SearchStoreResult" |&self| {
+    description: "Searching store result endpoint."
+    
+    field stores() -> Connection<Store> as "Connection of stores"{
+        self.stores.clone()
+    }
+
+    field total_count() -> Option<i32> as "Total store count"{
+        self.total_count
     }
 });
