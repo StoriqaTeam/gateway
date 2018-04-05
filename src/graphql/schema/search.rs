@@ -245,3 +245,19 @@ graphql_object!(SearchStoreResult: Context as "SearchStoreResult" |&self| {
         self.total_count
     }
 });
+
+graphql_object!(SearchOptions: Context as "SearchOptions" |&self| {
+    description: "Searching options endpoint."
+    
+    field attr_filters() -> Vec<AttributeFilter> as "Attribute filters."{
+        self.attr_filters.clone()
+    }
+
+    field price_filter() -> Option<RangeFilter> as "Price filter."{
+        self.price_filter.clone()
+    }
+    
+    field categories_ids() -> Vec<i32> as "Categories ids."{
+        self.categories_ids.clone()
+    }
+});

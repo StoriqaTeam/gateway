@@ -10,16 +10,6 @@ pub struct SearchOptionsInput {
     pub categories_ids: Vec<i32>,
 }
 
-#[derive(GraphQLObject, Deserialize, Clone, Debug)]
-pub struct SearchOptions {
-    #[graphql(description = "Attribute filters.")]
-    pub attr_filters: Vec<AttributeFilter>,
-    #[graphql(description = "Price filter.")]
-    pub price_filter: Option<RangeFilter>,
-    #[graphql(description = "Categories ids.")]
-    pub categories_ids: Vec<i32>,
-}
-
 #[derive(GraphQLInputObject, Serialize, Clone, Debug)]
 #[graphql(description = "Search product input object")]
 pub struct SearchProductsByNameInput {
@@ -44,6 +34,13 @@ pub struct MostViewedProductsInput {
 pub struct MostDiscountProductsInput {
     #[graphql(description = "Searching options")]
     pub options: Option<SearchOptionsInput>,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct SearchOptions {
+    pub attr_filters: Vec<AttributeFilter>,
+    pub price_filter: Option<RangeFilter>,
+    pub categories_ids: Vec<i32>,
 }
 
 #[derive(Debug, Clone)]
