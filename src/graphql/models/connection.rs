@@ -1,6 +1,6 @@
 use juniper;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Edge<T> {
     pub cursor: juniper::ID,
     pub node: T,
@@ -15,7 +15,7 @@ impl<T> Edge<T> {
     }
 }
 
-#[derive(GraphQLObject, Clone)]
+#[derive(GraphQLObject, Clone, Debug)]
 #[graphql(name = "PageInfo", description = "Page Info from relay spec: https://facebook.github.io/relay/graphql/connections.htm")]
 pub struct PageInfo {
     #[graphql(description = "has next page")]
@@ -25,6 +25,7 @@ pub struct PageInfo {
     pub has_previous_page: bool,
 }
 
+#[derive(Debug, Clone)]
 pub struct Connection<T> {
     pub edges: Vec<Edge<T>>,
     pub page_info: PageInfo,

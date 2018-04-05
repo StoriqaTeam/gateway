@@ -27,6 +27,9 @@ pub struct SearchProductsByNameInput {
     pub name: String,
     #[graphql(description = "Searching options")]
     pub options: Option<SearchOptionsInput>,
+    #[serde(skip_serializing)]
+    #[graphql(description = "Get search filters in result")]
+    pub get_search_filters: bool,
 }
 
 #[derive(GraphQLInputObject, Serialize, Clone, Debug)]

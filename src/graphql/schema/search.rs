@@ -15,7 +15,12 @@ use graphql::models::*;
 graphql_object!(Search: Context as "Search" |&self| {
     description: "Searching endpoint."
 
-    field find_product(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", search_term : SearchProductsByNameInput as "Search pattern") -> FieldResult<Connection<BaseProductWithVariants>> as "Find products by name using relay connection." {
+    field find_product(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<i32>  as "Offset form begining", 
+        search_term : SearchProductsByNameInput as "Search pattern") 
+        -> FieldResult<SearchProductResult> as "Find products by name using relay connection." {
+
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -32,7 +37,7 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
+        let prods = context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
             .map (|stores| {
                 let mut store_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
                 for i in 0..stores.len() {
@@ -50,10 +55,33 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
                 Connection::new(store_edges, page_info)
             })
-            .wait()
+            .wait()?;
+
+        let search_filters = if search_term.get_search_filters {
+            let url = format!("{}/{}/search/filters",
+                context.config.service_url(Service::Stores),
+                Model::Product.to_url(),
+                );
+
+                let res = context.request::<SearchOptions>(Method::Post, url, Some(search_term.name))
+                .wait()?;
+                Some(res)
+        } else {
+            None
+        };
+
+        Ok(SearchProductResult {
+            base_product_with_variants: prods,
+            search_filters: search_filters
+        })
     }
 
-    field auto_complete_product_name(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset form begining", name : String as "Name part") -> FieldResult<Connection<String>> as "Finds products full name by part of the name." {
+    field auto_complete_product_name(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<i32>  as "Offset form begining", 
+        name : String as "Name part") 
+        -> FieldResult<Connection<String>> as "Finds products full name by part of the name." {
+
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -189,4 +217,16 @@ graphql_object!(Search: Context as "Search" |&self| {
             .wait()
     }
 
+});
+
+graphql_object!(SearchProductResult: Context as "SearchProductResult" |&self| {
+    description: "Searching product result endpoint."
+    
+    field base_product_with_variants() -> Connection<BaseProductWithVariants> as "Connection of Base Products with variants"{
+        self.base_product_with_variants.clone()
+    }
+
+    field search_filters() -> Option<SearchOptions> as "Searching options"{
+        self.search_filters.clone()
+    }
 });

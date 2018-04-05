@@ -103,3 +103,9 @@ pub struct VariantsWithAttributes {
     pub product: Product,
     pub attrs: Vec<AttrValue>,
 }
+
+#[derive(Debug, Clone)]
+pub struct SearchProductResult {
+    pub base_product_with_variants: Connection<BaseProductWithVariants>,
+    pub search_filters: Option<SearchOptions>,
+}
