@@ -60,3 +60,26 @@ graphql_object!(AttrValue: Context as "AttributeValue" |&self| {
         self.meta_field.clone()
     }
 });
+
+graphql_object!(AttributeFilter: Context as "AttributeFilter" |&self| {
+    description: "Attribute Filter"
+
+    field attribute(&executor) -> FieldResult<Option<Attribute>> as "Attribute" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Attribute.to_url(),
+            self.id);
+        context.request::<Attribute>(Method::Get, url, None)
+            .wait()
+            .map(|u| Some(u))
+    }
+    
+    field equal() -> Option<EqualFilter> as "Values to be equal" {
+        self.equal.clone()
+    }
+
+    field range() -> Option<RangeFilter> as "Range values to compare" {
+        self.range.clone()
+    }
+});
