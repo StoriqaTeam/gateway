@@ -22,6 +22,8 @@ pub struct PageInfo {
     pub has_previous_page: bool,
     pub total_count: Option<i32>,
     pub search_filters: Option<SearchOptions>,
+    pub start_cursor: Option<juniper::ID>,
+    pub end_cursor: Option<juniper::ID>,
 }
 
 #[derive(Debug, Clone)]

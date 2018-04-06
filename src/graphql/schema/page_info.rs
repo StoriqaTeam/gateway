@@ -25,11 +25,11 @@ graphql_object!(PageInfo: Context as "PageInfo" |&self| {
     }
     
     field end_cursor() -> Option<juniper::ID> as "end cursor" {
-        3
+        self.end_cursor.clone()
     }
     
     field start_cursor() -> Option<juniper::ID> as "start cursor" {
-        None
+        self.start_cursor.clone()
     }
     
 });

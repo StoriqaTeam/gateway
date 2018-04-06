@@ -66,7 +66,9 @@ graphql_object!(Search: Context as "Search" |&self| {
                     None
                 };
 
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, search_filters: search_filters, total_count: None};
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, search_filters: search_filters, total_count: None,
+                    start_cursor: None,
+                    end_cursor: None};
                 future::ok(Connection::new(product_edges, page_info))
             })
             .wait()
@@ -107,7 +109,9 @@ graphql_object!(Search: Context as "Search" |&self| {
                     full_name_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None};
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None,
+                    start_cursor: None,
+                    end_cursor: None};
                 Connection::new(full_name_edges, page_info)
             })
             .wait()
@@ -165,7 +169,10 @@ graphql_object!(Search: Context as "Search" |&self| {
                     None
                 };
 
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, search_filters: None, total_count: total_count};
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, search_filters: None, total_count: total_count,
+                        start_cursor: Some(juniper::ID::from(offset.to_string())),
+                        end_cursor: total_count.map(|t| juniper::ID::from(t.to_string())
+                    )};
                 future::ok(Connection::new(store_edges, page_info))
             })
             .wait()
@@ -205,7 +212,9 @@ graphql_object!(Search: Context as "Search" |&self| {
                     full_name_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None};
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None,
+                    start_cursor: None,
+                    end_cursor: None};
                 Connection::new(full_name_edges, page_info)
             })
             .wait()
