@@ -1,4 +1,7 @@
-//! File containing Category object of graphql schema
+//! File containing PageInfo object of graphql schema
+
+use juniper;
+
 use graphql::context::Context;
 use graphql::models::*;
 
@@ -19,6 +22,14 @@ graphql_object!(PageInfo: Context as "PageInfo" |&self| {
     
     field search_filters() -> Option<SearchOptions> as "search options" {
         self.search_filters.clone()
+    }
+    
+    field end_cursor() -> Option<juniper::ID> as "end cursor" {
+        None
+    }
+    
+    field start_cursor() -> Option<juniper::ID> as "start cursor" {
+        None
     }
     
 });
