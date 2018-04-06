@@ -25,7 +25,7 @@ graphql_object!(PageInfo: Context as "PageInfo" |&self| {
     }
     
     field end_cursor() -> Option<juniper::ID> as "end cursor" {
-        None
+        3
     }
     
     field start_cursor() -> Option<juniper::ID> as "start cursor" {
