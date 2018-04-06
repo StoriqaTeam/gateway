@@ -42,9 +42,3 @@ pub struct SearchOptions {
     pub price_filter: Option<RangeFilter>,
     pub categories_ids: Vec<i32>,
 }
-
-#[derive(Debug, Clone)]
-pub struct SearchProductResult {
-    pub base_product_with_variants: Connection<BaseProductWithVariants>,
-    pub search_filters: Option<SearchOptions>,
-}

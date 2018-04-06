@@ -2,8 +2,6 @@ use juniper::ID as GraphqlID;
 
 use stq_static_resources::{Language, Translation, TranslationInput};
 
-use super::*;
-
 #[derive(Deserialize, Debug, Clone)]
 pub struct Store {
     pub id: i32,
@@ -141,10 +139,4 @@ pub struct SearchStoreInput {
     #[serde(skip_serializing)]
     #[graphql(description = "Get stores total count")]
     pub get_stores_total_count: bool,
-}
-
-#[derive(Debug, Clone)]
-pub struct SearchStoreResult {
-    pub stores: Connection<Store>,
-    pub total_count: Option<i32>,
 }

@@ -213,29 +213,6 @@ graphql_object!(Search: Context as "Search" |&self| {
 
 });
 
-graphql_object!(SearchProductResult: Context as "SearchProductResult" |&self| {
-    description: "Searching product result endpoint."
-    
-    field base_product_with_variants() -> Connection<BaseProductWithVariants> as "Connection of Base Products with variants"{
-        self.base_product_with_variants.clone()
-    }
-
-    field search_filters() -> Option<SearchOptions> as "Searching options"{
-        self.search_filters.clone()
-    }
-});
-
-graphql_object!(SearchStoreResult: Context as "SearchStoreResult" |&self| {
-    description: "Searching store result endpoint."
-    
-    field stores() -> Connection<Store> as "Connection of stores"{
-        self.stores.clone()
-    }
-
-    field total_count() -> Option<i32> as "Total store count"{
-        self.total_count
-    }
-});
 
 graphql_object!(SearchOptions: Context as "SearchOptions" |&self| {
     description: "Searching options endpoint."
