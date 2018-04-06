@@ -107,7 +107,10 @@ impl Service for WebService {
                 )))
             }
 
-            _ => Box::new(future::ok(utils::response_not_found())),
+            _ =>  {
+                error!("Received request to non existing endpoint of gateway.");
+                Box::new(future::ok(utils::response_not_found()))
+            },
         }
     }
 }
