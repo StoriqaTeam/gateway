@@ -1,4 +1,5 @@
 use juniper;
+use super::*;
 
 #[derive(Clone, Debug)]
 pub struct Edge<T> {
@@ -15,14 +16,12 @@ impl<T> Edge<T> {
     }
 }
 
-#[derive(GraphQLObject, Clone, Debug)]
-#[graphql(name = "PageInfo", description = "Page Info from relay spec: https://facebook.github.io/relay/graphql/connections.htm")]
+#[derive(Clone, Debug)]
 pub struct PageInfo {
-    #[graphql(description = "has next page")]
     pub has_next_page: bool,
-
-    #[graphql(description = "has previous page")]
     pub has_previous_page: bool,
+    pub total_count: Option<i32>,
+    pub search_filters: Option<SearchOptions>,
 }
 
 #[derive(Debug, Clone)]

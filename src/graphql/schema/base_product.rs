@@ -152,7 +152,7 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
                     base_product_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None};
                 Connection::new(base_product_edges, page_info)
             })
             .wait()

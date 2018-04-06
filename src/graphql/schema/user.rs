@@ -118,7 +118,7 @@ graphql_object!(User: Context as "User" |&self| {
                     user_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None};
                 Connection::new(user_edges, page_info)
             })
             .wait()
@@ -171,7 +171,7 @@ graphql_object!(User: Context as "User" |&self| {
                     store_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None};
                 Connection::new(store_edges, page_info)
             })
             .wait()
@@ -224,7 +224,7 @@ graphql_object!(User: Context as "User" |&self| {
                     product_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None};
                 Connection::new(product_edges, page_info)
             })
             .wait()
@@ -277,7 +277,7 @@ graphql_object!(User: Context as "User" |&self| {
                     product_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None};
                 Connection::new(product_edges, page_info)
             })
             .wait()
