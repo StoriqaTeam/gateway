@@ -153,6 +153,16 @@ graphql_object!(Query: Context |&self| {
         context.request::<Category>(Method::Get, url, None)
             .wait()
     }
+    
+    field attributes(&executor) -> FieldResult<Vec<Attribute>> as "Fetches all attributes." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Attribute.to_url());
+
+        context.request::<Vec<Attribute>>(Method::Get, url, None)
+            .wait()
+    }
 
     field search(&executor) -> FieldResult<Search> as "Search endpoint" {
         Ok(Search{})
