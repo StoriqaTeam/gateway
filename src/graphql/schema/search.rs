@@ -1,9 +1,11 @@
 //! File containing search object of graphql schema
 use std::cmp;
+use std::str::FromStr;
 
 use juniper;
 use serde_json;
 use juniper::FieldResult;
+use juniper::ID as GraphqlID;
 use hyper::Method;
 use futures::future;
 use futures::Future;
@@ -12,6 +14,8 @@ use stq_routes::service::Service;
 
 use graphql::context::Context;
 use graphql::models::*;
+
+const MIN_ID: i32 = 0;
 
 graphql_object!(Search: Context as "Search" |&self| {
     description: "Searching endpoint."
@@ -51,11 +55,12 @@ graphql_object!(Search: Context as "Search" |&self| {
                 product_edges
             })
             .and_then (|mut product_edges| {
-                let url = format!("{}/{}/search/without_category/filters",
+                let url = format!("{}/{}/search/without_category/filters?name={}",
                         context.config.service_url(Service::Stores),
                         Model::Product.to_url(),
+                        search_term.name
                     );
-                context.request::<SearchFiltersWithoutCategory>(Method::Post, url, Some(search_term.name))
+                context.request::<SearchFiltersWithoutCategory>(Method::Post, url, None)
                     .map(|search_filters| {
                         let has_next_page = product_edges.len() as i32 == count + 1;
                         if has_next_page {
@@ -110,11 +115,13 @@ graphql_object!(Search: Context as "Search" |&self| {
                 product_edges
             })
             .and_then (|mut product_edges| {
-                let url = format!("{}/{}/search/in_category/filters",
+                let url = format!("{}/{}/search/in_category/filters?name={}&category_id={}",
                         context.config.service_url(Service::Stores),
                         Model::Product.to_url(),
+                        search_term.name,
+                        search_term.category_id
                     );
-                context.request::<SearchFiltersInCategory>(Method::Post, url, Some(search_term.name))
+                context.request::<SearchFiltersInCategory>(Method::Post, url, None)
                     .map(|search_filters| {
                         let has_next_page = product_edges.len() as i32 == count + 1;
                         if has_next_page {
@@ -184,13 +191,16 @@ graphql_object!(Search: Context as "Search" |&self| {
 
     field find_store(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<i32>  as "Offset form begining", 
+        after = None : Option<GraphqlID>  as "Base64 Id of a store", 
         search_term : SearchStoreInput as "Search store input") 
             -> FieldResult<Connection<Store, PageInfoWithTotalCount>> as "Finds stores by name using relay connection." {
 
         let context = executor.context();
 
-        let offset = after.unwrap_or_default();
+        let offset = match after {
+            Some(val) => ID::from_str(&*val)?.raw_id,
+            None => MIN_ID
+        };
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
