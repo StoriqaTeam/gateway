@@ -22,7 +22,7 @@ pub use self::base_product::*;
 pub use self::search_product::*;
 pub use self::store::*;
 pub use self::attribute::*;
-pub use self::connection::{Connection, Edge, PageInfo};
+pub use self::connection::*;
 pub use self::id::ID;
 pub use self::provider::Provider;
 pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, UserStatus, JWT};

@@ -86,7 +86,10 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field users(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Base64 Id of a user") -> FieldResult<Connection<User>> as "Fetches users using relay connection." {
+    field users(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<GraphqlID>  as "Base64 Id of a user") 
+            -> FieldResult<Connection<User, PageInfo>> as "Fetches users using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -118,9 +121,13 @@ graphql_object!(User: Context as "User" |&self| {
                     user_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None,
-                    start_cursor: None,
-                    end_cursor: None};
+                let start_cursor =  user_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = user_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page, 
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
                 Connection::new(user_edges, page_info)
             })
             .wait()
@@ -141,7 +148,10 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field stores(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Id of a store") -> FieldResult<Connection<Store>> as "Fetches stores using relay connection." {
+    field stores(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<GraphqlID>  as "Id of a store") 
+            -> FieldResult<Connection<Store, PageInfo>> as "Fetches stores using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -173,9 +183,13 @@ graphql_object!(User: Context as "User" |&self| {
                     store_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None,
-                    start_cursor: None,
-                    end_cursor: None};
+                let start_cursor =  store_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page, 
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
                 Connection::new(store_edges, page_info)
             })
             .wait()
@@ -196,7 +210,10 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field products(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Base64 Id of a product") -> FieldResult<Connection<Product>> as "Fetches products using relay connection." {
+    field products(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<GraphqlID>  as "Base64 Id of a product") 
+            -> FieldResult<Connection<Product, PageInfo>> as "Fetches products using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -228,9 +245,13 @@ graphql_object!(User: Context as "User" |&self| {
                     product_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None,
-                    start_cursor: None,
-                    end_cursor: None};
+                let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page, 
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
                 Connection::new(product_edges, page_info)
             })
             .wait()
@@ -251,7 +272,10 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field base_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<GraphqlID>  as "Base64 Id of base product") -> FieldResult<Connection<BaseProduct>> as "Fetches base products using relay connection." {
+    field base_products(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<GraphqlID>  as "Base64 Id of base product")
+            -> FieldResult<Connection<BaseProduct, PageInfo>> as "Fetches base products using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -283,9 +307,13 @@ graphql_object!(User: Context as "User" |&self| {
                     product_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None,
-                    start_cursor: None,
-                    end_cursor: None};
+                let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page, 
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
                 Connection::new(product_edges, page_info)
             })
             .wait()
@@ -321,7 +349,7 @@ graphql_object!(User: Context as "User" |&self| {
     }
 });
 
-graphql_object!(Connection<User>: Context as "UsersConnection" |&self| {
+graphql_object!(Connection<User, PageInfo>: Context as "UsersConnection" |&self| {
     description:"Users Connection"
 
     field edges() -> Vec<Edge<User>> {

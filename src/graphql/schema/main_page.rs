@@ -15,7 +15,11 @@ use graphql::models::*;
 graphql_object!(MainPage: Context as "MainPage" |&self| {
     description: "Main Page endpoint."
 
-    field find_most_viewed_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining", search_term : MostViewedProductsInput as "Most viewed search pattern") -> FieldResult<Connection<BaseProductWithVariants>> as "Find most viewed base products each one contains one variant." {
+    field find_most_viewed_products(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<i32>  as "Offset from begining", 
+        search_term : MostViewedProductsInput as "Most viewed search pattern") 
+            -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Find most viewed base products each one contains one variant." {
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -47,16 +51,24 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
                     base_product_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None,
-                    start_cursor: None,
-                    end_cursor: None};
+                let start_cursor =  base_product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page, 
+                    has_previous_page, 
+                    start_cursor,
+                    end_cursor};
                 Connection::new(base_product_edges, page_info)
             })
             .wait()
     }
 
 
-    field find_most_discount_products(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining", search_term : MostDiscountProductsInput as "Most discount search pattern") -> FieldResult<Connection<BaseProductWithVariants>> as "Find base products each one with most discount variant." {
+    field find_most_discount_products(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<i32>  as "Offset from begining", 
+        search_term : MostDiscountProductsInput as "Most discount search pattern") 
+            -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Find base products each one with most discount variant." {
         let context = executor.context();
 
         let offset = after.unwrap_or_default();
@@ -88,9 +100,13 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
                     base_product_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page, total_count: None, search_filters: None,
-                    start_cursor: None,
-                    end_cursor: None};
+                let start_cursor =  base_product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page, 
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
                 Connection::new(base_product_edges, page_info)
             })
             .wait()

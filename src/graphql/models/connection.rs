@@ -1,5 +1,4 @@
 use juniper;
-use super::*;
 
 #[derive(Clone, Debug)]
 pub struct Edge<T> {
@@ -20,20 +19,36 @@ impl<T> Edge<T> {
 pub struct PageInfo {
     pub has_next_page: bool,
     pub has_previous_page: bool,
+    pub start_cursor: Option<juniper::ID>,
+    pub end_cursor: Option<juniper::ID>,
+}
+
+#[derive(Clone, Debug)]
+pub struct PageInfoWithTotalCount {
+    pub has_next_page: bool,
+    pub has_previous_page: bool,
     pub total_count: Option<i32>,
-    pub search_filters: Option<SearchOptions>,
+    pub start_cursor: Option<juniper::ID>,
+    pub end_cursor: Option<juniper::ID>,
+}
+
+#[derive(Clone, Debug)]
+pub struct PageInfoWithSearchFilters<T> {
+    pub has_next_page: bool,
+    pub has_previous_page: bool,
+    pub search_filters: Option<T>,
     pub start_cursor: Option<juniper::ID>,
     pub end_cursor: Option<juniper::ID>,
 }
 
 #[derive(Debug, Clone)]
-pub struct Connection<T> {
+pub struct Connection<T, P> {
     pub edges: Vec<Edge<T>>,
-    pub page_info: PageInfo,
+    pub page_info: P,
 }
 
-impl<T> Connection<T> {
-    pub fn new(edges: Vec<Edge<T>>, page_info: PageInfo) -> Self {
+impl<T, P> Connection<T, P> {
+    pub fn new(edges: Vec<Edge<T>>, page_info: P) -> Self {
         Self {
             edges: edges,
             page_info: page_info,
