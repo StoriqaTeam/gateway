@@ -15,8 +15,6 @@ use stq_routes::service::Service;
 use graphql::context::Context;
 use graphql::models::*;
 
-const MIN_ID: i32 = 0;
-
 graphql_object!(Search: Context as "Search" |&self| {
     description: "Searching endpoint."
 
@@ -191,16 +189,15 @@ graphql_object!(Search: Context as "Search" |&self| {
 
     field find_store(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Base64 Id of a store", 
+        after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchStoreInput as "Search store input") 
             -> FieldResult<Connection<Store, PageInfoWithTotalCount>> as "Finds stores by name using relay connection." {
 
         let context = executor.context();
 
-        let offset = match after {
-            Some(val) => ID::from_str(&*val)?.raw_id,
-            None => MIN_ID
-        };
+        let offset = after
+            .and_then(|id| i32::from_str(&id).ok())
+            .unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
