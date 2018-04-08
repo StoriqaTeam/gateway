@@ -6,6 +6,7 @@ use juniper::ID as GraphqlID;
 use juniper::FieldResult;
 use hyper::Method;
 use futures::Future;
+use base64::encode;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -105,7 +106,7 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
     description: "Base product with variantsinfo."
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::BaseProduct, self.base_product.id).to_string().into()
+        encode(&format!("{}|{}|{}", Service::Stores, "baseproductwithvariants",  self.base_product.id)).into()
     }
 
     field raw_id() -> i32 as "Unique int id"{
