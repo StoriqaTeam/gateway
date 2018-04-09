@@ -175,7 +175,7 @@ graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&se
     description: "Variants with attributes info."
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::Product, self.product.id).to_string().into()
+        encode(&format!("{}|{}|{}", Service::Stores, "variantswithattributes",  self.product.id)).into()
     }
 
     field raw_id() -> i32 as "Unique int id"{
