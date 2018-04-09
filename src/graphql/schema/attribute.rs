@@ -83,3 +83,20 @@ graphql_object!(AttributeFilter: Context as "AttributeFilter" |&self| {
         self.range.clone()
     }
 });
+
+graphql_object!(AttributeMetaField: Context as "AttributeMetaField" |&self| {
+    description: "Attribute Meta Field"
+
+    field values() -> Option<Vec<String>> as "Possible values of attribute" {
+        self.values.clone()
+    }
+
+    field translated_values() -> Vec<Vec<Translation>> as "Possible values of attribute with translation" {
+        self.translated_values.clone().unwrap_or_default()
+    }
+
+    field ui_element() -> Option<UIType> as "UI element type" {
+        self.ui_element.clone()
+    }
+});
+

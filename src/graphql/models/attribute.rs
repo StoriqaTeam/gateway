@@ -11,14 +11,10 @@ pub struct Attribute {
     pub meta_field: Option<AttributeMetaField>,
 }
 
-#[derive(GraphQLObject, Deserialize, Debug, Clone, PartialEq)]
-#[graphql(description = "Attribute meta field")]
+#[derive( Deserialize, Debug, Clone, PartialEq)]
 pub struct AttributeMetaField {
-    #[graphql(description = "Possible values of attribute")]
     pub values: Option<Vec<String>>,
-    #[graphql(description = "Possible values of attribute with translation")]
     pub translated_values: Option<Vec<Vec<Translation>>>,
-    #[graphql(description = "UI element type ")]
     pub ui_element: Option<UIType>,
 }
 
