@@ -3,8 +3,6 @@ pipeline:
     git:
       image: plugins/git
       recursive: true
-      submodule_override:
-        vendor/libstqbackend: https://github.com/StoriqaTeam/libstqbackend.git
   build:
     image: rust:1.24.1-stretch
     commands:
