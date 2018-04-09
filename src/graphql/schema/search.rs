@@ -20,13 +20,16 @@ graphql_object!(Search: Context as "Search" |&self| {
 
     field find_product_without_category(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<i32>  as "Offset form begining", 
+        after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchProductWithoutCategoryInput as "Search pattern") 
             -> FieldResult<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
 
-        let offset = after.unwrap_or_default();
+        let offset = after
+            .and_then(|id| i32::from_str(&id).ok())
+            .unwrap_or_default();
+
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
@@ -81,13 +84,16 @@ graphql_object!(Search: Context as "Search" |&self| {
     
     field find_product_in_category(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<i32>  as "Offset form begining", 
+        after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchProductInsideCategoryInput as "Search pattern") 
             -> FieldResult<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersInCategory>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
 
-        let offset = after.unwrap_or_default();
+        let offset = after
+            .and_then(|id| i32::from_str(&id).ok())
+            .unwrap_or_default();
+
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
@@ -142,13 +148,16 @@ graphql_object!(Search: Context as "Search" |&self| {
 
     field auto_complete_product_name(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<i32>  as "Offset form begining", 
+        after = None : Option<GraphqlID>  as "Offset form begining", 
         name : String as "Name part") 
             -> FieldResult<Connection<String, PageInfo>> as "Finds products full name by part of the name." {
 
         let context = executor.context();
 
-        let offset = after.unwrap_or_default();
+        let offset = after
+            .and_then(|id| i32::from_str(&id).ok())
+            .unwrap_or_default();
+
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
@@ -258,12 +267,15 @@ graphql_object!(Search: Context as "Search" |&self| {
 
     field auto_complete_store_name(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<i32>  as "Offset form begining", 
+        after = None : Option<GraphqlID>  as "Offset form begining", 
         name : String as "Name part") 
             -> FieldResult<Connection<String, PageInfo>> as "Finds stores full name by part of the name." {
         let context = executor.context();
 
-        let offset = after.unwrap_or_default();
+        let offset = after
+            .and_then(|id| i32::from_str(&id).ok())
+            .unwrap_or_default();
+
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);

@@ -89,7 +89,6 @@ graphql_object!(Connection<BaseProduct, PageInfo>: Context as "BaseProductsConne
     }
 });
 
-
 graphql_object!(Edge<BaseProduct>: Context as "BaseProductsEdge" |&self| {
     description:"Base Products Edge"
 
@@ -204,8 +203,7 @@ graphql_object!(Connection<BaseProductWithVariants, PageInfo>: Context as "BaseP
     }
 });
 
-
-graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>: Context as "BaseProductWithVariantsConnectionSearchFilterWithoutCategory" |&self| {
+graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>: Context as "BaseProductWithVariantsSearchFilterWithoutCategoryConnection" |&self| {
     description:"Base Products Connection"
 
     field edges() -> Vec<Edge<BaseProductWithVariants>> {
@@ -217,7 +215,7 @@ graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<Se
     }
 });
 
-graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersInCategory>>: Context as "BaseProductWithVariantsConnectionSearchFilterInCategory" |&self| {
+graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersInCategory>>: Context as "BaseProductWithVariantsSearchFilterInCategoryConnection" |&self| {
     description:"Base Products Connection"
 
     field edges() -> Vec<Edge<BaseProductWithVariants>> {
