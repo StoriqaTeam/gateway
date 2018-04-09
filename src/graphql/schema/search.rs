@@ -340,7 +340,7 @@ graphql_object!(SearchFiltersWithoutCategory: Context as "SearchFiltersWithoutCa
         self.price_range.clone()
     }
     
-    field categories() -> Vec<Category> as "Categories."{
+    field categories() -> Category as "Category."{
         self.categories.clone()
     }
 });
