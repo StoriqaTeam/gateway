@@ -49,10 +49,13 @@ impl Service for WebService {
                 let auth_header = headers.get::<Authorization<Bearer>>();
                 let jwt_secret_key = context.graphql_context.config.jwt.secret_key.clone();
                 let domain = context.graphql_context.config.cors.domain.clone();
+                let leeway = context.graphql_context.config.jwt.leeway;
+
+                let mut validation = Validation {leeway, ..Default::default()};
                 let token_payload = auth_header
                     .map(move |auth| {
                         let token = auth.0.token.as_ref();
-                        decode::<JWTPayload>(token, jwt_secret_key.as_ref(), &Validation::default())
+                        decode::<JWTPayload>(token, jwt_secret_key.as_ref(), &validation)
                             .ok()
                             .map(|t| t.claims)
                     })

@@ -34,6 +34,7 @@ pub struct Config {
 #[derive(Debug, Deserialize, Clone)]
 pub struct JWT {
     pub secret_key: String,
+    pub leeway: i64,
 }
 
 #[derive(Debug, Deserialize, Clone)]

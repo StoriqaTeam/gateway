@@ -294,6 +294,16 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field renewJWT(&executor) -> FieldResult<JWT> as "Get JWT Token by email." {
+        let context = executor.context();
+        let url = format!("{}/{}/renew",
+            context.config.service_url(Service::Users),
+            Model::JWT.to_url());
+
+        context.request::<JWT>(Method::Post, url, None)
+            .wait()
+    }
+
     field createAttribute(&executor, input: CreateAttributeInput as "Create attribute input.") -> FieldResult<Attribute> as "Creates new attribute." {
         let context = executor.context();
         let url = format!("{}/{}",
