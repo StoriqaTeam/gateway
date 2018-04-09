@@ -11,6 +11,7 @@ pub mod attribute;
 pub mod search;
 pub mod user_role;
 pub mod main_page;
+pub mod page_info;
 
 use juniper;
 

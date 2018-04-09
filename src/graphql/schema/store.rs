@@ -89,7 +89,10 @@ graphql_object!(Store: Context as "Store" |&self| {
         self.slogan.clone()
     }
 
-    field base_products_with_variants(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining") -> FieldResult<Connection<BaseProductWithVariants>> as "Fetches base products of the store." {
+    field base_products_with_variants(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<i32>  as "Offset from begining") 
+            -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Fetches base products of the store." {
         let context = executor.context();
         
         let offset = after.unwrap_or_default();
@@ -121,7 +124,13 @@ graphql_object!(Store: Context as "Store" |&self| {
                     base_product_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                let start_cursor =  base_product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page, 
+                    has_previous_page, 
+                    start_cursor,
+                    end_cursor};
                 Connection::new(base_product_edges, page_info)
             })
             .wait()
@@ -144,7 +153,7 @@ graphql_object!(Store: Context as "Store" |&self| {
 
 });
 
-graphql_object!(Connection<Store>: Context as "StoresConnection" |&self| {
+graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {
     description:"Stores Connection"
 
     field edges() -> Vec<Edge<Store>> {
@@ -168,7 +177,7 @@ graphql_object!(Edge<Store>: Context as "StoresEdge" |&self| {
     }
 });
 
-graphql_object!(Connection<String>: Context as "FullNameConnection" |&self| {
+graphql_object!(Connection<String, PageInfo>: Context as "FullNameConnection" |&self| {
     description:"Name Connection"
 
     field edges() -> Vec<Edge<String>> {
@@ -176,6 +185,18 @@ graphql_object!(Connection<String>: Context as "FullNameConnection" |&self| {
     }
 
     field page_info() -> PageInfo {
+        self.page_info.clone()
+    }
+});
+
+graphql_object!(Connection<Store, PageInfoWithTotalCount>: Context as "StoresConnection" |&self| {
+    description:"Stores Connection"
+
+    field edges() -> Vec<Edge<Store>> {
+        self.edges.to_vec()
+    }
+
+    field page_info() -> PageInfoWithTotalCount {
         self.page_info.clone()
     }
 });

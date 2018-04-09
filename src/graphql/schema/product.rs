@@ -51,7 +51,7 @@ graphql_object!(Product: Context as "Product" |&self| {
 
 });
 
-graphql_object!(Connection<Product>: Context as "ProductsConnection" |&self| {
+graphql_object!(Connection<Product, PageInfo>: Context as "ProductsConnection" |&self| {
     description:"Products Connection"
 
     field edges() -> Vec<Edge<Product>> {

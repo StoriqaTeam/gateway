@@ -6,6 +6,7 @@ use juniper::ID as GraphqlID;
 use juniper::FieldResult;
 use hyper::Method;
 use futures::Future;
+use base64::encode;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -76,7 +77,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     }
 });
 
-graphql_object!(Connection<BaseProduct>: Context as "BaseProductsConnection" |&self| {
+graphql_object!(Connection<BaseProduct, PageInfo>: Context as "BaseProductsConnection" |&self| {
     description:"Base Products Connection"
 
     field edges() -> Vec<Edge<BaseProduct>> {
@@ -87,6 +88,7 @@ graphql_object!(Connection<BaseProduct>: Context as "BaseProductsConnection" |&s
         self.page_info.clone()
     }
 });
+
 
 graphql_object!(Edge<BaseProduct>: Context as "BaseProductsEdge" |&self| {
     description:"Base Products Edge"
@@ -104,7 +106,7 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
     description: "Base product with variantsinfo."
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::BaseProduct, self.base_product.id).to_string().into()
+        encode(&format!("{}|{}|{}", Service::Stores, "baseproductwithvariants",  self.base_product.id)).into()
     }
 
     field raw_id() -> i32 as "Unique int id"{
@@ -119,7 +121,10 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
         self.variants.clone()
     }
 
-    field base_products_same_store(&executor, first = None : Option<i32> as "First edges", after = None : Option<i32>  as "Offset from begining") -> FieldResult<Connection<BaseProductWithVariants>> as "Fetches base product with same store id." {
+    field base_products_same_store(&executor, 
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<i32>  as "Offset from begining") 
+            -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Fetches base product with same store id." {
         let context = executor.context();
         
         let offset = after.unwrap_or_default();
@@ -152,7 +157,14 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
                     base_product_edges.pop();
                 };
                 let has_previous_page = true;
-                let page_info = PageInfo {has_next_page: has_next_page, has_previous_page: has_previous_page};
+                let start_cursor =  base_product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page, 
+                    has_previous_page, 
+                    start_cursor,
+                    end_cursor
+                    };
                 Connection::new(base_product_edges, page_info)
             })
             .wait()
@@ -163,7 +175,7 @@ graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&se
     description: "Variants with attributes info."
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::Product, self.product.id).to_string().into()
+        encode(&format!("{}|{}|{}", Service::Stores, "variantswithattributes",  self.product.id)).into()
     }
 
     field raw_id() -> i32 as "Unique int id"{
@@ -180,7 +192,7 @@ graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&se
 
 });
 
-graphql_object!(Connection<BaseProductWithVariants>: Context as "BaseProductWithVariantsConnection" |&self| {
+graphql_object!(Connection<BaseProductWithVariants, PageInfo>: Context as "BaseProductWithVariantsConnection" |&self| {
     description:"Base Products Connection"
 
     field edges() -> Vec<Edge<BaseProductWithVariants>> {
@@ -188,6 +200,31 @@ graphql_object!(Connection<BaseProductWithVariants>: Context as "BaseProductWith
     }
 
     field page_info() -> PageInfo {
+        self.page_info.clone()
+    }
+});
+
+
+graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>: Context as "BaseProductWithVariantsConnectionSearchFilterWithoutCategory" |&self| {
+    description:"Base Products Connection"
+
+    field edges() -> Vec<Edge<BaseProductWithVariants>> {
+        self.edges.to_vec()
+    }
+
+    field page_info() -> PageInfoWithSearchFilters<SearchFiltersWithoutCategory> {
+        self.page_info.clone()
+    }
+});
+
+graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersInCategory>>: Context as "BaseProductWithVariantsConnectionSearchFilterInCategory" |&self| {
+    description:"Base Products Connection"
+
+    field edges() -> Vec<Edge<BaseProductWithVariants>> {
+        self.edges.to_vec()
+    }
+
+    field page_info() -> PageInfoWithSearchFilters<SearchFiltersInCategory> {
         self.page_info.clone()
     }
 });
