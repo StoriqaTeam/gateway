@@ -3,8 +3,9 @@ FROM debian:stable-slim
 RUN mkdir -p /app/config
 WORKDIR /app
 
-COPY /mnt/gateway_runner /app
-COPY /mnt/config /app/config
+COPY target/release/gateway_runner /app
+COPY config /app/config
+
 EXPOSE 8000
 
 ENTRYPOINT ["/app/gateway_runner"]

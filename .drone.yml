@@ -1,13 +1,9 @@
 pipeline:
-  clone:
-    image: plugins/git
-    recursive: true
   build:
     image: rust:1.24.1-stretch
     commands:
       - cargo install cargo-watch
       - cargo build --release --locked
-      - cp -f target/release/gateway_runner /mnt/
     volumes:
       - /mnt:/mnt
   package:
