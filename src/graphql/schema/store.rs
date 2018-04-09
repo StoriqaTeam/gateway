@@ -1,6 +1,7 @@
 //! File containing node object of graphql schema
 //! File containing store object of graphql schema
 use std::cmp;
+use std::str::FromStr;
 
 use juniper;
 use juniper::ID as GraphqlID;
@@ -91,11 +92,13 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     field base_products_with_variants(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<i32>  as "Offset from begining") 
+        after = None : Option<GraphqlID>  as "Offset from begining") 
             -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Fetches base products of the store." {
         let context = executor.context();
         
-        let offset = after.unwrap_or_default();
+        let offset = after
+            .and_then(|id| i32::from_str(&id).ok())
+            .unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);

@@ -1,9 +1,11 @@
 //! File containing search object of graphql schema
 use std::cmp;
+use std::str::FromStr;
 
 use juniper;
-use serde_json;
 use juniper::FieldResult;
+use juniper::ID as GraphqlID;
+use serde_json;
 use hyper::Method;
 use futures::Future;
 use stq_routes::model::Model;
@@ -17,12 +19,14 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
 
     field find_most_viewed_products(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<i32>  as "Offset from begining", 
+        after = None : Option<GraphqlID>  as "Offset from begining", 
         search_term : MostViewedProductsInput as "Most viewed search pattern") 
             -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Find most viewed base products each one contains one variant." {
         let context = executor.context();
 
-        let offset = after.unwrap_or_default();
+        let offset = after
+            .and_then(|id| i32::from_str(&id).ok())
+            .unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
@@ -66,12 +70,14 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
 
     field find_most_discount_products(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<i32>  as "Offset from begining", 
+        after = None : Option<GraphqlID>  as "Offset from begining", 
         search_term : MostDiscountProductsInput as "Most discount search pattern") 
             -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Find base products each one with most discount variant." {
         let context = executor.context();
 
-        let offset = after.unwrap_or_default();
+        let offset = after
+            .and_then(|id| i32::from_str(&id).ok())
+            .unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);

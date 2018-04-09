@@ -89,7 +89,6 @@ graphql_object!(Connection<BaseProduct, PageInfo>: Context as "BaseProductsConne
     }
 });
 
-
 graphql_object!(Edge<BaseProduct>: Context as "BaseProductsEdge" |&self| {
     description:"Base Products Edge"
 
@@ -203,7 +202,6 @@ graphql_object!(Connection<BaseProductWithVariants, PageInfo>: Context as "BaseP
         self.page_info.clone()
     }
 });
-
 
 graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>: Context as "BaseProductWithVariantsSearchFilterWithoutCategoryConnection" |&self| {
     description:"Base Products Connection"
