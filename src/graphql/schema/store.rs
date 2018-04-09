@@ -192,7 +192,7 @@ graphql_object!(Connection<String, PageInfo>: Context as "FullNameConnection" |&
     }
 });
 
-graphql_object!(Connection<Store, PageInfoWithTotalCount>: Context as "StoresConnection" |&self| {
+graphql_object!(Connection<Store, PageInfoWithTotalCount>: Context as "StoresWithTotalCountConnection" |&self| {
     description:"Stores Connection"
 
     field edges() -> Vec<Edge<Store>> {
