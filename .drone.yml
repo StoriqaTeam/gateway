@@ -1,8 +1,7 @@
 pipeline:
   clone:
-    git:
-      image: plugins/git
-      recursive: true
+    image: plugins/git
+    recursive: true
   build:
     image: rust:1.24.1-stretch
     commands:
