@@ -172,4 +172,32 @@ graphql_object!(Query: Context |&self| {
         Ok(MainPage{})
     }    
 
+    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Store> as "Fetches store by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            id.to_string()
+        );
+
+        context.request::<Store>(Method::Get, url, None)
+            .wait()
+    }
+
+    field base_product_with_variants(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<BaseProductWithVariants> as "Fetches base product with variants by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}/with_variants",
+            &context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            id.to_string()
+        );
+
+        context.request::<BaseProductWithVariants>(Method::Get, url, None)
+            .wait()
+    }
+
 });

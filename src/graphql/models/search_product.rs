@@ -56,7 +56,7 @@ pub struct SearchOptions {
 #[derive(Deserialize, Clone, Debug)]
 pub struct SearchFiltersWithoutCategory {
     pub price_range: Option<RangeFilter>,
-    pub categories: Vec<Category>,
+    pub categories: Category,
 }
 
 #[derive(Deserialize, Clone, Debug)]
