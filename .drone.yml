@@ -1,0 +1,20 @@
+pipeline:
+  clone:
+    recursive: true
+    submodule_override:
+      vendor/libstqbackend: https://github.com/StoriqaTeam/libstqbackend.git
+  build:
+    image: rust:1.24.1-stretch
+    commands:
+      - cargo install cargo-watch
+      - cargo build --release --locked
+      - cp -f target/release/gateway_runner /mnt/
+    volumes:
+      - $$DRONE_DIR:/mnt
+  package:
+    image: plugins/docker
+    repo: storiqateam/stq-gw
+    tags:
+      - $$DRONE_BRANCH
+      - $${DRONE_BRANCH}$${DRONE_BUILD_NUMBER}
+    dockerfile: docker/Dockerfile.run
