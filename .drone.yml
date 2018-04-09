@@ -9,7 +9,7 @@ pipeline:
       - cargo build --release --locked
       - cp -f target/release/gateway_runner /mnt/
     volumes:
-      - $DRONE_DIR:/mnt
+      - $${DRONE_DIR}:/mnt
   package:
     image: plugins/docker
     repo: storiqateam/stq-gw
