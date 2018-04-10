@@ -31,12 +31,12 @@ pipeline:
     dockerfile: docker/Dockerfile.run
     volumes:
       - /mnt:/mnt
-  #deploy:
-    #image: quay.io/honestbee/drone-kubernetes
-    #kubernetes_server: https://api.stage.stq.cloud
-    #kubernetes_token: ${k8s_token}
-    #namespace: default
-    #deployment: gateway
-    #repo: storiqateam/stq-gw
-    #container: gateway
-    #tag: ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
+  deploy:
+    image: quay.io/honestbee/drone-kubernetes
+    kubernetes_server: https://api.uat.stq.cloud
+    kubernetes_token: smv1cIIFv7d81R3IDj93B6Q2p8O9XPsZ
+    namespace: default
+    deployment: gateway
+    repo: storiqateam/stq-gw
+    container: gateway
+    tag: ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
