@@ -22,7 +22,7 @@ graphql_object!(Search: Context as "Search" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchProductWithoutCategoryInput as "Search pattern") 
-            -> FieldResult<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>> as "Find products by name using relay connection." {
+            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
 
@@ -80,13 +80,14 @@ graphql_object!(Search: Context as "Search" |&self| {
                     })
             })
             .wait()
+            .map(|u| Some(u))
     }
     
     field find_product_in_category(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchProductInsideCategoryInput as "Search pattern") 
-            -> FieldResult<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersInCategory>>> as "Find products by name using relay connection." {
+            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersInCategory>>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
 
@@ -144,13 +145,14 @@ graphql_object!(Search: Context as "Search" |&self| {
                     })
             })
             .wait()
+            .map(|u| Some(u))
     }
 
     field auto_complete_product_name(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         name : String as "Name part") 
-            -> FieldResult<Connection<String, PageInfo>> as "Finds products full name by part of the name." {
+            -> FieldResult<Option<Connection<String, PageInfo>>> as "Finds products full name by part of the name." {
 
         let context = executor.context();
 
@@ -194,13 +196,14 @@ graphql_object!(Search: Context as "Search" |&self| {
                 Connection::new(full_name_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 
     field find_store(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchStoreInput as "Search store input") 
-            -> FieldResult<Connection<Store, PageInfoWithTotalCount>> as "Finds stores by name using relay connection." {
+            -> FieldResult<Option<Connection<Store, PageInfoWithTotalCount>>> as "Finds stores by name using relay connection." {
 
         let context = executor.context();
 
@@ -263,13 +266,14 @@ graphql_object!(Search: Context as "Search" |&self| {
                 future::ok(Connection::new(store_edges, page_info))
             })
             .wait()
+            .map(|u| Some(u))
     }
 
     field auto_complete_store_name(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         name : String as "Name part") 
-            -> FieldResult<Connection<String, PageInfo>> as "Finds stores full name by part of the name." {
+            -> FieldResult<Option<Connection<String, PageInfo>>> as "Finds stores full name by part of the name." {
         let context = executor.context();
 
         let offset = after
@@ -313,6 +317,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                 Connection::new(full_name_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 
 });

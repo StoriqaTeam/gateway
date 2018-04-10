@@ -124,7 +124,7 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
     field base_products_same_store(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<i32>  as "Offset from begining") 
-            -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Fetches base product with same store id." {
+            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfo>>> as "Fetches base product with same store id." {
         let context = executor.context();
         
         let offset = after.unwrap_or_default();
@@ -168,6 +168,7 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
                 Connection::new(base_product_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 });
 
