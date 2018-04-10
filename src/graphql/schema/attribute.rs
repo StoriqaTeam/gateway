@@ -91,8 +91,9 @@ graphql_object!(AttributeMetaField: Context as "AttributeMetaField" |&self| {
         &self.values
     }
 
-    field translated_values() -> Vec<Vec<Translation>> as "Possible values of attribute with translation" {
-        self.translated_values.clone().unwrap_or_default()
+    field translated_values() -> Vec<TranslatedValue> as "Possible values of attribute with translation" {
+        let vals = self.translated_values.clone().unwrap_or_default();
+        vals.into_iter().map(|v| TranslatedValue {translations: v}).collect()
     }
 
     field ui_element() -> &Option<UIType> as "UI element type" {
@@ -100,3 +101,9 @@ graphql_object!(AttributeMetaField: Context as "AttributeMetaField" |&self| {
     }
 });
 
+#[derive(GraphQLObject, Deserialize, Clone, Debug, PartialEq)]
+#[graphql(description = "Value with translation")]
+pub struct TranslatedValue {
+    #[graphql(description = "Translated value")]
+    pub translations: Vec<Translation>
+}
