@@ -3,7 +3,7 @@ pipeline:
     image: drillster/drone-volume-cache
     restore: true
     mount:
-      - ./target/deps
+      - ./target/release/deps
     volumes:
       - /tmp/cache:/cache
   build:
@@ -17,7 +17,7 @@ pipeline:
     image: drillster/drone-volume-cache
     rebuild: true
     mount:
-      - ./target/deps
+      - ./target/release/deps
     volumes:
       - /tmp/cache:/cache
   package:
@@ -27,6 +27,7 @@ pipeline:
       - ${DRONE_BRANCH}
       - ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
     dockerfile: docker/Dockerfile.run
-    auth: amFja3RoZXN0cmlwcGVyOmExYTFhMWEx
+    username: stqcommon
+    password: "Tz-q6qDL#d3Mz8hm"
     volumes:
       - /mnt:/mnt
