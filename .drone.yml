@@ -3,7 +3,7 @@ pipeline:
     image: drillster/drone-volume-cache
     restore: true
     mount:
-      - ./target/release/deps
+      - ./target/release
     volumes:
       - /tmp/cache:/cache
   build:
@@ -17,7 +17,7 @@ pipeline:
     image: drillster/drone-volume-cache
     rebuild: true
     mount:
-      - ./target/release/deps
+      - ./target/release
     volumes:
       - /tmp/cache:/cache
   package:
