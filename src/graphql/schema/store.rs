@@ -93,7 +93,7 @@ graphql_object!(Store: Context as "Store" |&self| {
     field base_products_with_variants(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset from begining") 
-            -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Fetches base products of the store." {
+            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfo>>> as "Fetches base products of the store." {
         let context = executor.context();
         
         let offset = after
@@ -137,6 +137,7 @@ graphql_object!(Store: Context as "Store" |&self| {
                 Connection::new(base_product_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 
     field products_count(&executor) -> FieldResult<i32> as "Fetches products count of the store." {

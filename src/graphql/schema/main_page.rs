@@ -21,7 +21,7 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset from begining", 
         search_term : MostViewedProductsInput as "Most viewed search pattern") 
-            -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Find most viewed base products each one contains one variant." {
+            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfo>>> as "Find most viewed base products each one contains one variant." {
         let context = executor.context();
 
         let offset = after
@@ -65,6 +65,7 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
                 Connection::new(base_product_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 
 
@@ -72,7 +73,7 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset from begining", 
         search_term : MostDiscountProductsInput as "Most discount search pattern") 
-            -> FieldResult<Connection<BaseProductWithVariants, PageInfo>> as "Find base products each one with most discount variant." {
+            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfo>>> as "Find base products each one with most discount variant." {
         let context = executor.context();
 
         let offset = after
@@ -116,6 +117,7 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
                 Connection::new(base_product_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 
 });

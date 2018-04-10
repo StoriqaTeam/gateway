@@ -89,7 +89,7 @@ graphql_object!(User: Context as "User" |&self| {
     field users(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Base64 Id of a user") 
-            -> FieldResult<Connection<User, PageInfo>> as "Fetches users using relay connection." {
+            -> FieldResult<Option<Connection<User, PageInfo>>> as "Fetches users using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -131,6 +131,7 @@ graphql_object!(User: Context as "User" |&self| {
                 Connection::new(user_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 
     field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
@@ -151,7 +152,7 @@ graphql_object!(User: Context as "User" |&self| {
     field stores(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Id of a store") 
-            -> FieldResult<Connection<Store, PageInfo>> as "Fetches stores using relay connection." {
+            -> FieldResult<Option<Connection<Store, PageInfo>>> as "Fetches stores using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -193,6 +194,7 @@ graphql_object!(User: Context as "User" |&self| {
                 Connection::new(store_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 
     field product(&executor, id: i32 as "Int id of a product.") -> FieldResult<Option<Product>> as "Fetches product by id." {
@@ -213,7 +215,7 @@ graphql_object!(User: Context as "User" |&self| {
     field products(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Base64 Id of a product") 
-            -> FieldResult<Connection<Product, PageInfo>> as "Fetches products using relay connection." {
+            -> FieldResult<Option<Connection<Product, PageInfo>>> as "Fetches products using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -255,6 +257,7 @@ graphql_object!(User: Context as "User" |&self| {
                 Connection::new(product_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 
     field base_product(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
@@ -275,7 +278,7 @@ graphql_object!(User: Context as "User" |&self| {
     field base_products(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Base64 Id of base product")
-            -> FieldResult<Connection<BaseProduct, PageInfo>> as "Fetches base products using relay connection." {
+            -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches base products using relay connection." {
         let context = executor.context();
 
         let raw_id = match after {
@@ -317,6 +320,7 @@ graphql_object!(User: Context as "User" |&self| {
                 Connection::new(product_edges, page_info)
             })
             .wait()
+            .map(|u| Some(u))
     }
 
     field base_product_with_variants(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProductWithVariants>> as "Fetches base product with variants by id." {
