@@ -10,7 +10,7 @@ pipeline:
     image: plugins/docker
     repo: storiqateam/stq-gw
     tags:
-      - $DRONE_BRANCH
+      - ${DRONE_BRANCH}
       - ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
     dockerfile: docker/Dockerfile.run
     volumes:
