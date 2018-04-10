@@ -1,4 +1,7 @@
 pipeline:
+  cache:
+    mount:
+      - /drone/target/deps
   build:
     image: rust:1.24.1-stretch
     commands:
@@ -6,9 +9,6 @@ pipeline:
       - cargo build --release --locked
     volumes:
       - /mnt:/mnt
-    cache:
-      mount:
-        - target/deps
   package:
     image: plugins/docker
     repo: storiqateam/stq-gw
