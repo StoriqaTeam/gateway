@@ -24,27 +24,27 @@ graphql_object!(Category: Context as "Category" |&self| {
         self.id
     }
 
-    field name() -> Vec<Translation> as "Full Name" {
-        self.name.clone()
+    field name() -> &[Translation] as "Full Name" {
+        &self.name
     }
 
-    field meta_field() -> Option<String> as "Meta field" {
-        self.meta_field.clone()
+    field meta_field() -> &Option<String> as "Meta field" {
+        &self.meta_field
     }
     
-    field parent_id() -> Option<i32> as "Parent id" {
-        self.parent_id.clone()
+    field parent_id() -> &Option<i32> as "Parent id" {
+        &self.parent_id
     }
     
-    field level() -> i32 as "Level" {
-        self.level.clone()
+    field level() -> &i32 as "Level" {
+        &self.level
     }
 
-    field children() -> Vec<Category> as "Children categories" {
-        self.children.clone()
+    field children() -> &[Category] as "Children categories" {
+        &self.children
     }
 
-    field get_attributes(&executor) -> FieldResult<Vec<Attribute>> as "Fetches category attributes." {
+    field get_attributes(&executor) -> FieldResult<Option<Vec<Attribute>>> as "Fetches category attributes." {
         let context = executor.context();
         let url = format!("{}/{}/{}/attributes",
             context.config.service_url(Service::Stores),
@@ -54,5 +54,6 @@ graphql_object!(Category: Context as "Category" |&self| {
 
         context.request::<Vec<Attribute>>(Method::Get, url, None)
             .wait()
+            .map(|u| Some(u))
     }
 });

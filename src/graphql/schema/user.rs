@@ -25,43 +25,43 @@ graphql_object!(User: Context as "User" |&self| {
         ID::new(Service::Users, Model::User, self.id).to_string().into()
     }
 
-    field raw_id() -> i32 as "Unique int id"{
-        self.id
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.id
     }
 
-    field email() -> String as "Email" {
-        self.email.clone()
+    field email() -> &str as "Email" {
+        &self.email
     }
 
-    field phone() -> Option<String> as "Phone" {
-        self.phone.clone()
+    field phone() -> &Option<String> as "Phone" {
+        &self.phone
     }
 
-    field first_name() -> Option<String> as "First name" {
-        self.first_name.clone()
+    field first_name() -> &Option<String> as "First name" {
+        &self.first_name
     }
 
-    field last_name() -> Option<String> as "Last name" {
-        self.last_name.clone()
+    field last_name() -> &Option<String> as "Last name" {
+        &self.last_name
     }
 
-    field middle_name() -> Option<String> as "Middle name" {
-        self.middle_name.clone()
+    field middle_name() -> &Option<String> as "Middle name" {
+        &self.middle_name
     }
 
-    field gender() -> Gender as "Gender" {
-        self.gender.clone()
+    field gender() -> &Gender as "Gender" {
+        &self.gender
     }
 
-    field birthdate() -> Option<String> as "Birthdate" {
-        self.birthdate.clone()
+    field birthdate() -> &Option<String> as "Birthdate" {
+        &self.birthdate
     }
 
-    field isActive() -> bool as "If the user was disabled (deleted), isActive is false" {
-        self.is_active
+    field isActive() -> &bool as "If the user was disabled (deleted), isActive is false" {
+        &self.is_active
     }
 
-    field roles(&executor) -> FieldResult<Vec<Role>> as "Fetches roles for user." {
+    field roles(&executor) -> FieldResult<Option<Vec<Role>>> as "Fetches roles for user." {
         let context = executor.context();
 
         let url = format!("{}/{}/{}",
@@ -70,20 +70,20 @@ graphql_object!(User: Context as "User" |&self| {
             self.id);
 
         context.request::<Vec<Role>>(Method::Get, url, None)
-            
             .wait()
+            .map(|u| Some(u))
     }
 
 
-    field user(&executor, id: GraphqlID as "Base64 Id of a user.") -> FieldResult<User> as "Fetches user by id." {
+    field user(&executor, id: GraphqlID as "Base64 Id of a user.") -> FieldResult<Option<User>> as "Fetches user by id." {
         let context = executor.context();
 
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
         context.request::<User>(Method::Get, url, None)
-            
             .wait()
+            .map(|u| Some(u))
     }
 
     field users(&executor, 
@@ -133,7 +133,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Store> as "Fetches store by id." {
+    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();
 
         let url = format!(
@@ -144,8 +144,8 @@ graphql_object!(User: Context as "User" |&self| {
         );
 
         context.request::<Store>(Method::Get, url, None)
-            
             .wait()
+            .map(|u| Some(u))
     }
 
     field stores(&executor, 
@@ -195,7 +195,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field product(&executor, id: i32 as "Int id of a product.") -> FieldResult<Product> as "Fetches product by id." {
+    field product(&executor, id: i32 as "Int id of a product.") -> FieldResult<Option<Product>> as "Fetches product by id." {
         let context = executor.context();
 
         let url = format!(
@@ -206,8 +206,8 @@ graphql_object!(User: Context as "User" |&self| {
         );
 
         context.request::<Product>(Method::Get, url, None)
-            
             .wait()
+            .map(|u| Some(u))
     }
 
     field products(&executor, 
@@ -257,7 +257,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field base_product(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<BaseProduct> as "Fetches base product by id." {
+    field base_product(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
         let context = executor.context();
 
        let url = format!(
@@ -268,8 +268,8 @@ graphql_object!(User: Context as "User" |&self| {
         );
 
         context.request::<BaseProduct>(Method::Get, url, None)
-            
             .wait()
+            .map(|u| Some(u))
     }
 
     field base_products(&executor, 
@@ -319,7 +319,7 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field base_product_with_variants(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<BaseProductWithVariants> as "Fetches base product with variants by id." {
+    field base_product_with_variants(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProductWithVariants>> as "Fetches base product with variants by id." {
         let context = executor.context();
 
         let url = format!(
@@ -330,11 +330,11 @@ graphql_object!(User: Context as "User" |&self| {
         );
 
         context.request::<BaseProductWithVariants>(Method::Get, url, None)
-            
             .wait()
+            .map(|u| Some(u))
     }
 
-    field cart(&executor) -> FieldResult<Cart> as "Fetches user cart" {
+    field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches user cart" {
         let context = executor.context();
 
         let url = format!(
@@ -343,32 +343,32 @@ graphql_object!(User: Context as "User" |&self| {
         );
 
         context.request::<OrdersCart>(Method::Get, url, None)
-            
             .map(cart_from_orders_reply)
             .wait()
+            .map(|u| Some(u))
     }
 });
 
 graphql_object!(Connection<User, PageInfo>: Context as "UsersConnection" |&self| {
     description:"Users Connection"
 
-    field edges() -> Vec<Edge<User>> {
-        self.edges.to_vec()
+    field edges() -> &[Edge<User>] {
+        &self.edges
     }
 
-    field page_info() -> PageInfo {
-        self.page_info.clone()
+    field page_info() -> &PageInfo {
+        &self.page_info
     }
 });
 
 graphql_object!(Edge<User>: Context as "UsersEdge" |&self| {
     description:"Users Edge"
 
-    field cursor() -> juniper::ID {
-        self.cursor.clone()
+    field cursor() -> &juniper::ID {
+        &self.cursor
     }
 
-    field node() -> User {
-        self.node.clone()
+    field node() -> &User {
+        &self.node
     }
 });

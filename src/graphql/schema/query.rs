@@ -56,8 +56,8 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
-    field static_node_id() -> FieldResult<StaticNodeIds> as "Static node id dictionary." {
-        Ok(StaticNodeIds{})
+    field static_node_id() -> StaticNodeIds as "Static node id dictionary." {
+        StaticNodeIds{}
     }
 
     field me(&executor) -> FieldResult<Option<User>> as "Fetches viewer for users." {
@@ -70,18 +70,18 @@ graphql_object!(Query: Context |&self| {
                     .map(|u| Some(u))
     }
 
-    field node(&executor, id: GraphqlID as "Base64 Id of a node.") -> FieldResult<Node> as "Fetches graphql interface node by Base64 id."  {
+    field node(&executor, id: GraphqlID as "Base64 Id of a node.") -> FieldResult<Option<Node>> as "Fetches graphql interface node by Base64 id."  {
         let context = executor.context();
         if id.to_string() == QUERY_NODE_ID.to_string() {
-             Ok(Node::Query(Query{}))
+             Ok(Some(Node::Query(Query{})))
         } else {
             let identifier = ID::from_str(&*id)?;
             match (&identifier.service, &identifier.model) {
                 (&Service::Users, &Model::User) => {
                                 context.request::<User>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::User(res))
-                                    
                                     .wait()
+                                    .map(|u| Some(u))
                 },
                 (&Service::Users, _) => {
                                 Err(FieldError::new(
@@ -92,32 +92,32 @@ graphql_object!(Query: Context |&self| {
                 (&Service::Stores, &Model::Store) => {
                                 context.request::<Store>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::Store(res))
-                                    
                                     .wait()
+                                    .map(|u| Some(u))
                 },
                 (&Service::Stores, &Model::Product) => {
                                 context.request::<Product>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::Product(res))
-                                    
                                     .wait()
+                                    .map(|u| Some(u))
                 },
                 (&Service::Stores, &Model::BaseProduct) => {
                                 context.request::<BaseProduct>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::BaseProduct(res))
-                                    
                                     .wait()
+                                    .map(|u| Some(u))
                 },
                 (&Service::Stores, &Model::Category) => {
                                 context.request::<Category>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::Category(res))
-                                    
                                     .wait()
+                                    .map(|u| Some(u))
                 },
                 (&Service::Stores, &Model::Attribute) => {
                                 context.request::<Attribute>(Method::Get, identifier.url(&context.config), None)
                                     .map(|res| Node::Attribute(res))
-                                    
                                     .wait()
+                                    .map(|u| Some(u))
                 },
                 (&Service::Stores, _) => {
                                 Err(FieldError::new(
@@ -135,16 +135,16 @@ graphql_object!(Query: Context |&self| {
         }
     }
 
-    field languages(&executor) -> FieldResult<Vec<LanguageGraphQl>> as "Fetches languages." {
-        Ok(Language::as_vec())
+    field languages(&executor) -> Vec<LanguageGraphQl> as "Fetches languages." {
+        Language::as_vec()
     }
 
 
-    field currencies(&executor) -> FieldResult<Vec<CurrencyGraphQl>> as "Fetches currencies." {
-        Ok(Currency::as_vec())
+    field currencies(&executor) -> Vec<CurrencyGraphQl> as "Fetches currencies." {
+        Currency::as_vec()
     }
 
-    field categories(&executor) -> FieldResult<Category> as "Fetches categories tree." {
+    field categories(&executor) -> FieldResult<Option<Category>> as "Fetches categories tree." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
@@ -152,9 +152,10 @@ graphql_object!(Query: Context |&self| {
 
         context.request::<Category>(Method::Get, url, None)
             .wait()
+            .map(|u| Some(u))
     }
     
-    field attributes(&executor) -> FieldResult<Vec<Attribute>> as "Fetches all attributes." {
+    field attributes(&executor) -> FieldResult<Option<Vec<Attribute>>> as "Fetches all attributes." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
@@ -162,17 +163,18 @@ graphql_object!(Query: Context |&self| {
 
         context.request::<Vec<Attribute>>(Method::Get, url, None)
             .wait()
+            .map(|u| Some(u))
     }
 
-    field search(&executor) -> FieldResult<Search> as "Search endpoint" {
-        Ok(Search{})
+    field search(&executor) -> Search as "Search endpoint" {
+        Search{}
     }
 
-    field main_page(&executor) -> FieldResult<MainPage> as "Main page endpoint" {
-        Ok(MainPage{})
+    field main_page(&executor) -> MainPage as "Main page endpoint" {
+        MainPage{}
     }    
 
-    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Store> as "Fetches store by id." {
+    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();
 
         let url = format!(
@@ -184,9 +186,10 @@ graphql_object!(Query: Context |&self| {
 
         context.request::<Store>(Method::Get, url, None)
             .wait()
+            .map(|u| Some(u))
     }
 
-    field base_product_with_variants(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<BaseProductWithVariants> as "Fetches base product with variants by id." {
+    field base_product_with_variants(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProductWithVariants>> as "Fetches base product with variants by id." {
         let context = executor.context();
 
         let url = format!(
@@ -198,6 +201,7 @@ graphql_object!(Query: Context |&self| {
 
         context.request::<BaseProductWithVariants>(Method::Get, url, None)
             .wait()
+            .map(|u| Some(u))
     }
 
 });
