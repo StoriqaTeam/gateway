@@ -59,7 +59,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let url = format!("{}/{}/search/without_category/filters?name={}",
                         context.config.service_url(Service::Stores),
                         Model::Product.to_url(),
-                        search_term.name
+                        search_term.name.replace(" ", "%20")
                     );
                 context.request::<SearchFiltersWithoutCategory>(Method::Post, url, None)
                     .map(|search_filters| {
@@ -123,7 +123,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let url = format!("{}/{}/search/in_category/filters?name={}&category_id={}",
                         context.config.service_url(Service::Stores),
                         Model::Product.to_url(),
-                        search_term.name,
+                        search_term.name.replace(" ", "%20"),
                         search_term.category_id
                     );
                 context.request::<SearchFiltersInCategory>(Method::Post, url, None)
