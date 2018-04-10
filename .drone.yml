@@ -6,6 +6,9 @@ pipeline:
       - cargo build --release --locked
     volumes:
       - /mnt:/mnt
+    cache:
+      mount:
+        - target/deps
   package:
     image: plugins/docker
     repo: storiqateam/stq-gw
