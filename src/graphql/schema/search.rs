@@ -320,39 +320,39 @@ graphql_object!(Search: Context as "Search" |&self| {
 graphql_object!(SearchOptions: Context as "SearchOptions" |&self| {
     description: "Searching options endpoint."
     
-    field attr_filters() -> Vec<AttributeFilter> as "Attribute filters."{
-        self.attr_filters.clone()
+    field attr_filters() -> &[AttributeFilter] as "Attribute filters."{
+        &self.attr_filters
     }
 
-    field price_filter() -> Option<RangeFilter> as "Price filter."{
-        self.price_range.clone()
+    field price_filter() -> &Option<RangeFilter> as "Price filter."{
+        &self.price_range
     }
     
-    field categories_ids() -> Vec<i32> as "Categories ids."{
-        self.categories_ids.clone()
+    field categories_ids() -> &[i32] as "Categories ids."{
+        &self.categories_ids
     }
 });
 
 graphql_object!(SearchFiltersWithoutCategory: Context as "SearchFiltersWithoutCategory" |&self| {
     description: "SearchFiltersWithoutCategory options endpoint."
     
-    field price_range() -> Option<RangeFilter> as "Price filter."{
-        self.price_range.clone()
+    field price_range() -> &Option<RangeFilter> as "Price filter."{
+        &self.price_range
     }
     
-    field categories() -> Category as "Category."{
-        self.categories.clone()
+    field categories() -> &Category as "Category."{
+        &self.categories
     }
 });
 
 graphql_object!(SearchFiltersInCategory: Context as "SearchFiltersInCategory" |&self| {
     description: "SearchFiltersInCategory options endpoint."
     
-    field attr_filters() -> Vec<AttributeFilter> as "Attribute filters."{
-        self.attr_filters.clone()
+    field attr_filters() -> &[AttributeFilter] as "Attribute filters."{
+        &self.attr_filters
     }
 
-    field price_range() -> Option<RangeFilter> as "Price filter."{
-        self.price_range.clone()
+    field price_range() -> &Option<RangeFilter> as "Price filter."{
+        &self.price_range
     }
 });

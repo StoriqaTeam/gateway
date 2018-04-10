@@ -26,68 +26,68 @@ graphql_object!(Store: Context as "Store" |&self| {
         ID::new(Service::Stores, Model::Store, self.id).to_string().into()
     }
 
-    field raw_id() -> i32 as "Unique int id"{
-        self.id
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.id
     }
 
-    field name() -> Vec<Translation> as "Full Name" {
-        self.name.clone()
+    field name() -> &[Translation] as "Full Name" {
+        &self.name
     }
 
-    field isActive() -> bool as "If the store was disabled (deleted), isActive is false" {
-        self.is_active
+    field isActive() -> &bool as "If the store was disabled (deleted), isActive is false" {
+        &self.is_active
     }
 
-    field short_description() -> Vec<Translation> as "Short description" {
-        self.short_description.clone()
+    field short_description() -> &[Translation] as "Short description" {
+        &self.short_description
     }
 
-    field long_description() -> Option<Vec<Translation>> as "Long description" {
-        self.long_description.clone()
+    field long_description() -> &Option<Vec<Translation>> as "Long description" {
+        &self.long_description
     }
 
-    field slug() -> String as "Slug" {
-        self.slug.clone()
+    field slug() -> &str as "Slug" {
+        &self.slug
     }
 
-    field cover() -> Option<String> as "Cover" {
-        self.cover.clone()
+    field cover() -> &Option<String> as "Cover" {
+        &self.cover
     }
 
-    field logo() -> Option<String> as "Logo" {
-        self.logo.clone()
+    field logo() -> &Option<String> as "Logo" {
+        &self.logo
     }
 
-    field phone() -> Option<String> as "Phone" {
-        self.phone.clone()
+    field phone() -> &Option<String> as "Phone" {
+        &self.phone
     }
 
-    field email() -> Option<String> as "Email" {
-        self.email.clone()
+    field email() -> &Option<String> as "Email" {
+        &self.email
     }
 
-    field address() -> Option<String> as "Address" {
-        self.address.clone()
+    field address() -> &Option<String> as "Address" {
+        &self.address
     }
 
-    field facebook_url() -> Option<String> as "Facebook url" {
-        self.facebook_url.clone()
+    field facebook_url() -> &Option<String> as "Facebook url" {
+        &self.facebook_url
     }
 
-    field twitter_url() -> Option<String> as "Twitter url" {
-        self.twitter_url.clone()
+    field twitter_url() -> &Option<String> as "Twitter url" {
+        &self.twitter_url
     }
 
-    field instagram_url() -> Option<String> as "Instagram url" {
-        self.instagram_url.clone()
+    field instagram_url() -> &Option<String> as "Instagram url" {
+        &self.instagram_url
     }
 
-    field default_language() -> Language as "Default language" {
-        self.default_language.clone()
+    field default_language() -> &Language as "Default language" {
+        &self.default_language
     }
 
-    field slogan() -> Option<String> as "Slogan" {
-        self.slogan.clone()
+    field slogan() -> &Option<String> as "Slogan" {
+        &self.slogan
     }
 
     field base_products_with_variants(&executor, 
@@ -159,59 +159,59 @@ graphql_object!(Store: Context as "Store" |&self| {
 graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {
     description:"Stores Connection"
 
-    field edges() -> Vec<Edge<Store>> {
-        self.edges.to_vec()
+    field edges() -> &[Edge<Store>] {
+        &self.edges
     }
 
-    field page_info() -> PageInfo {
-        self.page_info.clone()
+    field page_info() -> &PageInfo {
+        &self.page_info
     }
 });
 
 graphql_object!(Edge<Store>: Context as "StoresEdge" |&self| {
     description:"Stores Edge"
 
-    field cursor() -> juniper::ID {
-        self.cursor.clone()
+    field cursor() -> &juniper::ID {
+        &self.cursor
     }
 
-    field node() -> Store {
-        self.node.clone()
+    field node() -> &Store {
+        &self.node
     }
 });
 
 graphql_object!(Connection<String, PageInfo>: Context as "FullNameConnection" |&self| {
     description:"Name Connection"
 
-    field edges() -> Vec<Edge<String>> {
-        self.edges.to_vec()
+    field edges() -> &[Edge<String>] {
+        &self.edges
     }
 
-    field page_info() -> PageInfo {
-        self.page_info.clone()
+    field page_info() -> &PageInfo {
+        &self.page_info
     }
 });
 
 graphql_object!(Connection<Store, PageInfoWithTotalCount>: Context as "StoresWithTotalCountConnection" |&self| {
     description:"Stores Connection"
 
-    field edges() -> Vec<Edge<Store>> {
-        self.edges.to_vec()
+    field edges() -> &[Edge<Store>] {
+        &self.edges
     }
 
-    field page_info() -> PageInfoWithTotalCount {
-        self.page_info.clone()
+    field page_info() -> &PageInfoWithTotalCount {
+        &self.page_info
     }
 });
 
 graphql_object!(Edge<String>: Context as "FullNameEdge" |&self| {
     description:"Name Edge"
 
-    field cursor() -> juniper::ID {
-        self.cursor.clone()
+    field cursor() -> &juniper::ID {
+        &self.cursor
     }
 
-    field node() -> String {
-        self.node.clone()
+    field node() -> &str {
+        &self.node
     }
 });

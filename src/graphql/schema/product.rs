@@ -17,36 +17,36 @@ graphql_object!(Product: Context as "Product" |&self| {
         ID::new(Service::Stores, Model::Product, self.id).to_string().into()
     }
 
-    field raw_id() -> i32 as "Unique int id"{
-        self.id
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.id
     }
 
-    field is_active() -> bool as "If the product was disabled (deleted), isActive is false" {
-        self.is_active
+    field is_active() -> &bool as "If the product was disabled (deleted), isActive is false" {
+        &self.is_active
     }
 
-    field discount() -> Option<f64> as "Discount" {
-        self.discount.clone()
+    field discount() -> &Option<f64> as "Discount" {
+        &self.discount
     }
 
-    field photo_main() -> Option<String> as "Photo main" {
-        self.photo_main.clone()
+    field photo_main() -> &Option<String> as "Photo main" {
+        &self.photo_main
     }
 
-    field additional_photos() -> Option<Vec<String>> as "Additional photos of the product." {
-        self.additional_photos.clone()
+    field additional_photos() -> &Option<Vec<String>> as "Additional photos of the product." {
+        &self.additional_photos
     }
 
-    field vendor_code() -> Option<String> as "Vendor code" {
-        self.vendor_code.clone()
+    field vendor_code() -> &Option<String> as "Vendor code" {
+        &self.vendor_code
     }
 
-    field cashback() -> Option<f64> as "Cashback" {
-        self.cashback.clone()
+    field cashback() -> &Option<f64> as "Cashback" {
+        &self.cashback
     }
 
-    field price() -> f64 as "Price" {
-        self.price
+    field price() -> &f64 as "Price" {
+        &self.price
     }
 
 });
@@ -54,23 +54,23 @@ graphql_object!(Product: Context as "Product" |&self| {
 graphql_object!(Connection<Product, PageInfo>: Context as "ProductsConnection" |&self| {
     description:"Products Connection"
 
-    field edges() -> Vec<Edge<Product>> {
-        self.edges.to_vec()
+    field edges() -> &[Edge<Product>] {
+        &self.edges
     }
 
-    field page_info() -> PageInfo {
-        self.page_info.clone()
+    field page_info() -> &PageInfo {
+        &self.page_info
     }
 });
 
 graphql_object!(Edge<Product>: Context as "ProductsEdge" |&self| {
     description:"Products Edge"
 
-    field cursor() -> juniper::ID {
-        self.cursor.clone()
+    field cursor() -> &juniper::ID {
+        &self.cursor
     }
 
-    field node() -> Product {
-        self.node.clone()
+    field node() -> &Product {
+        &self.node
     }
 });

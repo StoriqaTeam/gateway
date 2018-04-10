@@ -25,43 +25,43 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         ID::new(Service::Stores, Model::BaseProduct, self.id).to_string().into()
     }
 
-    field raw_id() -> i32 as "Unique int id"{
-        self.id
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.id
     }
 
-    field name() -> Vec<Translation> as "Full Name" {
-        self.name.clone()
+    field name() -> &[Translation] as "Full Name" {
+        &self.name
     }
 
     field is_active() -> bool as "If the product was disabled (deleted), isActive is false" {
         self.is_active
     }
 
-    field short_description() -> Vec<Translation> as "Short description" {
-        self.short_description.clone()
+    field short_description() -> &[Translation] as "Short description" {
+        &self.short_description
     }
 
-    field long_description() -> Option<Vec<Translation>> as "Long Description" {
-        self.long_description.clone()
+    field long_description() -> &Option<Vec<Translation>> as "Long Description" {
+        &self.long_description
     }
     
-    field seo_title() -> Option<Vec<Translation>> as "SEO title" {
-        self.seo_title.clone()
+    field seo_title() -> &Option<Vec<Translation>> as "SEO title" {
+        &self.seo_title
     }
     
-    field seo_description() -> Option<Vec<Translation>> as "SEO Description" {
-        self.seo_description.clone()
+    field seo_description() -> &Option<Vec<Translation>> as "SEO Description" {
+        &self.seo_description
     }
 
-    field currency_id() -> i32 as "Currency Id" {
-        self.currency_id
+    field currency_id() -> &i32 as "Currency Id" {
+        &self.currency_id
     }
     
-    field store_id() -> i32 as "Store Id" {
-        self.store_id
+    field store_id() -> &i32 as "Store Id" {
+        &self.store_id
     }
 
-    field category(&executor) -> FieldResult<Category> as "Category" {
+    field category(&executor) -> FieldResult<Option<Category>> as "Category" {
        let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
@@ -70,34 +70,35 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
 
         context.request::<Category>(Method::Get, url, None)
             .wait()
+            .map(|u| Some(u))
     }
 
-    field views() -> i32 as "Views" {
-        self.views
+    field views() -> &i32 as "Views" {
+        &self.views
     }
 });
 
 graphql_object!(Connection<BaseProduct, PageInfo>: Context as "BaseProductsConnection" |&self| {
     description:"Base Products Connection"
 
-    field edges() -> Vec<Edge<BaseProduct>> {
-        self.edges.to_vec()
+    field edges() -> &[Edge<BaseProduct>] {
+        &self.edges
     }
 
-    field page_info() -> PageInfo {
-        self.page_info.clone()
+    field page_info() -> &PageInfo {
+        &self.page_info
     }
 });
 
 graphql_object!(Edge<BaseProduct>: Context as "BaseProductsEdge" |&self| {
     description:"Base Products Edge"
 
-    field cursor() -> juniper::ID {
-        self.cursor.clone()
+    field cursor() -> &juniper::ID {
+        &self.cursor
     }
 
-    field node() -> BaseProduct {
-        self.node.clone()
+    field node() -> &BaseProduct {
+        &self.node
     }
 });
 
@@ -108,16 +109,16 @@ graphql_object!(BaseProductWithVariants: Context as "BaseProductWithVariants" |&
         encode(&format!("{}|{}|{}", Service::Stores, "baseproductwithvariants",  self.base_product.id)).into()
     }
 
-    field raw_id() -> i32 as "Unique int id"{
-        self.base_product.id
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.base_product.id
     }
 
-    field base_product() -> BaseProduct as "Base product info." {
-        self.base_product.clone()
+    field base_product() -> &BaseProduct as "Base product info." {
+        &self.base_product
     }
 
-    field variants() -> Vec<VariantsWithAttributes> as "Variants info." {
-        self.variants.clone()
+    field variants() -> &[VariantsWithAttributes] as "Variants info." {
+        &self.variants
     }
 
     field base_products_same_store(&executor, 
@@ -177,16 +178,16 @@ graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&se
         encode(&format!("{}|{}|{}", Service::Stores, "variantswithattributes",  self.product.id)).into()
     }
 
-    field raw_id() -> i32 as "Unique int id"{
-        self.product.id
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.product.id
     }
 
-    field product() -> Product as "Base product info." {
-        self.product.clone()
+    field product() -> &Product as "Base product info." {
+        &self.product
     }
 
-    field attributes() -> Vec<AttrValue> as "Variants info." {
-        self.attrs.clone()
+    field attributes() -> &[AttrValue] as "Variants info." {
+        &self.attrs
     }
 
 });
@@ -194,47 +195,47 @@ graphql_object!(VariantsWithAttributes: Context as "VariantsWithAttributes" |&se
 graphql_object!(Connection<BaseProductWithVariants, PageInfo>: Context as "BaseProductWithVariantsConnection" |&self| {
     description:"Base Products Connection"
 
-    field edges() -> Vec<Edge<BaseProductWithVariants>> {
-        self.edges.to_vec()
+    field edges() -> &[Edge<BaseProductWithVariants>] {
+        &self.edges
     }
 
-    field page_info() -> PageInfo {
-        self.page_info.clone()
+    field page_info() -> &PageInfo {
+        &self.page_info
     }
 });
 
 graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>: Context as "BaseProductWithVariantsSearchFilterWithoutCategoryConnection" |&self| {
     description:"Base Products Connection"
 
-    field edges() -> Vec<Edge<BaseProductWithVariants>> {
-        self.edges.to_vec()
+    field edges() -> &[Edge<BaseProductWithVariants>] {
+        &self.edges
     }
 
-    field page_info() -> PageInfoWithSearchFilters<SearchFiltersWithoutCategory> {
-        self.page_info.clone()
+    field page_info() -> &PageInfoWithSearchFilters<SearchFiltersWithoutCategory> {
+        &self.page_info
     }
 });
 
 graphql_object!(Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersInCategory>>: Context as "BaseProductWithVariantsSearchFilterInCategoryConnection" |&self| {
     description:"Base Products Connection"
 
-    field edges() -> Vec<Edge<BaseProductWithVariants>> {
-        self.edges.to_vec()
+    field edges() -> &[Edge<BaseProductWithVariants>] {
+        &self.edges
     }
 
-    field page_info() -> PageInfoWithSearchFilters<SearchFiltersInCategory> {
-        self.page_info.clone()
+    field page_info() -> &PageInfoWithSearchFilters<SearchFiltersInCategory> {
+        &self.page_info
     }
 });
 
 graphql_object!(Edge<BaseProductWithVariants>: Context as "BaseProductWithVariantsEdge" |&self| {
     description:"Base Products Edge"
 
-    field cursor() -> juniper::ID {
-        self.cursor.clone()
+    field cursor() -> &juniper::ID {
+        &self.cursor
     }
 
-    field node() -> BaseProductWithVariants {
-        self.node.clone()
+    field node() -> &BaseProductWithVariants {
+        &self.node
     }
 });

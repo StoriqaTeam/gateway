@@ -21,20 +21,20 @@ graphql_object!(Attribute: Context as "Attribute" |&self| {
         ID::new(Service::Stores, Model::Attribute, self.id).to_string().into()
     }
 
-    field raw_id() -> i32 as "Unique int id"{
-        self.id
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.id
     }
 
-    field name() -> Vec<Translation> as "Full Name" {
-        self.name.clone()
+    field name() -> &[Translation] as "Full Name" {
+        &self.name
     }
     
-    field value_type() -> AttributeType as "Attribute Type" {
-        self.value_type.clone()
+    field value_type() -> &AttributeType as "Attribute Type" {
+        &self.value_type
     }
 
-    field meta_field() -> Option<AttributeMetaField> as "Meta field of product" {
-        self.meta_field.clone()
+    field meta_field() -> &Option<AttributeMetaField> as "Meta field of product" {
+        &self.meta_field
     }
 });
 
@@ -52,12 +52,12 @@ graphql_object!(AttrValue: Context as "AttributeValue" |&self| {
             .map(|u| Some(u))
     }
     
-    field value() -> String as "Attribute value of product variant" {
-        self.value.clone()
+    field value() -> &str as "Attribute value of product variant" {
+        &self.value
     }
 
-    field meta_field() -> Option<String> as "Meta field of product attribute value" {
-        self.meta_field.clone()
+    field meta_field() -> &Option<String> as "Meta field of product attribute value" {
+        &self.meta_field
     }
 });
 
@@ -75,28 +75,28 @@ graphql_object!(AttributeFilter: Context as "AttributeFilter" |&self| {
             .map(|u| Some(u))
     }
     
-    field equal() -> Option<EqualFilter> as "Values to be equal" {
-        self.equal.clone()
+    field equal() -> &Option<EqualFilter> as "Values to be equal" {
+        &self.equal
     }
 
-    field range() -> Option<RangeFilter> as "Range values to compare" {
-        self.range.clone()
+    field range() -> &Option<RangeFilter> as "Range values to compare" {
+        &self.range
     }
 });
 
 graphql_object!(AttributeMetaField: Context as "AttributeMetaField" |&self| {
     description: "Attribute Meta Field"
 
-    field values() -> Option<Vec<String>> as "Possible values of attribute" {
-        self.values.clone()
+    field values() -> &Option<Vec<String>> as "Possible values of attribute" {
+        &self.values
     }
 
     field translated_values() -> Vec<Vec<Translation>> as "Possible values of attribute with translation" {
         self.translated_values.clone().unwrap_or_default()
     }
 
-    field ui_element() -> Option<UIType> as "UI element type" {
-        self.ui_element.clone()
+    field ui_element() -> &Option<UIType> as "UI element type" {
+        &self.ui_element
     }
 });
 

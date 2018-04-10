@@ -1,6 +1,6 @@
 //! File containing node object of graphql schema
 use juniper::ID as GraphqlID;
-use juniper::FieldResult;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
@@ -50,7 +50,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
 
 graphql_object!(StaticNodeIds: Context as "StaticNodeIds" |&self| {
 
-    field query_id(&executor) -> FieldResult<i32> as "Static query id." {
-        Ok(QUERY_NODE_ID)
+    field query_id(&executor) -> i32 as "Static query id." {
+        QUERY_NODE_ID
     }
 });
