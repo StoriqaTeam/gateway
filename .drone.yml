@@ -27,5 +27,6 @@ pipeline:
       - ${DRONE_BRANCH}
       - ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
     dockerfile: docker/Dockerfile.run
+    auth: amFja3RoZXN0cmlwcGVyOmExYTFhMWEx
     volumes:
       - /mnt:/mnt
