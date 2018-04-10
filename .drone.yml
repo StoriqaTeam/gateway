@@ -26,7 +26,8 @@ pipeline:
     tags:
       - ${DRONE_BRANCH}
       - ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
-    secrets: [ dockerhub_user, dockerhub_pass ]
+    username: stqcommon
+    password: "Tz-q6qDL#d3Mz8hm"
     dockerfile: docker/Dockerfile.run
     volumes:
       - /mnt:/mnt
