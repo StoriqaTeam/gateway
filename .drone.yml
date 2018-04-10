@@ -26,8 +26,16 @@ pipeline:
     tags:
       - ${DRONE_BRANCH}
       - ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
+      secrets: [ dockerhub_user, dockerhub_pass ]
     dockerfile: docker/Dockerfile.run
-    username: stqcommon
-    password: "Tz-q6qDL#d3Mz8hm"
     volumes:
       - /mnt:/mnt
+  #deploy:
+    #image: quay.io/honestbee/drone-kubernetes
+    #kubernetes_server: https://api.stage.stq.cloud
+    #kubernetes_token: ${k8s_token}
+    #namespace: default
+    #deployment: gateway
+    #repo: storiqateam/stq-gw
+    #container: gateway
+    #tag: ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
