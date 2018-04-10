@@ -1,7 +1,11 @@
 pipeline:
-  cache:
+  restore-cache:
+    image: drillster/drone-volume-cache
+    restore: true
     mount:
-      - /drone/target/deps
+      - ./target/deps
+    volumes:
+      - /tmp/cache:/cache
   build:
     image: rust:1.24.1-stretch
     commands:
@@ -9,6 +13,13 @@ pipeline:
       - cargo build --release --locked
     volumes:
       - /mnt:/mnt
+  rebuild-cache:
+    image: drillster/drone-volume-cache
+    rebuild: true
+    mount:
+      - ./target/deps
+    volumes:
+      - /tmp/cache:/cache
   package:
     image: plugins/docker
     repo: storiqateam/stq-gw
