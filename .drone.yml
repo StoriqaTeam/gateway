@@ -31,6 +31,8 @@ pipeline:
     dockerfile: docker/Dockerfile.run
     volumes:
       - /mnt:/mnt
+    when:
+      event: push
   deploy2stage:
     image: quay.io/honestbee/drone-kubernetes
     kubernetes_server: https://api.stage.stq.cloud
@@ -47,9 +49,12 @@ pipeline:
     webhook: https://hooks.slack.com/services/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
     channel: back
     icon_url: https://drone.io/favicon.ico
+    username: cd.stq.cloud
     template: >
       {{#success build.status}}
-        build {{build.number}} succeeded. Good job.
+        Build {{build.number}} for {{repo.name}} branch {{build.branch}} succeeded.
       {{else}}
-        build {{build.number}} failed. Fix me please.
+        Build {{build.number}} for {{repo.name}} branch {{build.branch}} failed.
       {{/success}}
+    when:
+      event: push
