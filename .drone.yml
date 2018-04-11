@@ -40,3 +40,16 @@ pipeline:
     repo: storiqateam/stq-gw
     container: gateway
     tag: ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
+    when:
+      branch: [master, stage]
+  notify_slack:
+    image: plugins/slack
+    webhook: https://hooks.slack.com/services/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
+    channel: back
+    icon_url: https://drone.io/favicon.ico
+    template: >
+      {{#success build.status}}
+        build {{build.number}} succeeded. Good job.
+      {{else}}
+        build {{build.number}} failed. Fix me please.
+      {{/success}}
