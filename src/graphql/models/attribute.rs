@@ -15,7 +15,7 @@ pub struct Attribute {
 pub struct AttributeMetaField {
     pub values: Option<Vec<String>>,
     pub translated_values: Option<Vec<Vec<Translation>>>,
-    pub ui_element: Option<UIType>,
+    pub ui_element: UIType,
 }
 
 #[derive(GraphQLEnum, Deserialize, Serialize, Clone, Debug, PartialEq)]
@@ -35,7 +35,7 @@ pub struct AttributeMetaFieldInput {
     #[graphql(description = "Possible values of attribute with translation")]
     pub translated_values: Option<Vec<Vec<TranslationInput>>>,
     #[graphql(description = "UI element type ")]
-    pub ui_element: Option<UIType>,
+    pub ui_element: UIType,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
