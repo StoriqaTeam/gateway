@@ -96,7 +96,7 @@ graphql_object!(AttributeMetaField: Context as "AttributeMetaField" |&self| {
         vals.into_iter().map(|v| TranslatedValue {translations: v}).collect()
     }
 
-    field ui_element() -> &Option<UIType> as "UI element type" {
+    field ui_element() -> &UIType as "UI element type" {
         &self.ui_element
     }
 });
