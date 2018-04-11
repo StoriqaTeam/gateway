@@ -1,25 +1,9 @@
 pipeline:
-  restore-cache:
-    image: drillster/drone-volume-cache
-    restore: true
-    mount:
-      - ./target/release
-    volumes:
-      - /tmp/cache:/cache
   build:
     image: rust:1.24.1-stretch
     commands:
       - cargo install cargo-watch
       - cargo build --release --locked
-    volumes:
-      - /mnt:/mnt
-  rebuild-cache:
-    image: drillster/drone-volume-cache
-    rebuild: true
-    mount:
-      - ./target/release
-    volumes:
-      - /tmp/cache:/cache
   package:
     image: plugins/docker
     repo: storiqateam/stq-gw
@@ -29,8 +13,12 @@ pipeline:
     username: stqcommon
     password: "Tz-q6qDL#d3Mz8hm"
     dockerfile: docker/Dockerfile.run
-    volumes:
-      - /mnt:/mnt
+    when:
+      event: push
+  cleanup:
+    image: rust:1.24.1-stretch
+    commands:
+      - cargo clean
   deploy2stage:
     image: quay.io/honestbee/drone-kubernetes
     kubernetes_server: https://api.stage.stq.cloud
@@ -40,3 +28,19 @@ pipeline:
     repo: storiqateam/stq-gw
     container: gateway
     tag: ${DRONE_BRANCH}${DRONE_BUILD_NUMBER}
+    when:
+      branch: [master, stage]
+  notify_slack:
+    image: plugins/slack
+    webhook: https://hooks.slack.com/services/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
+    channel: back
+    icon_url: https://drone.io/favicon.ico
+    username: cd.stq.cloud
+    template: >
+      {{#success build.status}}
+        Build {{build.number}} for {{repo.name}} branch {{build.branch}} succeeded.
+      {{else}}
+        Build {{build.number}} for {{repo.name}} branch {{build.branch}} failed.
+      {{/success}}
+    when:
+      event: push
