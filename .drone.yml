@@ -1,25 +1,9 @@
 pipeline:
-  restore-cache:
-    image: drillster/drone-volume-cache
-    restore: true
-    mount:
-      - ./target/release
-    volumes:
-      - /tmp/cache:/cache
   build:
     image: rust:1.24.1-stretch
     commands:
       - cargo install cargo-watch
       - cargo build --release --locked
-    volumes:
-      - /mnt:/mnt
-  rebuild-cache:
-    image: drillster/drone-volume-cache
-    rebuild: true
-    mount:
-      - ./target/release
-    volumes:
-      - /tmp/cache:/cache
   package:
     image: plugins/docker
     repo: storiqateam/stq-gw
@@ -29,8 +13,6 @@ pipeline:
     username: stqcommon
     password: "Tz-q6qDL#d3Mz8hm"
     dockerfile: docker/Dockerfile.run
-    volumes:
-      - /mnt:/mnt
     when:
       event: push
   deploy2stage:
