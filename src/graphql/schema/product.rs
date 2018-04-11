@@ -1,6 +1,11 @@
 //! File containing product object of graphql schema
+
 use juniper;
 use juniper::ID as GraphqlID;
+use juniper::FieldResult;
+use hyper::Method;
+use futures::Future;
+ 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
@@ -47,6 +52,19 @@ graphql_object!(Product: Context as "Product" |&self| {
 
     field price() -> &f64 as "Price" {
         &self.price
+    }
+
+    field attributes(&executor) -> FieldResult<Option<Vec<AttrValue>>> as "Variants" {
+       let context = executor.context();
+        let url = format!("{}/{}/{}/attributes",
+            context.config.service_url(Service::Stores),
+            Model::Product.to_url(),
+            self.id);
+
+        context.request::<Vec<AttrValue>>(Method::Get, url, None)
+            .wait()
+            .or_else(|_| Ok(vec![]))
+            .map(|u| Some(u))
     }
 
 });

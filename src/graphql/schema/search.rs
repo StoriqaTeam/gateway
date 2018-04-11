@@ -22,7 +22,7 @@ graphql_object!(Search: Context as "Search" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchProductWithoutCategoryInput as "Search pattern") 
-            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>>> as "Find products by name using relay connection." {
+            -> FieldResult<Option<Connection<BaseProduct, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
 
@@ -36,16 +36,16 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         let url = format!("{}/{}/search/without_category?offset={}&count={}",
             context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
+            Model::BaseProduct.to_url(),
             offset,
             count + 1
             );
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
             .map (|products| {
-                let mut product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
+                let mut product_edges: Vec<Edge<BaseProduct>> =  vec![];
                 for i in 0..products.len() {
                     let edge = Edge::new(
                             juniper::ID::from( (i as i32 + offset).to_string()),
@@ -58,7 +58,7 @@ graphql_object!(Search: Context as "Search" |&self| {
             .and_then (|mut product_edges| {
                 let url = format!("{}/{}/search/without_category/filters?name={}",
                         context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
+                        Model::BaseProduct.to_url(),
                         search_term.name.replace(" ", "%20")
                     );
                 context.request::<SearchFiltersWithoutCategory>(Method::Post, url, None)
@@ -87,7 +87,7 @@ graphql_object!(Search: Context as "Search" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchProductInsideCategoryInput as "Search pattern") 
-            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersInCategory>>>> as "Find products by name using relay connection." {
+            -> FieldResult<Option<Connection<BaseProduct, PageInfoWithSearchFilters<SearchFiltersInCategory>>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
 
@@ -101,15 +101,15 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         let url = format!("{}/{}/search/in_category?offset={}&count={}",
             context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
+            Model::BaseProduct.to_url(),
             offset,
             count + 1
             );
         let body = serde_json::to_string(&search_term)?;
 
-        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
             .map (|products| {
-                let mut product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
+                let mut product_edges: Vec<Edge<BaseProduct>> =  vec![];
                 for i in 0..products.len() {
                     let edge = Edge::new(
                             juniper::ID::from( (i as i32 + offset).to_string()),
@@ -122,7 +122,7 @@ graphql_object!(Search: Context as "Search" |&self| {
             .and_then (|mut product_edges| {
                 let url = format!("{}/{}/search/in_category/filters?name={}&category_id={}",
                         context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
+                        Model::BaseProduct.to_url(),
                         search_term.name.replace(" ", "%20"),
                         search_term.category_id
                     );
@@ -166,7 +166,7 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         let url = format!("{}/{}/auto_complete?offset={}&count={}",
             context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
+            Model::BaseProduct.to_url(),
             offset,
             count + 1,
             );

@@ -21,7 +21,7 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset from begining", 
         search_term : MostViewedProductsInput as "Most viewed search pattern") 
-            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfo>>> as "Find most viewed base products each one contains one variant." {
+            -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Find most viewed base products each one contains one variant." {
         let context = executor.context();
 
         let offset = after
@@ -33,16 +33,16 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
 
         let url = format!("{}/{}/most_viewed?offset={}&count={}",
             context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
+            Model::BaseProduct.to_url(),
             offset,
             count + 1
             );
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
             .map (|base_products| {
-                let mut base_product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
+                let mut base_product_edges: Vec<Edge<BaseProduct>> =  vec![];
                 for i in 0..base_products.len() {
                     let edge = Edge::new(
                             juniper::ID::from( (i as i32 + offset).to_string()),
@@ -73,7 +73,7 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset from begining", 
         search_term : MostDiscountProductsInput as "Most discount search pattern") 
-            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfo>>> as "Find base products each one with most discount variant." {
+            -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Find base products each one with most discount variant." {
         let context = executor.context();
 
         let offset = after
@@ -85,16 +85,16 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
 
         let url = format!("{}/{}/most_discount?offset={}&count={}",
             context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
+            Model::BaseProduct.to_url(),
             offset,
             count + 1
             );
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
             .map (|base_products| {
-                let mut base_product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
+                let mut base_product_edges: Vec<Edge<BaseProduct>> =  vec![];
                 for i in 0..base_products.len() {
                     let edge = Edge::new(
                             juniper::ID::from( (i as i32 + offset).to_string()),

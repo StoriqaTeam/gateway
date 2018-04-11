@@ -103,3 +103,37 @@ pub struct DeactivateProductInput {
     #[graphql(description = "Id of a product.")]
     pub id: GraphqlID,
 }
+
+
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Variants {
+    pub products: Vec<Product>
+}
+
+impl Variants {
+    pub fn new(products: Vec<Product>) -> Self {
+        Self {
+            products
+        }
+    }
+
+    pub fn get_most_discount(&self) -> Option<&Product> {
+        self.products
+            .iter()
+            .filter_map(|p| {
+                if let Some(_) = p.discount {
+                    Some(p)
+                } else {
+                    None
+                }
+            })
+            .max_by_key(|p| (p.discount.unwrap() * 1000f64).round() as i64)
+    }
+    
+    pub fn get_first(&self) -> Option<&Product> {
+        self.products
+            .iter()
+            .nth(0)
+    }
+}

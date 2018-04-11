@@ -323,21 +323,6 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
-    field base_product_with_variants(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProductWithVariants>> as "Fetches base product with variants by id." {
-        let context = executor.context();
-
-        let url = format!(
-            "{}/{}/{}/with_variants",
-            &context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
-            id.to_string()
-        );
-
-        context.request::<BaseProductWithVariants>(Method::Get, url, None)
-            .wait()
-            .map(|u| Some(u))
-    }
-
     field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches user cart" {
         let context = executor.context();
 
