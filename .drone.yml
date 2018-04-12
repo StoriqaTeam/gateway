@@ -22,7 +22,7 @@ pipeline:
     password: "Tz-q6qDL#d3Mz8hm"
     dockerfile: docker/Dockerfile.run
     when:
-      event: push
+      event: [push, tag, deployment]
   cleanup:
     image: rust:1.24.1-stretch
     commands:
