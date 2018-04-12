@@ -44,7 +44,7 @@ pipeline:
       - sleep 10
       - apk update
       - apk add curl
-      - curl -sf 'http://nightly.stq.cloud:60088/graphql' -H 'Content-Type: application/json' -d '{"query":"{ apiVersion }","variables":null,"operationName":null}'
+      - "curl -sf 'http://nightly.stq.cloud:60088/graphql' -H 'Content-Type: application/json' -d '{\"query\":\"{ apiVersion }\",\"variables\":null,\"operationName\":null}'"
     when:
       branch: master
   deploy2stage:
