@@ -1,4 +1,5 @@
 use juniper;
+use super::*;
 
 #[derive(Clone, Debug)]
 pub struct Edge<T> {
@@ -33,10 +34,10 @@ pub struct PageInfoWithTotalCount {
 }
 
 #[derive(Clone, Debug)]
-pub struct PageInfoWithSearchFilters<T> {
+pub struct PageInfoWithSearchFilters {
     pub has_next_page: bool,
     pub has_previous_page: bool,
-    pub search_filters: Option<T>,
+    pub search_filters: Option<SearchFilters>,
     pub start_cursor: Option<juniper::ID>,
     pub end_cursor: Option<juniper::ID>,
 }
