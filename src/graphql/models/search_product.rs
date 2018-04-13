@@ -33,9 +33,15 @@ pub struct MostDiscountProductsInput {
     pub options: Option<SearchOptionsInput>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct SearchFilters {
-    pub price_range: Option<RangeFilter>,
-    pub attr_filters: Option<Vec<AttributeFilter>>,
-    pub categories: Category,
+    pub search_term: SearchProductInput,
+}
+
+impl SearchFilters {
+    pub fn new(search_term: SearchProductInput) -> Self {
+        Self {
+            search_term
+        }
+    }
 }

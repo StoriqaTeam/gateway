@@ -52,31 +52,22 @@ graphql_object!(Search: Context as "Search" |&self| {
                             products[i].clone()
                         );
                     product_edges.push(edge);
-                } 
-                product_edges
-            })
-            .and_then (|mut product_edges| {
-                let url = format!("{}/{}/search/filters",
-                        context.config.service_url(Service::Stores),
-                        Model::BaseProduct.to_url(),
-                    );
-                context.request::<SearchFilters>(Method::Post, url, Some(body))
-                    .map(|search_filters| {
-                        let has_next_page = product_edges.len() as i32 == count + 1;
-                        if has_next_page {
-                            product_edges.pop();
-                        };
-                        let has_previous_page = true;
-                        let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
-                        let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
-                        let page_info = PageInfoWithSearchFilters {
-                            has_next_page, 
-                            has_previous_page, 
-                            search_filters: Some(search_filters),
-                            start_cursor,
-                            end_cursor};
-                        Connection::new(product_edges, page_info)
-                    })
+                }
+                let search_filters = SearchFilters::new(search_term); 
+                let has_next_page = product_edges.len() as i32 == count + 1;
+                if has_next_page {
+                    product_edges.pop();
+                };
+                let has_previous_page = true;
+                let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfoWithSearchFilters {
+                    has_next_page, 
+                    has_previous_page, 
+                    search_filters: Some(search_filters),
+                    start_cursor,
+                    end_cursor};
+                Connection::new(product_edges, page_info)
             })
             .wait()
             .map(|u| Some(u))
@@ -259,16 +250,45 @@ graphql_object!(Search: Context as "Search" |&self| {
 graphql_object!(SearchFilters: Context as "SearchFilters" |&self| {
     description: "SearchFilters options endpoint."
     
-    field price_range() -> &Option<RangeFilter> as "Price filter."{
-        &self.price_range
+    field price_range(&executor) -> FieldResult<Option<RangeFilter>> as "Price filter."{
+        let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/price",
+                        context.config.service_url(Service::Stores),
+                        Model::BaseProduct.to_url(),
+                    );
+        context.request::<RangeFilter>(Method::Post, url, Some(body))
+            .wait()
+            .map(|u| Some(u))
     }
     
-    field categories() -> &Category as "Category."{
-        &self.categories
+    field categories(&executor) -> FieldResult<Option<Category>> as "Category."{
+        let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/category",
+                        context.config.service_url(Service::Stores),
+                        Model::BaseProduct.to_url(),
+                    );
+        context.request::<Category>(Method::Post, url, Some(body))
+            .wait()
+            .map(|u| Some(u))
     }
 
-    field attr_filters() -> &Option<Vec<AttributeFilter>> as "Attribute filters."{
-        &self.attr_filters
+    field attr_filters(&executor) -> FieldResult<Option<Vec<AttributeFilter>>> as "Attribute filters."{
+       let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/attributes",
+                        context.config.service_url(Service::Stores),
+                        Model::BaseProduct.to_url(),
+                    );
+        context.request::<Option<Vec<AttributeFilter>>>(Method::Post, url, Some(body))
+            .wait()
     }
 
 });
