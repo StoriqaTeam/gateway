@@ -26,7 +26,7 @@ graphql_object!(PageInfo: Context as "PageInfo" |&self| {
     
 });
 
-graphql_object!(PageInfoWithTotalCount: Context as "PageInfoWithTotalCount" |&self| {
+graphql_object!(PageInfoStoresSearch: Context as "PageInfoStoresSearch" |&self| {
     description: "Page Info from relay spec: https://facebook.github.io/relay/graphql/connections.htm."
 
     field has_next_page() -> &bool as "has next page"{
@@ -37,8 +37,8 @@ graphql_object!(PageInfoWithTotalCount: Context as "PageInfoWithTotalCount" |&se
         &self.has_previous_page
     }
 
-    field total_count() -> &Option<i32> as "total elements count" {
-        &self.total_count
+    field deprecated "Use search_filters.total_count " total_count() -> Option<i32> as "total elements count" {
+        Some(0)
     }
     
     field end_cursor() -> &Option<juniper::ID> as "end cursor" {
@@ -48,10 +48,14 @@ graphql_object!(PageInfoWithTotalCount: Context as "PageInfoWithTotalCount" |&se
     field start_cursor() -> &Option<juniper::ID> as "start cursor" {
         &self.start_cursor
     }
+
+    field search_filters() -> &StoresSearchFilters as "search options" {
+        &self.search_filters
+    }
     
 });
 
-graphql_object!(PageInfoWithSearchFilters: Context as "PageInfoWithSearchFilters" |&self| {
+graphql_object!(PageInfoProductsSearch: Context as "PageInfoProductsSearch" |&self| {
     description: "Page Info from relay spec: https://facebook.github.io/relay/graphql/connections.htm."
 
     field has_next_page() -> &bool as "has next page"{
@@ -62,7 +66,7 @@ graphql_object!(PageInfoWithSearchFilters: Context as "PageInfoWithSearchFilters
         &self.has_previous_page
     }
 
-    field search_filters() -> &Option<SearchFilters> as "search options" {
+    field search_filters() -> &Option<ProductsSearchFilters> as "search options" {
         &self.search_filters
     }
     

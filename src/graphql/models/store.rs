@@ -131,7 +131,15 @@ pub struct DeactivateStoreInput {
     pub id: GraphqlID,
 }
 
-#[derive(GraphQLInputObject, Serialize, Deserialize, Clone)]
+#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
+pub struct StoresSearchOptionsInput {
+    #[graphql(description = "Category id.")]
+    pub category_id: Option<i32>,
+    #[graphql(description = "Country.")]
+    pub country: Option<String>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
 #[graphql(description = "Search store input object")]
 pub struct SearchStoreInput {
     #[graphql(description = "Name part of the store.")]
@@ -139,4 +147,20 @@ pub struct SearchStoreInput {
     #[serde(skip_serializing)]
     #[graphql(description = "Get stores total count")]
     pub get_stores_total_count: bool,
+    #[graphql(description = "Searching options")]
+    pub options: Option<StoresSearchOptionsInput>,
+}
+
+
+#[derive(Serialize, Clone, Debug)]
+pub struct StoresSearchFilters {
+    pub search_term: SearchStoreInput,
+}
+
+impl StoresSearchFilters {
+    pub fn new(search_term: SearchStoreInput) -> Self {
+        Self {
+            search_term
+        }
+    }
 }

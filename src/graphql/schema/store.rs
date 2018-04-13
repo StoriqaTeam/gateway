@@ -205,14 +205,14 @@ graphql_object!(Connection<String, PageInfo>: Context as "FullNameConnection" |&
     }
 });
 
-graphql_object!(Connection<Store, PageInfoWithTotalCount>: Context as "StoresWithTotalCountConnection" |&self| {
+graphql_object!(Connection<Store, PageInfoStoresSearch>: Context as "StoresWithTotalCountConnection" |&self| {
     description:"Stores Connection"
 
     field edges() -> &[Edge<Store>] {
         &self.edges
     }
 
-    field page_info() -> &PageInfoWithTotalCount {
+    field page_info() -> &PageInfoStoresSearch {
         &self.page_info
     }
 });

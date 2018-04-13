@@ -142,14 +142,14 @@ graphql_object!(Edge<BaseProduct>: Context as "BaseProductsEdge" |&self| {
 });
 
 
-graphql_object!(Connection<BaseProduct, PageInfoWithSearchFilters>: Context as "BaseProductsSearchConnection" |&self| {
+graphql_object!(Connection<BaseProduct, PageInfoProductsSearch>: Context as "BaseProductsSearchConnection" |&self| {
     description:"Base Products Connection"
 
     field edges() -> &[Edge<BaseProduct>] {
         &self.edges
     }
 
-    field page_info() -> &PageInfoWithSearchFilters {
+    field page_info() -> &PageInfoProductsSearch {
         &self.page_info
     }
 });
