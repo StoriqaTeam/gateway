@@ -1,7 +1,7 @@
 FROM debian:stable-slim
 
 RUN mkdir -p /app/config \
-  && RUN adduser --disabled-password --gecos "" --home /app --no-create-home -u 5000 app
+  && adduser --disabled-password --gecos "" --home /app --no-create-home -u 5000 app
 WORKDIR /app
 
 COPY target/release/gateway_runner /app
