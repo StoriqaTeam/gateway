@@ -18,11 +18,11 @@ use graphql::models::*;
 graphql_object!(Search: Context as "Search" |&self| {
     description: "Searching endpoint."
 
-    field find_product_without_category(&executor, 
+    field find_product(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
-        search_term : SearchProductWithoutCategoryInput as "Search pattern") 
-            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersWithoutCategory>>>> as "Find products by name using relay connection." {
+        search_term : SearchProductInput as "Search pattern") 
+            -> FieldResult<Option<Connection<BaseProduct, PageInfoWithSearchFilters>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
 
@@ -34,120 +34,45 @@ graphql_object!(Search: Context as "Search" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/search/without_category?offset={}&count={}",
+        let url = format!("{}/{}/search?offset={}&count={}",
             context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
+            Model::BaseProduct.to_url(),
             offset,
             count + 1
             );
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body.clone()))
             .map (|products| {
-                let mut product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
+                let mut product_edges: Vec<Edge<BaseProduct>> =  vec![];
                 for i in 0..products.len() {
                     let edge = Edge::new(
                             juniper::ID::from( (i as i32 + offset).to_string()),
                             products[i].clone()
                         );
                     product_edges.push(edge);
-                } 
-                product_edges
-            })
-            .and_then (|mut product_edges| {
-                let url = format!("{}/{}/search/without_category/filters?name={}",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        search_term.name.replace(" ", "%20")
-                    );
-                context.request::<SearchFiltersWithoutCategory>(Method::Post, url, None)
-                    .map(|search_filters| {
-                        let has_next_page = product_edges.len() as i32 == count + 1;
-                        if has_next_page {
-                            product_edges.pop();
-                        };
-                        let has_previous_page = true;
-                        let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
-                        let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
-                        let page_info = PageInfoWithSearchFilters {
-                            has_next_page, 
-                            has_previous_page, 
-                            search_filters: Some(search_filters),
-                            start_cursor,
-                            end_cursor};
-                        Connection::new(product_edges, page_info)
-                    })
+                }
+                let search_filters = SearchFilters::new(search_term); 
+                let has_next_page = product_edges.len() as i32 == count + 1;
+                if has_next_page {
+                    product_edges.pop();
+                };
+                let has_previous_page = true;
+                let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfoWithSearchFilters {
+                    has_next_page, 
+                    has_previous_page, 
+                    search_filters: Some(search_filters),
+                    start_cursor,
+                    end_cursor};
+                Connection::new(product_edges, page_info)
             })
             .wait()
             .map(|u| Some(u))
     }
     
-    field find_product_in_category(&executor, 
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining", 
-        search_term : SearchProductInsideCategoryInput as "Search pattern") 
-            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfoWithSearchFilters<SearchFiltersInCategory>>>> as "Find products by name using relay connection." {
-
-        let context = executor.context();
-
-        let offset = after
-            .and_then(|id| i32::from_str(&id).ok())
-            .unwrap_or_default();
-
-
-        let records_limit = context.config.gateway.records_limit;
-        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
-
-        let url = format!("{}/{}/search/in_category?offset={}&count={}",
-            context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
-            offset,
-            count + 1
-            );
-        let body = serde_json::to_string(&search_term)?;
-
-        context.request::<Vec<BaseProductWithVariants>>(Method::Post, url, Some(body))
-            .map (|products| {
-                let mut product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
-                for i in 0..products.len() {
-                    let edge = Edge::new(
-                            juniper::ID::from( (i as i32 + offset).to_string()),
-                            products[i].clone()
-                        );
-                    product_edges.push(edge);
-                } 
-                product_edges
-            })
-            .and_then (|mut product_edges| {
-                let url = format!("{}/{}/search/in_category/filters?name={}&category_id={}",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        search_term.name.replace(" ", "%20"),
-                        search_term.category_id
-                    );
-                context.request::<SearchFiltersInCategory>(Method::Post, url, None)
-                    .map(|search_filters| {
-                        let has_next_page = product_edges.len() as i32 == count + 1;
-                        if has_next_page {
-                            product_edges.pop();
-                        };
-                        let has_previous_page = true;
-                        let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
-                        let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
-                        let page_info = PageInfoWithSearchFilters {
-                            has_next_page, 
-                            has_previous_page, 
-                            search_filters: Some(search_filters),
-                            start_cursor,
-                            end_cursor};
-                        Connection::new(product_edges, page_info)
-                    })
-            })
-            .wait()
-            .map(|u| Some(u))
-    }
-
     field auto_complete_product_name(&executor, 
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
@@ -166,7 +91,7 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         let url = format!("{}/{}/auto_complete?offset={}&count={}",
             context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
+            Model::BaseProduct.to_url(),
             offset,
             count + 1,
             );
@@ -322,42 +247,48 @@ graphql_object!(Search: Context as "Search" |&self| {
 
 });
 
-graphql_object!(SearchOptions: Context as "SearchOptions" |&self| {
-    description: "Searching options endpoint."
+graphql_object!(SearchFilters: Context as "SearchFilters" |&self| {
+    description: "SearchFilters options endpoint."
     
-    field attr_filters() -> &[AttributeFilter] as "Attribute filters."{
-        &self.attr_filters
+    field price_range(&executor) -> FieldResult<Option<RangeFilter>> as "Price filter."{
+        let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/price",
+                        context.config.service_url(Service::Stores),
+                        Model::BaseProduct.to_url(),
+                    );
+        context.request::<RangeFilter>(Method::Post, url, Some(body))
+            .wait()
+            .map(|u| Some(u))
+    }
+    
+    field categories(&executor) -> FieldResult<Option<Category>> as "Category."{
+        let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/category",
+                        context.config.service_url(Service::Stores),
+                        Model::BaseProduct.to_url(),
+                    );
+        context.request::<Category>(Method::Post, url, Some(body))
+            .wait()
+            .map(|u| Some(u))
     }
 
-    field price_filter() -> &Option<RangeFilter> as "Price filter."{
-        &self.price_range
-    }
-    
-    field categories_ids() -> &[i32] as "Categories ids."{
-        &self.categories_ids
-    }
-});
+    field attr_filters(&executor) -> FieldResult<Option<Vec<AttributeFilter>>> as "Attribute filters."{
+       let context = executor.context();
 
-graphql_object!(SearchFiltersWithoutCategory: Context as "SearchFiltersWithoutCategory" |&self| {
-    description: "SearchFiltersWithoutCategory options endpoint."
-    
-    field price_range() -> &Option<RangeFilter> as "Price filter."{
-        &self.price_range
-    }
-    
-    field categories() -> &Category as "Category."{
-        &self.categories
-    }
-});
-
-graphql_object!(SearchFiltersInCategory: Context as "SearchFiltersInCategory" |&self| {
-    description: "SearchFiltersInCategory options endpoint."
-    
-    field attr_filters() -> &[AttributeFilter] as "Attribute filters."{
-        &self.attr_filters
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/attributes",
+                        context.config.service_url(Service::Stores),
+                        Model::BaseProduct.to_url(),
+                    );
+        context.request::<Option<Vec<AttributeFilter>>>(Method::Post, url, Some(body))
+            .wait()
     }
 
-    field price_range() -> &Option<RangeFilter> as "Price filter."{
-        &self.price_range
-    }
 });

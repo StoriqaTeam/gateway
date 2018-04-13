@@ -90,10 +90,11 @@ graphql_object!(Store: Context as "Store" |&self| {
         &self.slogan
     }
 
-    field base_products_with_variants(&executor, 
+    field base_products(&executor, 
         first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset from begining") 
-            -> FieldResult<Option<Connection<BaseProductWithVariants, PageInfo>>> as "Fetches base products of the store." {
+        after = None : Option<GraphqlID> as "Offset from begining",
+        skip_base_prod_id = None : Option<i32> as "Skip base prod id" ) 
+            -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches base products of the store." {
         let context = executor.context();
         
         let offset = after
@@ -103,18 +104,29 @@ graphql_object!(Store: Context as "Store" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!(
-            "{}/{}/{}/products?offset={}&count={}",
-            &context.config.service_url(Service::Stores),
-            Model::Store.to_url(),
-            self.id,
-            offset,
-            count + 1
-        );
+        let url = match skip_base_prod_id {
+            None => format!(
+                    "{}/{}/{}/products?offset={}&count={}",
+                    &context.config.service_url(Service::Stores),
+                    Model::Store.to_url(),
+                    self.id,
+                    offset,
+                    count + 1
+                ),
+            Some(id) => format!(
+                    "{}/{}/{}/products?skip_base_product_id={}&offset={}&count={}",
+                    &context.config.service_url(Service::Stores),
+                    Model::Store.to_url(),
+                    self.id,
+                    id,
+                    offset,
+                    count + 1
+                )
+        };
 
-        context.request::<Vec<BaseProductWithVariants>>(Method::Get, url, None)
+        context.request::<Vec<BaseProduct>>(Method::Get, url, None)
             .map (|base_products| {
-                let mut base_product_edges: Vec<Edge<BaseProductWithVariants>> =  vec![];
+                let mut base_product_edges: Vec<Edge<BaseProduct>> =  vec![];
                 for i in 0..base_products.len() {
                     let edge = Edge::new(
                             juniper::ID::from( (i as i32 + offset).to_string()),

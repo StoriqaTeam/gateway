@@ -189,17 +189,17 @@ graphql_object!(Query: Context |&self| {
             .map(|u| Some(u))
     }
 
-    field base_product_with_variants(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProductWithVariants>> as "Fetches base product with variants by id." {
+    field base_product(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
         let context = executor.context();
 
         let url = format!(
-            "{}/{}/{}/with_variants",
+            "{}/{}/{}",
             &context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             id.to_string()
         );
 
-        context.request::<BaseProductWithVariants>(Method::Get, url, None)
+        context.request::<BaseProduct>(Method::Get, url, None)
             .wait()
             .map(|u| Some(u))
     }
