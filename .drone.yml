@@ -6,7 +6,7 @@ pipeline:
     when:
       event: pull_request
   build:
-    image: rust:1.24.1-stretch
+    image: rust:1.25-stretch
     commands:
       - cargo install cargo-watch
       - cargo build --release --locked
@@ -22,9 +22,9 @@ pipeline:
     password: "Tz-q6qDL#d3Mz8hm"
     dockerfile: docker/Dockerfile.run
     when:
-      event: [push, tag]
+      event: [ push, tag ]
   cleanup:
-    image: rust:1.24.1-stretch
+    image: rust:1.25-stretch
     commands:
       - cargo clean
   deploy2nightly:
