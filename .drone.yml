@@ -1,12 +1,12 @@
 pipeline:
   test:
-    image: rust:1.24.1-stretch
+    image: rust:1.25-stretch
     commands:
       - cargo test
     when:
       event: pull_request
   build:
-    image: rust:1.24.1-stretch
+    image: rust:1.25-stretch
     commands:
       - cargo install cargo-watch
       - cargo build --release --locked
@@ -16,15 +16,15 @@ pipeline:
     image: plugins/docker
     repo: storiqateam/stq-gw
     tags:
-      - ${DRONE_BRANCH}
-      - ${DRONE_BRANCH}${DRONE_BUILD_NUMBER/\//_}
+      - ${DRONE_BRANCH/\//_}
+      - ${DRONE_BRANCH/\//_}${DRONE_BUILD_NUMBER}
     username: stqcommon
     password: "Tz-q6qDL#d3Mz8hm"
     dockerfile: docker/Dockerfile.run
     when:
-      event: [push, tag]
+      event: [ push, tag ]
   cleanup:
-    image: rust:1.24.1-stretch
+    image: rust:1.25-stretch
     commands:
       - cargo clean
   deploy2nightly:
@@ -35,7 +35,7 @@ pipeline:
     deployment: gateway
     repo: storiqateam/stq-gw
     container: gateway
-    tag: ${DRONE_BRANCH}${DRONE_BUILD_NUMBER/\//_}
+    tag: ${DRONE_BRANCH/\//_}${DRONE_BUILD_NUMBER}
     when:
       branch: master
       event: push
@@ -57,7 +57,7 @@ pipeline:
     deployment: gateway
     repo: storiqateam/stq-gw
     container: gateway
-    tag: ${DRONE_BRANCH}${DRONE_BUILD_NUMBER/\//_}
+    tag: ${DRONE_BRANCH/\//_}${DRONE_BUILD_NUMBER}
     when:
       branch: release*
       event: push
@@ -75,3 +75,4 @@ pipeline:
       {{/success}}
     when:
       event: push
+      status:  [ failure, success ]

@@ -1,11 +1,15 @@
 FROM debian:stable-slim
 
-RUN mkdir -p /app/config
+RUN mkdir -p /app/config \
+  && adduser --disabled-password --gecos "" --home /app --no-create-home -u 5000 app
 WORKDIR /app
 
 COPY target/release/gateway_runner /app
 COPY config /app/config
+RUN chown -R app: /app
 
 EXPOSE 8000
+USER app
+WORKDIR /app
 
 ENTRYPOINT ["/app/gateway_runner"]
