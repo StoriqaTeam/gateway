@@ -1,8 +1,0 @@
-FROM rust:1.24.1-stretch
-
-COPY . /app
-WORKDIR /app
-
-# Install cargo-watch
-RUN cargo install cargo-watch
-RUN cargo build --release --locked
