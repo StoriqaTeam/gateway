@@ -69,6 +69,10 @@ graphql_object!(Store: Context as "Store" |&self| {
     field address() -> &Option<String> as "Address" {
         &self.address
     }
+    
+    field country() -> &Option<String> as "Country" {
+        &self.country
+    }
 
     field facebook_url() -> &Option<String> as "Facebook url" {
         &self.facebook_url
@@ -88,6 +92,10 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     field slogan() -> &Option<String> as "Slogan" {
         &self.slogan
+    }
+    
+    field rating() -> &Option<f64> as "Rating" {
+        &self.rating
     }
 
     field base_products(&executor, 

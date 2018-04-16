@@ -285,7 +285,7 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
 
 });
 
-graphql_object!(StoresSearchFilters: Context as "Stores Search Filters" |&self| {
+graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
     description: "Stores Search Filters options endpoint."
     
     field total_count(&executor) -> FieldResult<i32> as "Total count."{

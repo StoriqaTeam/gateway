@@ -20,6 +20,8 @@ pub struct Store {
     pub instagram_url: Option<String>,
     pub default_language: Language,
     pub slogan: Option<String>,
+    pub rating: Option<f64>,
+    pub country: Option<String>
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -59,6 +61,10 @@ pub struct UpdateStoreInput {
     pub default_language: Option<Language>,
     #[graphql(description = "Slogan")]
     pub slogan: Option<String>,
+    #[graphql(description = "Rating")]
+    pub rating: Option<f64>,
+    #[graphql(description = "Country")]
+    pub country: Option<String>,
 }
 
 impl UpdateStoreInput {
@@ -80,6 +86,8 @@ impl UpdateStoreInput {
             instagram_url: None,
             default_language: None,
             slogan: None,
+            rating: None,
+            country: None,
         } == self.clone()
     }
 }
@@ -120,6 +128,8 @@ pub struct CreateStoreInput {
     pub default_language: Language,
     #[graphql(description = "Slogan")]
     pub slogan: Option<String>,
+    #[graphql(description = "Country")]
+    pub country: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
