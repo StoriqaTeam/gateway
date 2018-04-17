@@ -94,7 +94,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         &self.slogan
     }
     
-    field rating() -> &Option<f64> as "Rating" {
+    field rating() -> &f64 as "Rating" {
         &self.rating
     }
 

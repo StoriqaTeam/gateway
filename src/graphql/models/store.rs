@@ -20,7 +20,7 @@ pub struct Store {
     pub instagram_url: Option<String>,
     pub default_language: Language,
     pub slogan: Option<String>,
-    pub rating: Option<f64>,
+    pub rating: f64,
     pub country: Option<String>
 }
 
