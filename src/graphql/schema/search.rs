@@ -302,4 +302,32 @@ graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
             .wait()
     }
     
+    field category(&executor) -> FieldResult<Category> as "Category."{
+        let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/category",
+                    context.config.service_url(Service::Stores),
+                    Model::Store.to_url(),
+                    );
+
+        context.request::<Category>(Method::Post, url, Some(body))
+            .wait()
+    }
+    
+    field country(&executor) -> FieldResult<Vec<String>> as "Countries"{
+        let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/country",
+                    context.config.service_url(Service::Stores),
+                    Model::Store.to_url(),
+                    );
+
+        context.request::<Vec<String>>(Method::Post, url, Some(body))
+            .wait()
+    }
+    
 });
