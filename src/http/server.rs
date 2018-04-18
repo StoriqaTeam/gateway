@@ -128,7 +128,7 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: Clie
         .parse()
         .expect("Cannot parse gateway url from config");
 
-    println!("Reading public key file {}", &config.jwt.public_key_path);
+    debug!("Reading public key file {}", &config.jwt.public_key_path);
     let mut f = File::open(config.jwt.public_key_path.clone()).unwrap();
     let mut jwt_public_key: Vec<u8> = Vec::new();
     f.read_to_end(&mut jwt_public_key).unwrap();
