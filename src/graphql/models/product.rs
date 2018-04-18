@@ -24,9 +24,9 @@ pub struct UpdateProductWithAttributesInput {
     #[serde(skip_serializing)]
     pub id: GraphqlID,
     #[graphql(description = "Update Product")]
-    pub product: UpdateProduct,
+    pub product: Option<UpdateProduct>,
     #[graphql(description = "Attributes")]
-    pub attributes: Vec<AttrValueInput>,
+    pub attributes: Option<Vec<AttrValueInput>>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -51,15 +51,21 @@ impl UpdateProductWithAttributesInput {
         Self {
             client_mutation_id: self.client_mutation_id.clone(),
             id: self.id.clone(),
-            product: UpdateProduct {
+            product: Some (UpdateProduct {
                 discount: None,
                 photo_main: None,
                 additional_photos: None,
                 vendor_code: None,
                 cashback: None,
                 price: None,
-            },
-            attributes: vec![],
+            }),
+            attributes: Some(vec![]),
+        } == self.clone() || 
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            id: self.id.clone(),
+            product: None,
+            attributes: None,
         } == self.clone()
     }
 }
