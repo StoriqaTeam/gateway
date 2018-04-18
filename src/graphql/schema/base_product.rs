@@ -54,6 +54,10 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         &self.currency_id
     }
     
+    field rating() -> &f64 as "Rating" {
+        &self.rating
+    }
+    
     field store(&executor) -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();
 
