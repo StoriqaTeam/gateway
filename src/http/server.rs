@@ -1,5 +1,7 @@
 use std::sync::Arc;
 use std::process;
+use std::io::prelude::*;
+use std::fs::File;
 
 use hyper;
 use hyper::mime;
@@ -14,7 +16,7 @@ use futures::{Future, Stream};
 use serde_json;
 use juniper::http::GraphQLRequest;
 use tokio_core::reactor::Handle;
-use jsonwebtoken::{decode, Validation};
+use jsonwebtoken::{decode, Validation, Algorithm};
 use uuid::Uuid;
 
 use stq_http::client::ClientHandle;
@@ -28,6 +30,7 @@ use graphql::models::jwt::JWTPayload;
 
 struct WebService {
     context: Arc<Context>,
+    jwt_public_key: Vec<u8>,
 }
 
 impl Service for WebService {
@@ -47,12 +50,15 @@ impl Service for WebService {
             (&Post, Some(router::Route::Graphql)) => {
                 let headers = req.headers().clone();
                 let auth_header = headers.get::<Authorization<Bearer>>();
-                let jwt_secret_key = context.graphql_context.config.jwt.secret_key.clone();
+                let jwt_public_key = self.jwt_public_key.clone();
                 let domain = context.graphql_context.config.cors.domain.clone();
+                let leeway = context.graphql_context.config.jwt.leeway;
+
+                let mut validation = Validation {leeway, ..Validation::new(Algorithm::RS256)};
                 let token_payload = auth_header
                     .map(move |auth| {
                         let token = auth.0.token.as_ref();
-                        decode::<JWTPayload>(token, jwt_secret_key.as_ref(), &Validation::default())
+                        decode::<JWTPayload>(token, jwt_public_key.as_ref(), &validation)
                             .ok()
                             .map(|t| t.claims)
                     })
@@ -122,12 +128,18 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: Clie
         .parse()
         .expect("Cannot parse gateway url from config");
 
+    debug!("Reading public key file {}", &config.jwt.public_key_path);
+    let mut f = File::open(config.jwt.public_key_path.clone()).unwrap();
+    let mut jwt_public_key: Vec<u8> = Vec::new();
+    f.read_to_end(&mut jwt_public_key).unwrap();
+
     let config_arc = config.clone();
     let handle_arc = tokio_handle.clone();
     let serve = Http::new()
         .serve_addr_handle(&addr, &tokio_handle, move || {
             Ok(WebService {
                 context: Arc::new(Context::new(config_arc.clone(), client_handle.clone())),
+                jwt_public_key: jwt_public_key.clone()
             })
         })
         .unwrap_or_else(|why| {

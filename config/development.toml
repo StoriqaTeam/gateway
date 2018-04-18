@@ -1,5 +1,6 @@
 [jwt]
-secret_key = "jwt secret key"
+public_key_path = "config/keys/public_key.der"
+leeway = 86400
 
 [cors]
 domain = "http://localhost:3003"
