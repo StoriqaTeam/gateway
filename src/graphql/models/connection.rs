@@ -25,19 +25,19 @@ pub struct PageInfo {
 }
 
 #[derive(Clone, Debug)]
-pub struct PageInfoWithTotalCount {
+pub struct PageInfoStoresSearch {
     pub has_next_page: bool,
     pub has_previous_page: bool,
-    pub total_count: Option<i32>,
     pub start_cursor: Option<juniper::ID>,
     pub end_cursor: Option<juniper::ID>,
+    pub search_filters: StoresSearchFilters
 }
 
 #[derive(Clone, Debug)]
-pub struct PageInfoWithSearchFilters {
+pub struct PageInfoProductsSearch {
     pub has_next_page: bool,
     pub has_previous_page: bool,
-    pub search_filters: Option<SearchFilters>,
+    pub search_filters: Option<ProductsSearchFilters>,
     pub start_cursor: Option<juniper::ID>,
     pub end_cursor: Option<juniper::ID>,
 }

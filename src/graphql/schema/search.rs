@@ -22,7 +22,7 @@ graphql_object!(Search: Context as "Search" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchProductInput as "Search pattern") 
-            -> FieldResult<Option<Connection<BaseProduct, PageInfoWithSearchFilters>>> as "Find products by name using relay connection." {
+            -> FieldResult<Option<Connection<BaseProduct, PageInfoProductsSearch>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
 
@@ -53,7 +53,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                         );
                     product_edges.push(edge);
                 }
-                let search_filters = SearchFilters::new(search_term); 
+                let search_filters = ProductsSearchFilters::new(search_term); 
                 let has_next_page = product_edges.len() as i32 == count + 1;
                 if has_next_page {
                     product_edges.pop();
@@ -61,7 +61,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let has_previous_page = true;
                 let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
-                let page_info = PageInfoWithSearchFilters {
+                let page_info = PageInfoProductsSearch {
                     has_next_page, 
                     has_previous_page, 
                     search_filters: Some(search_filters),
@@ -128,7 +128,7 @@ graphql_object!(Search: Context as "Search" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchStoreInput as "Search store input") 
-            -> FieldResult<Option<Connection<Store, PageInfoWithTotalCount>>> as "Finds stores by name using relay connection." {
+            -> FieldResult<Option<Connection<Store, PageInfoStoresSearch>>> as "Finds stores by name using relay connection." {
 
         let context = executor.context();
 
@@ -168,26 +168,18 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let start_cursor =  store_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
 
-                let total_count = if search_term.get_stores_total_count {
-                    let url = format!("{}/{}/search/count",
-                        context.config.service_url(Service::Stores),
-                        Model::Store.to_url(),
-                        );
+                
 
-                    context.request::<i32>(Method::Post, url, Some(search_term.name))
-                        .wait()
-                        .ok()
-                } else {
-                    None
-                };
+                let search_filters = StoresSearchFilters::new(search_term); 
 
-                let page_info = PageInfoWithTotalCount {
+                let page_info = PageInfoStoresSearch {
                         has_next_page, 
                         has_previous_page, 
-                        total_count,
+                        search_filters,
                         start_cursor,
                         end_cursor
                     };
+
                 future::ok(Connection::new(store_edges, page_info))
             })
             .wait()
@@ -247,8 +239,8 @@ graphql_object!(Search: Context as "Search" |&self| {
 
 });
 
-graphql_object!(SearchFilters: Context as "SearchFilters" |&self| {
-    description: "SearchFilters options endpoint."
+graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self| {
+    description: "Products Search Filters options endpoint."
     
     field price_range(&executor) -> FieldResult<Option<RangeFilter>> as "Price filter."{
         let context = executor.context();
@@ -291,4 +283,51 @@ graphql_object!(SearchFilters: Context as "SearchFilters" |&self| {
             .wait()
     }
 
+});
+
+graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
+    description: "Stores Search Filters options endpoint."
+    
+    field total_count(&executor) -> FieldResult<i32> as "Total count."{
+        let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/count",
+                    context.config.service_url(Service::Stores),
+                    Model::Store.to_url(),
+                    );
+
+        context.request::<i32>(Method::Post, url, Some(body))
+            .wait()
+    }
+    
+    field category(&executor) -> FieldResult<Category> as "Category."{
+        let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/category",
+                    context.config.service_url(Service::Stores),
+                    Model::Store.to_url(),
+                    );
+
+        context.request::<Category>(Method::Post, url, Some(body))
+            .wait()
+    }
+    
+    field country(&executor) -> FieldResult<Vec<String>> as "Countries"{
+        let context = executor.context();
+
+        let body = serde_json::to_string(&self.search_term)?;
+        
+        let url = format!("{}/{}/search/filters/country",
+                    context.config.service_url(Service::Stores),
+                    Model::Store.to_url(),
+                    );
+
+        context.request::<Vec<String>>(Method::Post, url, Some(body))
+            .wait()
+    }
+    
 });

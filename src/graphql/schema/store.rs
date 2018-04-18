@@ -69,6 +69,10 @@ graphql_object!(Store: Context as "Store" |&self| {
     field address() -> &Option<String> as "Address" {
         &self.address
     }
+    
+    field country() -> &Option<String> as "Country" {
+        &self.country
+    }
 
     field facebook_url() -> &Option<String> as "Facebook url" {
         &self.facebook_url
@@ -88,6 +92,10 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     field slogan() -> &Option<String> as "Slogan" {
         &self.slogan
+    }
+    
+    field rating() -> &f64 as "Rating" {
+        &self.rating
     }
 
     field base_products(&executor, 
@@ -205,14 +213,14 @@ graphql_object!(Connection<String, PageInfo>: Context as "FullNameConnection" |&
     }
 });
 
-graphql_object!(Connection<Store, PageInfoWithTotalCount>: Context as "StoresWithTotalCountConnection" |&self| {
+graphql_object!(Connection<Store, PageInfoStoresSearch>: Context as "StoresWithTotalCountConnection" |&self| {
     description:"Stores Connection"
 
     field edges() -> &[Edge<Store>] {
         &self.edges
     }
 
-    field page_info() -> &PageInfoWithTotalCount {
+    field page_info() -> &PageInfoStoresSearch {
         &self.page_info
     }
 });
