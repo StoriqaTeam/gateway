@@ -14,6 +14,7 @@ pub struct BaseProduct {
     pub currency_id: i32,
     pub category_id: i32,
     pub views: i32,
+    pub rating: f64,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -39,6 +40,8 @@ pub struct UpdateBaseProductInput {
     pub currency_id: Option<i32>,
     #[graphql(description = "Category id.")]
     pub category_id: Option<i32>,
+    #[graphql(description = "Rating.")]
+    pub rating: Option<f64>,
 }
 
 impl UpdateBaseProductInput {
@@ -53,6 +56,7 @@ impl UpdateBaseProductInput {
             seo_description: None,
             currency_id: None,
             category_id: None,
+            rating: None,
         } == self.clone()
     }
 }
