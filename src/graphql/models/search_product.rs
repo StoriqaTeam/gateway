@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
+#[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
 pub struct ProductsSearchOptionsInput {
     #[graphql(description = "Attribute filters.")]
     pub attr_filters: Option<Vec<AttributeFilterInput>>,
@@ -10,7 +10,7 @@ pub struct ProductsSearchOptionsInput {
     pub category_id: Option<i32>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
+#[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
 #[graphql(description = "Search product input object")]
 pub struct SearchProductInput {
     #[graphql(description = "Name part of the product.")]
