@@ -1,5 +1,6 @@
 //! Mod containing all graphql schema
 pub mod query;
+pub mod cart_product;
 pub mod mutations;
 pub mod user;
 pub mod node;

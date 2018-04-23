@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-#[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CartProduct {
     pub product_id: i32,
     pub quantity: i32,
