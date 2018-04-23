@@ -16,6 +16,7 @@ pub struct BaseProduct {
     pub category_id: i32,
     pub views: i32,
     pub rating: f64,
+    pub slug: String,
     pub variants: Option<Vec<Product>>,
 }
 
@@ -44,6 +45,8 @@ pub struct UpdateBaseProductInput {
     pub category_id: Option<i32>,
     #[graphql(description = "Rating.")]
     pub rating: Option<f64>,
+    #[graphql(description = "Slug.")]
+    pub slug: Option<String>,
 }
 
 impl UpdateBaseProductInput {
@@ -59,6 +62,7 @@ impl UpdateBaseProductInput {
             currency_id: None,
             category_id: None,
             rating: None,
+            slug: None
         } == self.clone()
     }
 }
@@ -85,6 +89,8 @@ pub struct CreateBaseProductInput {
     pub currency_id: i32,
     #[graphql(description = "Int Category id.")]
     pub category_id: i32,
+    #[graphql(description = "Slug.")]
+    pub slug: String,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]

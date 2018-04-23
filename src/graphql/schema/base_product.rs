@@ -106,6 +106,10 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     field views() -> &i32 as "Views" {
         &self.views
     }
+    
+    field slug() -> &str as "Slug" {
+        &self.slug
+    }
 });
 
 graphql_object!(Variants: Context as "BaseProductVariants" |&self| {
