@@ -74,7 +74,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     }
 
     field category(&executor) -> FieldResult<Option<Category>> as "Category" {
-       let context = executor.context();
+        let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Category.to_url(),
@@ -86,19 +86,24 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     }
     
     field variants(&executor) -> FieldResult<Option<Variants>> as "Variants" {
-       let context = executor.context();
-        let url = format!("{}/{}/by_base_product/{}",
-            context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
-            self.id);
+        let context = executor.context();
+        if let Some(ref variants) = self.variants {
+            Ok(Some(Variants::new(variants.clone())))
+        } else {
+            let url = format!("{}/{}/by_base_product/{}",
+                context.config.service_url(Service::Stores),
+                Model::Product.to_url(),
+                self.id);
 
-        context.request::<Vec<Product>>(Method::Get, url, None)
-            .wait()
-            .or_else(|_| Ok(vec![]))
-            .map(|u| 
-            Some(Variants::new(u)))
+            context.request::<Vec<Product>>(Method::Get, url, None)
+                .wait()
+                .or_else(|_| Ok(vec![]))
+                .map(|u| 
+                Some(Variants::new(u)))
+        }
+        
     }
-
+    
     field views() -> &i32 as "Views" {
         &self.views
     }

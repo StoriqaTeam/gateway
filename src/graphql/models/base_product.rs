@@ -1,5 +1,6 @@
 use juniper::ID as GraphqlID;
 use stq_static_resources::{Translation, TranslationInput};
+use super::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct BaseProduct {
@@ -15,6 +16,7 @@ pub struct BaseProduct {
     pub category_id: i32,
     pub views: i32,
     pub rating: f64,
+    pub variants: Option<Vec<Product>>
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
