@@ -1,6 +1,7 @@
 //! File containing user object of graphql schema
 use std::str::FromStr;
 use std::cmp;
+use std::collections::HashMap;
 
 use juniper;
 use juniper::FieldResult;
@@ -320,6 +321,60 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
+    field cart(&executor,
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<GraphqlID>  as "Base64 Id of product")
+            -> FieldResult<Option<Connection<CartProduct, PageInfo>>> as "Fetches cart products using relay connection." {
+        let context = executor.context();
+
+        let raw_id = match after {
+            Some(val) => ID::from_str(&*val)?.raw_id,
+            None => MIN_ID
+        };
+
+        let records_limit = context.config.gateway.records_limit;
+        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/cart?offset={}&count={}",
+            &context.config.service_url(Service::Orders),
+            raw_id,
+            first + 1);
+
+        context.request::<HashMap<i32,i32>>(Method::Get, url, None)
+            .map (|hash| {
+                let carts = hash
+                    .into_iter()
+                    .map(|(product_id, quantity)| CartProduct {
+                        product_id,
+                        quantity,
+                    })
+                    .collect::<Cart>();
+
+                let mut carts_edges: Vec<Edge<CartProduct>> = carts
+                    .into_iter()
+                    .map(|cart_product| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::Product, cart_product.product_id.clone()).to_string()),
+                                cart_product.clone()
+                            ))
+                    .collect();
+                let has_next_page = carts_edges.len() as i32 == first + 1;
+                if has_next_page {
+                    carts_edges.pop();
+                };
+                let has_previous_page = true;
+                let start_cursor =  carts_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = carts_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page,
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
+                Connection::new(carts_edges, page_info)
+            })
+            .wait()
+            .map(|u| Some(u))
+    }
+
     field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches user cart" {
         let context = executor.context();
 
@@ -355,6 +410,30 @@ graphql_object!(Edge<User>: Context as "UsersEdge" |&self| {
     }
 
     field node() -> &User {
+        &self.node
+    }
+});
+
+graphql_object!(Connection<CartProduct, PageInfo>: Context as "CartProductConnection" |&self| {
+    description:"CartProduct Connection"
+
+    field edges() -> &[Edge<CartProduct>] {
+        &self.edges
+    }
+
+    field page_info() -> &PageInfo {
+        &self.page_info
+    }
+});
+
+graphql_object!(Edge<CartProduct>: Context as "CartProductEdge" |&self| {
+    description:"CartProduct Edge"
+
+    field cursor() -> &juniper::ID {
+        &self.cursor
+    }
+
+    field node() -> &CartProduct {
         &self.node
     }
 });
