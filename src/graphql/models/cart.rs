@@ -24,6 +24,15 @@ pub fn cart_from_orders_reply(v: OrdersCart) -> Cart {
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Increment product quantity in cart input object")]
+pub struct IncrementInCartInput {
+    #[graphql(description = "Product id.")]
+    #[serde(skip_serializing)]
+    pub product_id: i32,
+}
+
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Set product data in cart input object")]
 pub struct SetInCartInput {
     #[graphql(description = "Product id.")]

@@ -391,6 +391,15 @@ graphql_object!(Mutation: Context |&self| {
         Ok(Mock{})
     }
 
+    field incrementInCart(&executor, input: IncrementInCartInput as "Increment in cart input.") -> FieldResult<Cart> as "Increment in cart." {
+        let context = executor.context();
+        let url = format!("{}/cart/products/{}/increment", context.config.service_url(Service::Orders), input.product_id);
+
+        context.request::<OrdersCart>(Method::Post, url, None)
+            .map(|resp| cart_from_orders_reply(resp))
+            .wait()
+    }
+
     field setInCart(&executor, input: SetInCartInput as "Set product in cart input.") -> FieldResult<Cart> as "Sets product data in cart." {
         let context = executor.context();
         let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
