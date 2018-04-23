@@ -18,7 +18,7 @@ use graphql::models::*;
 graphql_object!(Search: Context as "Search" |&self| {
     description: "Searching endpoint."
 
-    field find_product(&executor, 
+    field find_product(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchProductInput as "Search pattern") 
@@ -53,7 +53,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                         );
                     product_edges.push(edge);
                 }
-                let search_filters = ProductsSearchFilters::new(search_term); 
+                let search_filters = ProductsSearchFilters::new(search_term);
                 let has_next_page = product_edges.len() as i32 == count + 1;
                 if has_next_page {
                     product_edges.pop();
@@ -62,8 +62,8 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfoProductsSearch {
-                    has_next_page, 
-                    has_previous_page, 
+                    has_next_page,
+                    has_previous_page,
                     search_filters: Some(search_filters),
                     start_cursor,
                     end_cursor};
@@ -72,8 +72,8 @@ graphql_object!(Search: Context as "Search" |&self| {
             .wait()
             .map(|u| Some(u))
     }
-    
-    field auto_complete_product_name(&executor, 
+
+    field auto_complete_product_name(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         name : String as "Name part") 
@@ -114,8 +114,8 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let start_cursor =  full_name_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = full_name_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
-                    has_next_page, 
-                    has_previous_page, 
+                    has_next_page,
+                    has_previous_page,
                     start_cursor,
                     end_cursor};
                 Connection::new(full_name_edges, page_info)
@@ -124,7 +124,7 @@ graphql_object!(Search: Context as "Search" |&self| {
             .map(|u| Some(u))
     }
 
-    field find_store(&executor, 
+    field find_store(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : SearchStoreInput as "Search store input") 
@@ -168,13 +168,11 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let start_cursor =  store_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
 
-                
-
-                let search_filters = StoresSearchFilters::new(search_term); 
+                let search_filters = StoresSearchFilters::new(search_term);
 
                 let page_info = PageInfoStoresSearch {
-                        has_next_page, 
-                        has_previous_page, 
+                        has_next_page,
+                        has_previous_page,
                         search_filters,
                         start_cursor,
                         end_cursor
@@ -186,7 +184,7 @@ graphql_object!(Search: Context as "Search" |&self| {
             .map(|u| Some(u))
     }
 
-    field auto_complete_store_name(&executor, 
+    field auto_complete_store_name(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         name : String as "Name part") 
@@ -228,7 +226,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                 let has_previous_page = true;
                 let page_info = PageInfo {
                     has_next_page,
-                    has_previous_page, 
+                    has_previous_page,
                     start_cursor,
                     end_cursor};
                 Connection::new(full_name_edges, page_info)
@@ -241,12 +239,12 @@ graphql_object!(Search: Context as "Search" |&self| {
 
 graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self| {
     description: "Products Search Filters options endpoint."
-    
+
     field price_range(&executor) -> FieldResult<Option<RangeFilter>> as "Price filter."{
         let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
-        
+
         let url = format!("{}/{}/search/filters/price",
                         context.config.service_url(Service::Stores),
                         Model::BaseProduct.to_url(),
@@ -255,12 +253,12 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
             .wait()
             .map(|u| Some(u))
     }
-    
+
     field categories(&executor) -> FieldResult<Option<Category>> as "Category."{
         let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
-        
+
         let url = format!("{}/{}/search/filters/category",
                         context.config.service_url(Service::Stores),
                         Model::BaseProduct.to_url(),
@@ -274,7 +272,7 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
        let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
-        
+
         let url = format!("{}/{}/search/filters/attributes",
                         context.config.service_url(Service::Stores),
                         Model::BaseProduct.to_url(),
@@ -287,12 +285,12 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
 
 graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
     description: "Stores Search Filters options endpoint."
-    
+
     field total_count(&executor) -> FieldResult<i32> as "Total count."{
         let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
-        
+
         let url = format!("{}/{}/search/filters/count",
                     context.config.service_url(Service::Stores),
                     Model::Store.to_url(),
@@ -301,12 +299,12 @@ graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
         context.request::<i32>(Method::Post, url, Some(body))
             .wait()
     }
-    
+
     field category(&executor) -> FieldResult<Category> as "Category."{
         let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
-        
+
         let url = format!("{}/{}/search/filters/category",
                     context.config.service_url(Service::Stores),
                     Model::Store.to_url(),
@@ -315,12 +313,12 @@ graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
         context.request::<Category>(Method::Post, url, Some(body))
             .wait()
     }
-    
+
     field country(&executor) -> FieldResult<Vec<String>> as "Countries"{
         let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
-        
+
         let url = format!("{}/{}/search/filters/country",
                     context.config.service_url(Service::Stores),
                     Model::Store.to_url(),
@@ -329,5 +327,5 @@ graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
         context.request::<Vec<String>>(Method::Post, url, Some(body))
             .wait()
     }
-    
+
 });

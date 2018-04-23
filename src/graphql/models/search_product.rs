@@ -40,9 +40,6 @@ pub struct ProductsSearchFilters {
 
 impl ProductsSearchFilters {
     pub fn new(search_term: SearchProductInput) -> Self {
-        Self {
-            search_term
-        }
+        Self { search_term }
     }
 }
-

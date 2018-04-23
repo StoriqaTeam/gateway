@@ -154,7 +154,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
             .map(|u| Some(u))
     }
-    
+
     field attributes(&executor) -> FieldResult<Option<Vec<Attribute>>> as "Fetches all attributes." {
         let context = executor.context();
         let url = format!("{}/{}",
@@ -172,7 +172,7 @@ graphql_object!(Query: Context |&self| {
 
     field main_page(&executor) -> MainPage as "Main page endpoint" {
         MainPage{}
-    }    
+    }
 
     field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();

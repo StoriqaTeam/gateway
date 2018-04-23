@@ -41,11 +41,11 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     field long_description() -> &Option<Vec<Translation>> as "Long Description" {
         &self.long_description
     }
-    
+
     field seo_title() -> &Option<Vec<Translation>> as "SEO title" {
         &self.seo_title
     }
-    
+
     field seo_description() -> &Option<Vec<Translation>> as "SEO Description" {
         &self.seo_description
     }
@@ -53,11 +53,11 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     field currency_id() -> &i32 as "Currency Id" {
         &self.currency_id
     }
-    
+
     field rating() -> &f64 as "Rating" {
         &self.rating
     }
-    
+
     field store(&executor) -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();
 
@@ -84,7 +84,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             .wait()
             .map(|u| Some(u))
     }
-    
+
     field variants(&executor) -> FieldResult<Option<Variants>> as "Variants" {
         let context = executor.context();
         if let Some(ref variants) = self.variants {
@@ -98,12 +98,11 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             context.request::<Vec<Product>>(Method::Get, url, None)
                 .wait()
                 .or_else(|_| Ok(vec![]))
-                .map(|u| 
-                Some(Variants::new(u)))
+                .map(|u| Some(Variants::new(u)))
         }
-        
+
     }
-    
+
     field views() -> &i32 as "Views" {
         &self.views
     }
@@ -115,11 +114,11 @@ graphql_object!(Variants: Context as "BaseProductVariants" |&self| {
     field all() -> &[Product] {
         &self.products
     }
-    
+
     field most_discount() -> Option<&Product> {
         self.get_most_discount()
     }
-    
+
     field first() -> Option<&Product> {
         self.get_first()
     }
@@ -149,7 +148,6 @@ graphql_object!(Edge<BaseProduct>: Context as "BaseProductsEdge" |&self| {
         &self.node
     }
 });
-
 
 graphql_object!(Connection<BaseProduct, PageInfoProductsSearch>: Context as "BaseProductsSearchConnection" |&self| {
     description:"Base Products Connection"

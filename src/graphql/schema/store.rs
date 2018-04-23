@@ -69,7 +69,7 @@ graphql_object!(Store: Context as "Store" |&self| {
     field address() -> &Option<String> as "Address" {
         &self.address
     }
-    
+
     field country() -> &Option<String> as "Country" {
         &self.country
     }
@@ -93,18 +93,18 @@ graphql_object!(Store: Context as "Store" |&self| {
     field slogan() -> &Option<String> as "Slogan" {
         &self.slogan
     }
-    
+
     field rating() -> &f64 as "Rating" {
         &self.rating
     }
 
-    field base_products(&executor, 
+    field base_products(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID> as "Offset from begining",
         skip_base_prod_id = None : Option<i32> as "Skip base prod id" ) 
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches base products of the store." {
         let context = executor.context();
-        
+
         let offset = after
             .and_then(|id| i32::from_str(&id).ok())
             .unwrap_or_default();
@@ -150,8 +150,8 @@ graphql_object!(Store: Context as "Store" |&self| {
                 let start_cursor =  base_product_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
-                    has_next_page, 
-                    has_previous_page, 
+                    has_next_page,
+                    has_previous_page,
                     start_cursor,
                     end_cursor};
                 Connection::new(base_product_edges, page_info)
@@ -162,7 +162,7 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     field products_count(&executor) -> FieldResult<i32> as "Fetches products count of the store." {
         let context = executor.context();
-        
+
         let url = format!(
             "{}/{}/{}/products/count",
             &context.config.service_url(Service::Stores),

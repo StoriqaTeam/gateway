@@ -30,7 +30,7 @@ pub struct PageInfoStoresSearch {
     pub has_previous_page: bool,
     pub start_cursor: Option<juniper::ID>,
     pub end_cursor: Option<juniper::ID>,
-    pub search_filters: StoresSearchFilters
+    pub search_filters: StoresSearchFilters,
 }
 
 #[derive(Clone, Debug)]

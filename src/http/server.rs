@@ -16,7 +16,7 @@ use futures::{Future, Stream};
 use serde_json;
 use juniper::http::GraphQLRequest;
 use tokio_core::reactor::Handle;
-use jsonwebtoken::{decode, Validation, Algorithm};
+use jsonwebtoken::{decode, Algorithm, Validation};
 use uuid::Uuid;
 
 use stq_http::client::ClientHandle;
@@ -54,7 +54,10 @@ impl Service for WebService {
                 let domain = context.graphql_context.config.cors.domain.clone();
                 let leeway = context.graphql_context.config.jwt.leeway;
 
-                let mut validation = Validation {leeway, ..Validation::new(Algorithm::RS256)};
+                let mut validation = Validation {
+                    leeway,
+                    ..Validation::new(Algorithm::RS256)
+                };
                 let token_payload = auth_header
                     .map(move |auth| {
                         let token = auth.0.token.as_ref();
@@ -139,7 +142,7 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: Clie
         .serve_addr_handle(&addr, &tokio_handle, move || {
             Ok(WebService {
                 context: Arc::new(Context::new(config_arc.clone(), client_handle.clone())),
-                jwt_public_key: jwt_public_key.clone()
+                jwt_public_key: jwt_public_key.clone(),
             })
         })
         .unwrap_or_else(|why| {

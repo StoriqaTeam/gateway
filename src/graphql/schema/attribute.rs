@@ -28,7 +28,7 @@ graphql_object!(Attribute: Context as "Attribute" |&self| {
     field name() -> &[Translation] as "Full Name" {
         &self.name
     }
-    
+
     field value_type() -> &AttributeType as "Attribute Type" {
         &self.value_type
     }
@@ -51,7 +51,7 @@ graphql_object!(AttrValue: Context as "AttributeValue" |&self| {
             .wait()
             .map(|u| Some(u))
     }
-    
+
     field value() -> &str as "Attribute value of product variant" {
         &self.value
     }
@@ -74,7 +74,7 @@ graphql_object!(AttributeFilter: Context as "AttributeFilter" |&self| {
             .wait()
             .map(|u| Some(u))
     }
-    
+
     field equal() -> &Option<EqualFilter> as "Values to be equal" {
         &self.equal
     }
@@ -105,5 +105,5 @@ graphql_object!(AttributeMetaField: Context as "AttributeMetaField" |&self| {
 #[graphql(description = "Value with translation")]
 pub struct TranslatedValue {
     #[graphql(description = "Translated value")]
-    pub translations: Vec<Translation>
+    pub translations: Vec<Translation>,
 }

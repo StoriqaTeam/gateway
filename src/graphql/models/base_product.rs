@@ -16,7 +16,7 @@ pub struct BaseProduct {
     pub category_id: i32,
     pub views: i32,
     pub rating: f64,
-    pub variants: Option<Vec<Product>>
+    pub variants: Option<Vec<Product>>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]

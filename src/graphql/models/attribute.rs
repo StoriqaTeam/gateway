@@ -11,7 +11,7 @@ pub struct Attribute {
     pub meta_field: Option<AttributeMetaField>,
 }
 
-#[derive( Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct AttributeMetaField {
     pub values: Option<Vec<String>>,
     pub translated_values: Option<Vec<Vec<Translation>>>,
