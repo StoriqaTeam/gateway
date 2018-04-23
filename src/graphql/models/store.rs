@@ -21,7 +21,7 @@ pub struct Store {
     pub default_language: Language,
     pub slogan: Option<String>,
     pub rating: f64,
-    pub country: Option<String>
+    pub country: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -161,7 +161,6 @@ pub struct SearchStoreInput {
     pub options: Option<StoresSearchOptionsInput>,
 }
 
-
 #[derive(Serialize, Clone, Debug)]
 pub struct StoresSearchFilters {
     pub search_term: SearchStoreInput,
@@ -169,8 +168,6 @@ pub struct StoresSearchFilters {
 
 impl StoresSearchFilters {
     pub fn new(search_term: SearchStoreInput) -> Self {
-        Self {
-            search_term
-        }
+        Self { search_term }
     }
 }

@@ -51,7 +51,7 @@ impl UpdateProductWithAttributesInput {
         Self {
             client_mutation_id: self.client_mutation_id.clone(),
             id: self.id.clone(),
-            product: Some (UpdateProduct {
+            product: Some(UpdateProduct {
                 discount: None,
                 photo_main: None,
                 additional_photos: None,
@@ -60,8 +60,7 @@ impl UpdateProductWithAttributesInput {
                 price: None,
             }),
             attributes: Some(vec![]),
-        } == self.clone() || 
-        Self {
+        } == self.clone() || Self {
             client_mutation_id: self.client_mutation_id.clone(),
             id: self.id.clone(),
             product: None,
@@ -110,18 +109,14 @@ pub struct DeactivateProductInput {
     pub id: GraphqlID,
 }
 
-
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Variants {
-    pub products: Vec<Product>
+    pub products: Vec<Product>,
 }
 
 impl Variants {
     pub fn new(products: Vec<Product>) -> Self {
-        Self {
-            products
-        }
+        Self { products }
     }
 
     pub fn get_most_discount(&self) -> Option<&Product> {
@@ -136,10 +131,8 @@ impl Variants {
             })
             .max_by_key(|p| (p.discount.unwrap() * 1000f64).round() as i64)
     }
-    
+
     pub fn get_first(&self) -> Option<&Product> {
-        self.products
-            .iter()
-            .nth(0)
+        self.products.iter().nth(0)
     }
 }

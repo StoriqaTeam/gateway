@@ -86,7 +86,7 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
-    field users(&executor, 
+    field users(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Base64 Id of a user") 
             -> FieldResult<Option<Connection<User, PageInfo>>> as "Fetches users using relay connection." {
@@ -107,7 +107,6 @@ graphql_object!(User: Context as "User" |&self| {
             first + 1);
 
         context.request::<Vec<User>>(Method::Get, url, None)
-            
             .map (|users| {
                 let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
@@ -124,7 +123,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let start_cursor =  user_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = user_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
-                    has_next_page, 
+                    has_next_page,
                     has_previous_page,
                     start_cursor,
                     end_cursor};
@@ -149,7 +148,7 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
-    field stores(&executor, 
+    field stores(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Id of a store") 
             -> FieldResult<Option<Connection<Store, PageInfo>>> as "Fetches stores using relay connection." {
@@ -170,7 +169,7 @@ graphql_object!(User: Context as "User" |&self| {
             first + 1);
 
         context.request::<Vec<Store>>(Method::Get, url, None)
-            
+
             .map (|stores| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
@@ -187,7 +186,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let start_cursor =  store_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
-                    has_next_page, 
+                    has_next_page,
                     has_previous_page,
                     start_cursor,
                     end_cursor};
@@ -212,7 +211,7 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
-    field products(&executor, 
+    field products(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Base64 Id of a product") 
             -> FieldResult<Option<Connection<Product, PageInfo>>> as "Fetches products using relay connection." {
@@ -233,7 +232,6 @@ graphql_object!(User: Context as "User" |&self| {
             first + 1);
 
         context.request::<Vec<Product>>(Method::Get, url, None)
-            
             .map (|products| {
                 let mut product_edges: Vec<Edge<Product>> = products
                     .into_iter()
@@ -250,7 +248,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
-                    has_next_page, 
+                    has_next_page,
                     has_previous_page,
                     start_cursor,
                     end_cursor};
@@ -275,7 +273,7 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
-    field base_products(&executor, 
+    field base_products(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Base64 Id of base product")
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches base products using relay connection." {
@@ -296,7 +294,6 @@ graphql_object!(User: Context as "User" |&self| {
             first + 1);
 
         context.request::<Vec<BaseProduct>>(Method::Get, url, None)
-            
             .map (|products| {
                 let mut product_edges: Vec<Edge<BaseProduct>> = products
                     .into_iter()
@@ -313,7 +310,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
                 let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
-                    has_next_page, 
+                    has_next_page,
                     has_previous_page,
                     start_cursor,
                     end_cursor};

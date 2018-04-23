@@ -19,11 +19,11 @@ graphql_object!(PageInfo: Context as "PageInfo" |&self| {
     field end_cursor() -> &Option<juniper::ID> as "end cursor" {
         &self.end_cursor
     }
-    
+
     field start_cursor() -> &Option<juniper::ID> as "start cursor" {
         &self.start_cursor
     }
-    
+
 });
 
 graphql_object!(PageInfoStoresSearch: Context as "PageInfoStoresSearch" |&self| {
@@ -40,11 +40,11 @@ graphql_object!(PageInfoStoresSearch: Context as "PageInfoStoresSearch" |&self| 
     field deprecated "Use search_filters.total_count " total_count() -> Option<i32> as "total elements count" {
         Some(0)
     }
-    
+
     field end_cursor() -> &Option<juniper::ID> as "end cursor" {
         &self.end_cursor
     }
-    
+
     field start_cursor() -> &Option<juniper::ID> as "start cursor" {
         &self.start_cursor
     }
@@ -52,7 +52,7 @@ graphql_object!(PageInfoStoresSearch: Context as "PageInfoStoresSearch" |&self| 
     field search_filters() -> &StoresSearchFilters as "search options" {
         &self.search_filters
     }
-    
+
 });
 
 graphql_object!(PageInfoProductsSearch: Context as "PageInfoProductsSearch" |&self| {
@@ -69,14 +69,13 @@ graphql_object!(PageInfoProductsSearch: Context as "PageInfoProductsSearch" |&se
     field search_filters() -> &Option<ProductsSearchFilters> as "search options" {
         &self.search_filters
     }
-    
+
     field end_cursor() -> &Option<juniper::ID> as "end cursor" {
         &self.end_cursor
     }
-    
+
     field start_cursor() -> &Option<juniper::ID> as "start cursor" {
         &self.start_cursor
     }
-    
-});
 
+});

@@ -31,11 +31,11 @@ graphql_object!(Category: Context as "Category" |&self| {
     field meta_field() -> &Option<String> as "Meta field" {
         &self.meta_field
     }
-    
+
     field parent_id() -> &Option<i32> as "Parent id" {
         &self.parent_id
     }
-    
+
     field level() -> &i32 as "Level" {
         &self.level
     }

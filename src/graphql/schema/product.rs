@@ -5,7 +5,7 @@ use juniper::ID as GraphqlID;
 use juniper::FieldResult;
 use hyper::Method;
 use futures::Future;
- 
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
