@@ -91,4 +91,5 @@ pipeline:
       {{/success}}
     when:
       event: push
-      status:  [ failure, success ]
+      branch: [ master, release ]
+      status: [ failure, success ]
