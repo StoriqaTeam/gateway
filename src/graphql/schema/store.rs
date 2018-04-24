@@ -3,19 +3,19 @@
 use std::cmp;
 use std::str::FromStr;
 
-use juniper;
-use juniper::ID as GraphqlID;
-use juniper::FieldResult;
-use hyper::Method;
 use futures::Future;
+use hyper::Method;
+use juniper;
+use juniper::FieldResult;
+use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Language, Translation};
 
+use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use super::*;
 
 graphql_object!(Store: Context as "Store" |&self| {
     description: "Store's info."

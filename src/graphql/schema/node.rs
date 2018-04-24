@@ -4,9 +4,9 @@ use juniper::ID as GraphqlID;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
+use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use super::*;
 
 pub struct StaticNodeIds;
 

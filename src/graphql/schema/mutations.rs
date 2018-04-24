@@ -1,11 +1,11 @@
 //! File containing mutations object of graphql schema
 use std::str::FromStr;
 
-use juniper::{FieldError, FieldResult};
+use futures::Future;
 use graphql::context::Context;
 use graphql::models::*;
 use hyper::Method;
-use futures::Future;
+use juniper::{FieldError, FieldResult};
 use serde_json;
 use stq_routes::model::Model;
 use stq_routes::service::Service;

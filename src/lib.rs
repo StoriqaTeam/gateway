@@ -23,15 +23,15 @@ extern crate serde_json;
 extern crate tokio_core;
 extern crate uuid;
 
-use std::sync::Arc;
 use std::env;
 use std::io::Write;
+use std::sync::Arc;
 
-use futures::stream::Stream;
-use tokio_core::reactor::Core;
 use chrono::prelude::*;
 use env_logger::Builder as LogBuilder;
+use futures::stream::Stream;
 use log::LevelFilter as LogLevelFilter;
+use tokio_core::reactor::Core;
 
 use stq_http::client::Client as HttpClient;
 
@@ -46,13 +46,7 @@ pub fn start(config: Config) {
     builder
         .format(|formatter, record| {
             let now = Utc::now();
-            writeln!(
-                formatter,
-                "{} - {} - {}",
-                now.to_rfc3339(),
-                record.level(),
-                record.args()
-            )
+            writeln!(formatter, "{} - {} - {}", now.to_rfc3339(), record.level(), record.args())
         })
         .filter(None, LogLevelFilter::Info);
 

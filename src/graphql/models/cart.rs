@@ -16,10 +16,7 @@ pub struct OrdersCart {
 pub fn cart_from_orders_reply(v: OrdersCart) -> Cart {
     v.products
         .into_iter()
-        .map(|(product_id, quantity)| CartProduct {
-            product_id,
-            quantity,
-        })
+        .map(|(product_id, quantity)| CartProduct { product_id, quantity })
         .collect::<Cart>()
 }
 
@@ -30,7 +27,6 @@ pub struct IncrementInCartInput {
     #[serde(skip_serializing)]
     pub product_id: i32,
 }
-
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Set product data in cart input object")]

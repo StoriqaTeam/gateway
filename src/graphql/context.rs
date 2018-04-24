@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use juniper;
-use juniper::FieldError;
+use futures::prelude::*;
 use hyper;
 use hyper::header::{Authorization, Cookie, Headers};
-use futures::prelude::*;
+use juniper;
+use juniper::FieldError;
 use serde::de::DeserializeOwned;
 
 use super::schema;

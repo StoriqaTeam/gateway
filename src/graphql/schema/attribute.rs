@@ -1,16 +1,16 @@
 //! File containing product object of graphql schema
-use juniper::ID as GraphqlID;
-use juniper::FieldResult;
-use hyper::Method;
 use futures::Future;
+use hyper::Method;
+use juniper::FieldResult;
+use juniper::ID as GraphqlID;
 
-use stq_static_resources::Translation;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::Translation;
 
+use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use super::*;
 
 graphql_object!(Attribute: Context as "Attribute" |&self| {
     description: "Attribute's info."

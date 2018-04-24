@@ -1,7 +1,7 @@
 use std::env;
 
-use stq_routes::service::Service as StqService;
 use stq_http;
+use stq_routes::service::Service as StqService;
 
 use config_crate::{Config as RawConfig, ConfigError, Environment, File};
 

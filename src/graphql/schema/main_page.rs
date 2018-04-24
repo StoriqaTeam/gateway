@@ -2,12 +2,12 @@
 use std::cmp;
 use std::str::FromStr;
 
+use futures::Future;
+use hyper::Method;
 use juniper;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 use serde_json;
-use hyper::Method;
-use futures::Future;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
