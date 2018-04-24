@@ -1,5 +1,5 @@
-use juniper;
 use super::*;
+use juniper;
 
 #[derive(Clone, Debug)]
 pub struct Edge<T> {

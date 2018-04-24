@@ -2,13 +2,13 @@
 use std::cmp;
 use std::str::FromStr;
 
-use juniper;
-use serde_json;
-use juniper::FieldResult;
-use juniper::ID as GraphqlID;
-use hyper::Method;
 use futures::future;
 use futures::Future;
+use hyper::Method;
+use juniper;
+use juniper::FieldResult;
+use juniper::ID as GraphqlID;
+use serde_json;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
@@ -293,7 +293,7 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
         search_term_only_category.options = Some(options);
 
         let body = serde_json::to_string(&search_term_only_category)?;
-        
+
         let url = format!("{}/{}/search/filters/attributes",
                         context.config.service_url(Service::Stores),
                         Model::BaseProduct.to_url(),

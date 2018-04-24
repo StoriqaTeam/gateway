@@ -1,3 +1,3 @@
 pub mod context;
-pub mod schema;
 pub mod models;
+pub mod schema;

@@ -1,7 +1,7 @@
-pub mod server;
 pub mod context;
 pub mod graphiql;
 pub mod router;
+pub mod server;
 pub mod utils;
 
 use std::sync::Arc;

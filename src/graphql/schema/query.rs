@@ -1,18 +1,18 @@
 //! File containing query object of graphql schema
 use std::str::FromStr;
 
+use futures::Future;
+use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
-use hyper::Method;
-use futures::Future;
-use stq_static_resources::currency::{Currency, CurrencyGraphQl};
-use stq_static_resources::{Language, LanguageGraphQl};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::currency::{Currency, CurrencyGraphQl};
+use stq_static_resources::{Language, LanguageGraphQl};
 
+use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use super::*;
 
 pub const QUERY_NODE_ID: i32 = 1;
 

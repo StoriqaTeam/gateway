@@ -1,19 +1,19 @@
 //! File containing user object of graphql schema
-use std::str::FromStr;
 use std::cmp;
 use std::collections::HashMap;
+use std::str::FromStr;
 
+use futures::Future;
+use hyper::Method;
 use juniper;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
-use hyper::Method;
-use futures::Future;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
+use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use super::*;
 
 const MIN_ID: i32 = 0;
 

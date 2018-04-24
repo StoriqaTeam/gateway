@@ -1,24 +1,24 @@
 //! Mod containing all graphql schema
-pub mod query;
-pub mod cart_product;
-pub mod mutations;
-pub mod user;
-pub mod node;
-pub mod product;
-pub mod base_product;
-pub mod store;
-pub mod category;
 pub mod attribute;
-pub mod search;
-pub mod user_role;
+pub mod base_product;
+pub mod cart_product;
+pub mod category;
 pub mod main_page;
+pub mod mutations;
+pub mod node;
 pub mod page_info;
+pub mod product;
+pub mod query;
+pub mod search;
+pub mod store;
+pub mod user;
+pub mod user_role;
 
 use juniper;
 
-pub use self::query::*;
 pub use self::mutations::*;
 pub use self::node::*;
+pub use self::query::*;
 
 use graphql::context::Context;
 use graphql::models::Mock;

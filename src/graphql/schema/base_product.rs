@@ -1,17 +1,17 @@
 //! File containing product object of graphql schema
-use juniper;
-use juniper::ID as GraphqlID;
-use juniper::FieldResult;
-use hyper::Method;
 use futures::Future;
+use hyper::Method;
+use juniper;
+use juniper::FieldResult;
+use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Translation;
 
+use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use super::*;
 
 graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     description: "Base Product's info."
@@ -106,7 +106,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     field views() -> &i32 as "Views" {
         &self.views
     }
-    
+
     field slug() -> &str as "Slug" {
         &self.slug
     }

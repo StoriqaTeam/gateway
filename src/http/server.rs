@@ -1,29 +1,29 @@
-use std::sync::Arc;
-use std::process;
-use std::io::prelude::*;
 use std::fs::File;
+use std::io::prelude::*;
+use std::process;
+use std::sync::Arc;
 
-use hyper;
-use hyper::mime;
-use hyper::Method::{Get, Options, Post};
-use hyper::server::{Http, Request, Response, Service};
-use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge,
-                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Headers};
 use futures;
 use futures::future;
 use futures::IntoFuture;
 use futures::{Future, Stream};
-use serde_json;
-use juniper::http::GraphQLRequest;
-use tokio_core::reactor::Handle;
+use hyper;
+use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge,
+                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Headers};
+use hyper::mime;
+use hyper::server::{Http, Request, Response, Service};
+use hyper::Method::{Get, Options, Post};
 use jsonwebtoken::{decode, Algorithm, Validation};
+use juniper::http::GraphQLRequest;
+use serde_json;
+use tokio_core::reactor::Handle;
 use uuid::Uuid;
 
 use stq_http::client::ClientHandle;
 
-use super::router;
 use super::context::Context;
 use super::graphiql;
+use super::router;
 use super::utils;
 use config::Config;
 use graphql::models::jwt::JWTPayload;
@@ -42,9 +42,7 @@ impl Service for WebService {
     fn call(&self, req: Request) -> Self::Future {
         let context = self.context.clone();
         match (req.method(), self.context.router.test(req.path())) {
-            (&Get, Some(router::Route::Healthcheck)) => {
-                Box::new(future::ok(utils::response_with_body("Ok".to_string())))
-            }
+            (&Get, Some(router::Route::Healthcheck)) => Box::new(future::ok(utils::response_with_body("Ok".to_string()))),
 
             (&Get, Some(router::Route::Root)) => {
                 let source = graphiql::source("/graphql");
@@ -90,10 +88,7 @@ impl Service for WebService {
                         .and_then(move |resp| {
                             let mut new_headers = Headers::new();
                             new_headers.set(AccessControlAllowOrigin::Value(domain.to_owned()));
-                            Box::new(future::ok(utils::replace_response_headers(
-                                resp,
-                                new_headers,
-                            )))
+                            Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
                         })
                 }))
             }
@@ -114,10 +109,7 @@ impl Service for WebService {
                 new_headers.set(AccessControlMaxAge(max_age));
                 new_headers.set(ContentType(mime::TEXT_HTML));
 
-                Box::new(future::ok(utils::replace_response_headers(
-                    resp,
-                    new_headers,
-                )))
+                Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
             }
 
             _ => {
@@ -129,11 +121,7 @@ impl Service for WebService {
 }
 
 pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: ClientHandle) {
-    let addr = config
-        .gateway
-        .url
-        .parse()
-        .expect("Cannot parse gateway url from config");
+    let addr = config.gateway.url.parse().expect("Cannot parse gateway url from config");
 
     debug!("Reading public key file {}", &config.jwt.public_key_path);
     let mut f = File::open(config.jwt.public_key_path.clone()).unwrap();
@@ -157,10 +145,7 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: Clie
     tokio_handle.spawn(
         serve
             .for_each(move |conn| {
-                handle_arc.spawn(
-                    conn.map(|_| ())
-                        .map_err(|why| error!("Server Error: {:?}", why)),
-                );
+                handle_arc.spawn(conn.map(|_| ()).map_err(|why| error!("Server Error: {:?}", why)));
                 Ok(())
             })
             .map_err(|_| ()),

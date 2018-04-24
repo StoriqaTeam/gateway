@@ -1,6 +1,6 @@
+use super::*;
 use juniper::ID as GraphqlID;
 use stq_static_resources::{Translation, TranslationInput};
-use super::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct BaseProduct {
@@ -62,7 +62,7 @@ impl UpdateBaseProductInput {
             currency_id: None,
             category_id: None,
             rating: None,
-            slug: None
+            slug: None,
         } == self.clone()
     }
 }
