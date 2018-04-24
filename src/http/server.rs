@@ -42,6 +42,10 @@ impl Service for WebService {
     fn call(&self, req: Request) -> Self::Future {
         let context = self.context.clone();
         match (req.method(), self.context.router.test(req.path())) {
+            (&Get, Some(router::Route::Healthcheck)) => {
+                Box::new(future::ok(utils::response_with_body("Ok".to_string())))
+            }
+
             (&Get, Some(router::Route::Root)) => {
                 let source = graphiql::source("/graphql");
                 Box::new(future::ok(utils::response_with_body(source)))
