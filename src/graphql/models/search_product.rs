@@ -8,6 +8,8 @@ pub struct ProductsSearchOptionsInput {
     pub price_filter: Option<RangeFilterInput>,
     #[graphql(description = "Categories ids.")]
     pub category_id: Option<i32>,
+    #[graphql(description = "Sorting.")]
+    pub sort_by: Option<ProductsSorting>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
@@ -42,4 +44,12 @@ impl ProductsSearchFilters {
     pub fn new(search_term: SearchProductInput) -> Self {
         Self { search_term }
     }
+}
+
+#[derive(GraphQLEnum, Serialize, Deserialize, Clone, Debug)]
+pub enum ProductsSorting {
+    Views,
+    PriceAsc,
+    PriceDesc,
+    Discount,
 }
