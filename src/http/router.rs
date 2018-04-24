@@ -5,11 +5,13 @@ use stq_router::RouteParser;
 pub enum Route {
     Root,
     Graphql,
+    Healthcheck,
 }
 
 pub fn create_route_parser() -> RouteParser<Route> {
     let mut router = RouteParser::default();
     router.add_route(r"^/$", || Route::Root);
     router.add_route(r"^/graphql$", || Route::Graphql);
+    router.add_route(r"^/healthcheck$", || Route::Healthcheck);
     router
 }
