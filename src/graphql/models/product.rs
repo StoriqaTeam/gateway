@@ -9,7 +9,7 @@ pub struct Product {
     pub discount: Option<f64>,
     pub photo_main: Option<String>,
     pub additional_photos: Option<Vec<String>>,
-    pub vendor_code: Option<String>,
+    pub vendor_code: String,
     pub cashback: Option<f64>,
     pub price: f64,
 }
@@ -93,7 +93,7 @@ pub struct NewProduct {
     #[graphql(description = "Additional photos of the product.")]
     pub additional_photos: Option<Vec<String>>,
     #[graphql(description = "Vendor code.")]
-    pub vendor_code: Option<String>,
+    pub vendor_code: String,
     #[graphql(description = "Cashback.")]
     pub cashback: Option<f64>,
     #[graphql(description = "Price.")]

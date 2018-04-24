@@ -42,7 +42,7 @@ graphql_object!(Product: Context as "Product" |&self| {
         &self.additional_photos
     }
 
-    field vendor_code() -> &Option<String> as "Vendor code" {
+    field vendor_code() -> &String as "Vendor code" {
         &self.vendor_code
     }
 
