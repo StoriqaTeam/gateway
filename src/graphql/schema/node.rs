@@ -1,5 +1,6 @@
 //! File containing node object of graphql schema
 use juniper::ID as GraphqlID;
+use base64::encode;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -18,6 +19,7 @@ pub enum Node {
     BaseProduct(BaseProduct),
     Category(Category),
     Attribute(Attribute),
+    CartProduct(CartProduct)
 }
 
 graphql_interface!(Node: Context as "Node" |&self| {
@@ -34,6 +36,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::BaseProduct(BaseProduct { ref id, .. })  => ID::new(Service::Stores, Model::BaseProduct, *id).to_string().into(),
             Node::Category(Category { ref id, .. })  => ID::new(Service::Stores, Model::Category, *id).to_string().into(),
             Node::Attribute(Attribute { ref id, .. })  => ID::new(Service::Stores, Model::Attribute, *id).to_string().into(),
+            Node::CartProduct(CartProduct { ref product_id, .. })  => encode(&*format!("{}|CartProduct|{}", Service::Orders, product_id)).to_string().into(),
         }
     }
 
@@ -45,6 +48,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &BaseProduct => match *self { Node::BaseProduct(ref h) => Some(h), _ => None },
         &Category => match *self { Node::Category(ref h) => Some(h), _ => None },
         &Attribute => match *self { Node::Attribute(ref h) => Some(h), _ => None },
+        &CartProduct => match *self { Node::CartProduct(ref h) => Some(h), _ => None },
     }
 });
 
