@@ -90,7 +90,7 @@ pub struct CreateBaseProductInput {
     #[graphql(description = "Int Category id.")]
     pub category_id: i32,
     #[graphql(description = "Slug.")]
-    pub slug: String,
+    pub slug: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
