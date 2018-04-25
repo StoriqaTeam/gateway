@@ -1,4 +1,7 @@
 //! File containing product object of graphql schema
+use std::str::FromStr;
+use std::cmp;
+
 use futures::Future;
 use hyper::Method;
 use juniper;
@@ -85,7 +88,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             .map(|u| Some(u))
     }
 
-    field variants(&executor) -> FieldResult<Option<Variants>> as "Variants" {
+    field deprecated "Use products instead" variants(&executor) -> FieldResult<Option<Variants>> as "Variants" {
         let context = executor.context();
         if let Some(ref variants) = self.variants {
             Ok(Some(Variants::new(variants.clone())))
@@ -101,6 +104,72 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
                 .map(|u| Some(Variants::new(u)))
         }
 
+    }
+
+    field products(&executor,
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<GraphqlID>  as "Offset from begining") 
+            -> FieldResult<Option<Connection<Product, PageInfo>>> as "Fetches products using relay connection." {
+        let context = executor.context();
+
+        let offset = after
+            .and_then(|id| i32::from_str(&id).ok())
+            .unwrap_or_default();
+
+        let records_limit = context.config.gateway.records_limit;
+        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        if let Some(ref variants) = self.variants {
+            let mut product_edges: Vec<Edge<Product>> = variants.clone()
+                .into_iter()
+                .skip(offset as usize)
+                .take(first as usize)
+                .map(|product| Edge::new(
+                            juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id.clone()).to_string()),
+                            product.clone()
+                        ))
+                .collect();
+            let has_next_page = product_edges.len() as i32 > first;
+            let has_previous_page = true;
+            let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+            let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
+            let page_info = PageInfo {
+                has_next_page,
+                has_previous_page,
+                start_cursor,
+                end_cursor};
+            Ok(Some(Connection::new(product_edges, page_info)))
+        } else {
+            let url = format!("{}/{}/by_base_product/{}",
+                context.config.service_url(Service::Stores),
+                Model::Product.to_url(),
+                self.id);
+
+            context.request::<Vec<Product>>(Method::Get, url, None)
+            .map (|products| {
+                let mut product_edges: Vec<Edge<Product>> = products
+                    .into_iter()
+                    .skip(offset as usize)
+                    .take(first as usize)
+                    .map(|product| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id.clone()).to_string()),
+                                product.clone()
+                            ))
+                    .collect();
+                let has_next_page = product_edges.len() as i32 > first;
+                let has_previous_page = true;
+                let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page,
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
+                Connection::new(product_edges, page_info)
+            })
+            .wait()
+            .map(|u| Some(u))
+        }
     }
 
     field views() -> &i32 as "Views" {
