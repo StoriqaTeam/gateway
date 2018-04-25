@@ -2,14 +2,23 @@
 use futures::Future;
 use hyper::Method;
 use juniper::FieldResult;
+use juniper::ID as GraphqlID;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
+use super::*;
 use graphql::context::Context;
 use graphql::models::*;
 
 graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     description: "Cart Product info."
+
+    interfaces: [&Node]
+
+    field id() -> GraphqlID as "Base64 Unique id"{
+        ID::new(Service::Orders, Model::CartProduct, self.product_id).to_string().into()
+    }
 
     field quantity() -> &i32 as "Quantity" {
         &self.quantity
