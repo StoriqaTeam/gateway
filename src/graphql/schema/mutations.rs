@@ -396,7 +396,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/cart/products/{}/increment", context.config.service_url(Service::Orders), input.product_id);
 
         context.request::<OrdersCart>(Method::Post, url, None)
-            .map(|resp| cart_from_orders_reply(resp))
+            .map(cart_from_orders_reply)
             .wait()
     }
 
@@ -407,25 +407,27 @@ graphql_object!(Mutation: Context |&self| {
         let body = serde_json::to_string(&input)?;
 
         context.request::<OrdersCart>(Method::Put, url, Some(body))
-            .map(|resp| cart_from_orders_reply(resp))
+            .map(cart_from_orders_reply)
             .wait()
     }
 
     field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Cart> as "Deletes products from cart." {
         let context = executor.context();
 
-        if let Some(product_id) = input.product_id {
-            let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), product_id);
+        let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
 
-            context.request::<OrdersCart>(Method::Delete, url, None)
-                .map(|resp| cart_from_orders_reply(resp))
-                .wait()
-        } else {
-            let url = format!("{}/cart/clear", context.config.service_url(Service::Orders));
+        context.request::<OrdersCart>(Method::Delete, url, None)
+            .map(cart_from_orders_reply)
+            .wait()
+    }
 
-            context.request::<OrdersCart>(Method::Post, url, None)
-                .map(|resp| cart_from_orders_reply(resp))
-                .wait()
-        }
+    field clearCart(&executor) -> FieldResult<Cart> as "Clears cart." {
+        let context = executor.context();
+
+        let url = format!("{}/cart/clear", context.config.service_url(Service::Orders));
+
+        context.request::<OrdersCart>(Method::Post, url, None)
+            .map(cart_from_orders_reply)
+            .wait()
     }
 });

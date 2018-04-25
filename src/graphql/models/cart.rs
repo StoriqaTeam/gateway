@@ -42,5 +42,5 @@ pub struct SetInCartInput {
 #[graphql(description = "Delete product from cart input object")]
 pub struct DeleteFromCartInput {
     #[graphql(description = "Product id.")]
-    pub product_id: Option<i32>,
+    pub product_id: i32,
 }
