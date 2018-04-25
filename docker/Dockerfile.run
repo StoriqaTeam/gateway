@@ -1,5 +1,12 @@
 FROM debian:stable-slim
 
+# Install deps and cleanup
+RUN apt-get update \
+  && apt-get install -y ca-certificates \
+  && apt-get autoremove -y \
+  && apt-get clean -y \
+  && rm -rf /var/lib/apt/lists/
+
 RUN mkdir -p /app/config \
   && adduser --disabled-password --gecos "" --home /app --no-create-home -u 5000 app
 WORKDIR /app
