@@ -54,6 +54,21 @@ graphql_object!(Product: Context as "Product" |&self| {
         &self.price
     }
 
+    field base_product(&executor) -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            self.base_product_id.to_string()
+        );
+
+        context.request::<BaseProduct>(Method::Get, url, None)
+            .wait()
+            .map(|u| Some(u))
+    }
+
     field attributes(&executor) -> FieldResult<Option<Vec<AttrValue>>> as "Variants" {
        let context = executor.context();
         let url = format!("{}/{}/{}/attributes",
