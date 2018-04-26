@@ -35,7 +35,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
             Model::Store.to_url());
-        
+
         let body = serde_json::to_string(&self)?;
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
@@ -65,40 +65,40 @@ graphql_object!(Cart: Context as "Cart" |&self| {
             .map(|u| Some(u))
     }
 
-    field cart_products(&executor, 
+    field cart_products(&executor,
         first = None : Option<i32> as "First edges",  
         after = None : Option<GraphqlID>  as "Base64 Id of product") 
             -> Connection<CartProduct, PageInfo> as "Fetches cart products using relay connection." { 
-        let context = executor.context(); 
- 
+        let context = executor.context();
+
         let offset = after
             .and_then(|id| i32::from_str(&id).ok())
             .unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
-        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32); 
- 
+        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
         let mut carts_edges: Vec<Edge<CartProduct>> = self.inner
-            .clone() 
+            .clone()
             .into_iter()
             .skip(offset as usize)
-            .take(count as usize) 
-            .map(|cart_product| Edge::new( 
-                        juniper::ID::from(ID::new(Service::Orders, Model::CartProduct, cart_product.product_id.clone()).to_string()), 
-                        cart_product.clone() 
-                    )) 
-            .collect(); 
+            .take(count as usize)
+            .map(|cart_product| Edge::new(
+                        juniper::ID::from(ID::new(Service::Orders, Model::CartProduct, cart_product.product_id.clone()).to_string()),
+                        cart_product.clone()
+                    ))
+            .collect();
         let has_next_page = carts_edges.len() as i32 > count;
-        let has_previous_page = true; 
-        let start_cursor =  carts_edges.iter().nth(0).map(|e| e.cursor.clone()); 
-        let end_cursor = carts_edges.iter().last().map(|e| e.cursor.clone()); 
-        let page_info = PageInfo { 
-            has_next_page, 
-            has_previous_page, 
-            start_cursor, 
-            end_cursor}; 
-        Connection::new(carts_edges, page_info) 
-    } 
+        let has_previous_page = true;
+        let start_cursor =  carts_edges.iter().nth(0).map(|e| e.cursor.clone());
+        let end_cursor = carts_edges.iter().last().map(|e| e.cursor.clone());
+        let page_info = PageInfo {
+            has_next_page,
+            has_previous_page,
+            start_cursor,
+            end_cursor};
+        Connection::new(carts_edges, page_info)
+    }
 
 });
 

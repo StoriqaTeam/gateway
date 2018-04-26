@@ -8,14 +8,12 @@ pub struct CartProduct {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Cart {
-    pub inner: Vec<CartProduct>
+    pub inner: Vec<CartProduct>,
 }
 
 impl Cart {
     pub fn new(inner: Vec<CartProduct>) -> Self {
-        Self {
-            inner
-        }
+        Self { inner }
     }
 }
 
