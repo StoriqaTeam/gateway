@@ -265,7 +265,10 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
                     );
         context.request::<Category>(Method::Post, url, Some(body))
             .wait()
-            .map(|u| Some(u))
+            .map(|mut cat|{
+                cat.id = -1; //for Relay: root category and searched category must not have equal id
+                Some(cat)
+            })
     }
 
     field attr_filters(&executor) -> FieldResult<Option<Vec<AttributeFilter>>> as "Attribute filters."{
@@ -321,7 +324,7 @@ graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
             .wait()
     }
 
-    field category(&executor) -> FieldResult<Category> as "Category."{
+    field category(&executor) -> FieldResult<Option<Category>> as "Category."{
         let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
@@ -333,9 +336,13 @@ graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
 
         context.request::<Category>(Method::Post, url, Some(body))
             .wait()
+            .map(|mut cat|{
+                cat.id = -1; //for Relay: root category and searched category must not have equal id
+                Some(cat)
+            })
     }
 
-    field country(&executor) -> FieldResult<Vec<String>> as "Countries"{
+    field country(&executor) -> FieldResult<Option<Vec<String>>> as "Countries"{
         let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
@@ -347,6 +354,7 @@ graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
 
         context.request::<Vec<String>>(Method::Post, url, Some(body))
             .wait()
+            .map(|u| Some(u))
     }
 
 });

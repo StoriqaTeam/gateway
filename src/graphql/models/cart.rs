@@ -6,7 +6,18 @@ pub struct CartProduct {
     pub quantity: i32,
 }
 
-pub type Cart = Vec<CartProduct>;
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Cart {
+    pub inner: Vec<CartProduct>
+}
+
+impl Cart {
+    pub fn new(inner: Vec<CartProduct>) -> Self {
+        Self {
+            inner
+        }
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OrdersCart {
@@ -14,10 +25,11 @@ pub struct OrdersCart {
 }
 
 pub fn cart_from_orders_reply(v: OrdersCart) -> Cart {
-    v.products
+    let inner = v.products
         .into_iter()
         .map(|(product_id, quantity)| CartProduct { product_id, quantity })
-        .collect::<Cart>()
+        .collect::<Vec<CartProduct>>();
+    Cart::new(inner)
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
