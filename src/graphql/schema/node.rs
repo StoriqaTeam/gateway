@@ -18,7 +18,7 @@ pub enum Node {
     BaseProduct(BaseProduct),
     Category(Category),
     Attribute(Attribute),
-    CartProduct(CartProduct)
+    CartProduct(CartProduct),
 }
 
 graphql_interface!(Node: Context as "Node" |&self| {

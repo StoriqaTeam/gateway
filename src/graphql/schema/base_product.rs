@@ -1,6 +1,6 @@
 //! File containing product object of graphql schema
-use std::str::FromStr;
 use std::cmp;
+use std::str::FromStr;
 
 use futures::Future;
 use hyper::Method;
