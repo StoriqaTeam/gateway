@@ -84,3 +84,6 @@ pub struct DeleteAttributeFromCategory {
     #[graphql(description = "Id of Attribute.")]
     pub attr_id: i32,
 }
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct SearchCategory(pub Category);

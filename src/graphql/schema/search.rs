@@ -27,7 +27,9 @@ graphql_object!(Search: Context as "Search" |&self| {
         let context = executor.context();
 
         let offset = after
-            .and_then(|id| i32::from_str(&id).ok())
+            .and_then(|id|{
+                i32::from_str(&id).map(|i| i + 1).ok()
+            })
             .unwrap_or_default();
 
 
@@ -82,9 +84,10 @@ graphql_object!(Search: Context as "Search" |&self| {
         let context = executor.context();
 
         let offset = after
-            .and_then(|id| i32::from_str(&id).ok())
+            .and_then(|id|{
+                i32::from_str(&id).map(|i| i + 1).ok()
+            })
             .unwrap_or_default();
-
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
@@ -133,7 +136,9 @@ graphql_object!(Search: Context as "Search" |&self| {
         let context = executor.context();
 
         let offset = after
-            .and_then(|id| i32::from_str(&id).ok())
+            .and_then(|id|{
+                i32::from_str(&id).map(|i| i + 1).ok()
+            })
             .unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
@@ -192,7 +197,9 @@ graphql_object!(Search: Context as "Search" |&self| {
         let context = executor.context();
 
         let offset = after
-            .and_then(|id| i32::from_str(&id).ok())
+            .and_then(|id|{
+                i32::from_str(&id).map(|i| i + 1).ok()
+            })
             .unwrap_or_default();
 
 
@@ -254,7 +261,7 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
             .map(|u| Some(u))
     }
 
-    field categories(&executor) -> FieldResult<Option<Category>> as "Category."{
+    field categories(&executor) -> FieldResult<Option<SearchCategory>> as "Category."{
         let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
@@ -263,12 +270,9 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
                         context.config.service_url(Service::Stores),
                         Model::BaseProduct.to_url(),
                     );
-        context.request::<Category>(Method::Post, url, Some(body))
+        context.request::<SearchCategory>(Method::Post, url, Some(body))
             .wait()
-            .map(|mut cat|{
-                cat.id = -1; //for Relay: root category and searched category must not have equal id
-                Some(cat)
-            })
+            .map(|u| Some(u))
     }
 
     field attr_filters(&executor) -> FieldResult<Option<Vec<AttributeFilter>>> as "Attribute filters."{

@@ -37,6 +37,10 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         0.0
     }
 
+    field photo_main() -> &Option<String> as "Photo main" {
+        &self.photo_main
+    }
+
     field delivery_operator() -> &str as "Delivery Operator" {
         "Operator"
     }
