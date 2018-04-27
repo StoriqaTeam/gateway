@@ -324,17 +324,15 @@ graphql_object!(User: Context as "User" |&self| {
     field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 
-        let url = format!("{}/cart?offset={}&count={}",
-            &context.config.service_url(Service::Orders),
-            0,
-            100);
+        let url = format!("{}/cart/products",
+            &context.config.service_url(Service::Orders));
 
         context.request::<HashMap<i32,i32>>(Method::Get, url, None)
             .map (|hash| hash.into_iter()
-                .map(|(product_id, quantity)| CartProduct {
+                .map(|(product_id, quantity)| OrdersCartProduct {
                     product_id,
                     quantity,
-                }).collect::<Vec<CartProduct>>())
+                }).collect::<Vec<OrdersCartProduct>>())
             .map(|u| Some(Cart::new(u)))
             .wait()
     }

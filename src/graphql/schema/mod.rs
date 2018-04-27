@@ -2,6 +2,8 @@
 pub mod attribute;
 pub mod base_product;
 pub mod cart;
+pub mod cart_product;
+pub mod cart_store;
 pub mod category;
 pub mod main_page;
 pub mod mutations;
