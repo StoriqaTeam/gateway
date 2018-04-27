@@ -1,38 +1,38 @@
-use std::collections::BTreeMap;
+use stq_static_resources::Translation;
+
+use super::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CartProduct {
+pub struct OrdersCartProduct {
     pub product_id: i32,
+    pub quantity: i32,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct CartProduct {
+    pub id: i32,
+    pub name: Vec<Translation>,
+    pub price: f64,
     pub quantity: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Cart {
-    pub inner: Vec<CartProduct>,
+    pub inner: Vec<OrdersCartProduct>,
 }
 
 impl Cart {
-    pub fn new(inner: Vec<CartProduct>) -> Self {
+    pub fn new(inner: Vec<OrdersCartProduct>) -> Self {
         Self { inner }
     }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct OrdersCart {
-    pub products: BTreeMap<i32, i32>,
-}
-
-pub fn cart_from_orders_reply(v: OrdersCart) -> Cart {
-    let inner = v.products
-        .into_iter()
-        .map(|(product_id, quantity)| CartProduct { product_id, quantity })
-        .collect::<Vec<CartProduct>>();
-    Cart::new(inner)
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Increment product quantity in cart input object")]
 pub struct IncrementInCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "Product id.")]
     #[serde(skip_serializing)]
     pub product_id: i32,
@@ -41,6 +41,9 @@ pub struct IncrementInCartInput {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Set product data in cart input object")]
 pub struct SetInCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "Product id.")]
     #[serde(skip_serializing)]
     pub product_id: i32,
@@ -51,6 +54,28 @@ pub struct SetInCartInput {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Delete product from cart input object")]
 pub struct DeleteFromCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "Product id.")]
     pub product_id: i32,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct CartStore {
+    pub id: i32,
+    pub name: Vec<Translation>,
+    pub rating: f64,
+    pub products: Vec<CartProduct>,
+}
+
+impl CartStore {
+    pub fn new(store: Store, products: Vec<CartProduct>) -> Self {
+        Self {
+            id: store.id,
+            name: store.name,
+            rating: store.rating,
+            products,
+        }
+    }
 }

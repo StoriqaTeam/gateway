@@ -12,7 +12,6 @@ use serde_json;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
-use super::*;
 use graphql::context::Context;
 use graphql::models::*;
 
@@ -22,7 +21,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
     field stores(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Id of a store") 
-            -> FieldResult<Option<Connection<Store, PageInfo>>> as "Fetches stores using relay connection." {
+            -> FieldResult<Option<Connection<CartStore, PageInfo>>> as "Fetches stores using relay connection." {
         let context = executor.context();
 
         let offset = after
@@ -36,19 +35,50 @@ graphql_object!(Cart: Context as "Cart" |&self| {
             context.config.service_url(Service::Stores),
             Model::Store.to_url());
 
-        let body = serde_json::to_string(&self)?;
+        let body = serde_json::to_string(&self.inner)?;
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
-
             .map (|stores| {
-                let mut store_edges: Vec<Edge<Store>> = stores
+                let mut store_edges: Vec<Edge<CartStore>> = stores
                     .into_iter()
                     .skip(offset as usize)
                     .take(count as usize)
-                    .map(|store| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.clone()).to_string()),
-                                store.clone()
-                            ))
+                    .map(|store| {
+                        let products = store.base_products
+                            .clone()
+                            .unwrap_or_default()
+                            .into_iter()
+                            .flat_map(|base_product| {
+                                base_product.variants.clone()
+                                .and_then(|mut v|{
+                                    Some(v.iter_mut().map(|variant| {
+                                        let quantity = self.inner
+                                            .iter()
+                                            .find(|v|v.product_id == variant.id)
+                                            .map(|v| v.quantity)
+                                            .unwrap_or_default();
+
+                                        let price = if let Some(discount) = variant.discount.clone() {
+                                            variant.price * ( 1.0 - discount )
+                                        } else {
+                                            variant.price
+                                        };
+
+                                        CartProduct {
+                                            id: variant.id,
+                                            name: base_product.name.clone(),
+                                            price,
+                                            quantity
+                                        }
+                                    }).collect::<Vec<CartProduct>>())
+                                }).unwrap_or_default()
+                            }).collect();
+                        let cart_store = CartStore::new(store, products);
+                        Edge::new(
+                            juniper::ID::from(ID::new(Service::Stores, Model::CartStore, cart_store.id.clone()).to_string()),
+                            cart_store.clone()
+                        )
+                    })
                     .collect();
                 let has_next_page = store_edges.len() as i32 > count;
                 let has_previous_page = true;
@@ -65,65 +95,4 @@ graphql_object!(Cart: Context as "Cart" |&self| {
             .map(|u| Some(u))
     }
 
-    field cart_products(&executor,
-        first = None : Option<i32> as "First edges",  
-        after = None : Option<GraphqlID>  as "Base64 Id of product") 
-            -> Connection<CartProduct, PageInfo> as "Fetches cart products using relay connection." { 
-        let context = executor.context();
-
-        let offset = after
-            .and_then(|id| i32::from_str(&id).ok())
-            .unwrap_or_default();
-
-        let records_limit = context.config.gateway.records_limit;
-        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
-
-        let mut carts_edges: Vec<Edge<CartProduct>> = self.inner
-            .clone()
-            .into_iter()
-            .skip(offset as usize)
-            .take(count as usize)
-            .map(|cart_product| Edge::new(
-                        juniper::ID::from(ID::new(Service::Orders, Model::CartProduct, cart_product.product_id.clone()).to_string()),
-                        cart_product.clone()
-                    ))
-            .collect();
-        let has_next_page = carts_edges.len() as i32 > count;
-        let has_previous_page = true;
-        let start_cursor =  carts_edges.iter().nth(0).map(|e| e.cursor.clone());
-        let end_cursor = carts_edges.iter().last().map(|e| e.cursor.clone());
-        let page_info = PageInfo {
-            has_next_page,
-            has_previous_page,
-            start_cursor,
-            end_cursor};
-        Connection::new(carts_edges, page_info)
-    }
-
-});
-
-graphql_object!(CartProduct: Context as "CartProduct" |&self| {
-    description: "Cart Product info."
-
-    interfaces: [&Node]
-
-    field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Orders, Model::CartProduct, self.product_id).to_string().into()
-    }
-
-    field quantity() -> &i32 as "Quantity" {
-        &self.quantity
-    }
-
-    field product(&executor) -> FieldResult<Option<Product>> as "Fetches product from cart." {
-        let context = executor.context();
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
-            self.product_id);
-
-        context.request::<Product>(Method::Get, url, None)
-            .wait()
-            .map(|u| Some(u))
-    }
 });

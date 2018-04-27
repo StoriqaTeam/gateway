@@ -395,8 +395,8 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let url = format!("{}/cart/products/{}/increment", context.config.service_url(Service::Orders), input.product_id);
 
-        context.request::<OrdersCart>(Method::Post, url, None)
-            .map(cart_from_orders_reply)
+        context.request::<OrdersCartProduct>(Method::Post, url, None)
+            .map(|orders_cart_product| Cart::new(vec![orders_cart_product]))
             .wait()
     }
 
@@ -406,8 +406,8 @@ graphql_object!(Mutation: Context |&self| {
 
         let body = serde_json::to_string(&input)?;
 
-        context.request::<OrdersCart>(Method::Put, url, Some(body))
-            .map(cart_from_orders_reply)
+        context.request::<OrdersCartProduct>(Method::Put, url, Some(body))
+            .map(|orders_cart_product| Cart::new(vec![orders_cart_product]))
             .wait()
     }
 
@@ -416,18 +416,18 @@ graphql_object!(Mutation: Context |&self| {
 
         let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
 
-        context.request::<OrdersCart>(Method::Delete, url, None)
-            .map(cart_from_orders_reply)
+        context.request::<OrdersCartProduct>(Method::Delete, url, None)
+            .map(|orders_cart_product| Cart::new(vec![orders_cart_product]))
             .wait()
     }
 
-    field clearCart(&executor) -> FieldResult<Cart> as "Clears cart." {
+    field clearCart(&executor) -> FieldResult<Mock> as "Clears cart." {
         let context = executor.context();
 
         let url = format!("{}/cart/clear", context.config.service_url(Service::Orders));
 
-        context.request::<OrdersCart>(Method::Post, url, None)
-            .map(cart_from_orders_reply)
-            .wait()
+        context.request::<()>(Method::Post, url, None)
+            .wait()?;
+        Ok(Mock{})
     }
 });
