@@ -254,7 +254,7 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
             .map(|u| Some(u))
     }
 
-    field categories(&executor) -> FieldResult<Option<Category>> as "Category."{
+    field categories(&executor) -> FieldResult<Option<SearchCategory>> as "Category."{
         let context = executor.context();
 
         let body = serde_json::to_string(&self.search_term)?;
@@ -263,12 +263,9 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
                         context.config.service_url(Service::Stores),
                         Model::BaseProduct.to_url(),
                     );
-        context.request::<Category>(Method::Post, url, Some(body))
+        context.request::<SearchCategory>(Method::Post, url, Some(body))
             .wait()
-            .map(|mut cat|{
-                cat.id = -1; //for Relay: root category and searched category must not have equal id
-                Some(cat)
-            })
+            .map(|u| Some(u))
     }
 
     field attr_filters(&executor) -> FieldResult<Option<Vec<AttributeFilter>>> as "Attribute filters."{

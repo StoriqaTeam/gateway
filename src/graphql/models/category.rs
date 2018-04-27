@@ -84,3 +84,13 @@ pub struct DeleteAttributeFromCategory {
     #[graphql(description = "Id of Attribute.")]
     pub attr_id: i32,
 }
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct SearchCategory {
+    pub id: i32,
+    pub name: Vec<Translation>,
+    pub meta_field: Option<String>,
+    pub children: Vec<SearchCategory>,
+    pub parent_id: Option<i32>,
+    pub level: i32,
+}

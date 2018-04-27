@@ -57,3 +57,38 @@ graphql_object!(Category: Context as "Category" |&self| {
             .map(|u| Some(u))
     }
 });
+
+graphql_object!(SearchCategory: Context as "Search Category" |&self| {
+    description: "Search Category info."
+
+    interfaces: [&Node]
+
+    field id() -> GraphqlID as "Base64 Unique id"{
+        ID::new(Service::Stores, Model::SearchCategory, self.id).to_string().into()
+    }
+
+    field raw_id() -> i32 as "Unique int id"{
+        self.id
+    }
+
+    field name() -> &[Translation] as "Full Name" {
+        &self.name
+    }
+
+    field meta_field() -> &Option<String> as "Meta field" {
+        &self.meta_field
+    }
+
+    field parent_id() -> &Option<i32> as "Parent id" {
+        &self.parent_id
+    }
+
+    field level() -> &i32 as "Level" {
+        &self.level
+    }
+
+    field children() -> &[SearchCategory] as "Children categories" {
+        &self.children
+    }
+
+});
