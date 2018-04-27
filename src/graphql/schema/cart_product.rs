@@ -32,7 +32,7 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     field price() -> &f64 as "Price" {
         &self.price
     }
-    
+
     field delivery_price() -> f64 as "Delivery Price" {
         0.0
     }
@@ -40,7 +40,7 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     field delivery_operator() -> &str as "Delivery Operator" {
         "Operator"
     }
-  
+
     field delivery_period() -> &str as "Delivery Period" {
         "14 days"
     }

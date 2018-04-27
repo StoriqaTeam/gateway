@@ -43,8 +43,8 @@ graphql_object!(Cart: Context as "Cart" |&self| {
                     .into_iter()
                     .skip(offset as usize)
                     .take(count as usize)
-                    .map(|store| { 
-                        let products = store.base_products    
+                    .map(|store| {
+                        let products = store.base_products
                             .clone()
                             .unwrap_or_default()
                             .into_iter()
@@ -68,7 +68,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
                                             id: variant.id,
                                             name: base_product.name.clone(),
                                             price,
-                                            quantity 
+                                            quantity
                                         }
                                     }).collect::<Vec<CartProduct>>())
                                 }).unwrap_or_default()

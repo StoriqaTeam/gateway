@@ -1,4 +1,4 @@
-use stq_static_resources::{Translation};
+use stq_static_resources::Translation;
 
 use super::*;
 
@@ -30,6 +30,9 @@ impl Cart {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Increment product quantity in cart input object")]
 pub struct IncrementInCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "Product id.")]
     #[serde(skip_serializing)]
     pub product_id: i32,
@@ -38,6 +41,9 @@ pub struct IncrementInCartInput {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Set product data in cart input object")]
 pub struct SetInCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "Product id.")]
     #[serde(skip_serializing)]
     pub product_id: i32,
@@ -48,6 +54,9 @@ pub struct SetInCartInput {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Delete product from cart input object")]
 pub struct DeleteFromCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "Product id.")]
     pub product_id: i32,
 }
@@ -61,13 +70,12 @@ pub struct CartStore {
 }
 
 impl CartStore {
-    pub fn new (store: Store, products: Vec<CartProduct>) -> Self {
+    pub fn new(store: Store, products: Vec<CartProduct>) -> Self {
         Self {
-            id : store.id,
-            name : store.name,
+            id: store.id,
+            name: store.name,
             rating: store.rating,
-            products
+            products,
         }
-
     }
 }
