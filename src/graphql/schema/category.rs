@@ -58,37 +58,37 @@ graphql_object!(Category: Context as "Category" |&self| {
     }
 });
 
-graphql_object!(SearchCategory: Context as "Search Category" |&self| {
+graphql_object!(SearchCategory: Context as "SearchCategory" |&self| {
     description: "Search Category info."
 
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::SearchCategory, self.id).to_string().into()
+        ID::new(Service::Stores, Model::SearchCategory, self.0.id).to_string().into()
     }
 
     field raw_id() -> i32 as "Unique int id"{
-        self.id
+        self.0.id
     }
 
     field name() -> &[Translation] as "Full Name" {
-        &self.name
+        &self.0.name
     }
 
     field meta_field() -> &Option<String> as "Meta field" {
-        &self.meta_field
+        &self.0.meta_field
     }
 
     field parent_id() -> &Option<i32> as "Parent id" {
-        &self.parent_id
+        &self.0.parent_id
     }
 
     field level() -> &i32 as "Level" {
-        &self.level
+        &self.0.level
     }
 
-    field children() -> &[SearchCategory] as "Children categories" {
-        &self.children
+    field children() -> Vec<SearchCategory> as "Children categories" {
+        self.0.children.clone().into_iter().map(|c| SearchCategory(c)).collect::<Vec<SearchCategory>>()
     }
 
 });

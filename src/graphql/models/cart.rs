@@ -13,6 +13,7 @@ pub struct CartProduct {
     pub id: i32,
     pub name: Vec<Translation>,
     pub price: f64,
+    pub photo_main: Option<String>,
     pub quantity: i32,
 }
 

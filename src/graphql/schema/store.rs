@@ -106,7 +106,9 @@ graphql_object!(Store: Context as "Store" |&self| {
         let context = executor.context();
 
         let offset = after
-            .and_then(|id| i32::from_str(&id).ok())
+            .and_then(|id|{
+                i32::from_str(&id).map(|i| i + 1).ok()
+            })
             .unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
