@@ -53,7 +53,7 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         "funds return"
     }
 
-    field delivery_return_payd_by() -> &str as "Delivery return payd by" {
+    field delivery_return_paid_by() -> &str as "Delivery return paid by" {
         "Seller"
     }
 
