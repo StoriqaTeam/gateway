@@ -391,33 +391,94 @@ graphql_object!(Mutation: Context |&self| {
         Ok(Mock{})
     }
 
-    field incrementInCart(&executor, input: IncrementInCartInput as "Increment in cart input.") -> FieldResult<Cart> as "Increment in cart." {
+    field incrementInCart(&executor, input: IncrementInCartInput as "Increment in cart input.") -> FieldResult<Option<CartStore>> as "Increment in cart." {
         let context = executor.context();
-        let url = format!("{}/cart/products/{}/increment", context.config.service_url(Service::Orders), input.product_id);
 
-        context.request::<OrdersCartProduct>(Method::Post, url, None)
-            .map(|orders_cart_product| Cart::new(vec![orders_cart_product]))
-            .wait()
+        let url = format!("{}/{}/store_id?product_id={}", 
+            context.config.service_url(Service::Stores),
+            Model::CartStore.to_url(),
+            input.product_id);
+
+        let store_id = context.request::<i32>(Method::Post, url, None)
+                        .wait()?;
+        let cp_input = CartProductIncrementPayload { store_id };
+        let body: String = serde_json::to_string(&cp_input)?.to_string();
+        let url = format!("{}/cart/products/{}/increment", context.config.service_url(Service::Orders), input.product_id);
+        let products = context.request::<Vec<OrdersCartProduct>>(Method::Post, url, Some(body))
+                        .wait()?;
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
+
+        let body = serde_json::to_string(&products)?;
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores|
+                stores
+                    .into_iter()
+                    .nth(0)
+                    .map(|store| {
+                        let products = store.base_products
+                            .clone()
+                            .unwrap_or_default()
+                            .into_iter()
+                            .flat_map(|base_product| {
+                                base_product.variants.clone()
+                                .and_then(|mut v|{
+                                    Some(v.iter_mut().map(|variant| {
+                                        let quantity = products
+                                            .iter()
+                                            .find(|v|v.product_id == variant.id)
+                                            .map(|v| v.quantity)
+                                            .unwrap_or_default();
+
+                                        let price = if let Some(discount) = variant.discount.clone() {
+                                            variant.price * ( 1.0 - discount )
+                                        } else {
+                                            variant.price
+                                        };
+
+                                        CartProduct {
+                                            id: variant.id,
+                                            name: base_product.name.clone(),
+                                            photo_main: variant.photo_main.clone(),
+                                            price,
+                                            quantity
+                                        }
+                                    }).collect::<Vec<CartProduct>>())
+                                }).unwrap_or_default()
+                            }).collect();
+                        CartStore::new(store, products)
+                    })
+                )
+        .wait()
+
     }
 
-    field setInCart(&executor, input: SetInCartInput as "Set product in cart input.") -> FieldResult<Cart> as "Sets product data in cart." {
+    field setInCart(&executor, input: SetInCartInput as "Set product in cart input.") -> FieldResult<CartProduct> as "Sets product data in cart." {
         let context = executor.context();
         let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
 
         let body = serde_json::to_string(&input)?;
 
-        context.request::<OrdersCartProduct>(Method::Put, url, Some(body))
-            .map(|orders_cart_product| Cart::new(vec![orders_cart_product]))
+        let order = context.request::<OrdersCartProduct>(Method::Put, url, Some(body))
+            .wait()?;
+
+        let url = format!("{}/{}?product_id={}", 
+            context.config.service_url(Service::Stores),
+            Model::CartStore.to_url(),
+            order.product_id);
+
+        context.request::<CartProduct>(Method::Post, url, None)
             .wait()
     }
 
-    field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Cart> as "Deletes products from cart." {
+    field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<CartProductStore> as "Deletes products from cart." {
         let context = executor.context();
 
         let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
 
-        context.request::<OrdersCartProduct>(Method::Delete, url, None)
-            .map(|orders_cart_product| Cart::new(vec![orders_cart_product]))
+        context.request::<CartProductStore>(Method::Delete, url, None)
             .wait()
     }
 
