@@ -404,7 +404,14 @@ graphql_object!(Mutation: Context |&self| {
         let cp_input = CartProductIncrementPayload { store_id };
         let body: String = serde_json::to_string(&cp_input)?.to_string();
         let url = format!("{}/cart/products/{}/increment", context.config.service_url(Service::Orders), input.product_id);
-        let products = context.request::<Vec<OrdersCartProduct>>(Method::Post, url, Some(body))
+        let products = context.request::<CartHash>(Method::Post, url, Some(body))
+            .map (|hash| hash.into_iter()
+                .map(|(product_id, info)| OrdersCartProduct {
+                    product_id,
+                    quantity: info.quantity,
+                    store_id: info.store_id,
+                    selected: info.selected,
+            }).collect::<Vec<OrdersCartProduct>>())
             .wait()?;
 
         let url = format!("{}/{}/cart",

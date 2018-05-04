@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use stq_static_resources::Translation;
 
 use super::*;
@@ -9,6 +11,15 @@ pub struct OrdersCartProduct {
     pub store_id: i32,
     pub selected: bool,
 }
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct OrdersCartItemInfo {
+    pub quantity: i32,
+    pub selected: bool,
+    pub store_id: i32,
+}
+
+pub type CartHash = HashMap<i32, OrdersCartItemInfo>;
 
 /// Base unit of user's product selection
 #[derive(Deserialize, Debug, Clone)]

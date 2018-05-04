@@ -325,7 +325,14 @@ graphql_object!(User: Context as "User" |&self| {
         let url = format!("{}/cart/products",
             &context.config.service_url(Service::Orders));
 
-        context.request::<Vec<OrdersCartProduct>>(Method::Get, url, None)
+        context.request::<CartHash>(Method::Get, url, None)
+            .map (|hash| hash.into_iter()
+                .map(|(product_id, info)| OrdersCartProduct {
+                    product_id,
+                    quantity: info.quantity,
+                    store_id: info.store_id,
+                    selected: info.selected,
+            }).collect::<Vec<OrdersCartProduct>>())
             .map(|u| Some(Cart::new(u)))
             .wait()
     }
