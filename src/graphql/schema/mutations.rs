@@ -396,16 +396,17 @@ graphql_object!(Mutation: Context |&self| {
 
         let url = format!("{}/{}/store_id?product_id={}", 
             context.config.service_url(Service::Stores),
-            Model::CartStore.to_url(),
+            Model::Product.to_url(),
             input.product_id);
+        let store_id = context.request::<i32>(Method::Get, url, None)
+            .wait()?;
 
-        let store_id = context.request::<i32>(Method::Post, url, None)
-                        .wait()?;
         let cp_input = CartProductIncrementPayload { store_id };
         let body: String = serde_json::to_string(&cp_input)?.to_string();
         let url = format!("{}/cart/products/{}/increment", context.config.service_url(Service::Orders), input.product_id);
         let products = context.request::<Vec<OrdersCartProduct>>(Method::Post, url, Some(body))
-                        .wait()?;
+            .wait()?;
+
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
             Model::Store.to_url());
@@ -455,7 +456,7 @@ graphql_object!(Mutation: Context |&self| {
 
     }
 
-    field setInCart(&executor, input: SetInCartInput as "Set product in cart input.") -> FieldResult<CartProduct> as "Sets product data in cart." {
+    field setInCart(&executor, input: SetInCartInput as "Set product in cart input.") -> FieldResult<Option<CartProduct>> as "Sets product data in cart." {
         let context = executor.context();
         let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
 
@@ -464,12 +465,37 @@ graphql_object!(Mutation: Context |&self| {
         let order = context.request::<OrdersCartProduct>(Method::Put, url, Some(body))
             .wait()?;
 
-        let url = format!("{}/{}?product_id={}", 
+        let url = format!("{}/{}/by_product/{}", 
             context.config.service_url(Service::Stores),
-            Model::CartStore.to_url(),
+            Model::BaseProduct.to_url(),
             order.product_id);
 
-        context.request::<CartProduct>(Method::Post, url, None)
+        context.request::<BaseProduct>(Method::Post, url, None)
+            .map(|base_product| {
+                let name = base_product.name.clone();
+                base_product.variants.and_then(|variants| {
+                    variants
+                        .into_iter()
+                        .nth(0)
+                        .map(|variant| {
+                            let quantity = order.quantity;
+
+                            let price = if let Some(discount) = variant.discount.clone() {
+                                variant.price * ( 1.0 - discount )
+                            } else {
+                                variant.price
+                            };
+
+                            CartProduct {
+                                id: variant.id,
+                                name,
+                                photo_main: variant.photo_main.clone(),
+                                price,
+                                quantity
+                            }
+                        })
+                })
+            })
             .wait()
     }
 
