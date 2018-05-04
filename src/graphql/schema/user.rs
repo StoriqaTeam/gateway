@@ -1,6 +1,5 @@
 //! File containing user object of graphql schema
 use std::cmp;
-use std::collections::HashMap;
 use std::str::FromStr;
 
 use futures::Future;
@@ -170,7 +169,6 @@ graphql_object!(User: Context as "User" |&self| {
             first + 1);
 
         context.request::<Vec<Store>>(Method::Get, url, None)
-
             .map (|stores| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
@@ -327,12 +325,14 @@ graphql_object!(User: Context as "User" |&self| {
         let url = format!("{}/cart/products",
             &context.config.service_url(Service::Orders));
 
-        context.request::<HashMap<i32,i32>>(Method::Get, url, None)
+        context.request::<CartHash>(Method::Get, url, None)
             .map (|hash| hash.into_iter()
-                .map(|(product_id, quantity)| OrdersCartProduct {
+                .map(|(product_id, info)| OrdersCartProduct {
                     product_id,
-                    quantity,
-                }).collect::<Vec<OrdersCartProduct>>())
+                    quantity: info.quantity,
+                    store_id: info.store_id,
+                    selected: info.selected,
+            }).collect::<Vec<OrdersCartProduct>>())
             .map(|u| Some(Cart::new(u)))
             .wait()
     }

@@ -11,6 +11,8 @@ services:
     volumes:
       - ..:/app
       - stq_cargo_cache:/usr/local/cargo
+    environment:
+      - "RUST_LOG=gateway_runner=debug"
     ports:
       - 8000:8000
     stdin_open: true

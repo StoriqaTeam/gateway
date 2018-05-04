@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use stq_static_resources::Translation;
 
 use super::*;
@@ -6,8 +8,20 @@ use super::*;
 pub struct OrdersCartProduct {
     pub product_id: i32,
     pub quantity: i32,
+    pub store_id: i32,
+    pub selected: bool,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct OrdersCartItemInfo {
+    pub quantity: i32,
+    pub selected: bool,
+    pub store_id: i32,
+}
+
+pub type CartHash = HashMap<i32, OrdersCartItemInfo>;
+
+/// Base unit of user's product selection
 #[derive(Deserialize, Debug, Clone)]
 pub struct CartProduct {
     pub id: i32,
@@ -79,4 +93,21 @@ impl CartStore {
             products,
         }
     }
+}
+
+#[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
+pub struct CartProductStore {
+    pub product_id: i32,
+    pub store_id: i32,
+}
+
+impl CartProductStore {
+    pub fn new(product_id: i32, store_id: i32) -> Self {
+        Self { product_id, store_id }
+    }
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct CartProductIncrementPayload {
+    pub store_id: i32,
 }
