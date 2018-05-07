@@ -21,6 +21,10 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         ID::new(Service::Orders, Model::CartProduct, self.id).to_string().into()
     }
 
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.id
+    }
+
     field name() -> &[Translation] as "Full Name" {
         &self.name
     }
