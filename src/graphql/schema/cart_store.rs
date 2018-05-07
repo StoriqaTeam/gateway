@@ -31,6 +31,14 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
     field rating() -> &f64 as "Rating" {
         &self.rating
     }
+    
+    field logo() -> &Option<String> as "Logo" {
+        &self.logo
+    }
+    
+    field cover() -> &Option<String> as "Cover" {
+        &self.cover
+    }
 
     field products_cost() -> f64 as "Products cost" {
         self.products.iter().fold(0.0, |acc, x| acc + x.price)
