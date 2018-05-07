@@ -509,7 +509,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
     
-    field setSelectionInCart(&executor, input: SetSelectInCartInput as "Select product in cart input.") -> FieldResult<Option<CartProduct>> as "Select product in cart." {
+    field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<CartProduct>> as "Select product in cart." {
         let context = executor.context();
         let url = format!("{}/cart/products/{}/selection", context.config.service_url(Service::Orders), input.product_id);
 
