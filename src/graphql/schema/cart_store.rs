@@ -32,11 +32,11 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
         &self.rating
     }
 
-    field products_price() -> f64 as "Products price" {
+    field products_cost() -> f64 as "Products cost" {
         self.products.iter().fold(0.0, |acc, x| acc + x.price)
     }
 
-    field delivery_price() -> f64 as "Delivery price" {
+    field delivery_cost() -> f64 as "Delivery cost" {
         0.0
     }
 

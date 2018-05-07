@@ -33,12 +33,16 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         &self.price
     }
 
-    field delivery_price() -> f64 as "Delivery Price" {
+    field delivery_cost() -> f64 as "Delivery cost" {
         0.0
     }
 
     field photo_main() -> &Option<String> as "Photo main" {
         &self.photo_main
+    }
+
+    field selected() -> &bool as "Selected" {
+        &self.selected
     }
 
     field delivery_operator() -> &str as "Delivery Operator" {
