@@ -478,7 +478,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::BaseProduct.to_url(),
             order.product_id);
 
-        context.request::<BaseProduct>(Method::Post, url, None)
+        context.request::<BaseProduct>(Method::Get, url, None)
             .map(|base_product| {
                 let name = base_product.name.clone();
                 base_product.variants.and_then(|variants| {
@@ -523,7 +523,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::BaseProduct.to_url(),
             order.product_id);
 
-        context.request::<BaseProduct>(Method::Post, url, None)
+        context.request::<BaseProduct>(Method::Get, url, None)
             .map(|base_product| {
                 let name = base_product.name.clone();
                 base_product.variants.and_then(|variants| {
