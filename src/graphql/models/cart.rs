@@ -113,7 +113,7 @@ impl CartStore {
     }
 }
 
-#[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CartProductStore {
     pub product_id: i32,
     pub store_id: i32,
