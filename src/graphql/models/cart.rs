@@ -81,6 +81,8 @@ pub struct DeleteFromCartInput {
 pub struct CartStore {
     pub id: i32,
     pub name: Vec<Translation>,
+    pub logo: Option<String>,
+    pub cover: Option<String>,
     pub rating: f64,
     pub products: Vec<CartProduct>,
 }
@@ -91,6 +93,8 @@ impl CartStore {
             id: store.id,
             name: store.name,
             rating: store.rating,
+            logo: store.logo,
+            cover: store.cover,
             products,
         }
     }
