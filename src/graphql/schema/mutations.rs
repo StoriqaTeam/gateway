@@ -464,9 +464,54 @@ graphql_object!(Mutation: Context |&self| {
 
     }
 
-    field setInCart(&executor, input: SetInCartInput as "Set product in cart input.") -> FieldResult<Option<CartProduct>> as "Sets product data in cart." {
+    field setQuantityInCart(&executor, input: SetQuantityInCartInput as "Set product in cart input.") -> FieldResult<Option<CartProduct>> as "Sets product data in cart." {
         let context = executor.context();
-        let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
+        let url = format!("{}/cart/products/{}/quantity", context.config.service_url(Service::Orders), input.product_id);
+
+        let body = serde_json::to_string(&input)?;
+
+        let order = context.request::<OrdersCartProduct>(Method::Put, url, Some(body))
+            .wait()?;
+
+        let url = format!("{}/{}/by_product/{}", 
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            order.product_id);
+
+        context.request::<BaseProduct>(Method::Post, url, None)
+            .map(|base_product| {
+                let name = base_product.name.clone();
+                base_product.variants.and_then(|variants| {
+                    variants
+                        .into_iter()
+                        .nth(0)
+                        .map(|variant| {
+                            let quantity = order.quantity;
+                            let selected = order.selected;
+
+                            let price = if let Some(discount) = variant.discount.clone() {
+                                variant.price * ( 1.0 - discount )
+                            } else {
+                                variant.price
+                            };
+
+                            CartProduct {
+                                id: variant.id,
+                                name,
+                                photo_main: variant.photo_main.clone(),
+                                selected,
+                                price,
+                                quantity
+                            }
+                        })
+                })
+            })
+            .wait()
+    }
+    
+    field setSelectionInCart(&executor, input: SetSelectInCartInput as "Select product in cart input.") -> FieldResult<Option<CartProduct>> as "Select product in cart." {
+        let context = executor.context();
+        let url = format!("{}/cart/products/{}/selection", context.config.service_url(Service::Orders), input.product_id);
 
         let body = serde_json::to_string(&input)?;
 

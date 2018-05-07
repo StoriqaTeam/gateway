@@ -56,7 +56,7 @@ pub struct IncrementInCartInput {
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Set product data in cart input object")]
-pub struct SetInCartInput {
+pub struct SetQuantityInCartInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
@@ -64,7 +64,20 @@ pub struct SetInCartInput {
     #[serde(skip_serializing)]
     pub product_id: i32,
     #[graphql(description = "Product quantity.")]
-    pub quantity: i32,
+    pub value: i32,
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Set selected product data in cart input object")]
+pub struct SetSelectionInCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Product id.")]
+    #[serde(skip_serializing)]
+    pub product_id: i32,
+    #[graphql(description = "Product selected.")]
+    pub value: bool,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
