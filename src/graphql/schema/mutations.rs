@@ -434,10 +434,10 @@ graphql_object!(Mutation: Context |&self| {
                                 base_product.variants.clone()
                                 .and_then(|mut v|{
                                     Some(v.iter_mut().map(|variant| {
-                                        let quantity = products
+                                        let (quantity, selected) = products
                                             .iter()
                                             .find(|v|v.product_id == variant.id)
-                                            .map(|v| v.quantity)
+                                            .map(|v| (v.quantity, v.selected))
                                             .unwrap_or_default();
 
                                         let price = if let Some(discount) = variant.discount.clone() {
@@ -450,6 +450,7 @@ graphql_object!(Mutation: Context |&self| {
                                             id: variant.id,
                                             name: base_product.name.clone(),
                                             photo_main: variant.photo_main.clone(),
+                                            selected,
                                             price,
                                             quantity
                                         }
@@ -486,6 +487,7 @@ graphql_object!(Mutation: Context |&self| {
                         .nth(0)
                         .map(|variant| {
                             let quantity = order.quantity;
+                            let selected = order.selected;
 
                             let price = if let Some(discount) = variant.discount.clone() {
                                 variant.price * ( 1.0 - discount )
@@ -497,6 +499,7 @@ graphql_object!(Mutation: Context |&self| {
                                 id: variant.id,
                                 name,
                                 photo_main: variant.photo_main.clone(),
+                                selected,
                                 price,
                                 quantity
                             }

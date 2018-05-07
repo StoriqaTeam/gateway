@@ -28,6 +28,7 @@ pub struct CartProduct {
     pub name: Vec<Translation>,
     pub price: f64,
     pub photo_main: Option<String>,
+    pub selected: bool,
     pub quantity: i32,
 }
 
