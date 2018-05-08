@@ -155,6 +155,16 @@ graphql_object!(Query: Context |&self| {
             .map(|u| Some(u))
     }
 
+    field currency_exchange(&executor) -> FieldResult<Option<CurrencyExchange>> as "Fetches currency exchange." {
+        let context = executor.context();
+        let url = format!("{}/currency_exchange",
+            context.config.service_url(Service::Stores));
+
+        context.request::<CurrencyExchange>(Method::Get, url, None)
+            .wait()
+            .map(|u| Some(u))
+    }
+
     field attributes(&executor) -> FieldResult<Option<Vec<Attribute>>> as "Fetches all attributes." {
         let context = executor.context();
         let url = format!("{}/{}",

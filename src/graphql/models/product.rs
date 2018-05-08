@@ -11,6 +11,7 @@ pub struct Product {
     pub additional_photos: Option<Vec<String>>,
     pub vendor_code: String,
     pub cashback: Option<f64>,
+    pub currency_id: Option<i32>,
     pub price: f64,
 }
 
@@ -122,13 +123,7 @@ impl Variants {
     pub fn get_most_discount(&self) -> Option<&Product> {
         self.products
             .iter()
-            .filter_map(|p| {
-                if let Some(_) = p.discount {
-                    Some(p)
-                } else {
-                    None
-                }
-            })
+            .filter_map(|p| if let Some(_) = p.discount { Some(p) } else { None })
             .max_by_key(|p| (p.discount.unwrap() * 1000f64).round() as i64)
     }
 

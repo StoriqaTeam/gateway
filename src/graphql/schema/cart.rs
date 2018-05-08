@@ -107,7 +107,7 @@ graphql_object!(CartProductStore: Context as "CartProductStore" |&self| {
     field product_id() -> GraphqlID as "Base64 Unique product id"{
         ID::new(Service::Stores, Model::CartProduct, self.product_id).to_string().into()
     }
-    
+
     field store_id() -> GraphqlID as "Base64 Unique id"{
         ID::new(Service::Stores, Model::CartStore, self.store_id).to_string().into()
     }

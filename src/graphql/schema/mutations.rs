@@ -508,7 +508,7 @@ graphql_object!(Mutation: Context |&self| {
             })
             .wait()
     }
-    
+
     field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<CartProduct>> as "Select product in cart." {
         let context = executor.context();
         let url = format!("{}/cart/products/{}/selection", context.config.service_url(Service::Orders), input.product_id);
@@ -560,6 +560,17 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
 
         context.request::<CartProductStore>(Method::Delete, url, None)
+            .wait()
+    }
+
+    field updateCurrencyExchange(&executor, input: NewCurrencyExchangeInput as "New currency exchange input.") -> FieldResult<CurrencyExchange> as "Updates currencies exchange." {
+        let context = executor.context();
+
+        let url = format!("{}/currency_exchange", context.config.service_url(Service::Stores));
+
+        let body = serde_json::to_string(&input)?;
+
+        context.request::<CurrencyExchange>(Method::Post, url, Some(body))
             .wait()
     }
 

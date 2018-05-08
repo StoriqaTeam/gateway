@@ -121,10 +121,7 @@ pub struct CartProductStore {
 
 impl CartProductStore {
     pub fn new(product_id: i32, store_id: i32) -> Self {
-        Self {
-            product_id,
-            store_id,
-        }
+        Self { product_id, store_id }
     }
 }
 
