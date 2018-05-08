@@ -6,6 +6,8 @@ pub struct ProductsSearchOptionsInput {
     pub attr_filters: Option<Vec<AttributeFilterInput>>,
     #[graphql(description = "Price filter.")]
     pub price_filter: Option<RangeFilterInput>,
+    #[graphql(description = "Currency id.")]
+    pub currency_id: Option<i32>,
     #[graphql(description = "Categories ids.")]
     pub category_id: Option<i32>,
     #[graphql(description = "Sorting.")]
