@@ -154,7 +154,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
             .map(|u| Some(u))
     }
-    
+
     field currency_exchange(&executor) -> FieldResult<Option<CurrencyExchange>> as "Fetches currency exchange." {
         let context = executor.context();
         let url = format!("{}/currency_exchange",
