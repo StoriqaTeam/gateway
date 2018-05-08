@@ -33,6 +33,10 @@ graphql_object!(Product: Context as "Product" |&self| {
     field discount() -> &Option<f64> as "Discount" {
         &self.discount
     }
+    
+    field currency_id() -> &Option<i32> as "Currency id" {
+        &self.currency_id
+    }
 
     field photo_main() -> &Option<String> as "Photo main" {
         &self.photo_main

@@ -11,6 +11,7 @@ pub struct Product {
     pub additional_photos: Option<Vec<String>>,
     pub vendor_code: String,
     pub cashback: Option<f64>,
+    pub currency_id: Option<i32>,
     pub price: f64,
 }
 
