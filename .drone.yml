@@ -1,4 +1,14 @@
 pipeline:
+  update_pr:
+    image: plugins/git
+    commands:
+    - export BRANCH_SRC=origin/${DRONE_COMMIT_REFSPEC%%:*} BRANCH_DST=origin/${DRONE_BRANCH}
+    - cp -rpf .git .git.bak
+    - git fetch && git checkout $BRANCH_SRC && git merge $BRANCH_SRC
+    - rm -rf .git && mv -f .git.bak .git
+    when:
+      event: pull_request
+      branch: [ master, release* ]
   test:
     image: rust:1.25-stretch
     commands:
