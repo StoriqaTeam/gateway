@@ -470,43 +470,47 @@ graphql_object!(Mutation: Context |&self| {
 
         let body = serde_json::to_string(&input)?;
 
-        let order = context.request::<OrdersCartProduct>(Method::Put, url, Some(body))
+        let order = context.request::<Option<OrdersCartProduct>>(Method::Put, url, Some(body))
             .wait()?;
 
-        let url = format!("{}/{}/by_product/{}", 
-            context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
-            order.product_id);
+        if let Some(order) = order {
+            let url = format!("{}/{}/by_product/{}", 
+                context.config.service_url(Service::Stores),
+                Model::BaseProduct.to_url(),
+                order.product_id);
 
-        context.request::<BaseProduct>(Method::Get, url, None)
-            .map(|base_product| {
-                let name = base_product.name.clone();
-                base_product.variants.and_then(|variants| {
-                    variants
-                        .into_iter()
-                        .nth(0)
-                        .map(|variant| {
-                            let quantity = order.quantity;
-                            let selected = order.selected;
+            context.request::<BaseProduct>(Method::Get, url, None)
+                .map(|base_product| {
+                    let name = base_product.name.clone();
+                    base_product.variants.and_then(|variants| {
+                        variants
+                            .into_iter()
+                            .nth(0)
+                            .map(|variant| {
+                                let quantity = order.quantity;
+                                let selected = order.selected;
 
-                            let price = if let Some(discount) = variant.discount.clone() {
-                                variant.price * ( 1.0 - discount )
-                            } else {
-                                variant.price
-                            };
+                                let price = if let Some(discount) = variant.discount.clone() {
+                                    variant.price * ( 1.0 - discount )
+                                } else {
+                                    variant.price
+                                };
 
-                            CartProduct {
-                                id: variant.id,
-                                name,
-                                photo_main: variant.photo_main.clone(),
-                                selected,
-                                price,
-                                quantity
-                            }
-                        })
+                                CartProduct {
+                                    id: variant.id,
+                                    name,
+                                    photo_main: variant.photo_main.clone(),
+                                    selected,
+                                    price,
+                                    quantity
+                                }
+                            })
+                    })
                 })
-            })
-            .wait()
+                .wait()
+        } else {
+            Ok(None)
+        }
     }
 
     field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<CartProduct>> as "Select product in cart." {
@@ -515,62 +519,56 @@ graphql_object!(Mutation: Context |&self| {
 
         let body = serde_json::to_string(&input)?;
 
-        let order = context.request::<OrdersCartProduct>(Method::Put, url, Some(body))
+        let order = context.request::<Option<OrdersCartProduct>>(Method::Put, url, Some(body))
             .wait()?;
 
-        let url = format!("{}/{}/by_product/{}", 
-            context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
-            order.product_id);
+        if let Some(order) = order {
 
-        context.request::<BaseProduct>(Method::Get, url, None)
-            .map(|base_product| {
-                let name = base_product.name.clone();
-                base_product.variants.and_then(|variants| {
-                    variants
-                        .into_iter()
-                        .nth(0)
-                        .map(|variant| {
-                            let quantity = order.quantity;
-                            let selected = order.selected;
+            let url = format!("{}/{}/by_product/{}", 
+                context.config.service_url(Service::Stores),
+                Model::BaseProduct.to_url(),
+                order.product_id);
 
-                            let price = if let Some(discount) = variant.discount.clone() {
-                                variant.price * ( 1.0 - discount )
-                            } else {
-                                variant.price
-                            };
+            context.request::<BaseProduct>(Method::Get, url, None)
+                .map(|base_product| {
+                    let name = base_product.name.clone();
+                    base_product.variants.and_then(|variants| {
+                        variants
+                            .into_iter()
+                            .nth(0)
+                            .map(|variant| {
+                                let quantity = order.quantity;
+                                let selected = order.selected;
 
-                            CartProduct {
-                                id: variant.id,
-                                name,
-                                photo_main: variant.photo_main.clone(),
-                                selected,
-                                price,
-                                quantity
-                            }
-                        })
+                                let price = if let Some(discount) = variant.discount.clone() {
+                                    variant.price * ( 1.0 - discount )
+                                } else {
+                                    variant.price
+                                };
+
+                                CartProduct {
+                                    id: variant.id,
+                                    name,
+                                    photo_main: variant.photo_main.clone(),
+                                    selected,
+                                    price,
+                                    quantity
+                                }
+                            })
+                    })
                 })
-            })
-            .wait()
+                .wait()
+        } else {
+            Ok(None)
+        }
     }
 
-    field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<CartProductStore> as "Deletes products from cart." {
+    field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Option<CartProductStore>> as "Deletes products from cart." {
         let context = executor.context();
 
         let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
 
-        context.request::<CartProductStore>(Method::Delete, url, None)
-            .wait()
-    }
-
-    field updateCurrencyExchange(&executor, input: NewCurrencyExchangeInput as "New currency exchange input.") -> FieldResult<CurrencyExchange> as "Updates currencies exchange." {
-        let context = executor.context();
-
-        let url = format!("{}/currency_exchange", context.config.service_url(Service::Stores));
-
-        let body = serde_json::to_string(&input)?;
-
-        context.request::<CurrencyExchange>(Method::Post, url, Some(body))
+        context.request::<Option<CartProductStore>>(Method::Delete, url, None)
             .wait()
     }
 
@@ -582,5 +580,16 @@ graphql_object!(Mutation: Context |&self| {
         context.request::<()>(Method::Post, url, None)
             .wait()?;
         Ok(Mock{})
+    }
+
+    field updateCurrencyExchange(&executor, input: NewCurrencyExchangeInput as "New currency exchange input.") -> FieldResult<CurrencyExchange> as "Updates currencies exchange." {
+        let context = executor.context();
+
+        let url = format!("{}/currency_exchange", context.config.service_url(Service::Stores));
+
+        let body = serde_json::to_string(&input)?;
+
+        context.request::<CurrencyExchange>(Method::Post, url, Some(body))
+            .wait()
     }
 });
