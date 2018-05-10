@@ -424,7 +424,7 @@ graphql_object!(Mutation: Context |&self| {
             .map(|stores|
                 stores
                     .into_iter()
-                    .nth(0)
+                    .find(|s| s.id == store_id)
                     .map(|store| {
                         let products = store.base_products
                             .clone()
