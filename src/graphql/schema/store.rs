@@ -98,6 +98,10 @@ graphql_object!(Store: Context as "Store" |&self| {
         &self.rating
     }
 
+    field status() -> &Status as "Status" {
+        &self.status
+    }
+
     field base_products(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID> as "Offset from begining",

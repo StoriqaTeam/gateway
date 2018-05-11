@@ -15,6 +15,7 @@ pub mod search;
 pub mod store;
 pub mod user;
 pub mod user_role;
+pub mod wizard_store;
 
 use juniper;
 

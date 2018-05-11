@@ -592,4 +592,43 @@ graphql_object!(Mutation: Context |&self| {
         context.request::<CurrencyExchange>(Method::Post, url, Some(body))
             .wait()
     }
+
+    field createWizardStore(&executor) -> FieldResult<WizardStore> as "Creates new wizard store." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::WizardStore.to_url());
+
+        context.request::<WizardStore>(Method::Post, url, None)
+            .wait()
+    }
+
+    field updateWizardStore(&executor, input: UpdateWizardStoreInput as "Update wizard store input.") -> FieldResult<WizardStore>  as "Updates existing wizard store."{
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::WizardStore.to_url());
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<WizardStore>(Method::Put, url, Some(body))
+            .wait()
+    }
+
+    field deleteWizardStore(&executor) -> FieldResult<WizardStore>  as "Deleteexisting wizard store." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::WizardStore.to_url());
+
+        context.request::<WizardStore>(Method::Delete, url, None)
+            .wait()
+    }
 });

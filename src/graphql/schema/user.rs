@@ -336,6 +336,19 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(Cart::new(u)))
             .wait()
     }
+    
+    field wizard_store(&executor) -> FieldResult<Option<WizardStore>> as "Fetches wizard store." {
+        let context = executor.context();
+
+        let url = format!("{}/{}",
+            &context.config.service_url(Service::Orders),
+            Model::WizardStore.to_url(),
+            );
+
+        context.request::<WizardStore>(Method::Get, url, None)
+            .map(|w| Some(w))
+            .wait()
+    }
 
 });
 

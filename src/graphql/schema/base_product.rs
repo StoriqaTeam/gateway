@@ -60,6 +60,10 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     field rating() -> &f64 as "Rating" {
         &self.rating
     }
+    
+    field status() -> &Status as "Status" {
+        &self.status
+    }
 
     field store(&executor) -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();
