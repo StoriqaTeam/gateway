@@ -41,7 +41,13 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
     }
 
     field products_cost() -> f64 as "Products cost" {
-        self.products.iter().fold(0.0, |acc, x| acc + x.price)
+        self.products.iter().fold(0.0, |acc, x| {
+            if x.selected {
+                acc + x.price
+            } else {
+                acc
+            }
+        })
     }
 
     field delivery_cost() -> f64 as "Delivery cost" {
@@ -49,7 +55,13 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
     }
 
     field total_count() -> f64 as "Total count" {
-        self.products.iter().fold(0.0, |acc, x| acc + x.price)
+        self.products.iter().fold(0.0, |acc, x| {
+            if x.selected {
+                acc + x.price
+            } else {
+                acc
+            }
+        })
     }
 
     field products() -> &[CartProduct] as "Fetches products in the store cart." {
