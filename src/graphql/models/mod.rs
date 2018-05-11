@@ -12,9 +12,11 @@ pub mod product;
 pub mod provider;
 pub mod reset_password;
 pub mod search_product;
+pub mod status;
 pub mod store;
 pub mod user;
 pub mod user_role;
+pub mod wizard_store;
 
 pub use self::attribute::*;
 pub use self::base_product::*;
@@ -30,9 +32,11 @@ pub use self::product::*;
 pub use self::provider::Provider;
 pub use self::reset_password::*;
 pub use self::search_product::*;
+pub use self::status::*;
 pub use self::store::*;
 pub use self::user::*;
 pub use self::user_role::{NewUserRoleInput, Role, UserRoles};
+pub use self::wizard_store::*;
 
 //Mock object, made to return from graphql when microservices responce contains nothing - '()'
 pub struct Mock;

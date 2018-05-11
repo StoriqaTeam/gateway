@@ -24,6 +24,7 @@ pub struct Store {
     pub slogan: Option<String>,
     pub rating: f64,
     pub country: Option<String>,
+    pub status: Status,
     pub base_products: Option<Vec<BaseProduct>>,
 }
 
@@ -68,6 +69,8 @@ pub struct UpdateStoreInput {
     pub rating: Option<f64>,
     #[graphql(description = "Country")]
     pub country: Option<String>,
+    #[graphql(description = "Status.")]
+    pub status: Option<Status>,
 }
 
 impl UpdateStoreInput {
@@ -91,6 +94,7 @@ impl UpdateStoreInput {
             slogan: None,
             rating: None,
             country: None,
+            status: None,
         } == self.clone()
     }
 }
