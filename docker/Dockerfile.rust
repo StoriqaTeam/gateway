@@ -1,6 +1,6 @@
 FROM rust:latest
 
 # Install cargo-watch
-RUN cargo install cargo-watch
+RUN cargo install cargo-watch --force
 
 VOLUME /usr/local/cargo
