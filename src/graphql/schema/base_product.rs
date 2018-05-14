@@ -65,6 +65,25 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         &self.status
     }
 
+    field store_id(&executor) -> &i32 as "Raw store id"{
+        &self.store_id
+    }
+
+    field moderator_comment(&executor) -> FieldResult<Option<ModeratorProductComments>> as "Fetches moderator comment by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::ModeratorProductComment.to_url(),
+            self.id.to_string()
+        );
+
+        context.request::<ModeratorProductComments>(Method::Get, url, None)
+            .wait()
+            .map(|u| Some(u))
+    }
+
     field store(&executor) -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();
 

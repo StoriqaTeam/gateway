@@ -638,7 +638,9 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::ModeratorProductComment.to_url());
 
-        context.request::<ModeratorProductComments>(Method::Post, url, None)
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<ModeratorProductComments>(Method::Post, url, Some(body))
             .wait()
     }
 
@@ -648,7 +650,9 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::ModeratorStoreComment.to_url());
 
-        context.request::<ModeratorStoreComments>(Method::Post, url, None)
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<ModeratorStoreComments>(Method::Post, url, Some(body))
             .wait()
     }
 

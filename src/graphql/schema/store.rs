@@ -203,6 +203,20 @@ graphql_object!(Store: Context as "Store" |&self| {
             .wait()
     }
 
+    field moderator_comment(&executor) -> FieldResult<Option<ModeratorStoreComments>> as "Fetches moderator comment by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::ModeratorStoreComment.to_url(),
+            self.id.to_string()
+        );
+
+        context.request::<ModeratorStoreComments>(Method::Get, url, None)
+            .wait()
+            .map(|u| Some(u))
+    }
 
 });
 
