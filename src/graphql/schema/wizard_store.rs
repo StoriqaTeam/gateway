@@ -46,19 +46,18 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
         }
     }
 
-    field wizard_step_one(&executor) -> WizardStepOne as "Fetches wizard step one." {
+    field step_one(&executor) -> WizardStepOne as "Fetches wizard step one." {
         let context = executor.context();
         self.clone().into()
     }
 
-    field wizard_step_two(&executor) -> WizardStepTwo as "Fetches wizard step two." {
+    field step_two(&executor) -> WizardStepTwo as "Fetches wizard step two." {
         let context = executor.context();
         self.clone().into()
     }
 
-    field wizard_step_three(&executor, first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID> as "Offset from begining",
-        skip_base_prod_id = None : Option<i32> as "Skip base prod id" ) 
+    field step_three(&executor, first = None : Option<i32> as "First edges", 
+        after = None : Option<GraphqlID> as "Offset from begining") 
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches wizard step three." {
         let context = executor.context();
 
