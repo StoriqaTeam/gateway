@@ -72,7 +72,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             "{}/{}/{}",
             &context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            self.id.to_string()
+            self.store_id.to_string()
         );
 
         context.request::<Store>(Method::Get, url, None)

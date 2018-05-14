@@ -622,7 +622,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deleteWizardStore(&executor) -> FieldResult<WizardStore>  as "Deleteexisting wizard store." {
+    field deleteWizardStore(&executor) -> FieldResult<WizardStore>  as "Delete existing wizard store." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
@@ -631,4 +631,25 @@ graphql_object!(Mutation: Context |&self| {
         context.request::<WizardStore>(Method::Delete, url, None)
             .wait()
     }
+
+    field createProductComment(&executor, input: CreateModeratorProductCommentsInput as "Create Moderator Product Comment Input.") -> FieldResult<ModeratorProductComments> as "Creates new product comment." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::ModeratorProductComment.to_url());
+
+        context.request::<ModeratorProductComments>(Method::Post, url, None)
+            .wait()
+    }
+    
+    field createStoreComment(&executor, input: CreateModeratorStoreCommentsInput as "Create Moderator Store Comment Input.") -> FieldResult<ModeratorStoreComments> as "Creates new store comment." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::ModeratorStoreComment.to_url());
+
+        context.request::<ModeratorStoreComments>(Method::Post, url, None)
+            .wait()
+    }
+
 });
