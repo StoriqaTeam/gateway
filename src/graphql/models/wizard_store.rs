@@ -49,3 +49,45 @@ impl UpdateWizardStoreInput {
         } == self.clone()
     }
 }
+
+#[derive(GraphQLObject, Deserialize, Debug, Clone)]
+#[graphql(description = "Wizard Step One")]
+pub struct WizardStepOne {
+    #[graphql(description = "New name of a store.")]
+    pub name: Option<String>,
+    #[graphql(description = "Short description")]
+    pub short_description: Option<String>,
+    #[graphql(description = "Slug")]
+    pub slug: Option<String>,
+}
+
+impl From<WizardStore> for WizardStepOne {
+    fn from(w: WizardStore) -> Self {
+        Self {
+            name: w.name,
+            short_description: w.short_description,
+            slug: w.slug,
+        }
+    }
+}
+
+#[derive(GraphQLObject, Deserialize, Debug, Clone)]
+#[graphql(description = "Wizard Step Two")]
+pub struct WizardStepTwo {
+    #[graphql(description = "Language")]
+    pub default_language: Option<Language>,
+    #[graphql(description = "Country")]
+    pub country: Option<String>,
+    #[graphql(description = "Address")]
+    pub address: Option<String>,
+}
+
+impl From<WizardStore> for WizardStepTwo {
+    fn from(w: WizardStore) -> Self {
+        Self {
+            default_language: w.default_language,
+            country: w.country,
+            address: w.address,
+        }
+    }
+}
