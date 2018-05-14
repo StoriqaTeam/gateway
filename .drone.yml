@@ -4,7 +4,7 @@ pipeline:
     commands:
     - export BRANCH_SRC=origin/${DRONE_COMMIT_REFSPEC%%:*} BRANCH_DST=origin/${DRONE_BRANCH}
     - cp -rpf .git .git.bak
-    - git fetch && git checkout $BRANCH_SRC && git merge $BRANCH_SRC
+    - git fetch && git checkout $BRANCH_SRC && git merge --no-commit $BRANCH_DST
     - rm -rf .git && mv -f .git.bak .git
     when:
       event: pull_request
@@ -26,17 +26,13 @@ pipeline:
     image: plugins/docker
     repo: storiqateam/stq-gw
     tags:
-    - ${DRONE_BRANCH/\//_}
-    - ${DRONE_BRANCH/\//_}${DRONE_BUILD_NUMBER}
+    - ${DRONE_BRANCH//\//_}
+    - ${DRONE_BRANCH//\//_}${DRONE_BUILD_NUMBER}
     username: stqcommon
     password: "Tz-q6qDL#d3Mz8hm"
     dockerfile: docker/Dockerfile.run
     when:
       event: [ push, tag ]
-  cleanup:
-    image: rust:1.25-stretch
-    commands:
-    - cargo clean
   deploy2nightly:
     image: jackthestripper/drone_k8s_rollout:20180510
     namespace: default
