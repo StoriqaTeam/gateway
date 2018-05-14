@@ -341,7 +341,7 @@ graphql_object!(User: Context as "User" |&self| {
         let context = executor.context();
 
         let url = format!("{}/{}",
-            &context.config.service_url(Service::Orders),
+            &context.config.service_url(Service::Stores),
             Model::WizardStore.to_url(),
             );
 
