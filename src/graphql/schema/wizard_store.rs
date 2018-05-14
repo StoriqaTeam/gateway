@@ -1,4 +1,7 @@
 //! File containing wizard store object of graphql schema
+use futures::Future;
+use hyper::Method;
+use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
@@ -45,9 +48,28 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
     field default_language() -> &Option<Language> as "Default language" {
         &self.default_language
     }
-    
+
     field store_id() -> &Option<i32> as "Store raw id" {
         &self.store_id
+    }
+
+    field moderator_comment(&executor) -> FieldResult<Option<ModeratorStoreComments>> as "Fetches moderator comment by id." {
+        if let Some(ref store_id) = &self.store_id {
+            let context = executor.context();
+
+            let url = format!(
+                "{}/{}/{}",
+                &context.config.service_url(Service::Stores),
+                Model::ModeratorStoreComment.to_url(),
+                store_id
+            );
+
+            context.request::<ModeratorStoreComments>(Method::Get, url, None)
+                .wait()
+                .map(|u| Some(u))
+        } else {
+            Ok(None)
+        }
     }
 
 });

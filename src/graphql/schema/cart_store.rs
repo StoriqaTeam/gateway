@@ -63,7 +63,7 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
             }
         })
     }
-    
+
     field total_count() -> i32 as "Total products count" {
         self.products.iter().fold(0, |acc, x| {
             if x.selected {

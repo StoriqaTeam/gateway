@@ -7,9 +7,8 @@ pub enum Status {
     Draft,
     Moderation,
     Decline,
-    Published
+    Published,
 }
-
 
 impl FromStr for Status {
     type Err = ();
@@ -19,7 +18,7 @@ impl FromStr for Status {
             "moderation" => Ok(Status::Moderation),
             "decline" => Ok(Status::Decline),
             "published" => Ok(Status::Published),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
