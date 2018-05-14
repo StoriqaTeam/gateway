@@ -641,7 +641,7 @@ graphql_object!(Mutation: Context |&self| {
         context.request::<ModeratorProductComments>(Method::Post, url, None)
             .wait()
     }
-    
+
     field createStoreComment(&executor, input: CreateModeratorStoreCommentsInput as "Create Moderator Store Comment Input.") -> FieldResult<ModeratorStoreComments> as "Creates new store comment." {
         let context = executor.context();
         let url = format!("{}/{}",

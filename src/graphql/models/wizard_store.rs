@@ -1,6 +1,5 @@
 use stq_static_resources::Language;
 
-
 #[derive(Deserialize, Debug, Clone)]
 pub struct WizardStore {
     pub id: i32,

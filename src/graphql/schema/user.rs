@@ -336,7 +336,7 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(Cart::new(u)))
             .wait()
     }
-    
+
     field wizard_store(&executor) -> FieldResult<Option<WizardStore>> as "Fetches wizard store." {
         let context = executor.context();
 

@@ -1,5 +1,3 @@
-
-
 #[derive(Deserialize, Debug, Clone)]
 pub struct ModeratorProductComments {
     pub id: i32,

@@ -45,7 +45,7 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
     field default_language() -> &Option<Language> as "Default language" {
         &self.default_language
     }
-    
+
     field store_id() -> &Option<i32> as "Store raw id" {
         &self.store_id
     }
