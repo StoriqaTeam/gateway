@@ -62,13 +62,13 @@ impl UpdateUserInput {
         if let Some(birthdate) = self.birthdate.clone() {
             NaiveDate::parse_from_str(&birthdate, "%Y-%m-%d").map(|_| ()).map_err(|_| {
                 FieldError::new(
-                    "Birthdate validation error",
+                    "Error response from microservice",
                     graphql_value!({ "code": 100, "details": { 
                             "status": "400 Bad Request",
                             "code": "400",
-                            "message": {
-                                "Validation error: ValidationErrors({\"birthdate\": [ValidationError { code: \"birthdate\", message: Some(\"Incorrect birthdate format\"), params: {\"value\": String(\"\")} }]})"
-                            },
+                            "message": 
+                                "{\"birthdate\":[{\"code\":\"birthdate\",\"message\":\"Incorrect birthdate format\",\"params\":{\"value\":\"\"}}]}"
+                            ,
                         }}),
                 )
             })
