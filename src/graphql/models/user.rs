@@ -1,6 +1,9 @@
+use chrono::NaiveDate;
+use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
+
 use super::Gender;
 use super::Provider;
-use juniper::ID as GraphqlID;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct User {
@@ -53,6 +56,25 @@ impl UpdateUserInput {
             gender: None,
             birthdate: None,
         } == self.clone()
+    }
+
+    pub fn validate(&self) -> FieldResult<()> {
+        if let Some(birthdate) = self.birthdate.clone() {
+            NaiveDate::parse_from_str(&birthdate, "%Y-%m-%d").map(|_| ()).map_err(|_| {
+                FieldError::new(
+                    "Birthdate validation error",
+                    graphql_value!({ "code": 100, "details": { 
+                            "status": "400 Bad Request",
+                            "code": "400",
+                            "message": {
+                                "Validation error: ValidationErrors({\"birthdate\": [ValidationError { code: \"birthdate\", message: Some(\"Incorrect birthdate format\"), params: {\"value\": String(\"\")} }]})"
+                            },
+                        }}),
+                )
+            })
+        } else {
+            Ok(())
+        }
     }
 }
 

@@ -65,6 +65,8 @@ graphql_object!(Mutation: Context |&self| {
             ));
         }
 
+        input.validate()?;
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.request::<User>(Method::Put, url, Some(body))
