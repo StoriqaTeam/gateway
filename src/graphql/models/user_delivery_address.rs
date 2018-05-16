@@ -77,22 +77,21 @@ pub struct UpdateUserDeliveryAddressInput {
     pub is_priority: Option<bool>,
 }
 
-
 impl UpdateUserDeliveryAddressInput {
     pub fn is_none(&self) -> bool {
         Self {
             client_mutation_id: self.client_mutation_id.clone(),
             id: self.id.clone(),
-            administrative_area_level_1:None,
-            administrative_area_level_2:None,
-            country:None,
-            locality:None,
-            political:None,
-            postal_code:None,
-            route:None,
-            street_number:None,
-            address:None,
-            is_priority:None,
+            administrative_area_level_1: None,
+            administrative_area_level_2: None,
+            country: None,
+            locality: None,
+            political: None,
+            postal_code: None,
+            route: None,
+            street_number: None,
+            address: None,
+            is_priority: None,
         } == self.clone()
     }
 }

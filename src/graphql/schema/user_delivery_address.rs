@@ -20,7 +20,7 @@ graphql_object!(UserDeliveryAddress: Context as "UserDeliveryAddress" |&self| {
     field raw_id() -> &i32 as "Unique int id"{
         &self.id
     }
-    
+
     field user_id() -> &i32 as "user id"{
         &self.user_id
     }
@@ -32,7 +32,7 @@ graphql_object!(UserDeliveryAddress: Context as "UserDeliveryAddress" |&self| {
     field administrative_area_level_2() -> &Option<String> as "administrative_area_level_2" {
         &self.administrative_area_level_2
     }
-    
+
     field country() -> &str as "Country" {
         &self.country
     }
@@ -44,7 +44,7 @@ graphql_object!(UserDeliveryAddress: Context as "UserDeliveryAddress" |&self| {
     field political() -> &Option<String> as "political" {
         &self.political
     }
-    
+
     field postal_code() -> &str as "postal_code" {
         &self.postal_code
     }
@@ -60,7 +60,7 @@ graphql_object!(UserDeliveryAddress: Context as "UserDeliveryAddress" |&self| {
     field address() -> &Option<String> as "address" {
         &self.address
     }
-    
+
     field is_priority() -> &bool as "is_priority" {
         &self.is_priority
     }

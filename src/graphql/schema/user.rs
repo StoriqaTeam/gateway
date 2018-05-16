@@ -349,7 +349,6 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-
     field delivery_addresses(&executor) -> FieldResult<Option<Vec<UserDeliveryAddress>>> as "Fetches delivery addresses for user." {
         let context = executor.context();
 
