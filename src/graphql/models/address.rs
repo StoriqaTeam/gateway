@@ -54,3 +54,19 @@ impl From<UserDeliveryAddress> for Address {
         }
     }
 }
+
+impl From<WizardStore> for Address {
+    fn from(address: WizardStore) -> Address {
+        Self {
+            value: address.address,
+            country: address.country,
+            administrative_area_level_1: address.administrative_area_level_1,
+            administrative_area_level_2: address.administrative_area_level_2,
+            locality: address.locality,
+            political: address.political,
+            postal_code: address.postal_code,
+            route: address.route,
+            street_number: address.street_number,
+        }
+    }
+}

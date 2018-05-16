@@ -1,3 +1,4 @@
+use graphql::models::Address;
 use stq_static_resources::Language;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -11,6 +12,13 @@ pub struct WizardStore {
     pub slug: Option<String>,
     pub country: Option<String>,
     pub address: Option<String>,
+    pub administrative_area_level_1: Option<String>,
+    pub administrative_area_level_2: Option<String>,
+    pub locality: Option<String>,
+    pub political: Option<String>,
+    pub postal_code: Option<String>,
+    pub route: Option<String>,
+    pub street_number: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -33,6 +41,20 @@ pub struct UpdateWizardStoreInput {
     pub country: Option<String>,
     #[graphql(description = "Address")]
     pub address: Option<String>,
+    #[graphql(description = "administrative_area_level_1")]
+    pub administrative_area_level_1: Option<String>,
+    #[graphql(description = "administrative_area_level_2")]
+    pub administrative_area_level_2: Option<String>,
+    #[graphql(description = "locality")]
+    pub locality: Option<String>,
+    #[graphql(description = "political")]
+    pub political: Option<String>,
+    #[graphql(description = "postal_code")]
+    pub postal_code: Option<String>,
+    #[graphql(description = "route")]
+    pub route: Option<String>,
+    #[graphql(description = "street_number")]
+    pub street_number: Option<String>,
 }
 
 impl UpdateWizardStoreInput {
@@ -46,6 +68,13 @@ impl UpdateWizardStoreInput {
             address: None,
             default_language: None,
             country: None,
+            administrative_area_level_1: None,
+            administrative_area_level_2: None,
+            locality: None,
+            political: None,
+            postal_code: None,
+            route: None,
+            street_number: None,
         } == self.clone()
     }
 }
@@ -80,14 +109,17 @@ pub struct WizardStepTwo {
     pub country: Option<String>,
     #[graphql(description = "Address")]
     pub address: Option<String>,
+    #[graphql(description = "Address full")]
+    pub address_full: Address,
 }
 
 impl From<WizardStore> for WizardStepTwo {
     fn from(w: WizardStore) -> Self {
         Self {
-            default_language: w.default_language,
-            country: w.country,
-            address: w.address,
+            default_language: w.default_language.clone(),
+            country: w.country.clone(),
+            address: w.address.clone(),
+            address_full: w.into(),
         }
     }
 }

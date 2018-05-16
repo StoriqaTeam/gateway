@@ -97,11 +97,11 @@ graphql_object!(Store: Context as "Store" |&self| {
     field deprecated "Use address_full -> value" address() -> &Option<String> as "address" {
         &self.address
     }
-    
+
     field deprecated "Use address_full -> country" country() -> &Option<String> as "country" {
         &self.country
     }
-    
+
     field address_full() -> Address as "full address" {
         self.clone().into()
     }
