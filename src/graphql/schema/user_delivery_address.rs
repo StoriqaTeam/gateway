@@ -25,40 +25,8 @@ graphql_object!(UserDeliveryAddress: Context as "UserDeliveryAddress" |&self| {
         &self.user_id
     }
 
-    field administrative_area_level_1() -> &Option<String> as "administrative_area_level_1" {
-        &self.administrative_area_level_1
-    }
-
-    field administrative_area_level_2() -> &Option<String> as "administrative_area_level_2" {
-        &self.administrative_area_level_2
-    }
-
-    field country() -> &str as "Country" {
-        &self.country
-    }
-
-    field locality() -> &Option<String> as "Locality" {
-        &self.locality
-    }
-
-    field political() -> &Option<String> as "political" {
-        &self.political
-    }
-
-    field postal_code() -> &str as "postal_code" {
-        &self.postal_code
-    }
-
-    field route() -> &Option<String> as "route" {
-        &self.route
-    }
-
-    field street_number() -> &Option<String> as "street_number" {
-        &self.street_number
-    }
-
-    field address() -> &Option<String> as "address" {
-        &self.address
+    field address() -> Address as "address" {
+        self.clone().into()
     }
 
     field is_priority() -> &bool as "is_priority" {

@@ -25,6 +25,13 @@ pub struct Store {
     pub rating: f64,
     pub country: Option<String>,
     pub status: Status,
+    pub administrative_area_level_1: Option<String>,
+    pub administrative_area_level_2: Option<String>,
+    pub locality: Option<String>,
+    pub political: Option<String>,
+    pub postal_code: Option<String>,
+    pub route: Option<String>,
+    pub street_number: Option<String>,
     pub base_products: Option<Vec<BaseProduct>>,
 }
 
@@ -71,6 +78,20 @@ pub struct UpdateStoreInput {
     pub country: Option<String>,
     #[graphql(description = "Status.")]
     pub status: Option<Status>,
+    #[graphql(description = "administrative_area_level_1")]
+    pub administrative_area_level_1: Option<String>,
+    #[graphql(description = "administrative_area_level_2")]
+    pub administrative_area_level_2: Option<String>,
+    #[graphql(description = "locality")]
+    pub locality: Option<String>,
+    #[graphql(description = "political")]
+    pub political: Option<String>,
+    #[graphql(description = "postal_code")]
+    pub postal_code: Option<String>,
+    #[graphql(description = "route")]
+    pub route: Option<String>,
+    #[graphql(description = "street_number")]
+    pub street_number: Option<String>,
 }
 
 impl UpdateStoreInput {
@@ -95,6 +116,13 @@ impl UpdateStoreInput {
             rating: None,
             country: None,
             status: None,
+            administrative_area_level_1: None,
+            administrative_area_level_2: None,
+            locality: None,
+            political: None,
+            postal_code: None,
+            route: None,
+            street_number: None,
         } == self.clone()
     }
 }
@@ -137,6 +165,20 @@ pub struct CreateStoreInput {
     pub slogan: Option<String>,
     #[graphql(description = "Country")]
     pub country: Option<String>,
+    #[graphql(description = "administrative_area_level_1")]
+    pub administrative_area_level_1: Option<String>,
+    #[graphql(description = "administrative_area_level_2")]
+    pub administrative_area_level_2: Option<String>,
+    #[graphql(description = "locality")]
+    pub locality: Option<String>,
+    #[graphql(description = "political")]
+    pub political: Option<String>,
+    #[graphql(description = "postal_code")]
+    pub postal_code: Option<String>,
+    #[graphql(description = "route")]
+    pub route: Option<String>,
+    #[graphql(description = "street_number")]
+    pub street_number: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
