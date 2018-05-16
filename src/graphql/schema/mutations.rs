@@ -658,4 +658,47 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field createUserDeliveryAddress(&executor, input: NewUserDeliveryAddressInput  as "Create delivery address input.") -> FieldResult<UserDeliveryAddress> as "Creates new user delivery address." {
+        let context = executor.context();
+        let url = format!("{}/{}/delivery_addresses",
+            context.config.service_url(Service::Users),
+            Model::User.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<UserDeliveryAddress>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field updateUserDeliveryAddress(&executor, input: UpdateUserDeliveryAddressInput as "Update delivery address input.") -> FieldResult<UserDeliveryAddress>  as "Updates delivery address."{
+        let context = executor.context();
+        let url = format!("{}/{}/delivery_addresses/{}",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            input.id.to_string());
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<UserDeliveryAddress>(Method::Put, url, Some(body))
+            .wait()
+    }
+
+    field deleteUserDeliveryAddress(&executor, id: i32 as "Raw id of delivery address") -> FieldResult<UserDeliveryAddress>  as "Deletes delivery address." {
+        let context = executor.context();
+        let url = format!("{}/{}/delivery_addresses/{}",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            id);
+
+        context.request::<UserDeliveryAddress>(Method::Delete, url, None)
+            .wait()
+    }
+
 });

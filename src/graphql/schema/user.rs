@@ -74,7 +74,6 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
-
     field user(&executor, id: GraphqlID as "Base64 Id of a user.") -> FieldResult<Option<User>> as "Fetches user by id." {
         let context = executor.context();
 
@@ -348,6 +347,19 @@ graphql_object!(User: Context as "User" |&self| {
         context.request::<WizardStore>(Method::Get, url, None)
             .map(|w| Some(w))
             .wait()
+    }
+
+    field delivery_addresses(&executor) -> FieldResult<Option<Vec<UserDeliveryAddress>>> as "Fetches delivery addresses for user." {
+        let context = executor.context();
+
+        let url = format!("{}/{}/delivery_addresses/{}",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            self.id);
+
+        context.request::<Vec<UserDeliveryAddress>>(Method::Get, url, None)
+            .wait()
+            .map(|u| Some(u))
     }
 
 });
