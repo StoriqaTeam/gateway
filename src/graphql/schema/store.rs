@@ -66,14 +66,6 @@ graphql_object!(Store: Context as "Store" |&self| {
         &self.email
     }
 
-    field address() -> &Option<String> as "Address" {
-        &self.address
-    }
-
-    field country() -> &Option<String> as "Country" {
-        &self.country
-    }
-
     field facebook_url() -> &Option<String> as "Facebook url" {
         &self.facebook_url
     }
@@ -100,6 +92,10 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     field status() -> &Status as "Status" {
         &self.status
+    }
+
+    field address() -> Address as "address" {
+        self.clone().into()
     }
 
     field base_products(&executor,

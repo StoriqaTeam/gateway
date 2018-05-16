@@ -1,3 +1,4 @@
+pub mod address;
 pub mod attribute;
 pub mod base_product;
 pub mod cart;
@@ -20,6 +21,7 @@ pub mod user_delivery_address;
 pub mod user_role;
 pub mod wizard_store;
 
+pub use self::address::*;
 pub use self::attribute::*;
 pub use self::base_product::*;
 pub use self::cart::*;
