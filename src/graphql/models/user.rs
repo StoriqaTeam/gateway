@@ -63,10 +63,10 @@ impl UpdateUserInput {
             NaiveDate::parse_from_str(&birthdate, "%Y-%m-%d").map(|_| ()).map_err(|_| {
                 FieldError::new(
                     "Error response from microservice",
-                    graphql_value!({ "code": 100, "details": { 
+                    graphql_value!({ "code": 100, "details": {
                             "status": "400 Bad Request",
                             "code": "400",
-                            "message": 
+                            "message":
                                 "{\"birthdate\":[{\"code\":\"birthdate\",\"message\":\"Incorrect birthdate format\",\"params\":{\"value\":\"\"}}]}"
                             ,
                         }}),
@@ -97,6 +97,18 @@ pub struct NewIdentity {
     pub password: String,
     pub provider: Provider,
     pub saga_id: String,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Change user password input object")]
+pub struct ChangePasswordInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Previous password of a user.")]
+    pub old_password: String,
+    #[graphql(description = "New password of a user.")]
+    pub new_password: String,
 }
 
 /// Payload for creating identity
