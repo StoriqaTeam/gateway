@@ -82,6 +82,21 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field changePasword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
+        let context = executor.context();
+        let url = format!("{}/{}/password_change",
+            context.config.service_url(Service::Users),
+            Model::User.to_url());
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<bool>(Method::Post, url, Some(body))
+            .wait()?;
+
+        Ok(ResetActionOutput {
+            success: true,
+        })
+    }
+
     field requestPasswordReset(&executor, input: ResetRequest as "Password reset request input.") -> FieldResult<ResetActionOutput>  as "Requests password reset." {
         let context = executor.context();
         let url = format!("{}/{}/{}",
@@ -396,7 +411,7 @@ graphql_object!(Mutation: Context |&self| {
     field incrementInCart(&executor, input: IncrementInCartInput as "Increment in cart input.") -> FieldResult<Option<CartStore>> as "Increment in cart." {
         let context = executor.context();
 
-        let url = format!("{}/{}/store_id?product_id={}", 
+        let url = format!("{}/{}/store_id?product_id={}",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
             input.product_id);
@@ -476,7 +491,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()?;
 
         if let Some(order) = order {
-            let url = format!("{}/{}/by_product/{}", 
+            let url = format!("{}/{}/by_product/{}",
                 context.config.service_url(Service::Stores),
                 Model::BaseProduct.to_url(),
                 order.product_id);
@@ -526,7 +541,7 @@ graphql_object!(Mutation: Context |&self| {
 
         if let Some(order) = order {
 
-            let url = format!("{}/{}/by_product/{}", 
+            let url = format!("{}/{}/by_product/{}",
                 context.config.service_url(Service::Stores),
                 Model::BaseProduct.to_url(),
                 order.product_id);
