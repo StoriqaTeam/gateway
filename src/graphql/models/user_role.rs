@@ -17,6 +17,18 @@ pub struct NewUserRoleInput {
     pub role: Role,
 }
 
+#[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[graphql(description = "Old user role input object")]
+pub struct OldUserRoleInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "User id")]
+    pub user_id: i32,
+    #[graphql(description = "Old user role")]
+    pub role: Role,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UserRoles {
     pub user_id: i32,

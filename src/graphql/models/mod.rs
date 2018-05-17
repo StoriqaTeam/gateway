@@ -41,7 +41,7 @@ pub use self::status::*;
 pub use self::store::*;
 pub use self::user::*;
 pub use self::user_delivery_address::*;
-pub use self::user_role::{NewUserRoleInput, Role, UserRoles};
+pub use self::user_role::*;
 pub use self::wizard_store::*;
 
 //Mock object, made to return from graphql when microservices responce contains nothing - '()'

@@ -27,6 +27,10 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
         &self.id
     }
 
+    field store_id() -> &Option<i32> as "Store id"{
+        &self.store_id
+    }
+
     field moderator_comment(&executor) -> FieldResult<Option<ModeratorStoreComments>> as "Fetches moderator comment by id." {
         if let Some(ref store_id) = self.store_id {
             let context = executor.context();
