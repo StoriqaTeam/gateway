@@ -60,18 +60,20 @@ impl UpdateUserInput {
 
     pub fn validate(&self) -> FieldResult<()> {
         if let Some(birthdate) = self.birthdate.clone() {
-            NaiveDate::parse_from_str(&birthdate, "%Y-%m-%d").map(|_| ()).map_err(|_| {
-                FieldError::new(
-                    "Error response from microservice",
-                    graphql_value!({ "code": 100, "details": {
+            NaiveDate::parse_from_str(&birthdate, "%Y-%m-%d")
+                .map(|_| ())
+                .map_err(|_| {
+                    FieldError::new(
+                        "Error response from microservice",
+                        graphql_value!({ "code": 100, "details": {
                             "status": "400 Bad Request",
                             "code": "400",
                             "message":
                                 "{\"birthdate\":[{\"code\":\"birthdate\",\"message\":\"Incorrect birthdate format\",\"params\":{\"value\":\"\"}}]}"
                             ,
                         }}),
-                )
-            })
+                    )
+                })
         } else {
             Ok(())
         }

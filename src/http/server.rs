@@ -8,10 +8,8 @@ use futures::future;
 use futures::IntoFuture;
 use futures::{Future, Stream};
 use hyper;
-use hyper::header::{
-    AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge, AccessControlRequestHeaders,
-    Authorization, Bearer, ContentType, Headers,
-};
+use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge,
+                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Headers};
 use hyper::mime;
 use hyper::server::{Http, Request, Response, Service};
 use hyper::Method::{Get, Options, Post};
@@ -90,7 +88,10 @@ impl Service for WebService {
                         .and_then(move |resp| {
                             let mut new_headers = Headers::new();
                             new_headers.set(AccessControlAllowOrigin::Value(domain.to_owned()));
-                            Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
+                            Box::new(future::ok(utils::replace_response_headers(
+                                resp,
+                                new_headers,
+                            )))
                         })
                 }))
             }
@@ -111,7 +112,10 @@ impl Service for WebService {
                 new_headers.set(AccessControlMaxAge(max_age));
                 new_headers.set(ContentType(mime::TEXT_HTML));
 
-                Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
+                Box::new(future::ok(utils::replace_response_headers(
+                    resp,
+                    new_headers,
+                )))
             }
 
             _ => {
@@ -123,7 +127,11 @@ impl Service for WebService {
 }
 
 pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: ClientHandle) {
-    let addr = config.gateway.url.parse().expect("Cannot parse gateway url from config");
+    let addr = config
+        .gateway
+        .url
+        .parse()
+        .expect("Cannot parse gateway url from config");
 
     debug!("Reading public key file {}", &config.jwt.public_key_path);
     let mut f = File::open(config.jwt.public_key_path.clone()).unwrap();
@@ -147,7 +155,10 @@ pub fn start(config: Arc<Config>, tokio_handle: Arc<Handle>, client_handle: Clie
     tokio_handle.spawn(
         serve
             .for_each(move |conn| {
-                handle_arc.spawn(conn.map(|_| ()).map_err(|why| error!("Server Error: {:?}", why)));
+                handle_arc.spawn(
+                    conn.map(|_| ())
+                        .map_err(|why| error!("Server Error: {:?}", why)),
+                );
                 Ok(())
             })
             .map_err(|_| ()),

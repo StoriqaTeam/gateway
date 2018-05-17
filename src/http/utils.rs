@@ -20,7 +20,9 @@ pub fn read_body(body: hyper::Body) -> Box<Future<Item = String, Error = hyper::
 }
 
 pub fn response_with_body(body: String) -> Response {
-    Response::new().with_header(ContentLength(body.len() as u64)).with_body(body)
+    Response::new()
+        .with_header(ContentLength(body.len() as u64))
+        .with_body(body)
 }
 
 pub fn response_with_error(error: serde_json::error::Error) -> Response {
