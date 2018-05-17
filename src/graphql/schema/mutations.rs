@@ -149,6 +149,17 @@ graphql_object!(Mutation: Context |&self| {
             Model::UserRoles.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
+        context.request::<UserRoles>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field deleteRoleFromUser(&executor, input: OldUserRoleInput as "Old User Role Input.") -> FieldResult<UserRoles>  as "Deletes role from user." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Users),
+            Model::UserRoles.to_url());
+        let body: String = serde_json::to_string(&input)?.to_string();
+
         context.request::<UserRoles>(Method::Delete, url, Some(body))
             .wait()
     }
