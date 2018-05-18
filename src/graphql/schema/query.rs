@@ -5,6 +5,8 @@ use futures::Future;
 use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
+use serde_json;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::{Currency, CurrencyGraphQl};
@@ -212,6 +214,60 @@ graphql_object!(Query: Context |&self| {
         context.request::<BaseProduct>(Method::Get, url, None)
             .wait()
             .map(|u| Some(u))
+    }
+
+    field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+        let context = executor.context();
+        if let Some(session_id) = context.session_id {
+            if let Some(_) = context.user {
+                let body = serde_json::to_string(&CartMergePayload {user_from: session_id})?;
+                let url = format!("{}/cart/merge",
+                    &context.config.service_url(Service::Orders));
+
+                context.request::<CartHash>(Method::Post, url, Some(body))
+                    .map (|hash| hash.into_iter()
+                        .map(|(product_id, info)| OrdersCartProduct {
+                            product_id,
+                            quantity: info.quantity,
+                            store_id: info.store_id,
+                            selected: info.selected,
+                    }).collect::<Vec<OrdersCartProduct>>())
+                    .map(|u| Some(Cart::new(u)))
+                    .wait()
+            } else {
+                let url = format!("{}/cart/products",
+                    &context.config.service_url(Service::Orders));
+
+                context.request::<CartHash>(Method::Get, url, None)
+                    .map (|hash| hash.into_iter()
+                        .map(|(product_id, info)| OrdersCartProduct {
+                            product_id,
+                            quantity: info.quantity,
+                            store_id: info.store_id,
+                            selected: info.selected,
+                    }).collect::<Vec<OrdersCartProduct>>())
+                    .map(|u| Some(Cart::new(u)))
+                    .wait()
+            }
+        } else {
+            if let Some(_) = context.user {
+                let url = format!("{}/cart/products",
+                    &context.config.service_url(Service::Orders));
+
+                context.request::<CartHash>(Method::Get, url, None)
+                    .map (|hash| hash.into_iter()
+                        .map(|(product_id, info)| OrdersCartProduct {
+                            product_id,
+                            quantity: info.quantity,
+                            store_id: info.store_id,
+                            selected: info.selected,
+                    }).collect::<Vec<OrdersCartProduct>>())
+                    .map(|u| Some(Cart::new(u)))
+                    .wait()
+            }  else {
+                Ok (None)
+            }
+        }
     }
 
 });

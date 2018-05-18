@@ -121,14 +121,16 @@ pub struct CartProductStore {
 
 impl CartProductStore {
     pub fn new(product_id: i32, store_id: i32) -> Self {
-        Self {
-            product_id,
-            store_id,
-        }
+        Self { product_id, store_id }
     }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct CartProductIncrementPayload {
     pub store_id: i32,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct CartMergePayload {
+    pub user_from: i32,
 }

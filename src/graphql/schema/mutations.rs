@@ -82,7 +82,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field changePasword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
+    field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
         let context = executor.context();
         let url = format!("{}/{}/password_change",
             context.config.service_url(Service::Users),
@@ -605,7 +605,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let url = format!("{}/cart/clear", context.config.service_url(Service::Orders));
 
-        context.request::<()>(Method::Post, url, None)
+        context.request::<CartHash>(Method::Post, url, None)
             .wait()?;
         Ok(Mock{})
     }
