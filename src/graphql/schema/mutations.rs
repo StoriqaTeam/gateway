@@ -82,7 +82,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field changePasword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
+    field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
         let context = executor.context();
         let url = format!("{}/{}/password_change",
             context.config.service_url(Service::Users),

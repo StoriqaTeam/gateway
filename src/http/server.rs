@@ -9,7 +9,7 @@ use futures::IntoFuture;
 use futures::{Future, Stream};
 use hyper;
 use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge,
-                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Headers};
+                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Cookie, Headers};
 use hyper::mime;
 use hyper::server::{Http, Request, Response, Service};
 use hyper::Method::{Get, Options, Post};
@@ -61,18 +61,24 @@ impl Service for WebService {
                     ..Validation::new(Algorithm::RS256)
                 };
                 let token_payload = auth_header
-                    .map(move |auth| {
+                    .and_then(move |auth| {
                         let token = auth.0.token.as_ref();
                         decode::<JWTPayload>(token, jwt_public_key.as_ref(), &validation)
                             .ok()
                             .map(|t| t.claims)
-                    })
-                    .and_then(|x| x);
+                    });
+
+                let session_id_header = 
+                    headers.get::<Cookie>()
+                        .and_then(|c| c.get("SESSION_ID"))
+                        .and_then(|sid| sid.parse::<i32>().ok());
+                
 
                 Box::new(utils::read_body(req.body()).and_then(move |body| {
                     let mut graphql_context = context.graphql_context.clone();
                     graphql_context.user = token_payload;
                     graphql_context.uuid = Uuid::new_v4().to_string();
+                    graphql_context.session_id = session_id_header;
                     serde_json::from_str::<GraphQLRequest>(&body)
                         .into_future()
                         .and_then(move |graphql_req| {

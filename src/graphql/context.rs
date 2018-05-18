@@ -20,6 +20,7 @@ pub struct Context {
     pub schema: Arc<schema::Schema>,
     pub http_client: ClientHandle,
     pub user: Option<JWTPayload>,
+    pub session_id: Option<i32>,
     pub uuid: String,
 }
 
@@ -30,6 +31,7 @@ impl Context {
             schema: Arc::new(schema::create()),
             http_client: client_handle,
             user: None,
+            session_id: None,
             uuid: "".to_string(),
         }
     }
@@ -44,6 +46,9 @@ impl Context {
         };
         let mut cookie = Cookie::new();
         cookie.append("UUID", self.uuid.clone());
+        if let Some(ref session_id) = self.session_id {
+            cookie.append("SESSION_ID", session_id.to_string());
+        };
         headers.set(cookie);
 
         Box::new(
