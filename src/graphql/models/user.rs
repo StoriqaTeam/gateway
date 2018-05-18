@@ -16,6 +16,7 @@ pub struct User {
     pub middle_name: Option<String>,
     pub gender: Gender,
     pub birthdate: Option<String>,
+    pub avatar: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -41,6 +42,8 @@ pub struct UpdateUserInput {
     pub gender: Option<Gender>,
     #[graphql(description = "Birthdate of a user")]
     pub birthdate: Option<String>,
+    #[graphql(description = "Avatar link of a user")]
+    pub avatar: Option<String>,
 }
 
 impl UpdateUserInput {
@@ -55,6 +58,7 @@ impl UpdateUserInput {
             middle_name: None,
             gender: None,
             birthdate: None,
+            avatar: None,
         } == self.clone()
     }
 

@@ -57,6 +57,10 @@ graphql_object!(User: Context as "User" |&self| {
         &self.birthdate
     }
 
+    field avatar() -> &Option<String> as "Avatar" {
+        &self.avatar
+    }
+
     field isActive() -> &bool as "If the user was disabled (deleted), isActive is false" {
         &self.is_active
     }
@@ -86,8 +90,8 @@ graphql_object!(User: Context as "User" |&self| {
     }
 
     field users(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Base64 Id of a user") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Base64 Id of a user")
             -> FieldResult<Option<Connection<User, PageInfo>>> as "Fetches users using relay connection." {
         let context = executor.context();
 
@@ -148,8 +152,8 @@ graphql_object!(User: Context as "User" |&self| {
     }
 
     field stores(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Id of a store") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Id of a store")
             -> FieldResult<Option<Connection<Store, PageInfo>>> as "Fetches stores using relay connection." {
         let context = executor.context();
 
@@ -210,8 +214,8 @@ graphql_object!(User: Context as "User" |&self| {
     }
 
     field products(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Base64 Id of a product") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Base64 Id of a product")
             -> FieldResult<Option<Connection<Product, PageInfo>>> as "Fetches products using relay connection." {
         let context = executor.context();
 
@@ -272,7 +276,7 @@ graphql_object!(User: Context as "User" |&self| {
     }
 
     field base_products(&executor,
-        first = None : Option<i32> as "First edges", 
+        first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Base64 Id of base product")
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches base products using relay connection." {
         let context = executor.context();
