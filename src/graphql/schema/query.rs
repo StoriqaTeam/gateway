@@ -214,4 +214,22 @@ graphql_object!(Query: Context |&self| {
             .map(|u| Some(u))
     }
 
+    field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+        let context = executor.context();
+
+        let url = format!("{}/cart/products",
+            &context.config.service_url(Service::Orders));
+
+        context.request::<CartHash>(Method::Get, url, None)
+            .map (|hash| hash.into_iter()
+                .map(|(product_id, info)| OrdersCartProduct {
+                    product_id,
+                    quantity: info.quantity,
+                    store_id: info.store_id,
+                    selected: info.selected,
+            }).collect::<Vec<OrdersCartProduct>>())
+            .map(|u| Some(Cart::new(u)))
+            .wait()
+    }
+
 });

@@ -7,6 +7,8 @@ use hyper::Method;
 use juniper;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use serde_json;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
@@ -321,10 +323,14 @@ graphql_object!(User: Context as "User" |&self| {
     field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 
-        let url = format!("{}/cart/products",
+        let id = context.session_id.unwrap_or(self.id);
+
+        let body = serde_json::to_string(&CartMergePayload {user_from: id})?;
+
+        let url = format!("{}/cart/merge",
             &context.config.service_url(Service::Orders));
 
-        context.request::<CartHash>(Method::Get, url, None)
+        context.request::<CartHash>(Method::Post, url, Some(body))
             .map (|hash| hash.into_iter()
                 .map(|(product_id, info)| OrdersCartProduct {
                     product_id,

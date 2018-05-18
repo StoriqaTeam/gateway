@@ -605,7 +605,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let url = format!("{}/cart/clear", context.config.service_url(Service::Orders));
 
-        context.request::<()>(Method::Post, url, None)
+        context.request::<CartHash>(Method::Post, url, None)
             .wait()?;
         Ok(Mock{})
     }
