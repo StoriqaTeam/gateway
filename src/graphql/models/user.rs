@@ -94,6 +94,10 @@ pub struct CreateUserInput {
     pub email: String,
     #[graphql(description = "Password of a user.")]
     pub password: String,
+    #[graphql(description = "First name of a user")]
+    pub first_name: String,
+    #[graphql(description = "Last name of a user")]
+    pub last_name: String,
 }
 
 /// Payload for creating identity
