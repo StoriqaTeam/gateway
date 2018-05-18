@@ -320,7 +320,7 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
-    field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+    field deprecated "use query cart" cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 
         let id = context.session_id.unwrap_or(self.id);
