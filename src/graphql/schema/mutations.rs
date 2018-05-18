@@ -40,13 +40,20 @@ graphql_object!(Mutation: Context |&self| {
 
         let new_ident = NewIdentity {
             provider: Provider::Email,
-            email: input.email,
+            email: input.email.clone(),
             password: input.password,
             saga_id: "".to_string(),
         };
+        let new_user = NewUser {
+            email: input.email.clone(),
+            first_name: input.first_name.clone(),
+            last_name: input.last_name.clone(),
+        };
         let saga_profile = SagaCreateProfile {
             identity: new_ident,
+            user: Some(new_user),
         };
+
         let body: String = serde_json::to_string(&saga_profile)?.to_string();
 
         context.request::<User>(Method::Post, url, Some(body))
@@ -82,7 +89,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field changePasword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
+    field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
         let context = executor.context();
         let url = format!("{}/{}/password_change",
             context.config.service_url(Service::Users),

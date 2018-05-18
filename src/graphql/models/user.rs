@@ -100,6 +100,13 @@ pub struct CreateUserInput {
     pub last_name: String,
 }
 
+#[derive(Serialize, Clone)]
+pub struct NewUser {
+    pub email: String,
+    pub first_name: String,
+    pub last_name: String,
+}
+
 /// Payload for creating identity
 #[derive(Serialize, Clone)]
 pub struct NewIdentity {
@@ -125,6 +132,7 @@ pub struct ChangePasswordInput {
 #[derive(Serialize, Clone)]
 pub struct SagaCreateProfile {
     pub identity: NewIdentity,
+    pub user: Option<NewUser>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
