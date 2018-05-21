@@ -31,6 +31,23 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
         &self.store_id
     }
 
+    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store." {
+        if let Some(ref store_id) = self.store_id {
+            let context = executor.context();
+            let url = format!(
+                "{}/{}/{}",
+                &context.config.service_url(Service::Stores),
+                Model::Store.to_url(),
+                store_id.to_string()
+            );
+            context.request::<Store>(Method::Get, url, None)
+                .wait()
+                .map(|u| Some(u))
+        } else {
+            Ok(None)
+        }
+    }
+
     field moderator_comment(&executor) -> FieldResult<Option<ModeratorStoreComments>> as "Fetches moderator comment by id." {
         if let Some(ref store_id) = self.store_id {
             let context = executor.context();

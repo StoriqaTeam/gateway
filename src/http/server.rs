@@ -10,7 +10,7 @@ use futures::{Future, Stream};
 use hyper;
 use hyper::header::{
     AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge, AccessControlRequestHeaders,
-    Authorization, Bearer, ContentType, Cookie, Headers,
+    Authorization, Bearer, ContentType, Headers,
 };
 use hyper::mime;
 use hyper::server::{Http, Request, Response, Service};
@@ -25,6 +25,7 @@ use stq_http::client::ClientHandle;
 
 use super::context::Context;
 use super::graphiql;
+use super::headers::SessionId;
 use super::router;
 use super::utils;
 use config::Config;
@@ -69,10 +70,7 @@ impl Service for WebService {
                         .map(|t| t.claims)
                 });
 
-                let session_id_header = headers
-                    .get::<Cookie>()
-                    .and_then(|c| c.get("SESSION_ID"))
-                    .and_then(|sid| sid.parse::<i32>().ok());
+                let session_id_header = headers.get::<SessionId>().and_then(|sid| sid.parse::<i32>().ok());
 
                 Box::new(utils::read_body(req.body()).and_then(move |body| {
                     let mut graphql_context = context.graphql_context.clone();
