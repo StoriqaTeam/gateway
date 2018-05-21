@@ -75,7 +75,7 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
     field name() -> &Option<String> as "New name of a store"{
         &self.name
     }
-    
+
     field slug() -> &Option<String> as "Slug"{
         &self.slug
     }

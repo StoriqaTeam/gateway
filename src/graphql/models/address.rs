@@ -23,6 +23,30 @@ pub struct Address {
     pub street_number: Option<String>,
 }
 
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Address input object")]
+pub struct AddressInput {
+    #[graphql(description = "Full address")]
+    #[serde(rename = "address")]
+    pub value: Option<String>,
+    #[graphql(description = "Country")]
+    pub country: Option<String>,
+    #[graphql(description = "administrative_area_level_1")]
+    pub administrative_area_level_1: Option<String>,
+    #[graphql(description = "administrative_area_level_2")]
+    pub administrative_area_level_2: Option<String>,
+    #[graphql(description = "locality")]
+    pub locality: Option<String>,
+    #[graphql(description = "political")]
+    pub political: Option<String>,
+    #[graphql(description = "postal_code")]
+    pub postal_code: Option<String>,
+    #[graphql(description = "route")]
+    pub route: Option<String>,
+    #[graphql(description = "street_number")]
+    pub street_number: Option<String>,
+}
+
 impl From<Store> for Address {
     fn from(store: Store) -> Address {
         Self {

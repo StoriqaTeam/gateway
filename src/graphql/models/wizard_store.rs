@@ -1,4 +1,4 @@
-use graphql::models::Address;
+use graphql::models::{Address, AddressInput};
 use stq_static_resources::Language;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -37,24 +37,9 @@ pub struct UpdateWizardStoreInput {
     pub default_language: Option<Language>,
     #[graphql(description = "Slug")]
     pub slug: Option<String>,
-    #[graphql(description = "Country")]
-    pub country: Option<String>,
     #[graphql(description = "Address")]
-    pub address: Option<String>,
-    #[graphql(description = "administrative_area_level_1")]
-    pub administrative_area_level_1: Option<String>,
-    #[graphql(description = "administrative_area_level_2")]
-    pub administrative_area_level_2: Option<String>,
-    #[graphql(description = "locality")]
-    pub locality: Option<String>,
-    #[graphql(description = "political")]
-    pub political: Option<String>,
-    #[graphql(description = "postal_code")]
-    pub postal_code: Option<String>,
-    #[graphql(description = "route")]
-    pub route: Option<String>,
-    #[graphql(description = "street_number")]
-    pub street_number: Option<String>,
+    #[serde(flatten)]
+    pub address_full: AddressInput,
 }
 
 impl UpdateWizardStoreInput {
@@ -65,16 +50,18 @@ impl UpdateWizardStoreInput {
             store_id: None,
             short_description: None,
             slug: None,
-            address: None,
             default_language: None,
-            country: None,
-            administrative_area_level_1: None,
-            administrative_area_level_2: None,
-            locality: None,
-            political: None,
-            postal_code: None,
-            route: None,
-            street_number: None,
+            address_full: AddressInput {
+                country: None,
+                administrative_area_level_1: None,
+                administrative_area_level_2: None,
+                locality: None,
+                political: None,
+                postal_code: None,
+                route: None,
+                street_number: None,
+                value: None
+            }
         } == self.clone()
     }
 }
