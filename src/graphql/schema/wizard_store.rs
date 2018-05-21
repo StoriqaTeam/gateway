@@ -9,6 +9,7 @@ use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::Language;
 
 use super::*;
 use graphql::context::Context;
@@ -31,7 +32,7 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
         &self.store_id
     }
 
-    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store." {
+    field store(&executor) -> FieldResult<Option<Store>> as "Fetches store." {
         if let Some(ref store_id) = self.store_id {
             let context = executor.context();
             let url = format!(
@@ -67,17 +68,45 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
         }
     }
 
-    field step_one(&executor) -> WizardStepOne as "Fetches wizard step one." {
+    field short_description() -> &Option<String> as "Short description"{
+        &self.short_description
+    }
+
+    field name() -> &Option<String> as "New name of a store"{
+        &self.name
+    }
+
+    field slug() -> &Option<String> as "Slug"{
+        &self.slug
+    }
+
+    field default_language() -> &Option<Language> as "Language"{
+        &self.default_language
+    }
+
+    field country() -> &Option<String> as "Country"{
+        &self.country
+    }
+
+    field address() -> &Option<String> as "Address"{
+        &self.address
+    }
+
+    field address_full() -> Address as "Address full"{
+        self.clone().into()
+    }
+
+    field deprecated "Use wizard store raw fields" step_one(&executor) -> WizardStepOne as "Fetches wizard step one." {
         let context = executor.context();
         self.clone().into()
     }
 
-    field step_two(&executor) -> WizardStepTwo as "Fetches wizard step two." {
+    field deprecated "Use wizard store raw fields" step_two(&executor) -> WizardStepTwo as "Fetches wizard step two." {
         let context = executor.context();
         self.clone().into()
     }
 
-    field step_three(&executor, first = None : Option<i32> as "First edges", 
+    field deprecated "Use store field and base_products connection inside" step_three(&executor, first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID> as "Offset from begining") 
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches wizard step three." {
         let context = executor.context();
