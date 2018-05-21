@@ -7,6 +7,8 @@ use graphql::models::*;
 use hyper::Method;
 use juniper::{FieldError, FieldResult};
 use serde_json;
+use std::time::SystemTime;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
@@ -46,8 +48,14 @@ graphql_object!(Mutation: Context |&self| {
         };
         let new_user = NewUser {
             email: input.email.clone(),
-            first_name: input.first_name.clone(),
-            last_name: input.last_name.clone(),
+            phone: None,
+            first_name: Some(input.first_name.clone()),
+            last_name: Some(input.last_name.clone()),
+            middle_name: None,
+            gender: Gender::Undefined,
+            birthdate: None,
+            last_login_at: SystemTime::now(),
+            saga_id: "".to_string(),
         };
         let saga_profile = SagaCreateProfile {
             identity: new_ident,

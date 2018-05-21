@@ -1,6 +1,7 @@
 use chrono::NaiveDate;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
+use std::time::SystemTime;
 
 use super::Gender;
 use super::Provider;
@@ -100,11 +101,17 @@ pub struct CreateUserInput {
     pub last_name: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewUser {
     pub email: String,
-    pub first_name: String,
-    pub last_name: String,
+    pub phone: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub middle_name: Option<String>,
+    pub gender: Gender,
+    pub birthdate: Option<NaiveDate>,
+    pub last_login_at: SystemTime,
+    pub saga_id: String,
 }
 
 /// Payload for creating identity
