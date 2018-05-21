@@ -9,6 +9,7 @@ extern crate config as config_crate;
 extern crate env_logger;
 extern crate futures;
 extern crate futures_cpupool;
+#[macro_use]
 extern crate hyper;
 extern crate jsonwebtoken;
 #[macro_use]

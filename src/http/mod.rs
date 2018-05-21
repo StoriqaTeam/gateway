@@ -1,5 +1,6 @@
 pub mod context;
 pub mod graphiql;
+pub mod headers;
 pub mod router;
 pub mod server;
 pub mod utils;
