@@ -60,8 +60,6 @@ pub struct UpdateStoreInput {
     pub phone: Option<String>,
     #[graphql(description = "E-mail")]
     pub email: Option<String>,
-    #[graphql(description = "Address")]
-    pub address: Option<String>,
     #[graphql(description = "Facebook url")]
     pub facebook_url: Option<String>,
     #[graphql(description = "Twitter url")]
@@ -74,24 +72,11 @@ pub struct UpdateStoreInput {
     pub slogan: Option<String>,
     #[graphql(description = "Rating")]
     pub rating: Option<f64>,
-    #[graphql(description = "Country")]
-    pub country: Option<String>,
     #[graphql(description = "Status.")]
     pub status: Option<Status>,
-    #[graphql(description = "administrative_area_level_1")]
-    pub administrative_area_level_1: Option<String>,
-    #[graphql(description = "administrative_area_level_2")]
-    pub administrative_area_level_2: Option<String>,
-    #[graphql(description = "locality")]
-    pub locality: Option<String>,
-    #[graphql(description = "political")]
-    pub political: Option<String>,
-    #[graphql(description = "postal_code")]
-    pub postal_code: Option<String>,
-    #[graphql(description = "route")]
-    pub route: Option<String>,
-    #[graphql(description = "street_number")]
-    pub street_number: Option<String>,
+    #[graphql(description = "Address")]
+    #[serde(flatten)]
+    pub address_full: AddressInput,
 }
 
 impl UpdateStoreInput {
@@ -107,22 +92,24 @@ impl UpdateStoreInput {
             logo: None,
             phone: None,
             email: None,
-            address: None,
             facebook_url: None,
             twitter_url: None,
             instagram_url: None,
             default_language: None,
             slogan: None,
             rating: None,
-            country: None,
             status: None,
-            administrative_area_level_1: None,
-            administrative_area_level_2: None,
-            locality: None,
-            political: None,
-            postal_code: None,
-            route: None,
-            street_number: None,
+            address_full: AddressInput {
+                country: None,
+                administrative_area_level_1: None,
+                administrative_area_level_2: None,
+                locality: None,
+                political: None,
+                postal_code: None,
+                route: None,
+                street_number: None,
+                value: None
+            }
         } == self.clone()
     }
 }
@@ -151,8 +138,6 @@ pub struct CreateStoreInput {
     pub phone: Option<String>,
     #[graphql(description = "E-mail")]
     pub email: Option<String>,
-    #[graphql(description = "Address")]
-    pub address: Option<String>,
     #[graphql(description = "Facebook url")]
     pub facebook_url: Option<String>,
     #[graphql(description = "Twitter url")]
@@ -163,22 +148,9 @@ pub struct CreateStoreInput {
     pub default_language: Language,
     #[graphql(description = "Slogan")]
     pub slogan: Option<String>,
-    #[graphql(description = "Country")]
-    pub country: Option<String>,
-    #[graphql(description = "administrative_area_level_1")]
-    pub administrative_area_level_1: Option<String>,
-    #[graphql(description = "administrative_area_level_2")]
-    pub administrative_area_level_2: Option<String>,
-    #[graphql(description = "locality")]
-    pub locality: Option<String>,
-    #[graphql(description = "political")]
-    pub political: Option<String>,
-    #[graphql(description = "postal_code")]
-    pub postal_code: Option<String>,
-    #[graphql(description = "route")]
-    pub route: Option<String>,
-    #[graphql(description = "street_number")]
-    pub street_number: Option<String>,
+    #[graphql(description = "Address")]
+    #[serde(flatten)]
+    pub address_full: AddressInput,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
