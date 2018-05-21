@@ -4,6 +4,7 @@ pipeline:
     commands:
     - export BRANCH_SRC=origin/${DRONE_COMMIT_REFSPEC%%:*} BRANCH_DST=origin/${DRONE_BRANCH}
     - cp -rpf .git .git.bak
+    - git config --global user.email "service@storiqa.com" && git config --global user.name "Storiqa Common"
     - git fetch && git checkout $BRANCH_SRC && git merge --no-commit $BRANCH_DST
     - rm -rf .git && mv -f .git.bak .git
     when:
