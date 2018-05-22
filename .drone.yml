@@ -11,15 +11,14 @@ pipeline:
       event: pull_request
       branch: [ master, release* ]
   test:
-    image: rust:1.25-stretch
+    image: rust:1.26-stretch
     commands:
     - cargo test
     when:
       event: pull_request
   build:
-    image: rust:1.25-stretch
+    image: rust:1.26-stretch
     commands:
-    - cargo install cargo-watch
     - cargo build --release --locked
     when:
       event: push
