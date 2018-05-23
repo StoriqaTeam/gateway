@@ -217,7 +217,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createProduct(&executor, input: CreateProductWithAttributesInput as "Create product with attributes input.") -> FieldResult<Product> as "Creates new product." {
+    field createProduct(&executor, input: CreateProductWithAttributesInput as "Create product with attributes input.") -> FieldResult<Store> as "Creates new product." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
@@ -225,8 +225,27 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<Product>(Method::Post, url, Some(body))
+        let product = context.request::<Product>(Method::Post, url, Some(body))
+            .wait()?;
+
+        let url = format!("{}/{}/by_product/{}",
+                context.config.service_url(Service::Stores),
+                Model::BaseProduct.to_url(),
+                product.id);
+
+        let base_product = context.request::<BaseProduct>(Method::Get, url, None)
+            .wait()?;
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            base_product.store_id.to_string()
+        );
+
+        context.request::<Store>(Method::Get, url, None)
             .wait()
+            
     }
 
     field updateProduct(&executor, input: UpdateProductWithAttributesInput as "Update product input.") -> FieldResult<Product>  as "Updates existing product."{
@@ -257,7 +276,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createBaseProduct(&executor, input: CreateBaseProductInput as "Create base product with attributes input.") -> FieldResult<BaseProduct> as "Creates new base product." {
+    field createBaseProduct(&executor, input: CreateBaseProductInput as "Create base product with attributes input.") -> FieldResult<Store> as "Creates new base product." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
@@ -265,7 +284,17 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<BaseProduct>(Method::Post, url, Some(body))
+        let base_product = context.request::<BaseProduct>(Method::Post, url, Some(body))
+            .wait()?;
+        
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            base_product.store_id.to_string()
+        );
+
+        context.request::<Store>(Method::Get, url, None)
             .wait()
     }
 
