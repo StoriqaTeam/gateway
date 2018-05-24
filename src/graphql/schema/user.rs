@@ -382,9 +382,8 @@ graphql_object!(User: Context as "User" |&self| {
             id.to_string()
         );
 
-        context.request::<Warehouse>(Method::Get, url, None)
+        context.request::<Option<Warehouse>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
 });

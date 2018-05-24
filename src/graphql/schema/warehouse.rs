@@ -48,7 +48,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
         self.clone().into()
     }
 
-    field products(&executor) -> FieldResult<Option<Vec<WarehouseProduct>>> as "Fetches all products of warehouse." {
+    field products(&executor) -> FieldResult<Vec<WarehouseProduct>> as "Fetches all products of warehouse." {
         let context = executor.context();
 
         let url = format!(
@@ -60,7 +60,6 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
         context.request::<Vec<WarehouseProduct>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
 });

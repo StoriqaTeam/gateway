@@ -739,7 +739,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateWarehouse(&executor, input: UpdateWarehouseInput as "Update Warehouse input.") -> FieldResult<Warehouse>  as "Updates existing Warehouse."{
+    field updateWarehouse(&executor, input: UpdateWarehouseInput as "Update Warehouse input.") -> FieldResult<Option<Warehouse>>  as "Updates existing Warehouse."{
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Warehouses),
@@ -754,18 +754,18 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<Warehouse>(Method::Put, url, Some(body))
+        context.request::<Option<Warehouse>>(Method::Put, url, Some(body))
             .wait()
     }
 
-    field deleteWarehouse(&executor, id: i32) -> FieldResult<Warehouse>  as "Delete existing Warehouse." {
+    field deleteWarehouse(&executor, id: i32) -> FieldResult<Option<Warehouse>>  as "Delete existing Warehouse." {
         let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
             id);
 
-        context.request::<Warehouse>(Method::Delete, url, None)
+        context.request::<Option<Warehouse>>(Method::Delete, url, None)
             .wait()
     }
 
@@ -793,7 +793,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateProductInWarehouse(&executor, input: UpdateWarehouseProductInput as "Create warehouse input.") -> FieldResult<WarehouseProduct> as "Creates new warehouse product." {
+    field updateProductInWarehouse(&executor, input: UpdateWarehouseProductInput as "Create warehouse input.") -> FieldResult<Option<WarehouseProduct>> as "Creates new warehouse product." {
         let context = executor.context();
         let url = format!("{}/{}/{}/{}/{}",
             context.config.service_url(Service::Warehouses),
@@ -804,11 +804,11 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<WarehouseProduct>(Method::Post, url, Some(body))
+        context.request::<Option<WarehouseProduct>>(Method::Post, url, Some(body))
             .wait()
     }
 
-    field deleteProductInWarehouse(&executor, input: DeleteWarehouseProductInput as "Delete warehouse input.") -> FieldResult<WarehouseProduct> as "Deletes warehouse product." {
+    field deleteProductInWarehouse(&executor, input: DeleteWarehouseProductInput as "Delete warehouse input.") -> FieldResult<Option<WarehouseProduct>> as "Deletes warehouse product." {
         let context = executor.context();
         let url = format!("{}/{}/{}/{}/{}",
             context.config.service_url(Service::Warehouses),
@@ -817,7 +817,7 @@ graphql_object!(Mutation: Context |&self| {
             Model::Product.to_url(),
             input.product_id);
 
-        context.request::<WarehouseProduct>(Method::Delete, url, None)
+        context.request::<Option<WarehouseProduct>>(Method::Delete, url, None)
             .wait()
     }
 

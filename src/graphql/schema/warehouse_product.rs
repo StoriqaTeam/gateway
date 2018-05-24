@@ -53,9 +53,8 @@ graphql_object!(WarehouseProduct: Context as "WarehouseProduct" |&self| {
             self.warehouse_id.to_string()
         );
 
-        context.request::<Warehouse>(Method::Get, url, None)
+        context.request::<Option<Warehouse>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field quantity() -> &i32 as "Quantity"{
