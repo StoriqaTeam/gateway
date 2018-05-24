@@ -13,6 +13,7 @@ pub struct UserDeliveryAddress {
     pub route: Option<String>,
     pub street_number: Option<String>,
     pub address: Option<String>,
+    pub place_id: Option<String>,
     pub is_priority: bool,
 }
 
@@ -42,6 +43,8 @@ pub struct NewUserDeliveryAddressInput {
     pub street_number: Option<String>,
     #[graphql(description = "address")]
     pub address: Option<String>,
+    #[graphql(description = "place id")]
+    pub place_id: Option<String>,
     #[graphql(description = "is_priority")]
     pub is_priority: bool,
 }
@@ -73,6 +76,8 @@ pub struct UpdateUserDeliveryAddressInput {
     pub street_number: Option<String>,
     #[graphql(description = "address")]
     pub address: Option<String>,
+    #[graphql(description = "place id")]
+    pub place_id: Option<String>,
     #[graphql(description = "is_priority")]
     pub is_priority: Option<bool>,
 }
@@ -92,6 +97,7 @@ impl UpdateUserDeliveryAddressInput {
             street_number: None,
             address: None,
             is_priority: None,
+            place_id: None,
         } == self.clone()
     }
 }
