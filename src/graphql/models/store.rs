@@ -32,6 +32,7 @@ pub struct Store {
     pub postal_code: Option<String>,
     pub route: Option<String>,
     pub street_number: Option<String>,
+    pub place_id: Option<String>,
     pub base_products: Option<Vec<BaseProduct>>,
 }
 
@@ -92,6 +93,8 @@ pub struct UpdateStoreInput {
     pub route: Option<String>,
     #[graphql(description = "street_number")]
     pub street_number: Option<String>,
+    #[graphql(description = "place id")]
+    pub place_id: Option<String>,
 }
 
 impl UpdateStoreInput {
@@ -123,6 +126,7 @@ impl UpdateStoreInput {
             postal_code: None,
             route: None,
             street_number: None,
+            place_id: None,
         } == self.clone()
     }
 }
@@ -179,6 +183,8 @@ pub struct CreateStoreInput {
     pub route: Option<String>,
     #[graphql(description = "street_number")]
     pub street_number: Option<String>,
+    #[graphql(description = "place id")]
+    pub place_id: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
