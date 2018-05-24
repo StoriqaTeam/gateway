@@ -18,6 +18,7 @@ pub mod user;
 pub mod user_delivery_address;
 pub mod user_role;
 pub mod warehouse;
+pub mod warehouse_product;
 pub mod wizard_store;
 
 use juniper;

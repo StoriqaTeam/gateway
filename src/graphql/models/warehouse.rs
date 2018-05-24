@@ -51,7 +51,7 @@ pub struct Warehouse {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
-#[graphql(description = "Update warehouse with attributes input object")]
+#[graphql(description = "Update warehouse input object")]
 pub struct UpdateWarehouseInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
@@ -95,7 +95,7 @@ impl UpdateWarehouseInput {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description = "Create warehouse with attributes input object")]
+#[graphql(description = "Create warehouse input object")]
 pub struct CreateWarehouseInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]

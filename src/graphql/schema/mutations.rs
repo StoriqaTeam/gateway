@@ -727,4 +727,98 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field createWarehouse(&executor, input: CreateWarehouseInput as "Create warehouse input.") -> FieldResult<Warehouse> as "Creates new warehouse." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Warehouse>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field updateWarehouse(&executor, input: UpdateWarehouseInput as "Update Warehouse input.") -> FieldResult<Warehouse>  as "Updates existing Warehouse."{
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url());
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Warehouse>(Method::Put, url, Some(body))
+            .wait()
+    }
+
+    field deleteWarehouse(&executor, id: i32) -> FieldResult<Warehouse>  as "Delete existing Warehouse." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url(),
+            id);
+
+        context.request::<Warehouse>(Method::Delete, url, None)
+            .wait()
+    }
+
+    field deleteAllWarehouses(&executor) -> FieldResult<Vec<Warehouse>>  as "Delete all Warehouses." {
+        let context = executor.context();
+        let url = format!("{}/{}/clear",
+            context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url());
+
+        context.request::<Warehouse>(Method::Delete, url, None)
+            .wait()
+    }
+
+    field createProductInWarehouse(&executor, input: CreateWarehouseProductInput as "Create warehouse product input.") -> FieldResult<WarehouseProduct> as "Creates new warehouse product." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/{}/{}",
+            context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url(),
+            input.warehouse_id,
+            Model::Product.to_url(),
+            input.product_id);
+
+
+        context.request::<WarehouseProduct>(Method::Post, url, None)
+            .wait()
+    }
+
+    field updateProductInWarehouse(&executor, input: UpdateWarehouseProductInput as "Create warehouse input.") -> FieldResult<WarehouseProduct> as "Creates new warehouse product." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/{}/{}",
+            context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url(),
+            input.warehouse_id,
+            Model::Product.to_url(),
+            input.product_id);
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<WarehouseProduct>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field deleteProductInWarehouse(&executor, input: DeleteWarehouseProductInput as "Delete warehouse input.") -> FieldResult<WarehouseProduct> as "Deletes warehouse product." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/{}/{}",
+            context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url(),
+            input.warehouse_id,
+            Model::Product.to_url(),
+            input.product_id);
+
+        context.request::<WarehouseProduct>(Method::Delete, url, None)
+            .wait()
+    }
+
 });

@@ -1,5 +1,7 @@
 //! File containing wizard store object of graphql schema
 use futures::Future;
+use hyper::Method;
+use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
@@ -10,7 +12,7 @@ use graphql::context::Context;
 use graphql::models::*;
 
 graphql_object!(Warehouse: Context as "Warehouse" |&self| {
-    description: "Store's wizard info."
+    description: "Warehouse info."
 
     interfaces: [&Node]
 
@@ -44,6 +46,21 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
     field address_full() -> Address as "Address full"{
         self.clone().into()
+    }
+
+    field products(&executor) -> FieldResult<Option<Vec<WarehouseProduct>>> as "Fetches all products of warehouse." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url(),
+            self.id.to_string()
+        );
+
+        context.request::<Vec<WarehouseProduct>>(Method::Get, url, None)
+            .wait()
+            .map(|u| Some(u))
     }
 
 });

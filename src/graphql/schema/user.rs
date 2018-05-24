@@ -372,6 +372,21 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
+    field warehouse(&executor, id: i32 as "Int Id of warehouse.") -> FieldResult<Option<Warehouse>> as "Fetches warehouse by id." {
+        let context = executor.context();
+
+       let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url(),
+            id.to_string()
+        );
+
+        context.request::<Warehouse>(Method::Get, url, None)
+            .wait()
+            .map(|u| Some(u))
+    }
+
 });
 
 graphql_object!(Connection<User, PageInfo>: Context as "UsersConnection" |&self| {
