@@ -21,6 +21,8 @@ pub enum Node {
     Attribute(Attribute),
     CartProduct(CartProduct),
     CartStore(CartStore),
+    Warehouse(Warehouse),
+    WarehouseProduct(WarehouseProduct),
 }
 
 graphql_interface!(Node: Context as "Node" |&self| {
@@ -40,6 +42,8 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::Attribute(Attribute { ref id, .. })  => ID::new(Service::Stores, Model::Attribute, *id).to_string().into(),
             Node::CartProduct(CartProduct { ref id, .. })  => ID::new(Service::Orders, Model::CartProduct, *id).to_string().into(),
             Node::CartStore(CartStore { ref id, .. })  => ID::new(Service::Orders, Model::CartStore, *id).to_string().into(),
+            Node::Warehouse(Warehouse { ref id, .. })  => ID::new(Service::Warehouses, Model::Warehouse, *id).to_string().into(),
+            Node::WarehouseProduct(WarehouseProduct { ref id, .. })  => ID::new(Service::Warehouses, Model::WarehouseProduct, *id).to_string().into(),
         }
     }
 
@@ -54,6 +58,8 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &Attribute => match *self { Node::Attribute(ref h) => Some(h), _ => None },
         &CartProduct => match *self { Node::CartProduct(ref h) => Some(h), _ => None },
         &CartStore => match *self { Node::CartStore(ref h) => Some(h), _ => None },
+        &Warehouse => match *self { Node::Warehouse(ref h) => Some(h), _ => None },
+        &WarehouseProduct => match *self { Node::WarehouseProduct(ref h) => Some(h), _ => None },
     }
 });
 

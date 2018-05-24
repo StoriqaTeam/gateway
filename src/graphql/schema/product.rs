@@ -91,7 +91,7 @@ graphql_object!(Product: Context as "Product" |&self| {
 
         let url = format!(
             "{}/{}/{}",
-            &context.config.service_url(Service::warehouses),
+            &context.config.service_url(Service::Warehouses),
             Model::Product.to_url(),
             self.id.to_string()
         );

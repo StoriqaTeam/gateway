@@ -775,7 +775,7 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url());
 
-        context.request::<Warehouse>(Method::Delete, url, None)
+        context.request::<Vec<Warehouse>>(Method::Delete, url, None)
             .wait()
     }
 

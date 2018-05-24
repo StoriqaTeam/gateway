@@ -133,6 +133,24 @@ graphql_object!(Query: Context |&self| {
                                     graphql_value!({ "internal_error": "Unknown model" })
                                 ))
                 }
+                (&Service::Warehouses, &Model::Warehouse) => {
+                                context.request::<Warehouse>(Method::Get, identifier.url(&context.config), None)
+                                    .map(|res| Node::Warehouse(res))
+                                    .wait()
+                                    .map(|u| Some(u))
+                },
+                (&Service::Warehouses, &Model::WarehouseProduct) => {
+                                context.request::<WarehouseProduct>(Method::Get, identifier.url(&context.config), None)
+                                    .map(|res| Node::WarehouseProduct(res))
+                                    .wait()
+                                    .map(|u| Some(u))
+                },
+                (&Service::Warehouses, _) => {
+                                Err(FieldError::new(
+                                    "Could not get model from warehouses microservice.",
+                                    graphql_value!({ "internal_error": "Unknown model" })
+                                ))
+                }
             }
         }
     }
