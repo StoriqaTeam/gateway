@@ -67,6 +67,12 @@ graphql_object!(User: Context as "User" |&self| {
         &self.is_active
     }
 
+    field provider(&executor) -> Option<Provider> as "Provider user has logged in with" {
+        let context = executor.context();
+
+        context.user.clone().map(|payload| payload.provider)
+    }
+
     field roles(&executor) -> FieldResult<Option<Vec<Role>>> as "Fetches roles for user." {
         let context = executor.context();
 

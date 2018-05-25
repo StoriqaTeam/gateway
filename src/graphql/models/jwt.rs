@@ -65,6 +65,8 @@ pub struct CreateJWTProviderInput {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct JWTPayload {
     pub user_id: i32,
+    pub exp: i64,
+    pub provider: Provider,
 }
 
 impl Display for JWTPayload {

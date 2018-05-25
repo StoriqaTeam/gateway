@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(GraphQLEnum, Debug, Clone, Serialize)]
+#[derive(GraphQLEnum, Debug, Clone, Serialize, Deserialize)]
 #[graphql(name = "Provider", description = "Token providers")]
 pub enum Provider {
     #[graphql(description = "Google")]
