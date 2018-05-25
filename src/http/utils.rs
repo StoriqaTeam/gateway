@@ -3,10 +3,10 @@ use std::mem;
 use futures::future::Future;
 use futures::{future, Stream};
 use hyper;
+use hyper::StatusCode;
 use hyper::error::Error;
 use hyper::header::{ContentLength, Headers};
 use hyper::server::Response;
-use hyper::StatusCode;
 use serde_json;
 
 pub fn read_body(body: hyper::Body) -> Box<Future<Item = String, Error = hyper::Error>> {

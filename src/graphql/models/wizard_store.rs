@@ -63,7 +63,7 @@ impl UpdateWizardStoreInput {
                 street_number: None,
                 value: None,
                 place_id: None,
-            }
+            },
         } == self.clone()
     }
 }
