@@ -126,10 +126,16 @@ graphql_object!(Query: Context |&self| {
                                     "Could not get model from stores microservice.",
                                     graphql_value!({ "internal_error": "Unknown model" })
                                 ))
-                }
+                },
                 (&Service::Orders, _) => {
                                 Err(FieldError::new(
                                     "Could not get model from orders microservice.",
+                                    graphql_value!({ "internal_error": "Unknown model" })
+                                ))
+                }
+                (&Service::Warehouses, _) => {
+                                Err(FieldError::new(
+                                    "Could not get model from warehouses microservice.",
                                     graphql_value!({ "internal_error": "Unknown model" })
                                 ))
                 }

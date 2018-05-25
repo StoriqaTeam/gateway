@@ -4,17 +4,15 @@ use std::process;
 use std::sync::Arc;
 
 use futures;
-use futures::future;
 use futures::IntoFuture;
+use futures::future;
 use futures::{Future, Stream};
 use hyper;
-use hyper::header::{
-    AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge, AccessControlRequestHeaders,
-    Authorization, Bearer, ContentType, Headers,
-};
+use hyper::Method::{Get, Options, Post};
+use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge,
+                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Headers};
 use hyper::mime;
 use hyper::server::{Http, Request, Response, Service};
-use hyper::Method::{Get, Options, Post};
 use jsonwebtoken::{decode, Algorithm, Validation};
 use juniper::http::GraphQLRequest;
 use serde_json;

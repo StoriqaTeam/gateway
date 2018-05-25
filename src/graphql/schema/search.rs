@@ -2,8 +2,8 @@
 use std::cmp;
 use std::str::FromStr;
 
-use futures::future;
 use futures::Future;
+use futures::future;
 use hyper::Method;
 use juniper;
 use juniper::FieldResult;
