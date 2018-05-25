@@ -322,7 +322,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field renewJWT(&executor) -> FieldResult<JWT> as "Get JWT Token by email." {
+    field deprecated "do not use" renewJWT(&executor) -> FieldResult<JWT> as "Get JWT Token by email." {
         let context = executor.context();
         let url = format!("{}/{}/renew",
             context.config.service_url(Service::Users),
