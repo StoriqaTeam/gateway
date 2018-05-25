@@ -73,6 +73,7 @@ impl Config {
             StqService::Users => self.users_microservice.url.clone(),
             StqService::Stores => self.stores_microservice.url.clone(),
             StqService::Orders => self.orders_microservice.url.clone(),
+            StqService::Warehouses => "".to_string(),
         }
     }
 }
