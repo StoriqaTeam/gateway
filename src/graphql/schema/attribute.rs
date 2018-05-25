@@ -52,6 +52,10 @@ graphql_object!(AttrValue: Context as "AttributeValue" |&self| {
             .map(|u| Some(u))
     }
 
+    field attr_id() -> &i32 as "Attribute id" {
+        &self.attr_id
+    }
+
     field value() -> &str as "Attribute value of product variant" {
         &self.value
     }
