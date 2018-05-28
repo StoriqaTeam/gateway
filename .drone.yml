@@ -1,13 +1,3 @@
-clone:
-  git:
-    image: plugins/git
-    commands:
-    - git init
-    - git remote add origin ${DRONE_REMOTE_URL}
-    - git fetch
-    - git checkout ${DRONE_BRANCH}
-    - git submodule update --init --recursive --remote
-
 ######
 pipeline:
 
