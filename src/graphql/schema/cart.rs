@@ -25,9 +25,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         let context = executor.context();
 
         let offset = after
-            .and_then(|id|{
-                i32::from_str(&id).map(|i| i + 1).ok()
-            })
+            .and_then(|val| ID::from_str(&*val).map(|id| id.raw_id + 1).ok())
             .unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
