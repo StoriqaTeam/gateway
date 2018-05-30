@@ -92,7 +92,8 @@ impl Service for WebService {
                             }
                         })
                         .and_then(move |resp| {
-                            info!("Gateway Response status = {:?}, elapsed time = {:?}", resp.status(), Local::now() - dt);
+                            let d = Local::now() - dt;
+                            info!("Gateway Response status = {:?}, elapsed time = {}.{:03}", resp.status(), d.num_seconds(), d.num_milliseconds());
                             let mut new_headers = Headers::new();
                             new_headers.set(AccessControlAllowOrigin::Value(domain.to_owned()));
                             Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
