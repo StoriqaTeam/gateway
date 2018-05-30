@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::process;
 use std::sync::Arc;
 
+use chrono::prelude::*;
 use futures;
 use futures::IntoFuture;
 use futures::future;
@@ -41,7 +42,6 @@ impl Service for WebService {
     type Future = Box<futures::Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        info!("==========================req {:?}", &req);
         let context = self.context.clone();
         match (req.method(), self.context.router.test(req.path())) {
             (&Get, Some(router::Route::Healthcheck)) => Box::new(future::ok(utils::response_with_body("Ok".to_string()))),
@@ -72,11 +72,11 @@ impl Service for WebService {
                 let session_id_header = headers.get::<SessionId>().and_then(|sid| sid.parse::<i32>().ok());
 
                 Box::new(utils::read_body(req.body()).and_then(move |body| {
-                    info!("=============req body {:?}", &body);
                     let mut graphql_context = context.graphql_context.clone();
                     graphql_context.user = token_payload;
                     graphql_context.uuid = Uuid::new_v4().to_string();
                     graphql_context.session_id = session_id_header;
+                    let dt = Local::now();
                     serde_json::from_str::<GraphQLRequest>(&body)
                         .into_future()
                         .and_then(move |graphql_req| {
@@ -85,9 +85,13 @@ impl Service for WebService {
                                 serde_json::to_string(&graphql_resp)
                             })
                         })
-                        .then(|r| match r {
-                            Ok(data) => future::ok(utils::response_with_body(data)),
-                            Err(err) => future::ok(utils::response_with_error(err)),
+                        .then(move |r| {
+                            info!("{:?}", &r);
+                            info!("==========================Response Time {:?}", Local::now() - dt);
+                            match r {
+                                Ok(data) => future::ok(utils::response_with_body(data)),
+                                Err(err) => future::ok(utils::response_with_error(err)),
+                            }
                         })
                         .and_then(move |resp| {
                             let mut new_headers = Headers::new();
