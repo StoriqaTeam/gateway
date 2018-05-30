@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use chrono::prelude::*;
 use futures::prelude::*;
 use hyper;
 use hyper::header::{Authorization, Cookie, Headers};
@@ -51,10 +52,13 @@ impl Context {
         };
         headers.set(cookie);
 
+        let dt = Local::now();
+
         Box::new(
             self.http_client
-                .request(method, url, body, Some(headers))
-                .map_err(Error::into_graphql),
+                .request(method, url.clone(), body, Some(headers))
+                .map_err(Error::into_graphql)
+                .inspect(move |_| info!("Request to microservice : {:?}, elapsed time: {:?}", url, Local::now() - dt)),
         )
     }
 }
