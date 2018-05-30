@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use stq_static_resources::Translation;
 
@@ -19,7 +19,7 @@ pub struct OrdersCartItemInfo {
     pub store_id: i32,
 }
 
-pub type CartHash = HashMap<i32, OrdersCartItemInfo>;
+pub type CartHash = BTreeMap<i32, OrdersCartItemInfo>;
 
 /// Base unit of user's product selection
 #[derive(Deserialize, Debug, Clone)]
