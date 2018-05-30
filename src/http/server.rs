@@ -41,7 +41,7 @@ impl Service for WebService {
     type Future = Box<futures::Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        info!("req {:?}", &req);
+        info!("==========================req {:?}", &req);
         let context = self.context.clone();
         match (req.method(), self.context.router.test(req.path())) {
             (&Get, Some(router::Route::Healthcheck)) => Box::new(future::ok(utils::response_with_body("Ok".to_string()))),
@@ -72,6 +72,7 @@ impl Service for WebService {
                 let session_id_header = headers.get::<SessionId>().and_then(|sid| sid.parse::<i32>().ok());
 
                 Box::new(utils::read_body(req.body()).and_then(move |body| {
+                    info!("=============req body {:?}", &body);
                     let mut graphql_context = context.graphql_context.clone();
                     graphql_context.user = token_payload;
                     graphql_context.uuid = Uuid::new_v4().to_string();
