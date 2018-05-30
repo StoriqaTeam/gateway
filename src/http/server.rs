@@ -41,6 +41,7 @@ impl Service for WebService {
     type Future = Box<futures::Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
+        info!("req {:?}", &req);
         let context = self.context.clone();
         match (req.method(), self.context.router.test(req.path())) {
             (&Get, Some(router::Route::Healthcheck)) => Box::new(future::ok(utils::response_with_body("Ok".to_string()))),
