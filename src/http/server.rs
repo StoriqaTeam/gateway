@@ -70,7 +70,6 @@ impl Service for WebService {
                 });
 
                 let session_id_header = headers.get::<SessionId>().and_then(|sid| sid.parse::<i32>().ok());
-                let req_path = req.uri().clone();
 
                 Box::new(utils::read_body(req.body()).and_then(move |body| {
                     let mut graphql_context = context.graphql_context.clone();
@@ -93,7 +92,7 @@ impl Service for WebService {
                             }
                         })
                         .and_then(move |resp| {
-                            info!("Request path = {:?}, response status = {:?}, elapsed time = {:?}", &req_path, resp.status(), Local::now() - dt);
+                            info!("Gateway Response status = {:?}, elapsed time = {:?}", resp.status(), Local::now() - dt);
                             let mut new_headers = Headers::new();
                             new_headers.set(AccessControlAllowOrigin::Value(domain.to_owned()));
                             Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))
