@@ -120,31 +120,6 @@ graphql_object!(Store: Context as "Store" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        if let Some(ref base_products) = self.base_products {
-            let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products.clone()
-                .into_iter()
-                .skip(offset as usize)
-                .take((count + 1) as usize)
-                .map(|base_product| Edge::new(
-                            juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.clone()).to_string()),
-                            base_product.clone()
-                        ))
-                .collect();
-            let has_next_page = base_product_edges.len() as i32 > count;
-            if has_next_page {
-                base_product_edges.pop();
-            };
-            let has_previous_page = true;
-            let start_cursor =  base_product_edges.iter().nth(0).map(|e| e.cursor.clone());
-            let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
-            let page_info = PageInfo {
-                has_next_page,
-                has_previous_page,
-                start_cursor,
-                end_cursor};
-            Ok(Some(Connection::new(base_product_edges, page_info)))
-        } else {
-
             let url = match skip_base_prod_id {
                 None => format!(
                         "{}/{}/{}/products?offset={}&count={}",
@@ -192,7 +167,6 @@ graphql_object!(Store: Context as "Store" |&self| {
                 .wait()
                 .map(|u| Some(u))
         }
-    }
 
     field products_count(&executor) -> FieldResult<i32> as "Fetches products count of the store." {
         let context = executor.context();
