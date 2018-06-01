@@ -68,6 +68,10 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     field store_id(&executor) -> &i32 as "Raw store id"{
         &self.store_id
     }
+    
+    field category_id(&executor) -> &i32 as "Category Id"{
+        &self.category_id
+    }
 
     field moderator_comment(&executor) -> FieldResult<Option<ModeratorProductComments>> as "Fetches moderator comment by id." {
         let context = executor.context();
