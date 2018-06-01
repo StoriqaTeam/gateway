@@ -1,3 +1,4 @@
+use super::Attribute;
 use juniper::ID as GraphqlID;
 use stq_static_resources::{Translation, TranslationInput};
 
@@ -9,6 +10,7 @@ pub struct Category {
     pub children: Vec<Category>,
     pub parent_id: Option<i32>,
     pub level: i32,
+    pub attributes: Option<Vec<Attribute>>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]

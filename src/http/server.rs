@@ -5,15 +5,17 @@ use std::sync::Arc;
 
 use chrono::prelude::*;
 use futures;
-use futures::IntoFuture;
 use futures::future;
+use futures::IntoFuture;
 use futures::{Future, Stream};
 use hyper;
-use hyper::Method::{Get, Options, Post};
-use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge,
-                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Headers};
+use hyper::header::{
+    AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge, AccessControlRequestHeaders,
+    Authorization, Bearer, ContentType, Headers,
+};
 use hyper::mime;
 use hyper::server::{Http, Request, Response, Service};
+use hyper::Method::{Get, Options, Post};
 use jsonwebtoken::{decode, Algorithm, Validation};
 use juniper::http::GraphQLRequest;
 use serde_json;
@@ -85,15 +87,18 @@ impl Service for WebService {
                                 serde_json::to_string(&graphql_resp)
                             })
                         })
-                        .then(move |r| {
-                            match r {
-                                Ok(data) => future::ok(utils::response_with_body(data)),
-                                Err(err) => future::ok(utils::response_with_error(err)),
-                            }
+                        .then(move |r| match r {
+                            Ok(data) => future::ok(utils::response_with_body(data)),
+                            Err(err) => future::ok(utils::response_with_error(err)),
                         })
                         .and_then(move |resp| {
                             let d = Local::now() - dt;
-                            info!("Gateway Response status = {:?}, elapsed time = {}.{:03}", resp.status(), d.num_seconds(), d.num_milliseconds());
+                            info!(
+                                "Gateway Response status = {:?}, elapsed time = {}.{:03}",
+                                resp.status(),
+                                d.num_seconds(),
+                                d.num_milliseconds()
+                            );
                             let mut new_headers = Headers::new();
                             new_headers.set(AccessControlAllowOrigin::Value(domain.to_owned()));
                             Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))

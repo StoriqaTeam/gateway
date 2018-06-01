@@ -59,9 +59,14 @@ impl Context {
                 .request(method, url.clone(), body, Some(headers))
                 .map_err(Error::into_graphql)
                 .inspect(move |_| {
-                        let d = Local::now() - dt;
-                        info!("Request to microservice : {:?}, elapsed time: {}.{:03}", url, d.num_seconds(), d.num_milliseconds())
-                    }),
+                    let d = Local::now() - dt;
+                    info!(
+                        "Request to microservice : {:?}, elapsed time: {}.{:03}",
+                        url,
+                        d.num_seconds(),
+                        d.num_milliseconds()
+                    )
+                }),
         )
     }
 }
