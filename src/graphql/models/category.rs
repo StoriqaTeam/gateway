@@ -1,6 +1,6 @@
+use super::Attribute;
 use juniper::ID as GraphqlID;
 use stq_static_resources::{Translation, TranslationInput};
-use super::Attribute;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Category {
