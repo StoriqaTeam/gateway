@@ -45,6 +45,9 @@ impl Service for WebService {
 
     fn call(&self, req: Request) -> Self::Future {
         let context = self.context.clone();
+        let method = format!("{}",req.method());
+        let path = format!("{}",req.path());
+        info!("Request: {} {}", method, path);
         match (req.method(), self.context.router.test(req.path())) {
             (&Get, Some(router::Route::Healthcheck)) => Box::new(future::ok(utils::response_with_body("Ok".to_string()))),
 
@@ -94,7 +97,9 @@ impl Service for WebService {
                         .and_then(move |resp| {
                             let d = Local::now() - dt;
                             info!(
-                                "Gateway Response status = {:?}, elapsed time = {}.{:03}",
+                                "Response: {} {} {}, elapsed time = {}.{:03}",
+                                method,
+                                path,
                                 resp.status(),
                                 d.num_seconds(),
                                 d.num_milliseconds()
