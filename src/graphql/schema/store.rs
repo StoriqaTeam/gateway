@@ -192,9 +192,8 @@ graphql_object!(Store: Context as "Store" |&self| {
             self.id.to_string()
         );
 
-        context.request::<ModeratorStoreComments>(Method::Get, url, None)
+        context.request::<Option<ModeratorStoreComments>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
 });
