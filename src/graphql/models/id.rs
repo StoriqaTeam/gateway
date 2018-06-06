@@ -40,8 +40,7 @@ impl FromStr for ID {
 
         let service = Service::from_str(v[0])?;
         let model = Model::from_str(v[1])?;
-        let raw_id = v[2]
-            .parse::<i32>()
+        let raw_id = v[2].parse::<i32>()
             .map_err(|err| FieldError::new("Id parsing error", graphql_value!({ "code": 300, "details": { err.to_string() }})))?;
         Ok(ID::new(service, model, raw_id))
     }

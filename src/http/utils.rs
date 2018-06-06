@@ -10,15 +10,13 @@ use hyper::StatusCode;
 use serde_json;
 
 pub fn read_body(body: hyper::Body) -> Box<Future<Item = String, Error = hyper::Error>> {
-    Box::new(
-        body.fold(Vec::new(), |mut acc, chunk| {
-            acc.extend_from_slice(&*chunk);
-            future::ok::<_, hyper::Error>(acc)
-        }).and_then(|bytes| match String::from_utf8(bytes) {
-            Ok(data) => future::ok(data),
-            Err(err) => future::err(Error::Utf8(err.utf8_error())),
-        }),
-    )
+    Box::new(body.fold(Vec::new(), |mut acc, chunk| {
+        acc.extend_from_slice(&*chunk);
+        future::ok::<_, hyper::Error>(acc)
+    }).and_then(|bytes| match String::from_utf8(bytes) {
+        Ok(data) => future::ok(data),
+        Err(err) => future::err(Error::Utf8(err.utf8_error())),
+    }))
 }
 
 pub fn response_with_body(body: String) -> Response {
