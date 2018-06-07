@@ -92,9 +92,8 @@ graphql_object!(User: Context as "User" |&self| {
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.request::<User>(Method::Get, url, None)
+        context.request::<Option<User>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field users(&executor,
