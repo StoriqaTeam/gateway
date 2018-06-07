@@ -9,10 +9,8 @@ use futures::future;
 use futures::IntoFuture;
 use futures::{Future, Stream};
 use hyper;
-use hyper::header::{
-    AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge, AccessControlRequestHeaders,
-    Authorization, Bearer, ContentType, Headers,
-};
+use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge,
+                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Headers};
 use hyper::mime;
 use hyper::server::{Http, Request, Response, Service};
 use hyper::Method::{Get, Options, Post};
@@ -45,8 +43,8 @@ impl Service for WebService {
 
     fn call(&self, req: Request) -> Self::Future {
         let context = self.context.clone();
-        let method = format!("{}",req.method());
-        let path = format!("{}",req.path());
+        let method = format!("{}", req.method());
+        let path = format!("{}", req.path());
         info!("Request: {} {}", method, path);
         match (req.method(), self.context.router.test(req.path())) {
             (&Get, Some(router::Route::Healthcheck)) => Box::new(future::ok(utils::response_with_body("Ok".to_string()))),

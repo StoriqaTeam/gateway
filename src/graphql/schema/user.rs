@@ -92,9 +92,8 @@ graphql_object!(User: Context as "User" |&self| {
         let identifier = ID::from_str(&*id)?;
         let url = identifier.url(&context.config);
 
-        context.request::<User>(Method::Get, url, None)
+        context.request::<Option<User>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field users(&executor,
@@ -154,9 +153,8 @@ graphql_object!(User: Context as "User" |&self| {
             id.to_string()
         );
 
-        context.request::<Store>(Method::Get, url, None)
+        context.request::<Option<Store>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field stores(&executor,
@@ -216,9 +214,8 @@ graphql_object!(User: Context as "User" |&self| {
             id.to_string()
         );
 
-        context.request::<Product>(Method::Get, url, None)
+        context.request::<Option<Product>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field products(&executor,
@@ -278,9 +275,8 @@ graphql_object!(User: Context as "User" |&self| {
             id.to_string()
         );
 
-        context.request::<BaseProduct>(Method::Get, url, None)
+        context.request::<Option<BaseProduct>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field base_products(&executor,
@@ -360,8 +356,7 @@ graphql_object!(User: Context as "User" |&self| {
             Model::WizardStore.to_url(),
             );
 
-        context.request::<WizardStore>(Method::Get, url, None)
-            .map(|w| Some(w))
+        context.request::<Option<WizardStore>>(Method::Get, url, None)
             .wait()
     }
 

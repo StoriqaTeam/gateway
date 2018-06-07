@@ -41,9 +41,8 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
                 Model::Store.to_url(),
                 store_id.to_string()
             );
-            context.request::<Store>(Method::Get, url, None)
+            context.request::<Option<Store>>(Method::Get, url, None)
                 .wait()
-                .map(|u| Some(u))
         } else {
             Ok(None)
         }
@@ -60,9 +59,8 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
                 store_id
             );
 
-            context.request::<ModeratorStoreComments>(Method::Get, url, None)
+            context.request::<Option<ModeratorStoreComments>>(Method::Get, url, None)
                 .wait()
-                .map(|u| Some(u))
         } else {
             Ok(None)
         }
