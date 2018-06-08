@@ -3,15 +3,14 @@ use std::io::prelude::*;
 use std::process;
 use std::sync::Arc;
 
+use chrono::prelude::*;
 use futures;
 use futures::future;
 use futures::IntoFuture;
 use futures::{Future, Stream};
 use hyper;
-use hyper::header::{
-    AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge, AccessControlRequestHeaders,
-    Authorization, Bearer, ContentType, Headers,
-};
+use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge,
+                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Headers};
 use hyper::mime;
 use hyper::server::{Http, Request, Response, Service};
 use hyper::Method::{Get, Options, Post};
@@ -44,6 +43,9 @@ impl Service for WebService {
 
     fn call(&self, req: Request) -> Self::Future {
         let context = self.context.clone();
+        let method = format!("{}", req.method());
+        let path = format!("{}", req.path());
+        info!("Request: {} {}", method, path);
         match (req.method(), self.context.router.test(req.path())) {
             (&Get, Some(router::Route::Healthcheck)) => Box::new(future::ok(utils::response_with_body("Ok".to_string()))),
 
@@ -77,6 +79,7 @@ impl Service for WebService {
                     graphql_context.user = token_payload;
                     graphql_context.uuid = Uuid::new_v4().to_string();
                     graphql_context.session_id = session_id_header;
+                    let dt = Local::now();
                     serde_json::from_str::<GraphQLRequest>(&body)
                         .into_future()
                         .and_then(move |graphql_req| {
@@ -85,11 +88,20 @@ impl Service for WebService {
                                 serde_json::to_string(&graphql_resp)
                             })
                         })
-                        .then(|r| match r {
+                        .then(move |r| match r {
                             Ok(data) => future::ok(utils::response_with_body(data)),
                             Err(err) => future::ok(utils::response_with_error(err)),
                         })
                         .and_then(move |resp| {
+                            let d = Local::now() - dt;
+                            info!(
+                                "Response: {} {} {}, elapsed time = {}.{:03}",
+                                method,
+                                path,
+                                resp.status(),
+                                d.num_seconds(),
+                                d.num_milliseconds()
+                            );
                             let mut new_headers = Headers::new();
                             new_headers.set(AccessControlAllowOrigin::Value(domain.to_owned()));
                             Box::new(future::ok(utils::replace_response_headers(resp, new_headers)))

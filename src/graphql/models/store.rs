@@ -32,6 +32,7 @@ pub struct Store {
     pub postal_code: Option<String>,
     pub route: Option<String>,
     pub street_number: Option<String>,
+    pub place_id: Option<String>,
     pub base_products: Option<Vec<BaseProduct>>,
 }
 
@@ -108,7 +109,8 @@ impl UpdateStoreInput {
                 postal_code: None,
                 route: None,
                 street_number: None,
-                value: None
+                value: None,
+                place_id: None,
             }
         } == self.clone()
     }

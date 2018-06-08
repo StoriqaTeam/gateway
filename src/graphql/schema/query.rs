@@ -80,10 +80,9 @@ graphql_object!(Query: Context |&self| {
             let identifier = ID::from_str(&*id)?;
             match (&identifier.service, &identifier.model) {
                 (&Service::Users, &Model::User) => {
-                                context.request::<User>(Method::Get, identifier.url(&context.config), None)
-                                    .map(|res| Node::User(res))
+                                context.request::<Option<User>>(Method::Get, identifier.url(&context.config), None)
                                     .wait()
-                                    .map(|u| Some(u))
+                                    .map(|res| res.map(Node::User))
                 },
                 (&Service::Users, _) => {
                                 Err(FieldError::new(
@@ -92,44 +91,45 @@ graphql_object!(Query: Context |&self| {
                                 ))
                 },
                 (&Service::Stores, &Model::Store) => {
-                                context.request::<Store>(Method::Get, identifier.url(&context.config), None)
-                                    .map(|res| Node::Store(res))
+                                context.request::<Option<Store>>(Method::Get, identifier.url(&context.config), None)
                                     .wait()
-                                    .map(|u| Some(u))
+                                    .map(|res| res.map(Node::Store))
                 },
                 (&Service::Stores, &Model::Product) => {
-                                context.request::<Product>(Method::Get, identifier.url(&context.config), None)
-                                    .map(|res| Node::Product(res))
+                                context.request::<Option<Product>>(Method::Get, identifier.url(&context.config), None)
                                     .wait()
-                                    .map(|u| Some(u))
+                                    .map(|res| res.map(Node::Product))
                 },
                 (&Service::Stores, &Model::BaseProduct) => {
-                                context.request::<BaseProduct>(Method::Get, identifier.url(&context.config), None)
-                                    .map(|res| Node::BaseProduct(res))
+                                context.request::<Option<BaseProduct>>(Method::Get, identifier.url(&context.config), None)
                                     .wait()
-                                    .map(|u| Some(u))
+                                    .map(|res| res.map(Node::BaseProduct))
                 },
                 (&Service::Stores, &Model::Category) => {
-                                context.request::<Category>(Method::Get, identifier.url(&context.config), None)
-                                    .map(|res| Node::Category(res))
+                                context.request::<Option<Category>>(Method::Get, identifier.url(&context.config), None)
                                     .wait()
-                                    .map(|u| Some(u))
+                                    .map(|res| res.map(Node::Category))
                 },
                 (&Service::Stores, &Model::Attribute) => {
-                                context.request::<Attribute>(Method::Get, identifier.url(&context.config), None)
-                                    .map(|res| Node::Attribute(res))
+                                context.request::<Option<Attribute>>(Method::Get, identifier.url(&context.config), None)
                                     .wait()
-                                    .map(|u| Some(u))
+                                    .map(|res| res.map(Node::Attribute))
                 },
                 (&Service::Stores, _) => {
                                 Err(FieldError::new(
                                     "Could not get model from stores microservice.",
                                     graphql_value!({ "internal_error": "Unknown model" })
                                 ))
-                }
+                },
                 (&Service::Orders, _) => {
                                 Err(FieldError::new(
                                     "Could not get model from orders microservice.",
+                                    graphql_value!({ "internal_error": "Unknown model" })
+                                ))
+                }
+                (&Service::Warehouses, _) => {
+                                Err(FieldError::new(
+                                    "Could not get model from warehouses microservice.",
                                     graphql_value!({ "internal_error": "Unknown model" })
                                 ))
                 }
@@ -152,9 +152,8 @@ graphql_object!(Query: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::Category.to_url());
 
-        context.request::<Category>(Method::Get, url, None)
+        context.request::<Option<Category>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field currency_exchange(&executor) -> FieldResult<Option<CurrencyExchange>> as "Fetches currency exchange." {
@@ -162,9 +161,8 @@ graphql_object!(Query: Context |&self| {
         let url = format!("{}/currency_exchange",
             context.config.service_url(Service::Stores));
 
-        context.request::<CurrencyExchange>(Method::Get, url, None)
+        context.request::<Option<CurrencyExchange>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field attributes(&executor) -> FieldResult<Option<Vec<Attribute>>> as "Fetches all attributes." {
@@ -196,9 +194,8 @@ graphql_object!(Query: Context |&self| {
             id.to_string()
         );
 
-        context.request::<Store>(Method::Get, url, None)
+        context.request::<Option<Store>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field base_product(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
@@ -211,9 +208,8 @@ graphql_object!(Query: Context |&self| {
             id.to_string()
         );
 
-        context.request::<BaseProduct>(Method::Get, url, None)
+        context.request::<Option<BaseProduct>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {

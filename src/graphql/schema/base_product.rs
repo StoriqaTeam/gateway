@@ -69,6 +69,10 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         &self.store_id
     }
 
+    field category_id(&executor) -> &i32 as "Category Id"{
+        &self.category_id
+    }
+
     field moderator_comment(&executor) -> FieldResult<Option<ModeratorProductComments>> as "Fetches moderator comment by id." {
         let context = executor.context();
 
@@ -79,9 +83,8 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             self.id.to_string()
         );
 
-        context.request::<ModeratorProductComments>(Method::Get, url, None)
+        context.request::<Option<ModeratorProductComments>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field store(&executor) -> FieldResult<Option<Store>> as "Fetches store by id." {
@@ -94,9 +97,8 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             self.store_id.to_string()
         );
 
-        context.request::<Store>(Method::Get, url, None)
+        context.request::<Option<Store>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field category(&executor) -> FieldResult<Option<Category>> as "Category" {
@@ -106,9 +108,8 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             Model::Category.to_url(),
             self.category_id);
 
-        context.request::<Category>(Method::Get, url, None)
+        context.request::<Option<Category>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field deprecated "Use products instead" variants(&executor) -> FieldResult<Option<Variants>> as "Variants" {

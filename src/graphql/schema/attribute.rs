@@ -47,9 +47,12 @@ graphql_object!(AttrValue: Context as "AttributeValue" |&self| {
             context.config.service_url(Service::Stores),
             Model::Attribute.to_url(),
             self.attr_id);
-        context.request::<Attribute>(Method::Get, url, None)
+        context.request::<Option<Attribute>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
+    }
+
+    field attr_id() -> &i32 as "Attribute id" {
+        &self.attr_id
     }
 
     field value() -> &str as "Attribute value of product variant" {
@@ -70,9 +73,8 @@ graphql_object!(AttributeFilter: Context as "AttributeFilter" |&self| {
             context.config.service_url(Service::Stores),
             Model::Attribute.to_url(),
             self.id);
-        context.request::<Attribute>(Method::Get, url, None)
+        context.request::<Option<Attribute>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field equal() -> &Option<EqualFilter> as "Values to be equal" {

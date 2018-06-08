@@ -68,9 +68,8 @@ graphql_object!(Product: Context as "Product" |&self| {
             self.base_product_id.to_string()
         );
 
-        context.request::<BaseProduct>(Method::Get, url, None)
+        context.request::<Option<BaseProduct>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
     }
 
     field attributes(&executor) -> FieldResult<Option<Vec<AttrValue>>> as "Variants" {

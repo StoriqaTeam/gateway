@@ -21,6 +21,8 @@ pub struct Address {
     pub route: Option<String>,
     #[graphql(description = "street_number")]
     pub street_number: Option<String>,
+    #[graphql(description = "place id")]
+    pub place_id: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -45,6 +47,8 @@ pub struct AddressInput {
     pub route: Option<String>,
     #[graphql(description = "street_number")]
     pub street_number: Option<String>,
+    #[graphql(description = "place id")]
+    pub place_id: Option<String>,
 }
 
 impl From<Store> for Address {
@@ -59,6 +63,7 @@ impl From<Store> for Address {
             postal_code: store.postal_code,
             route: store.route,
             street_number: store.street_number,
+            place_id: store.place_id,
         }
     }
 }
@@ -75,6 +80,7 @@ impl From<UserDeliveryAddress> for Address {
             postal_code: Some(address.postal_code),
             route: address.route,
             street_number: address.street_number,
+            place_id: address.place_id,
         }
     }
 }
@@ -91,6 +97,7 @@ impl From<WizardStore> for Address {
             postal_code: address.postal_code,
             route: address.route,
             street_number: address.street_number,
+            place_id: address.place_id,
         }
     }
 }
