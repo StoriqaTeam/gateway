@@ -34,3 +34,4 @@ base64="0.9"
 jsonwebtoken = "4.0.0"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "*", features = ["use_std", "v4", "serde"] }
+failure = "0.1.1"
