@@ -9,7 +9,6 @@ extern crate config as config_crate;
 extern crate env_logger;
 extern crate futures;
 extern crate futures_cpupool;
-#[macro_use]
 extern crate hyper;
 extern crate jsonwebtoken;
 #[macro_use]
@@ -51,7 +50,6 @@ pub mod config;
 pub mod controller;
 pub mod errors;
 pub mod graphql;
-pub mod http;
 
 pub fn start(config: Config) {
     let mut builder = LogBuilder::new();
