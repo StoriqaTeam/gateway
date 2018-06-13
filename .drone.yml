@@ -58,7 +58,7 @@ pipeline:
     when:
       event: [ push, tag ]
   deploy2nightly:
-    image: jackthestripper/drone_k8s_rollout:20180510
+    image: jackthestripper/drone_k8s_rollout:20180610
     namespace: default
     kind: deployment
     object: gateway
@@ -78,7 +78,7 @@ pipeline:
       branch: master
       event: push
   deploy2stage:
-    image: jackthestripper/drone_k8s_rollout:20180510
+    image: jackthestripper/drone_k8s_rollout:20180610
     namespace: default
     kind: deployment
     object: gateway
@@ -103,7 +103,7 @@ pipeline:
   ###
 
   deploy2stable:
-    image: jackthestripper/drone_k8s_rollout:20180510
+    image: jackthestripper/drone_k8s_rollout:20180610
     namespace: default
     kind: deployment
     object: gateway
@@ -124,7 +124,7 @@ pipeline:
       event: deployment
       environment: stable
   deploy2production:
-    image: jackthestripper/drone_k8s_rollout:20180510
+    image: jackthestripper/drone_k8s_rollout:20180610
     namespace: default
     kind: deployment
     object: gateway
