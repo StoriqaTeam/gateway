@@ -45,14 +45,6 @@ pipeline:
     - cargo build --release --locked
     when:
       event: push
-  rebuild-cache:
-    image: plugins/s3-cache:1
-    pull: true
-    secrets: [ aws_access_key_id, aws_secret_access_key ]
-    mount:
-    - target
-    - deps
-    rebuild: true
   package:
     image: plugins/docker
     repo: storiqateam/stq-gw
@@ -139,19 +131,32 @@ pipeline:
     img_names: storiqateam/stq-gw
     img_tags: ${DRONE_BRANCH//\//_}${DRONE_PARENT_BUILD_NUMBER}
     img_cnts: gateway
-    user: admin
-    addr: https://api.production.stq.cloud
-    token: 2qIxi6uQs9wPFVXKqlyZXze1WFY4d4qY
-    ca: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMwekNDQWJ1Z0F3SUJBZ0lNRlRFOXJ4ZTR2QkVmV3dvUU1BMEdDU3FHU0liM0RRRUJDd1VBTUJVeEV6QVIKQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13SGhjTk1UZ3dOVEl4TURrMU9UTXdXaGNOTWpnd05USXdNRGsxT1RNdwpXakFWTVJNd0VRWURWUVFERXdwcmRXSmxjbTVsZEdWek1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBCk1JSUJDZ0tDQVFFQXNNVmZFbnVDQm82ZHd1L0NRb0EraEFORDE3L0hnSnN4YktGWmdXMmN2RFBxQUxOTlpQOEsKYTc3T3g4UnM1bUlNeStiWkpYTnhndzIvOEQxOWhlTC9UaWNHWDJJNGVFeXRoZ203NnRtTlg5bEQ4SEwxNHBjNQpYRkcwd3NPL3V2WUJWWm8xclZVTXcyRGVsd2FIUnJjU1h6ck93TzNUQzdSaEx6VzlaY1lCWEFmRGtWMmM4TkFxCnRNLzFGUjladG1qRkV5c1d0d0pXZUtNdXNYdnQvOURNc3Z2ZWVxL1hIVjVJaXRKZVMzRy9vZndCeUlubnZndFMKTHYxdTFJN0pBOGY2TEQ1SlNLUG9VNENSZWtwWkFGVk81OGEzbW1KRE9SRHJhN1FLU09wVk5va1ovVFRCYkNzagplazQ1cjd5ZklTb1pWRkNuM3I3QXFQMDkwU2ZUUXFJcE13SURBUUFCb3lNd0lUQU9CZ05WSFE4QkFmOEVCQU1DCkFRWXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFLbE90UzJQU0ZaWWcKenhRb1lDd2N0TGR1THM4dlB0Yms2cjdYdWdhZ25vaHpMOHR4Tk90UWliZ3hhY04va0t1a1hEMkxsTmlmQVUyagorMGlzYVBLNXBnSStNUzV5eFlmWFVpWjlpT2gydkZhWXJoMXp4eU0zRHozaDBrbUhWOGU2WkErYUlpS2hWU0NxCmY0TlNrMlVSNjNNb0xnVElyR1ZxRmFwajJBS1o0bkVKZ1lMUit3bG9TdWRubVBVZVFTallXdkNUcTczcmRMcVMKL0JCazVlUXNCZHF3clZBK3Z3dGd3Nnl3N0ljek1Nblk2QUFESFJVMytvTExHS3ZnUVFHTHhINkJ1WnUwOWF1WQpTUXRXMG83OWxrZExvNnhIMUZldVF5bVJNbTlVQ01DeWdIRUlBc1lYRFROVWcxYTdBTFBTR0NnNkszUEQ1S05MCjBRYWxCVWxoWmc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    secrets:
+    - source: k8s_prod_ca
+      target: k8s_ca
+    - source: k8s_prod_user
+      target: k8s_user
+    - source: k8s_prod_token
+      target: k8s_token
+    - source: k8s_prod_addr
+      target: k8s_addr
     when:
       branch: release*
       event: deployment
       environment: production
 
   ###
-  # Notifications
+  # Notifications and post-deploy ops
   ###
 
+  rebuild-cache:
+    image: plugins/s3-cache:1
+    pull: true
+    secrets: [ aws_access_key_id, aws_secret_access_key ]
+    mount:
+    - target
+    - deps
+    rebuild: true
   notify_slack:
     image: plugins/slack
     webhook: https://hooks.slack.com/services/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
