@@ -45,16 +45,20 @@ graphql_object!(Category: Context as "Category" |&self| {
     }
 
     field get_attributes(&executor) -> FieldResult<Option<Vec<Attribute>>> as "Fetches category attributes." {
-        let context = executor.context();
-        let url = format!("{}/{}/{}/attributes",
-            context.config.service_url(Service::Stores),
-            Model::Category.to_url(),
-            self.id
-            );
+        if self.attributes.is_some() {
+            Ok(self.attributes.clone())
+        } else {
+            let context = executor.context();
+            let url = format!("{}/{}/{}/attributes",
+                context.config.service_url(Service::Stores),
+                Model::Category.to_url(),
+                self.id
+                );
 
-        context.request::<Vec<Attribute>>(Method::Get, url, None)
-            .wait()
-            .map(|u| Some(u))
+            context.request::<Vec<Attribute>>(Method::Get, url, None)
+                .wait()
+                .map(|u| Some(u))
+        }
     }
 });
 

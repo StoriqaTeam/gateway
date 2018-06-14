@@ -20,7 +20,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
 
     field stores(&executor,
         first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Id of a store") 
+        after = None : Option<GraphqlID>  as "Offset") 
             -> FieldResult<Option<Connection<CartStore, PageInfo>>> as "Fetches stores using relay connection." {
         let context = executor.context();
 
@@ -41,7 +41,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
             .map (|stores| {
-                let mut store_edges: Vec<Edge<CartStore>> = stores
+                let mut cart_stores: Vec<CartStore> = stores
                     .into_iter()
                     .skip(offset as usize)
                     .take(count as usize)
@@ -77,13 +77,17 @@ graphql_object!(Cart: Context as "Cart" |&self| {
                                     }).collect::<Vec<CartProduct>>())
                                 }).unwrap_or_default()
                             }).collect();
-                        let cart_store = CartStore::new(store, products);
-                        Edge::new(
-                            juniper::ID::from(ID::new(Service::Stores, Model::CartStore, cart_store.id.clone()).to_string()),
-                            cart_store.clone()
-                        )
+                        CartStore::new(store, products)
                     })
                     .collect();
+                let mut store_edges: Vec<Edge<CartStore>> =  vec![];
+                for i in 0..cart_stores.len() {
+                    let edge = Edge::new(
+                            juniper::ID::from( (i as i32 + offset).to_string()),
+                            cart_stores[i].clone()
+                        );
+                    store_edges.push(edge);
+                }
                 let has_next_page = store_edges.len() as i32 > count;
                 let has_previous_page = true;
                 let start_cursor =  store_edges.iter().nth(0).map(|e| e.cursor.clone());

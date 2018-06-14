@@ -1,6 +1,7 @@
 use chrono::NaiveDate;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
+use std::time::SystemTime;
 
 use super::Gender;
 use super::Provider;
@@ -92,6 +93,23 @@ pub struct CreateUserInput {
     pub email: String,
     #[graphql(description = "Password of a user.")]
     pub password: String,
+    #[graphql(description = "First name of a user")]
+    pub first_name: String,
+    #[graphql(description = "Last name of a user")]
+    pub last_name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NewUser {
+    pub email: String,
+    pub phone: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub middle_name: Option<String>,
+    pub gender: Gender,
+    pub birthdate: Option<NaiveDate>,
+    pub last_login_at: SystemTime,
+    pub saga_id: String,
 }
 
 /// Payload for creating identity
@@ -119,6 +137,7 @@ pub struct ChangePasswordInput {
 #[derive(Serialize, Clone)]
 pub struct SagaCreateProfile {
     pub identity: NewIdentity,
+    pub user: Option<NewUser>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]

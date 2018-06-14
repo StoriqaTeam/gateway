@@ -20,6 +20,10 @@ graphql_object!(WarehouseProduct: Context as "WarehouseProduct" |&self| {
         ID::new(Service::Warehouses, Model::WarehouseProduct, self.id).to_string().into()
     }
 
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.id
+    }
+
     field product_id() -> &i32 as "Product id"{
         &self.product_id
     }

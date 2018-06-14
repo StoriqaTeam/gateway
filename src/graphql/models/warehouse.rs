@@ -46,8 +46,6 @@ pub struct Warehouse {
     pub route: Option<String>,
     pub street_number: Option<String>,
     pub place_id: Option<String>,
-    pub admins: Vec<i32>,
-    pub managers: Vec<i32>,
     pub kind: WarehouseKind,
 }
 

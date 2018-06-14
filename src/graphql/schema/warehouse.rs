@@ -35,14 +35,6 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
         &self.location
     }
 
-    field admins() -> &[i32] as "admins"{
-        &self.admins
-    }
-
-    field managers() -> &[i32] as "managers"{
-        &self.managers
-    }
-
     field kind() -> &WarehouseKind as "Warehouse Kind"{
         &self.kind
     }
