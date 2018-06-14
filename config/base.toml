@@ -20,5 +20,5 @@ url="http://billing:8003"
 [saga_microservice]
 url="http://saga:8004"
 
-[warehouse_microservice]
-url="http://warehouse:8005"
+[warehouses_microservice]
+url="http://warehouses:8005"
