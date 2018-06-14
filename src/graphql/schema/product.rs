@@ -85,6 +85,26 @@ graphql_object!(Product: Context as "Product" |&self| {
             .map(|u| Some(u))
     }
 
+    field quantity(&executor) -> FieldResult<Option<i32>> as "Fetches product quantity from warehouses." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Warehouses),
+            Model::Product.to_url(),
+            self.id.to_string()
+        );
+
+        context.request::<Vec<WarehouseProduct>>(Method::Get, url, None)
+            .wait()
+            .map(|products| {
+                products.iter().fold(0, |acc, p| {
+                    acc + p.quantity
+                })
+            })
+            .map(|u| Some(u))
+    }
+
 });
 
 graphql_object!(Connection<Product, PageInfo>: Context as "ProductsConnection" |&self| {

@@ -80,40 +80,40 @@ graphql_object!(Query: Context |&self| {
             let identifier = ID::from_str(&*id)?;
             match (&identifier.service, &identifier.model) {
                 (&Service::Users, &Model::User) => {
-                                context.request::<Option<User>>(Method::Get, identifier.url(&context.config), None)
-                                    .wait()
-                                    .map(|res| res.map(Node::User))
+                    context.request::<Option<User>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::User))
                 },
                 (&Service::Users, _) => {
-                                Err(FieldError::new(
-                                    "Could not get model from users microservice.",
-                                    graphql_value!({ "internal_error": "Unknown model" })
-                                ))
+                    Err(FieldError::new(
+                        "Could not get model from users microservice.",
+                        graphql_value!({ "internal_error": "Unknown model" })
+                    ))
                 },
                 (&Service::Stores, &Model::Store) => {
-                                context.request::<Option<Store>>(Method::Get, identifier.url(&context.config), None)
-                                    .wait()
-                                    .map(|res| res.map(Node::Store))
+                    context.request::<Option<Store>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::Store))
                 },
                 (&Service::Stores, &Model::Product) => {
-                                context.request::<Option<Product>>(Method::Get, identifier.url(&context.config), None)
-                                    .wait()
-                                    .map(|res| res.map(Node::Product))
+                    context.request::<Option<Product>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::Product))
                 },
                 (&Service::Stores, &Model::BaseProduct) => {
-                                context.request::<Option<BaseProduct>>(Method::Get, identifier.url(&context.config), None)
-                                    .wait()
-                                    .map(|res| res.map(Node::BaseProduct))
+                    context.request::<Option<BaseProduct>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::BaseProduct))
                 },
                 (&Service::Stores, &Model::Category) => {
-                                context.request::<Option<Category>>(Method::Get, identifier.url(&context.config), None)
-                                    .wait()
-                                    .map(|res| res.map(Node::Category))
+                    context.request::<Option<Category>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::Category))
                 },
                 (&Service::Stores, &Model::Attribute) => {
-                                context.request::<Option<Attribute>>(Method::Get, identifier.url(&context.config), None)
-                                    .wait()
-                                    .map(|res| res.map(Node::Attribute))
+                    context.request::<Option<Attribute>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::Attribute))
                 },
                 (&Service::Stores, _) => {
                                 Err(FieldError::new(
@@ -122,16 +122,26 @@ graphql_object!(Query: Context |&self| {
                                 ))
                 },
                 (&Service::Orders, _) => {
-                                Err(FieldError::new(
-                                    "Could not get model from orders microservice.",
-                                    graphql_value!({ "internal_error": "Unknown model" })
-                                ))
-                }
+                    Err(FieldError::new(
+                        "Could not get model from orders microservice.",
+                        graphql_value!({ "internal_error": "Unknown model" })
+                    ))
+                },
+                (&Service::Warehouses, &Model::Warehouse) => {
+                    context.request::<Option<Warehouse>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::Warehouse))
+                },
+                (&Service::Warehouses, &Model::WarehouseProduct) => {
+                    context.request::<Option<WarehouseProduct>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::WarehouseProduct))
+                },
                 (&Service::Warehouses, _) => {
-                                Err(FieldError::new(
-                                    "Could not get model from warehouses microservice.",
-                                    graphql_value!({ "internal_error": "Unknown model" })
-                                ))
+                    Err(FieldError::new(
+                        "Could not get model from warehouses microservice.",
+                        graphql_value!({ "internal_error": "Unknown model" })
+                    ))
                 }
             }
         }
@@ -140,7 +150,6 @@ graphql_object!(Query: Context |&self| {
     field languages(&executor) -> Vec<LanguageGraphQl> as "Fetches languages." {
         Language::as_vec()
     }
-
 
     field currencies(&executor) -> Vec<CurrencyGraphQl> as "Fetches currencies." {
         Currency::as_vec()

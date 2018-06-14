@@ -19,6 +19,8 @@ pub mod store;
 pub mod user;
 pub mod user_delivery_address;
 pub mod user_role;
+pub mod warehouse;
+pub mod warehouse_product;
 pub mod wizard_store;
 
 pub use self::address::*;
@@ -42,6 +44,8 @@ pub use self::store::*;
 pub use self::user::*;
 pub use self::user_delivery_address::*;
 pub use self::user_role::*;
+pub use self::warehouse::*;
+pub use self::warehouse_product::*;
 pub use self::wizard_store::*;
 
 //Mock object, made to return from graphql when microservices responce contains nothing - '()'

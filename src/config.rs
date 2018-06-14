@@ -27,6 +27,7 @@ pub struct Config {
     pub saga_microservice: Microservice,
     pub orders_microservice: Microservice,
     pub billing_microservice: Microservice,
+    pub warehouses_microservice: Microservice,
     pub jwt: JWT,
     pub cors: CORS,
 }
@@ -73,7 +74,7 @@ impl Config {
             StqService::Users => self.users_microservice.url.clone(),
             StqService::Stores => self.stores_microservice.url.clone(),
             StqService::Orders => self.orders_microservice.url.clone(),
-            StqService::Warehouses => "".to_string(),
+            StqService::Warehouses => self.warehouses_microservice.url.clone(),
         }
     }
 }
