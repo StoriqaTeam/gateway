@@ -8,10 +8,8 @@ use futures::future;
 use futures::IntoFuture;
 use futures::{Future, Stream};
 use hyper;
-use hyper::header::{
-    AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge, AccessControlRequestHeaders,
-    Authorization, Bearer, ContentType, Headers,
-};
+use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlAllowOrigin, AccessControlMaxAge,
+                    AccessControlRequestHeaders, Authorization, Bearer, ContentType, Headers};
 use hyper::mime;
 use hyper::server::{Http, Request, Response, Service};
 use hyper::Method::{Get, Options, Post};

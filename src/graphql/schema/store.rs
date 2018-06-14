@@ -222,6 +222,20 @@ graphql_object!(Store: Context as "Store" |&self| {
             .map(|u| Some(u))
     }
 
+    field warehouses(&executor) -> FieldResult<Option<Vec<Warehouse>>> as "Fetches store warehouses." {
+        let context = executor.context();
+
+       let url = format!(
+            "{}/{}/by_store/{}",
+            &context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url(),
+            self.id.to_string()
+        );
+
+        context.request::<Option<Vec<Warehouse>>>(Method::Get, url, None)
+            .wait()
+    }
+
 });
 
 graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {

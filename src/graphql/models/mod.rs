@@ -19,9 +19,9 @@ pub mod store;
 pub mod user;
 pub mod user_delivery_address;
 pub mod user_role;
-pub mod wizard_store;
 pub mod warehouse;
 pub mod warehouse_product;
+pub mod wizard_store;
 
 pub use self::address::*;
 pub use self::attribute::*;

@@ -34,6 +34,7 @@ pub struct GeoPointInput {
 pub struct Warehouse {
     pub id: i32,
     pub name: Option<String>,
+    pub store_id: i32,
     pub location: Option<GeoPoint>,
     pub administrative_area_level_1: Option<String>,
     pub administrative_area_level_2: Option<String>,
@@ -47,7 +48,7 @@ pub struct Warehouse {
     pub place_id: Option<String>,
     pub admins: Vec<i32>,
     pub managers: Vec<i32>,
-    pub kind: WarehouseKind, 
+    pub kind: WarehouseKind,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -67,7 +68,7 @@ pub struct UpdateWarehouseInput {
     #[serde(flatten)]
     pub address_full: AddressInput,
     #[graphql(description = "Warehouse kind")]
-    pub kind: Option<WarehouseKind>, 
+    pub kind: Option<WarehouseKind>,
 }
 
 impl UpdateWarehouseInput {
@@ -89,7 +90,7 @@ impl UpdateWarehouseInput {
                 street_number: None,
                 value: None,
                 place_id: None,
-            }
+            },
         } == self.clone()
     }
 }
@@ -102,11 +103,13 @@ pub struct CreateWarehouseInput {
     pub client_mutation_id: String,
     #[graphql(description = "Name of a warehouse.")]
     pub name: Option<String>,
+    #[graphql(description = "Store id of a warehouse.")]
+    pub store_id: i32,
     #[graphql(description = "Location of a warehouse.")]
     pub location: Option<GeoPointInput>,
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,
     #[graphql(description = "Warehouse kind")]
-    pub kind: WarehouseKind, 
+    pub kind: WarehouseKind,
 }
