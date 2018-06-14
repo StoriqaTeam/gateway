@@ -121,6 +121,11 @@ graphql_object!(Query: Context |&self| {
                                     graphql_value!({ "internal_error": "Unknown model" })
                                 ))
                 },
+                (&Service::Orders, &Model::Order) => {
+                    context.request::<Option<Order>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::Order))
+                },
                 (&Service::Orders, _) => {
                     Err(FieldError::new(
                         "Could not get model from orders microservice.",

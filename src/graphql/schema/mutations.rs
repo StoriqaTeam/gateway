@@ -837,4 +837,35 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field createOrder(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<Order> as "Creates new order." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Orders),
+            Model::Order.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Order>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field updateOrder(&executor, input: UpdateOrderInput as "Update order input.") -> FieldResult<Option<Order>>  as "Updates existing order."{
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Orders),
+            Model::Order.to_url());
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Option<Order>>(Method::Put, url, Some(body))
+            .wait()
+    }
+
 });
