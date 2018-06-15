@@ -18,7 +18,7 @@ use stq_http::controller::Controller;
 use stq_http::controller::ControllerFuture;
 use stq_http::request_util::parse_body;
 use stq_http::request_util::serialize_future;
-use stq_http::request_util::SessionId;
+use stq_http::request_util::{CurrencyId, SessionId};
 
 use self::context::Context;
 use self::routes::Route;
@@ -73,6 +73,7 @@ impl Controller for ControllerImpl {
                     });
 
                     let session_id_header = headers.get::<SessionId>().and_then(|sid| sid.parse::<i32>().ok());
+                    let currency_id_header = headers.get::<CurrencyId>().and_then(|sid| sid.parse::<i32>().ok());
 
                     serialize_future::<_, FailureError, _>(
                         parse_body::<GraphQLRequest>(req.body())
@@ -86,6 +87,7 @@ impl Controller for ControllerImpl {
                                 graphql_context.user = token_payload;
                                 graphql_context.uuid = Uuid::new_v4().to_string();
                                 graphql_context.session_id = session_id_header;
+                                graphql_context.currency_id = currency_id_header;
                                 context
                                     .graphql_thread_pool
                                     .spawn_fn(move || {

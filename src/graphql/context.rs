@@ -12,6 +12,7 @@ use super::schema;
 use config::Config;
 
 use stq_http::client::{ClientHandle, Error};
+use stq_http::request_util::CurrencyId;
 
 use graphql::models::jwt::JWTPayload;
 
@@ -22,6 +23,7 @@ pub struct Context {
     pub http_client: ClientHandle,
     pub user: Option<JWTPayload>,
     pub session_id: Option<i32>,
+    pub currency_id: Option<i32>,
     pub uuid: String,
 }
 
@@ -33,6 +35,7 @@ impl Context {
             http_client: client_handle,
             user: None,
             session_id: None,
+            currency_id: None,
             uuid: "".to_string(),
         }
     }
@@ -49,6 +52,9 @@ impl Context {
         cookie.append("UUID", self.uuid.clone());
         if let Some(ref session_id) = self.session_id {
             cookie.append("SESSION_ID", session_id.to_string());
+        };
+        if let Some(ref currency_id) = self.currency_id {
+            headers.set(CurrencyId(currency_id.to_string()));
         };
         headers.set(cookie);
 
