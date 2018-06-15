@@ -23,7 +23,6 @@ pub struct Order {
     pub price: f64,
     pub subtotal: f64,
     pub payment_status: bool,
-    pub delivery_status: bool,
     pub delivery_company: String,
     pub delivery_track_id: Option<String>,
     pub creation_time: String,
@@ -62,30 +61,97 @@ pub struct CreateOrderInput {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
-#[graphql(description = "Update order input object")]
-pub struct UpdateOrderInput {
+#[graphql(description = "Order Status Delivery input.")]
+pub struct OrderStatusDeliveryInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
     #[graphql(description = "Id of order.")]
     #[serde(skip_serializing)]
     pub id: GraphqlID,
-    #[graphql(description = "Status of order.")]
-    pub status: Option<OrderStatus>,
-    #[graphql(description = "Payment status.")]
-    pub payment_status: Option<bool>,
-    #[graphql(description = "Delivery status.")]
-    pub delivery_status: Option<bool>,
+    #[graphql(description = "Track id.")]
+    pub track_id: String,
+    #[graphql(description = "Comments")]
+    pub comments: String,
 }
 
-impl UpdateOrderInput {
-    pub fn is_none(&self) -> bool {
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct OrderStatusDelivery {
+    pub status: OrderStatus,
+    pub track_id: String,
+    pub comments: String,
+}
+
+impl From<OrderStatusDeliveryInput> for OrderStatusDelivery {
+    fn from(order: OrderStatusDeliveryInput) -> Self {
         Self {
-            client_mutation_id: self.client_mutation_id.clone(),
-            id: self.id.clone(),
-            payment_status: None,
-            delivery_status: None,
-            status: None,
-        } == self.clone()
+            status: OrderStatus::Delivery,
+            track_id: order.track_id,
+            comments: order.comments,
+        }
     }
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Order Status Paid input.")]
+pub struct OrderStatusPaidInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of order.")]
+    #[serde(skip_serializing)]
+    pub id: GraphqlID,
+    #[graphql(description = "Comments")]
+    pub comments: String,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct OrderStatusPaid {
+    pub status: OrderStatus,
+    pub comments: String,
+}
+
+impl From<OrderStatusPaidInput> for OrderStatusPaid {
+    fn from(order: OrderStatusPaidInput) -> Self {
+        Self {
+            status: OrderStatus::Paid,
+            comments: order.comments,
+        }
+    }
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Order Status Finished input.")]
+pub struct OrderStatusFinishedInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of order.")]
+    #[serde(skip_serializing)]
+    pub id: GraphqlID,
+    #[graphql(description = "Comments")]
+    pub comments: String,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct OrderStatusFinished {
+    pub status: OrderStatus,
+    pub comments: String,
+}
+
+impl From<OrderStatusFinishedInput> for OrderStatusFinished {
+    fn from(order: OrderStatusFinishedInput) -> Self {
+        Self {
+            status: OrderStatus::Finished,
+            comments: order.comments,
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct OrderHistoryItem {
+    pub status: OrderStatus,
+    pub user_id: i32,
+    pub comments: Option<String>,
+    pub creation_time: String,
 }

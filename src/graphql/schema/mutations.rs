@@ -849,20 +849,46 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateOrder(&executor, input: UpdateOrderInput as "Update order input.") -> FieldResult<Option<Order>>  as "Updates existing order."{
+    field setOrderStatusDelivery(&executor, input: OrderStatusDeliveryInput as "Order Status Delivery input.") -> FieldResult<Option<Order>>  as "Set Order Status Delivery."{
         let context = executor.context();
-        let url = format!("{}/{}",
+        let url = format!("{}/{}/{}",
             context.config.service_url(Service::Orders),
-            Model::Order.to_url());
+            Model::Order.to_url(),
+            input.id.to_string());
 
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
+        let order: OrderStatusDelivery = input.into();
 
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body: String = serde_json::to_string(&order)?.to_string();
+
+        context.request::<Option<Order>>(Method::Put, url, Some(body))
+            .wait()
+    }
+
+    field setOrderStatusPaid(&executor, input: OrderStatusPaidInput as "Order Status Paid input.") -> FieldResult<Option<Order>>  as "Set Order Status Paid."{
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Orders),
+            Model::Order.to_url(),
+            input.id.to_string());
+
+        let order: OrderStatusPaid = input.into();
+
+        let body: String = serde_json::to_string(&order)?.to_string();
+
+        context.request::<Option<Order>>(Method::Put, url, Some(body))
+            .wait()
+    }
+
+    field setOrderStatusFinished(&executor, input: OrderStatusFinishedInput as "Order Status Finished input.") -> FieldResult<Option<Order>>  as "Set Order Status Finished."{
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Orders),
+            Model::Order.to_url(),
+            input.id.to_string());
+
+        let order: OrderStatusFinished = input.into();
+
+        let body: String = serde_json::to_string(&order)?.to_string();
 
         context.request::<Option<Order>>(Method::Put, url, Some(body))
             .wait()

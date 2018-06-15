@@ -93,10 +93,6 @@ graphql_object!(Order: Context as "Order" |&self| {
         &self.payment_status
     }
 
-    field delivery_status() -> &bool as "Delivery status" {
-        &self.payment_status
-    }
-
     field delivery_company() -> &str as "Delivery Company" {
         &self.delivery_company
     }
@@ -117,6 +113,27 @@ graphql_object!(Order: Context as "Order" |&self| {
         self.clone().into()
     }
 
+    field history(&executor) -> FieldResult<Vec<OrderHistoryItem>> as "History" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/history",
+            context.config.service_url(Service::Orders),
+            Model::Order.to_url(),
+            self.id);
+
+        context.request::<Vec<OrderHistoryItem>>(Method::Get, url, None)
+            .wait()
+    }
+    
+    field allowed_statuses(&executor) -> FieldResult<Vec<OrderStatus>> as "Allowed statuses" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/allowed_statuses",
+            context.config.service_url(Service::Orders),
+            Model::Order.to_url(),
+            self.id);
+
+        context.request::<Vec<OrderStatus>>(Method::Get, url, None)
+            .wait()
+    }
 });
 
 graphql_object!(Connection<Order, PageInfo>: Context as "OrdersConnection" |&self| {
