@@ -196,9 +196,10 @@ graphql_object!(Mutation: Context |&self| {
 
     field createStore(&executor, input: CreateStoreInput as "Create store input.") -> FieldResult<Store> as "Creates new store." {
         let context = executor.context();
+        let saga_addr = context.config.saga_microservice.url.clone();
         let url = format!("{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+            saga_addr,
+            "create_store");
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.request::<Store>(Method::Post, url, Some(body))
