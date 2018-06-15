@@ -373,18 +373,52 @@ graphql_object!(User: Context as "User" |&self| {
             .map(|u| Some(u))
     }
 
-    field warehouse(&executor, id: i32 as "Int Id of warehouse.") -> FieldResult<Option<Warehouse>> as "Fetches warehouse by id." {
+    field orders(&executor,
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Base64 Id of order")
+            -> FieldResult<Option<Connection<Order, PageInfo>>> as "Fetches orders using relay connection." {
         let context = executor.context();
 
-       let url = format!(
-            "{}/{}/{}",
-            &context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url(),
-            id.to_string()
-        );
+        let offset = after
+            .and_then(|id|{
+                i32::from_str(&id).map(|i| i + 1).ok()
+            })
+            .unwrap_or_default();
 
-        context.request::<Option<Warehouse>>(Method::Get, url, None)
+        let records_limit = context.config.gateway.records_limit;
+        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}/by_user?offset={}&count={}",
+            context.config.service_url(Service::Orders),
+            Model::Order.to_url(),
+            offset,
+            count + 1);
+
+        context.request::<Vec<Order>>(Method::Get, url, None)
+            .map (|products| {
+                let mut orders_edges: Vec<Edge<Order>> = products
+                    .into_iter()
+                    .map(|order| Edge::new(
+                                juniper::ID::from(ID::new(Service::Orders, Model::Order, order.id.clone()).to_string()),
+                                order.clone()
+                            ))
+                    .collect();
+                let has_next_page = orders_edges.len() as i32 == count + 1;
+                if has_next_page {
+                    orders_edges.pop();
+                };
+                let has_previous_page = true;
+                let start_cursor =  orders_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = orders_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page,
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
+                Connection::new(orders_edges, page_info)
+            })
             .wait()
+            .map(|u| Some(u))
     }
 
 });

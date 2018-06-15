@@ -9,6 +9,8 @@ pub mod main_page;
 pub mod moderator_comment;
 pub mod mutations;
 pub mod node;
+pub mod order;
+pub mod order_history;
 pub mod page_info;
 pub mod product;
 pub mod query;
