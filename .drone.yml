@@ -5,9 +5,13 @@ pipeline:
     pull: true
     secrets: [ aws_access_key_id, aws_secret_access_key ]
     mount:
-    - target
     - deps
     restore: true
+    when:
+      event:
+      - pull_request
+      - push
+      - tag
 
 ###
 # Test PR
@@ -154,9 +158,13 @@ pipeline:
     pull: true
     secrets: [ aws_access_key_id, aws_secret_access_key ]
     mount:
-    - target
     - deps
     rebuild: true
+    when:
+      event:
+      - pull_request
+      - push
+      - tag
   notify_slack:
     image: plugins/slack
     webhook: https://hooks.slack.com/services/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
