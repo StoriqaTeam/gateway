@@ -5,9 +5,17 @@ use super::*;
 #[derive(GraphQLEnum, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[graphql(name = "OrderStatus", description = "Current order status")]
 pub enum OrderStatus {
+    #[serde(rename = "new")]
     New,
+    #[serde(rename = "paid")]
     Paid,
-    Delivery,
+    #[serde(rename = "in_processing")]
+    InProcessing,
+    #[serde(rename = "cancelled")]
+    Cancelled,
+    #[serde(rename = "sent")]
+    Sent,
+    #[serde(rename = "finished")]
     Finished,
 }
 
@@ -19,9 +27,10 @@ pub struct Order {
     pub product_id: i32,
     pub quantity: i32,
     pub store_id: i32,
-    pub currency_id: i32,
     pub price: f64,
     pub subtotal: f64,
+    pub receiver_name: String,
+    pub slug: i32,
     pub payment_status: bool,
     pub delivery_company: String,
     pub delivery_track_id: Option<String>,
@@ -36,7 +45,6 @@ pub struct Order {
     pub street_number: Option<String>,
     pub address: Option<String>,
     pub place_id: Option<String>,
-    pub customer_comments: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -50,14 +58,18 @@ pub struct CreateOrderInput {
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,
-    #[graphql(description = "Cart product id")]
-    pub cart_product_id: i32,
-    #[graphql(description = "Currency id")]
-    pub currency_id: i32,
-    #[graphql(description = "Price")]
-    pub price: f64,
-    #[graphql(description = "Subtotal")]
-    pub subtotal: f64,
+    #[graphql(description = "Receiver name")]
+    pub receiver_name: String,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct CreateOrder {
+    pub user_id: i32,
+    pub customer_comments: Option<String>,
+    #[serde(flatten)]
+    pub address_full: AddressInput,
+    pub receiver_name: String,
+    pub cart_products: CartProductWithPriceHash,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -85,7 +97,7 @@ pub struct OrderStatusDelivery {
 impl From<OrderStatusDeliveryInput> for OrderStatusDelivery {
     fn from(order: OrderStatusDeliveryInput) -> Self {
         Self {
-            status: OrderStatus::Delivery,
+            status: OrderStatus::Sent,
             track_id: order.track_id,
             comments: order.comments,
         }

@@ -134,3 +134,5 @@ pub struct CartProductIncrementPayload {
 pub struct CartMergePayload {
     pub user_from: i32,
 }
+
+pub type CartProductWithPriceHash = BTreeMap<i32, f64>;

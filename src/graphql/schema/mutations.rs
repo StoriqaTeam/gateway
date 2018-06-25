@@ -1,4 +1,6 @@
 //! File containing mutations object of graphql schema
+use std::collections::BTreeMap;
+use std::iter::FromIterator;
 use std::str::FromStr;
 
 use futures::Future;
@@ -840,11 +842,51 @@ graphql_object!(Mutation: Context |&self| {
 
     field createOrder(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<Order> as "Creates new order." {
         let context = executor.context();
-        let url = format!("{}/{}",
+
+        let (products, user_id) = if let Some(user) = context.user.clone() {
+            let url = format!("{}/cart/products",
+                &context.config.service_url(Service::Orders));
+
+            context.request::<CartHash>(Method::Get, url, None)
+                .map (|hash| hash.into_iter()
+                    .map(|(product_id, info)| OrdersCartProduct {
+                        product_id,
+                        quantity: info.quantity,
+                        store_id: info.store_id,
+                        selected: info.selected,
+                })
+                .map(|p| {
+                    let url = format!("{}/{}/{}",
+                        context.config.service_url(Service::Stores),
+                        Model::Product.to_url(),
+                        p.product_id);
+
+                    context.request::<Product>(Method::Get, url, None).wait()
+                })
+                .collect::<Result<Vec<Product>, FieldError>>())
+                .map(|p| (p, user.user_id)).wait()?
+        }  else {
+            return Err(FieldError::new(
+                "Could not create order for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let products_with_prices = BTreeMap::<i32, f64>::from_iter(products?.iter().map(|p| (p.id, p.price)));
+
+        let create_order = CreateOrder {
+            user_id: user_id,
+            customer_comments: input.customer_comments,
+            address_full: input.address_full,
+            receiver_name: input.receiver_name,
+            cart_products: products_with_prices,
+        };
+
+        let url = format!("{}/{}/create_from_cart",
             context.config.service_url(Service::Orders),
             Model::Order.to_url());
 
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body: String = serde_json::to_string(&create_order)?.to_string();
 
         context.request::<Order>(Method::Post, url, Some(body))
             .wait()
