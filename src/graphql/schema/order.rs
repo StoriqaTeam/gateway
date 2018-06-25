@@ -81,8 +81,8 @@ graphql_object!(Order: Context as "Order" |&self| {
         &self.price
     }
 
-    field subtotal() -> &f64 as "Subtotal" {
-        &self.subtotal
+    field subtotal() -> f64 as "Subtotal" {
+        self.price * (self.quantity as f64)
     }
 
     field slug() -> &i32 as "Slug" {
@@ -97,8 +97,8 @@ graphql_object!(Order: Context as "Order" |&self| {
         &self.delivery_company
     }
 
-    field delivery_track_id() -> &Option<String> as "Delivery Company" {
-        &self.delivery_track_id
+    field track_id() -> &Option<String> as "Delivery Company" {
+        &self.track_id
     }
 
     field creation_time() -> &str as "Creation time" {

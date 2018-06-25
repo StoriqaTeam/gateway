@@ -15,8 +15,8 @@ pub enum OrderStatus {
     Cancelled,
     #[serde(rename = "sent")]
     Sent,
-    #[serde(rename = "finished")]
-    Finished,
+    #[serde(rename = "complete")]
+    Complete,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -28,12 +28,11 @@ pub struct Order {
     pub quantity: i32,
     pub store_id: i32,
     pub price: f64,
-    pub subtotal: f64,
     pub receiver_name: String,
     pub slug: i32,
     pub payment_status: bool,
     pub delivery_company: String,
-    pub delivery_track_id: Option<String>,
+    pub track_id: Option<String>,
     pub creation_time: String,
     pub administrative_area_level_1: Option<String>,
     pub administrative_area_level_2: Option<String>,
@@ -64,10 +63,10 @@ pub struct CreateOrderInput {
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct CreateOrder {
-    pub user_id: i32,
-    pub customer_comments: Option<String>,
+    pub customer_id: i32,
+    pub comments: Option<String>,
     #[serde(flatten)]
-    pub address_full: AddressInput,
+    pub address: AddressInput,
     pub receiver_name: String,
     pub cart_products: CartProductWithPriceHash,
 }
@@ -133,8 +132,8 @@ impl From<OrderStatusPaidInput> for OrderStatusPaid {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
-#[graphql(description = "Order Status Finished input.")]
-pub struct OrderStatusFinishedInput {
+#[graphql(description = "Order Status Complete input.")]
+pub struct OrderStatusCompleteInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
@@ -146,15 +145,15 @@ pub struct OrderStatusFinishedInput {
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
-pub struct OrderStatusFinished {
+pub struct OrderStatusComplete {
     pub status: OrderStatus,
     pub comments: String,
 }
 
-impl From<OrderStatusFinishedInput> for OrderStatusFinished {
-    fn from(order: OrderStatusFinishedInput) -> Self {
+impl From<OrderStatusCompleteInput> for OrderStatusComplete {
+    fn from(order: OrderStatusCompleteInput) -> Self {
         Self {
-            status: OrderStatus::Finished,
+            status: OrderStatus::Complete,
             comments: order.comments,
         }
     }
