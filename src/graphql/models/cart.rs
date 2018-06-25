@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
 
@@ -134,3 +134,5 @@ pub struct CartProductIncrementPayload {
 pub struct CartMergePayload {
     pub user_from: i32,
 }
+
+pub type CartProductWithPriceHash = HashMap<i32, f64>;

@@ -5,10 +5,18 @@ use super::*;
 #[derive(GraphQLEnum, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[graphql(name = "OrderStatus", description = "Current order status")]
 pub enum OrderStatus {
+    #[serde(rename = "new")]
     New,
+    #[serde(rename = "paid")]
     Paid,
-    Delivery,
-    Finished,
+    #[serde(rename = "in_processing")]
+    InProcessing,
+    #[serde(rename = "cancelled")]
+    Cancelled,
+    #[serde(rename = "sent")]
+    Sent,
+    #[serde(rename = "complete")]
+    Complete,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -19,12 +27,12 @@ pub struct Order {
     pub product_id: i32,
     pub quantity: i32,
     pub store_id: i32,
-    pub currency_id: i32,
     pub price: f64,
-    pub subtotal: f64,
+    pub receiver_name: String,
+    pub slug: i32,
     pub payment_status: bool,
     pub delivery_company: String,
-    pub delivery_track_id: Option<String>,
+    pub track_id: Option<String>,
     pub creation_time: String,
     pub administrative_area_level_1: Option<String>,
     pub administrative_area_level_2: Option<String>,
@@ -36,7 +44,6 @@ pub struct Order {
     pub street_number: Option<String>,
     pub address: Option<String>,
     pub place_id: Option<String>,
-    pub customer_comments: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -50,14 +57,18 @@ pub struct CreateOrderInput {
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,
-    #[graphql(description = "Cart product id")]
-    pub cart_product_id: i32,
-    #[graphql(description = "Currency id")]
-    pub currency_id: i32,
-    #[graphql(description = "Price")]
-    pub price: f64,
-    #[graphql(description = "Subtotal")]
-    pub subtotal: f64,
+    #[graphql(description = "Receiver name")]
+    pub receiver_name: String,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct CreateOrder {
+    pub customer_id: i32,
+    pub comments: Option<String>,
+    #[serde(flatten)]
+    pub address: AddressInput,
+    pub receiver_name: String,
+    pub cart_products: CartProductWithPriceHash,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -85,7 +96,7 @@ pub struct OrderStatusDelivery {
 impl From<OrderStatusDeliveryInput> for OrderStatusDelivery {
     fn from(order: OrderStatusDeliveryInput) -> Self {
         Self {
-            status: OrderStatus::Delivery,
+            status: OrderStatus::Sent,
             track_id: order.track_id,
             comments: order.comments,
         }
@@ -121,8 +132,8 @@ impl From<OrderStatusPaidInput> for OrderStatusPaid {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
-#[graphql(description = "Order Status Finished input.")]
-pub struct OrderStatusFinishedInput {
+#[graphql(description = "Order Status Complete input.")]
+pub struct OrderStatusCompleteInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
@@ -134,15 +145,15 @@ pub struct OrderStatusFinishedInput {
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
-pub struct OrderStatusFinished {
+pub struct OrderStatusComplete {
     pub status: OrderStatus,
     pub comments: String,
 }
 
-impl From<OrderStatusFinishedInput> for OrderStatusFinished {
-    fn from(order: OrderStatusFinishedInput) -> Self {
+impl From<OrderStatusCompleteInput> for OrderStatusComplete {
+    fn from(order: OrderStatusCompleteInput) -> Self {
         Self {
-            status: OrderStatus::Finished,
+            status: OrderStatus::Complete,
             comments: order.comments,
         }
     }

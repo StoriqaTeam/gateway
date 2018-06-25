@@ -73,10 +73,6 @@ graphql_object!(Order: Context as "Order" |&self| {
             .wait()
     }
 
-    field currency_id() -> &i32 as "Currency int id"{
-        &self.currency_id
-    }
-
     field quantity() -> &i32 as "Quantity" {
         &self.quantity
     }
@@ -85,8 +81,12 @@ graphql_object!(Order: Context as "Order" |&self| {
         &self.price
     }
 
-    field subtotal() -> &f64 as "Subtotal" {
-        &self.subtotal
+    field subtotal() -> f64 as "Subtotal" {
+        self.price * (self.quantity as f64)
+    }
+
+    field slug() -> &i32 as "Slug" {
+        &self.slug
     }
 
     field payment_status() -> &bool as "Payment status" {
@@ -97,16 +97,16 @@ graphql_object!(Order: Context as "Order" |&self| {
         &self.delivery_company
     }
 
-    field delivery_track_id() -> &Option<String> as "Delivery Company" {
-        &self.delivery_track_id
+    field track_id() -> &Option<String> as "Delivery Company" {
+        &self.track_id
     }
 
     field creation_time() -> &str as "Creation time" {
         &self.creation_time
     }
 
-    field customer_comments() -> &Option<String> as "Customer comments" {
-        &self.customer_comments
+    field receiver_name() -> &str as "Receiver name" {
+        &self.receiver_name
     }
 
     field address_full() -> Address as "Full address" {
@@ -123,7 +123,7 @@ graphql_object!(Order: Context as "Order" |&self| {
         context.request::<Vec<OrderHistoryItem>>(Method::Get, url, None)
             .wait()
     }
-    
+
     field allowed_statuses(&executor) -> FieldResult<Vec<OrderStatus>> as "Allowed statuses" {
         let context = executor.context();
         let url = format!("{}/{}/{}/allowed_statuses",
