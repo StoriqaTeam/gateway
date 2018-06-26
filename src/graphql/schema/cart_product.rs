@@ -45,6 +45,10 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         &self.photo_main
     }
 
+    field comment() -> &str as "Comment" {
+        &self.comment
+    }
+
     field selected() -> &bool as "Selected" {
         &self.selected
     }

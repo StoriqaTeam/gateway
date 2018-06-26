@@ -241,6 +241,7 @@ graphql_object!(Query: Context |&self| {
                             quantity: info.quantity,
                             store_id: info.store_id,
                             selected: info.selected,
+                            comment: info.comment,
                     }).collect::<Vec<OrdersCartProduct>>())
                     .map(|u| Some(Cart::new(u)))
                     .wait()
@@ -255,6 +256,7 @@ graphql_object!(Query: Context |&self| {
                             quantity: info.quantity,
                             store_id: info.store_id,
                             selected: info.selected,
+                            comment: info.comment,
                     }).collect::<Vec<OrdersCartProduct>>())
                     .map(|u| Some(Cart::new(u)))
                     .wait()
@@ -271,6 +273,7 @@ graphql_object!(Query: Context |&self| {
                             quantity: info.quantity,
                             store_id: info.store_id,
                             selected: info.selected,
+                            comment: info.comment,
                     }).collect::<Vec<OrdersCartProduct>>())
                     .map(|u| Some(Cart::new(u)))
                     .wait()

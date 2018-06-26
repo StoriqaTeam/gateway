@@ -1,4 +1,7 @@
 //! File containing PageInfo object of graphql schema
+use std::cmp;
+use std::str::FromStr;
+
 use futures::Future;
 use hyper::Method;
 use juniper::FieldResult;
@@ -113,15 +116,55 @@ graphql_object!(Order: Context as "Order" |&self| {
         self.clone().into()
     }
 
-    field history(&executor) -> FieldResult<Vec<OrderHistoryItem>> as "History" {
+    field history(&executor,
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<GraphqlID>  as "Offset form begining") 
+            -> FieldResult<Option<Connection<OrderHistoryItem, PageInfo>>> as "History" {
+
         let context = executor.context();
-        let url = format!("{}/{}/{}/history",
+
+        let offset = after
+            .and_then(|id|{
+                i32::from_str(&id).map(|i| i + 1).ok()
+            })
+            .unwrap_or_default();
+
+        let records_limit = context.config.gateway.records_limit;
+        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}/history?offset={}&count={}",
             context.config.service_url(Service::Orders),
             Model::Order.to_url(),
-            self.id);
+            offset,
+            count + 1
+            );
 
-        context.request::<Vec<OrderHistoryItem>>(Method::Get, url, None)
+        context.request::<Vec<OrderHistoryItem>>(Method::Post, url, None)
+            .map (|items| {
+                let mut item_edges: Vec<Edge<OrderHistoryItem>> =  vec![];
+                for i in 0..items.len() {
+                    let edge = Edge::new(
+                            juniper::ID::from( (i as i32 + offset).to_string()),
+                            items[i].clone()
+                        );
+                    item_edges.push(edge);
+                }
+                let has_next_page = item_edges.len() as i32 == count + 1;
+                if has_next_page {
+                    item_edges.pop();
+                };
+                let has_previous_page = true;
+                let start_cursor =  item_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let end_cursor = item_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page,
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
+                Connection::new(item_edges, page_info)
+            })
             .wait()
+            .map(|u| Some(u))
     }
 
     field allowed_statuses(&executor) -> FieldResult<Vec<OrderStatus>> as "Allowed statuses" {
@@ -156,6 +199,30 @@ graphql_object!(Edge<Order>: Context as "OrdersEdge" |&self| {
     }
 
     field node() -> &Order {
+        &self.node
+    }
+});
+
+graphql_object!(Connection<OrderHistoryItem, PageInfo>: Context as "OrderHistoryItemsConnection" |&self| {
+    description:"Order History Item Connection"
+
+    field edges() -> &[Edge<OrderHistoryItem>] {
+        &self.edges
+    }
+
+    field page_info() -> &PageInfo {
+        &self.page_info
+    }
+});
+
+graphql_object!(Edge<OrderHistoryItem>: Context as "OrderHistoryItemsEdge" |&self| {
+    description:"Order History Item Edge"
+
+    field cursor() -> &juniper::ID {
+        &self.cursor
+    }
+
+    field node() -> &OrderHistoryItem {
         &self.node
     }
 });

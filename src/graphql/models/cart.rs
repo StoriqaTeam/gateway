@@ -10,6 +10,7 @@ pub struct OrdersCartProduct {
     pub quantity: i32,
     pub store_id: i32,
     pub selected: bool,
+    pub comment: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -17,6 +18,7 @@ pub struct OrdersCartItemInfo {
     pub quantity: i32,
     pub selected: bool,
     pub store_id: i32,
+    pub comment: String,
 }
 
 pub type CartHash = BTreeMap<i32, OrdersCartItemInfo>;
@@ -30,6 +32,7 @@ pub struct CartProduct {
     pub photo_main: Option<String>,
     pub selected: bool,
     pub quantity: i32,
+    pub comment: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -78,6 +81,19 @@ pub struct SetSelectionInCartInput {
     pub product_id: i32,
     #[graphql(description = "Product selected.")]
     pub value: bool,
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Set product comment in cart input object")]
+pub struct SetCommentInCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Product id.")]
+    #[serde(skip_serializing)]
+    pub product_id: i32,
+    #[graphql(description = "Product comment.")]
+    pub comment: String,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]

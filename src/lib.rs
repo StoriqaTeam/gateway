@@ -1,3 +1,5 @@
+#![recursion_limit = "128"]
+
 extern crate stq_http;
 extern crate stq_router;
 extern crate stq_routes;

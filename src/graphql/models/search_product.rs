@@ -8,8 +8,10 @@ pub struct ProductsSearchOptionsInput {
     pub price_filter: Option<RangeFilterInput>,
     #[graphql(description = "Currency id.")]
     pub currency_id: Option<i32>,
-    #[graphql(description = "Categories ids.")]
+    #[graphql(description = "Category id.")]
     pub category_id: Option<i32>,
+    #[graphql(description = "Store id.")]
+    pub store_id: Option<i32>,
     #[graphql(description = "Sorting.")]
     pub sort_by: Option<ProductsSorting>,
 }
@@ -21,6 +23,15 @@ pub struct SearchProductInput {
     pub name: String,
     #[graphql(description = "Searching options")]
     pub options: Option<ProductsSearchOptionsInput>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
+#[graphql(description = "Auto complete product name input object")]
+pub struct AutoCompleteProductNameInput {
+    #[graphql(description = "Name part of the product.")]
+    pub name: String,
+    #[graphql(description = "Store id.")]
+    pub store_id: Option<i32>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Clone, Debug)]

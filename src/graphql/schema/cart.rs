@@ -54,10 +54,10 @@ graphql_object!(Cart: Context as "Cart" |&self| {
                                 base_product.variants.clone()
                                 .and_then(|mut v|{
                                     Some(v.iter_mut().map(|variant| {
-                                        let (quantity, selected) = self.inner
+                                        let (quantity, selected, comment) = self.inner
                                             .iter()
                                             .find(|v|v.product_id == variant.id)
-                                            .map(|v| (v.quantity, v.selected))
+                                            .map(|v| (v.quantity, v.selected, v.comment.clone()))
                                             .unwrap_or_default();
 
                                         let price = if let Some(discount) = variant.discount.clone() {
@@ -72,7 +72,8 @@ graphql_object!(Cart: Context as "Cart" |&self| {
                                             photo_main: variant.photo_main.clone(),
                                             selected,
                                             price,
-                                            quantity
+                                            quantity,
+                                            comment,
                                         }
                                     }).collect::<Vec<CartProduct>>())
                                 }).unwrap_or_default()

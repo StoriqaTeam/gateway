@@ -45,7 +45,7 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body.clone()))
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
             .map (|products| {
                 let mut product_edges: Vec<Edge<BaseProduct>> =  vec![];
                 for i in 0..products.len() {
@@ -99,7 +99,14 @@ graphql_object!(Search: Context as "Search" |&self| {
             count + 1,
             );
 
-        context.request::<Vec<String>>(Method::Post, url, Some(name))
+        let search_term = AutoCompleteProductNameInput {
+            name,
+            store_id : None,
+        };
+
+        let body = serde_json::to_string(&search_term)?;
+
+        context.request::<Vec<String>>(Method::Post, url, Some(body))
             .map (|full_names| {
                 let mut full_name_edges: Vec<Edge<String>> =  vec![];
                 for i in 0..full_names.len() {
