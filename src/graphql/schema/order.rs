@@ -19,12 +19,8 @@ graphql_object!(Order: Context as "Order" |&self| {
 
     interfaces: [&Node]
 
-    field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Orders, Model::Order, self.id).to_string().into()
-    }
-
-    field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+    field id() -> GraphqlID as "Unique id"{
+        self.id.clone().into()
     }
 
     field status() -> &OrderStatus as "Order Status"{

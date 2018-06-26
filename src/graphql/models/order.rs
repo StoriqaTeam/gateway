@@ -21,7 +21,7 @@ pub enum OrderStatus {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Order {
-    pub id: i32,
+    pub id: String,
     pub status: OrderStatus,
     pub customer_id: i32,
     pub product_id: i32,

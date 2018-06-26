@@ -20,12 +20,8 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
     interfaces: [&Node]
 
-    field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Warehouses, Model::Warehouse, self.id).to_string().into()
-    }
-
-    field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+    field id() -> GraphqlID as "Unique id"{
+        self.id.clone().into()
     }
 
     field name() -> &Option<String> as "Name"{
@@ -36,8 +32,8 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
         &self.location
     }
 
-    field kind() -> &WarehouseKind as "Warehouse Kind"{
-        &self.kind
+    field slug() -> &str as "Slug"{
+        &self.slug
     }
 
     field address_full() -> Address as "Address full"{

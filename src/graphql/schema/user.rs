@@ -416,7 +416,7 @@ graphql_object!(User: Context as "User" |&self| {
                     .skip(offset as usize)
                     .take(count as usize)
                     .map(|order| Edge::new(
-                                juniper::ID::from(ID::new(Service::Orders, Model::Order, order.id.clone()).to_string()),
+                                juniper::ID::from(order.id.clone()),
                                 order.clone()
                             ))
                     .collect();
