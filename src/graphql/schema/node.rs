@@ -43,9 +43,9 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::Attribute(Attribute { ref id, .. })  => ID::new(Service::Stores, Model::Attribute, *id).to_string().into(),
             Node::CartProduct(CartProduct { ref id, .. })  => ID::new(Service::Orders, Model::CartProduct, *id).to_string().into(),
             Node::CartStore(CartStore { ref id, .. })  => ID::new(Service::Orders, Model::CartStore, *id).to_string().into(),
-            Node::Warehouse(Warehouse { ref id, .. })  => ID::new(Service::Warehouses, Model::Warehouse, *id).to_string().into(),
+            Node::Warehouse(Warehouse { ref id, .. })  => id.clone().into(),
             Node::WarehouseProduct(WarehouseProduct { ref id, .. })  => ID::new(Service::Warehouses, Model::WarehouseProduct, *id).to_string().into(),
-            Node::Order(Order { ref id, .. })  => ID::new(Service::Orders, Model::Order, *id).to_string().into(),
+            Node::Order(Order { ref id, .. })  => id.clone().into(),
         }
     }
 
