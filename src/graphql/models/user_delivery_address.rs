@@ -1,3 +1,4 @@
+use super::*;
 use juniper::ID as GraphqlID;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
@@ -98,6 +99,59 @@ impl UpdateUserDeliveryAddressInput {
             address: None,
             is_priority: None,
             place_id: None,
+        } == self.clone()
+    }
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[graphql(description = "New user delivery address input object")]
+pub struct NewUserDeliveryAddressFullInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "User id")]
+    pub user_id: i32,
+    #[graphql(description = "Address")]
+    #[serde(flatten)]
+    pub address_full: AddressInput,
+    #[graphql(description = "is_priority")]
+    pub is_priority: bool,
+}
+
+#[derive(GraphQLInputObject, Serialize, Clone, Debug, PartialEq)]
+#[graphql(description = "Update user delivery address input object")]
+pub struct UpdateUserDeliveryAddressFullInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of delivery address.")]
+    #[serde(skip_serializing)]
+    pub id: GraphqlID,
+    #[graphql(description = "Address")]
+    #[serde(flatten)]
+    pub address_full: AddressInput,
+    #[graphql(description = "is_priority")]
+    pub is_priority: Option<bool>,
+}
+
+impl UpdateUserDeliveryAddressFullInput {
+    pub fn is_none(&self) -> bool {
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            id: self.id.clone(),
+            is_priority: None,
+            address_full: AddressInput {
+                country: None,
+                administrative_area_level_1: None,
+                administrative_area_level_2: None,
+                locality: None,
+                political: None,
+                postal_code: None,
+                route: None,
+                street_number: None,
+                value: None,
+                place_id: None,
+            },
         } == self.clone()
     }
 }
