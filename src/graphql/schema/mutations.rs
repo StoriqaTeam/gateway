@@ -458,6 +458,7 @@ graphql_object!(Mutation: Context |&self| {
                     quantity: info.quantity,
                     store_id: info.store_id,
                     selected: info.selected,
+                    comment: info.comment,
             }).collect::<Vec<OrdersCartProduct>>())
             .wait()?;
 
@@ -481,10 +482,10 @@ graphql_object!(Mutation: Context |&self| {
                                 base_product.variants.clone()
                                 .and_then(|mut v|{
                                     Some(v.iter_mut().map(|variant| {
-                                        let (quantity, selected) = products
+                                        let (quantity, selected, comment) = products
                                             .iter()
                                             .find(|v|v.product_id == variant.id)
-                                            .map(|v| (v.quantity, v.selected))
+                                            .map(|v| (v.quantity, v.selected, v.comment.clone()))
                                             .unwrap_or_default();
 
                                         let price = if let Some(discount) = variant.discount.clone() {
@@ -499,7 +500,8 @@ graphql_object!(Mutation: Context |&self| {
                                             photo_main: variant.photo_main.clone(),
                                             selected,
                                             price,
-                                            quantity
+                                            quantity,
+                                            comment,
                                         }
                                     }).collect::<Vec<CartProduct>>())
                                 }).unwrap_or_default()
@@ -536,6 +538,7 @@ graphql_object!(Mutation: Context |&self| {
                             .map(|variant| {
                                 let quantity = order.quantity;
                                 let selected = order.selected;
+                                let comment = order.comment;
 
                                 let price = if let Some(discount) = variant.discount.clone() {
                                     variant.price * ( 1.0 - discount )
@@ -549,7 +552,8 @@ graphql_object!(Mutation: Context |&self| {
                                     photo_main: variant.photo_main.clone(),
                                     selected,
                                     price,
-                                    quantity
+                                    quantity,
+                                    comment,
                                 }
                             })
                     })
@@ -586,6 +590,7 @@ graphql_object!(Mutation: Context |&self| {
                             .map(|variant| {
                                 let quantity = order.quantity;
                                 let selected = order.selected;
+                                let comment = order.comment;
 
                                 let price = if let Some(discount) = variant.discount.clone() {
                                     variant.price * ( 1.0 - discount )
@@ -599,7 +604,60 @@ graphql_object!(Mutation: Context |&self| {
                                     photo_main: variant.photo_main.clone(),
                                     selected,
                                     price,
-                                    quantity
+                                    quantity,
+                                    comment,
+                                }
+                            })
+                    })
+                })
+                .wait()
+        } else {
+            Ok(None)
+        }
+    }
+
+    field setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.") -> FieldResult<Option<CartProduct>> as "product in cart." {
+        let context = executor.context();
+        let url = format!("{}/cart/products/{}/comment", context.config.service_url(Service::Orders), input.product_id);
+
+        let body = serde_json::to_string(&input)?;
+
+        let order = context.request::<Option<OrdersCartProduct>>(Method::Put, url, Some(body))
+            .wait()?;
+
+        if let Some(order) = order {
+
+            let url = format!("{}/{}/by_product/{}",
+                context.config.service_url(Service::Stores),
+                Model::BaseProduct.to_url(),
+                order.product_id);
+
+            context.request::<BaseProduct>(Method::Get, url, None)
+                .map(|base_product| {
+                    let name = base_product.name.clone();
+                    base_product.variants.and_then(|variants| {
+                        variants
+                            .into_iter()
+                            .nth(0)
+                            .map(|variant| {
+                                let quantity = order.quantity;
+                                let selected = order.selected;
+                                let comment = order.comment;
+
+                                let price = if let Some(discount) = variant.discount.clone() {
+                                    variant.price * ( 1.0 - discount )
+                                } else {
+                                    variant.price
+                                };
+
+                                CartProduct {
+                                    id: variant.id,
+                                    name,
+                                    photo_main: variant.photo_main.clone(),
+                                    selected,
+                                    price,
+                                    quantity,
+                                    comment,
                                 }
                             })
                     })
@@ -854,6 +912,7 @@ graphql_object!(Mutation: Context |&self| {
                         quantity: info.quantity,
                         store_id: info.store_id,
                         selected: info.selected,
+                        comment: info.comment,
                 })
                 .map(|p| {
                     let url = format!("{}/{}/{}",
@@ -876,7 +935,6 @@ graphql_object!(Mutation: Context |&self| {
 
         let create_order = CreateOrder {
             customer_id: user_id,
-            comments: input.customer_comments,
             address: input.address_full,
             receiver_name: input.receiver_name,
             cart_products: products_with_prices,

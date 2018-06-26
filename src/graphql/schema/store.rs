@@ -8,6 +8,7 @@ use hyper::Method;
 use juniper;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use serde_json;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -211,47 +212,70 @@ graphql_object!(Store: Context as "Store" |&self| {
     }
 
     field orders(&executor,
-        first = None : Option<i32> as "First edges",
-        after = None : Option<GraphqlID>  as "Base64 Id of order")
-            -> FieldResult<Option<Connection<Order, PageInfo>>> as "Fetches orders using relay connection." {
+        current_page : i32 as "Current page",
+        items_count : i32 as "Items count",
+        search_term_options : Option<SearchOrderOptionInput> as "Search options pattern")
+            -> FieldResult<Option<Connection<Order, PageInfoOrdersSearch>>> as "Fetches orders using relay connection." {
         let context = executor.context();
 
-        let offset = after
-            .and_then(|id|{
-                i32::from_str(&id).map(|i| i + 1).ok()
-            })
-            .unwrap_or_default();
+        let offset = items_count * (current_page - 1);
 
         let records_limit = context.config.gateway.records_limit;
-        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+        let count = cmp::min(items_count, records_limit as i32);
 
-        let url = format!("{}/{}/by_store?offset={}&count={}",
+        let search_term = search_term_options.clone().map(|options| {
+            let customer = options.email.and_then(|email| {
+                let url = format!("{}/{}/by_email?email={}",
+                    context.config.service_url(Service::Users),
+                    Model::User.to_url(),
+                    email);
+
+                context.request::<Option<User>>(Method::Get, url, None)
+                    .wait()
+                    .ok()
+                    .and_then (|user| user.map(|u|u.id))
+            });
+            let created_from= options.date.clone().and_then(|date|
+                date.min_value.map(|value| i64::from_str(&value).unwrap_or_default()));
+            let created_to = options.date.and_then(|date|
+                date.max_value.map(|value| i64::from_str(&value).unwrap_or_default()));
+
+            SearchOrder {
+                slug: options.slug,
+                customer,
+                store: Some(self.id),
+                created_from,
+                created_to,
+                payment_status: options.payment_status,
+                state: options.order_status,
+            }
+        });
+
+        let body = serde_json::to_string(&search_term)?;
+
+        let url = format!("{}/{}/search",
             context.config.service_url(Service::Orders),
-            Model::Order.to_url(),
-            offset,
-            count + 1);
+            Model::Order.to_url());
 
-        context.request::<Vec<Order>>(Method::Get, url, None)
-            .map (|products| {
-                let mut orders_edges: Vec<Edge<Order>> = products
+        context.request::<Vec<Order>>(Method::Post, url, Some(body))
+            .map (|orders| {
+                let total_pages = orders.iter().count() as i32;
+
+                let mut orders_edges: Vec<Edge<Order>> = orders
                     .into_iter()
+                    .skip(offset as usize)
+                    .take(count as usize)
                     .map(|order| Edge::new(
                                 juniper::ID::from(ID::new(Service::Orders, Model::Order, order.id.clone()).to_string()),
                                 order.clone()
                             ))
                     .collect();
-                let has_next_page = orders_edges.len() as i32 == count + 1;
-                if has_next_page {
-                    orders_edges.pop();
-                };
-                let has_previous_page = true;
-                let start_cursor =  orders_edges.iter().nth(0).map(|e| e.cursor.clone());
-                let end_cursor = orders_edges.iter().last().map(|e| e.cursor.clone());
-                let page_info = PageInfo {
-                    has_next_page,
-                    has_previous_page,
-                    start_cursor,
-                    end_cursor};
+
+                let page_info = PageInfoOrdersSearch {
+                    total_pages,
+                    current_page,
+                    page_items_count: items_count,
+                    search_term_options};
                 Connection::new(orders_edges, page_info)
             })
             .wait()
@@ -317,5 +341,17 @@ graphql_object!(Edge<String>: Context as "FullNameEdge" |&self| {
 
     field node() -> &str {
         &self.node
+    }
+});
+
+graphql_object!(Connection<Order, PageInfoOrdersSearch>: Context as "OrderSearchConnection" |&self| {
+    description:"Order Search Connection"
+
+    field edges() -> &[Edge<Order>] {
+        &self.edges
+    }
+
+    field page_info() -> &PageInfoOrdersSearch {
+        &self.page_info
     }
 });
