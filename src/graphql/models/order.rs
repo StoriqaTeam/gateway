@@ -171,8 +171,10 @@ pub struct SearchOrderOptionInput {
     pub slug: Option<String>,
     #[graphql(description = "Customer email")]
     pub email: Option<String>,
-    #[graphql(description = "Date range")]
-    pub date: Option<DateRangeFilter>,
+    #[graphql(description = "Min Date")]
+    pub created_from: Option<String>,
+    #[graphql(description = "Max Date")]
+    pub created_to: Option<String>,
     #[graphql(description = "Payment status")]
     pub payment_status: Option<bool>,
     #[graphql(description = "Order status")]
@@ -190,19 +192,40 @@ pub struct SearchOrder {
     pub state: Option<OrderStatus>,
 }
 
-#[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
-#[graphql(description = "Date Range Filter input")]
-pub struct DateRangeFilter {
-    #[graphql(description = "Min value")]
-    pub min_value: Option<String>,
-    #[graphql(description = "Max value")]
-    pub max_value: Option<String>,
-}
-
 #[derive(Clone, Debug)]
 pub struct PageInfoOrdersSearch {
     pub total_pages: i32,
     pub current_page: i32,
     pub page_items_count: i32,
-    pub search_term_options: Option<SearchOrderOptionInput>,
+    pub search_term_options: Option<SearchOrderOption>,
+}
+
+#[derive(GraphQLObject, Serialize, Clone, Debug, Default)]
+#[graphql(description = "Search order option object")]
+pub struct SearchOrderOption {
+    #[graphql(description = "Slug")]
+    pub slug: Option<String>,
+    #[graphql(description = "Customer email")]
+    pub email: Option<String>,
+    #[graphql(description = "Min Date")]
+    pub created_from: Option<String>,
+    #[graphql(description = "Max Date")]
+    pub created_to: Option<String>,
+    #[graphql(description = "Payment status")]
+    pub payment_status: Option<bool>,
+    #[graphql(description = "Order status")]
+    pub order_status: Option<OrderStatus>,
+}
+
+impl From<SearchOrderOptionInput> for SearchOrderOption {
+    fn from(options: SearchOrderOptionInput) -> Self {
+        Self {
+            slug: options.slug,
+            email: options.email,
+            created_from: options.created_from,
+            created_to: options.created_to,
+            payment_status: options.payment_status,
+            order_status: options.order_status,
+        }
+    }
 }

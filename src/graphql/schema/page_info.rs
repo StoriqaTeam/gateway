@@ -95,7 +95,7 @@ graphql_object!(PageInfoOrdersSearch: Context as "PageInfoOrdersSearch" |&self| 
         &self.page_items_count
     }
 
-    field search_term_options() -> &Option<SearchOrderOptionInput> as "search options" {
+    field search_term_options() -> &Option<SearchOrderOption> as "search options" {
         &self.search_term_options
     }
 

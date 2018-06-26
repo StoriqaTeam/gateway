@@ -129,7 +129,6 @@ graphql_object!(Order: Context as "Order" |&self| {
             })
             .unwrap_or_default();
 
-
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
@@ -167,7 +166,6 @@ graphql_object!(Order: Context as "Order" |&self| {
             .wait()
             .map(|u| Some(u))
     }
-     
 
     field allowed_statuses(&executor) -> FieldResult<Vec<OrderStatus>> as "Allowed statuses" {
         let context = executor.context();

@@ -387,11 +387,8 @@ graphql_object!(User: Context as "User" |&self| {
         let count = cmp::min(items_count, records_limit as i32);
 
         let search_term = search_term_options.clone().map(|options| {
-            let created_from= options.date.clone().and_then(|date|
-                date.min_value.map(|value| i64::from_str(&value).unwrap_or_default()));
-
-            let created_to = options.date.and_then(|date|
-                date.max_value.map(|value| i64::from_str(&value).unwrap_or_default()));
+            let created_from= options.created_from.clone().map(|value| i64::from_str(&value).unwrap_or_default());
+            let created_to= options.created_to.clone().map(|value| i64::from_str(&value).unwrap_or_default());
 
             SearchOrder {
                 slug: options.slug,
@@ -428,7 +425,7 @@ graphql_object!(User: Context as "User" |&self| {
                     total_pages,
                     current_page,
                     page_items_count: items_count,
-                    search_term_options};
+                    search_term_options: search_term_options.map(|s|s.into())};
                 Connection::new(orders_edges, page_info)
             })
             .wait()
