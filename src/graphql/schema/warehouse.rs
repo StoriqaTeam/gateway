@@ -59,27 +59,23 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
     }
 
     field products(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining", 
+        current_page : i32 as "Current page",
+        items_count : i32 as "Items count", 
         search_term : Option<SearchProductInput> as "Search pattern") 
-            -> FieldResult<Option<Connection<Stock, PageInfo>>> as "Find products of the warehouse using relay connection." {
+            -> FieldResult<Option<Connection<Stock, PageInfoWarehouseProductSearch>>> as "Find products of the warehouse using relay connection." {
 
         let context = executor.context();
 
-        let offset = after
-            .and_then(|id|{
-                i32::from_str(&id).map(|i| i + 1).ok()
-            })
-            .unwrap_or_default();
+        let offset = items_count * (current_page - 1);
 
         let records_limit = context.config.gateway.records_limit;
-        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+        let count = cmp::min(items_count, records_limit as i32);
 
         let url = format!("{}/{}/search?offset={}&count={}",
             context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             offset,
-            count + 1
+            count
             );
 
         let search_term = if let Some(search_term) = search_term {
@@ -135,7 +131,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                             }
                         })
                 }).collect::<FieldResult<Vec<Stock>>>()
-                .map (|products| {
+                .and_then (|products| {
                     let mut product_edges: Vec<Edge<Stock>> =  vec![];
                     for i in 0..products.len() {
                         let edge = Edge::new(
@@ -144,19 +140,27 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                             );
                         product_edges.push(edge);
                     }
-                    let has_next_page = product_edges.len() as i32 == count + 1;
-                    if has_next_page {
-                        product_edges.pop();
+
+                    let body = serde_json::to_string(&search_term)?;
+
+                    let url = format!("{}/{}/search/filters/count",
+                                context.config.service_url(Service::Stores),
+                                Model::Store.to_url(),
+                                );
+
+                    let total_items = context.request::<i32>(Method::Post, url, Some(body))
+                        .wait()?;
+
+                    let total_pages = total_items / items_count + 1;
+
+                    let search_filters = ProductsSearchFilters::new(search_term);
+                    let page_info = PageInfoWarehouseProductSearch {
+                        total_pages,
+                        current_page,
+                        page_items_count: items_count,
+                        search_term_options: Some(search_filters)
                     };
-                    let has_previous_page = true;
-                    let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
-                    let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
-                    let page_info = PageInfo {
-                        has_next_page,
-                        has_previous_page,
-                        start_cursor,
-                        end_cursor};
-                    Connection::new(product_edges, page_info)
+                    Ok(Connection::new(product_edges, page_info))
                 })
             })
             .map(|u| Some(u))
@@ -223,14 +227,14 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
 });
 
-graphql_object!(Connection<Stock, PageInfo>: Context as "StocksConnection" |&self| {
+graphql_object!(Connection<Stock, PageInfoWarehouseProductSearch>: Context as "StocksConnection" |&self| {
     description:"Warehouse Products Connection"
 
     field edges() -> &[Edge<Stock>] {
         &self.edges
     }
 
-    field page_info() -> &PageInfo {
+    field page_info() -> &PageInfoWarehouseProductSearch {
         &self.page_info
     }
 });

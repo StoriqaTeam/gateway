@@ -81,7 +81,7 @@ graphql_object!(PageInfoProductsSearch: Context as "PageInfoProductsSearch" |&se
 });
 
 graphql_object!(PageInfoOrdersSearch: Context as "PageInfoOrdersSearch" |&self| {
-    description: "Page Info order connection."
+    description: "Page Info order."
 
     field total_pages() -> &i32 as "total_pages"{
         &self.total_pages
@@ -96,6 +96,27 @@ graphql_object!(PageInfoOrdersSearch: Context as "PageInfoOrdersSearch" |&self| 
     }
 
     field search_term_options() -> &Option<SearchOrderOption> as "search options" {
+        &self.search_term_options
+    }
+
+});
+
+graphql_object!(PageInfoWarehouseProductSearch: Context as "PageInfoWarehouseProductSearch" |&self| {
+    description: "Page Info Warehouse Product Search."
+
+    field total_pages() -> &i32 as "total_pages"{
+        &self.total_pages
+    }
+
+    field current_page() -> &i32 as "current_page" {
+        &self.current_page
+    }
+
+    field page_items_count() -> &i32 as "page_items_count" {
+        &self.page_items_count
+    }
+
+    field search_term_options() -> &Option<ProductsSearchFilters> as "search options" {
         &self.search_term_options
     }
 

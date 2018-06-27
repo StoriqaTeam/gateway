@@ -257,7 +257,7 @@ graphql_object!(Store: Context as "Store" |&self| {
 
         context.request::<Vec<Order>>(Method::Post, url, Some(body))
             .map (|orders| {
-                let total_pages = orders.iter().count() as i32;
+                let total_pages = (orders.iter().count() as i32) / items_count + 1;
 
                 let mut orders_edges: Vec<Edge<Order>> = orders
                     .into_iter()

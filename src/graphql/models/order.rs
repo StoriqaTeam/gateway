@@ -65,7 +65,7 @@ pub struct CreateOrder {
     #[serde(flatten)]
     pub address: AddressInput,
     pub receiver_name: String,
-    pub cart_products: CartProductWithPriceHash,
+    pub prices: CartProductWithPriceHash,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]

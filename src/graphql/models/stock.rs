@@ -18,8 +18,8 @@ pub struct CreateStockInput {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description = "Update warehouse product input object")]
-pub struct UpdateStockInput {
+#[graphql(description = "Product Quantity input object")]
+pub struct ProductQuantityInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
