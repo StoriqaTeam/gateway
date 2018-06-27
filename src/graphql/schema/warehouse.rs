@@ -62,7 +62,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset form begining", 
         search_term : Option<SearchProductInput> as "Search pattern") 
-            -> FieldResult<Option<Connection<WarehouseProduct, PageInfo>>> as "Find products of the warehouse using relay connection." {
+            -> FieldResult<Option<Connection<Stock, PageInfo>>> as "Find products of the warehouse using relay connection." {
 
         let context = executor.context();
 
@@ -112,39 +112,52 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
             .map(|products| products.into_iter().map(|p| p.id).collect())
             .wait()
             .and_then (|products: Vec<i32>| {
-                let url = format!("{}/{}/{}/products",
-                    context.config.service_url(Service::Warehouses),
-                    Model::Warehouse.to_url(),
-                    self.id.to_string(),
+                products.into_iter().map(|product_id| {
+                    let url = format!("{}/{}/by-id/{}/{}/{}",
+                        context.config.service_url(Service::Warehouses),
+                        Model::Warehouse.to_url(),
+                        self.id.clone(),
+                        Model::Product.to_url(),
+                        product_id.to_string(),
                     );
 
-                let body = serde_json::to_string(&products)?;
-
-                context.request::<Vec<WarehouseProduct>>(Method::Post, url, Some(body))
-                    .map (|products| {
-                        let mut product_edges: Vec<Edge<WarehouseProduct>> =  vec![];
-                        for i in 0..products.len() {
-                            let edge = Edge::new(
-                                    juniper::ID::from( (i as i32 + offset).to_string()),
-                                    products[i].clone()
-                                );
-                            product_edges.push(edge);
-                        }
-                        let has_next_page = product_edges.len() as i32 == count + 1;
-                        if has_next_page {
-                            product_edges.pop();
-                        };
-                        let has_previous_page = true;
-                        let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
-                        let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
-                        let page_info = PageInfo {
-                            has_next_page,
-                            has_previous_page,
-                            start_cursor,
-                            end_cursor};
-                        Connection::new(product_edges, page_info)
-                    })
-                    .wait()
+                    context.request::<Option<Stock>>(Method::Get, url, None)
+                        .wait()
+                        .map (|stock| {
+                            if let Some(stock) = stock {
+                                stock
+                            } else {
+                                Stock {
+                                    product_id: product_id,
+                                    warehouse_id: self.id.clone(),
+                                    quantity: 0,
+                                }
+                            }
+                        })
+                }).collect::<FieldResult<Vec<Stock>>>()
+                .map (|products| {
+                    let mut product_edges: Vec<Edge<Stock>> =  vec![];
+                    for i in 0..products.len() {
+                        let edge = Edge::new(
+                                juniper::ID::from( (i as i32 + offset).to_string()),
+                                products[i].clone()
+                            );
+                        product_edges.push(edge);
+                    }
+                    let has_next_page = product_edges.len() as i32 == count + 1;
+                    if has_next_page {
+                        product_edges.pop();
+                    };
+                    let has_previous_page = true;
+                    let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                    let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
+                    let page_info = PageInfo {
+                        has_next_page,
+                        has_previous_page,
+                        start_cursor,
+                        end_cursor};
+                    Connection::new(product_edges, page_info)
+                })
             })
             .map(|u| Some(u))
     }
@@ -210,10 +223,10 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
 });
 
-graphql_object!(Connection<WarehouseProduct, PageInfo>: Context as "WarehouseProductsConnection" |&self| {
+graphql_object!(Connection<Stock, PageInfo>: Context as "StocksConnection" |&self| {
     description:"Warehouse Products Connection"
 
-    field edges() -> &[Edge<WarehouseProduct>] {
+    field edges() -> &[Edge<Stock>] {
         &self.edges
     }
 
@@ -222,14 +235,14 @@ graphql_object!(Connection<WarehouseProduct, PageInfo>: Context as "WarehousePro
     }
 });
 
-graphql_object!(Edge<WarehouseProduct>: Context as "WarehouseProductsEdge" |&self| {
+graphql_object!(Edge<Stock>: Context as "StocksEdge" |&self| {
     description:"Warehouse Product Edge"
 
     field cursor() -> &juniper::ID {
         &self.cursor
     }
 
-    field node() -> &WarehouseProduct {
+    field node() -> &Stock {
         &self.node
     }
 });

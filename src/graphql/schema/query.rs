@@ -137,11 +137,6 @@ graphql_object!(Query: Context |&self| {
                         .wait()
                         .map(|res| res.map(Node::Warehouse))
                 },
-                (&Service::Warehouses, &Model::WarehouseProduct) => {
-                    context.request::<Option<WarehouseProduct>>(Method::Get, identifier.url(&context.config), None)
-                        .wait()
-                        .map(|res| res.map(Node::WarehouseProduct))
-                },
                 (&Service::Warehouses, _) => {
                     Err(FieldError::new(
                         "Could not get model from warehouses microservice.",

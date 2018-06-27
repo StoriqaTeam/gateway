@@ -850,9 +850,10 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateWarehouse(&executor, input: UpdateWarehouseInput as "Update Warehouse input.") -> FieldResult<Option<Warehouse>>  as "Updates existing Warehouse."{
         let context = executor.context();
-        let url = format!("{}/{}",
+        let url = format!("{}/{}/by-id/{}",
             context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url());
+            Model::Warehouse.to_url(),
+            input.id.to_string());
 
         if input.is_none() {
              return Err(FieldError::new(
@@ -869,7 +870,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field deleteWarehouse(&executor, id: i32) -> FieldResult<Option<Warehouse>>  as "Delete existing Warehouse." {
         let context = executor.context();
-        let url = format!("{}/{}/{}",
+        let url = format!("{}/{}/by-id/{}",
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
             id);
@@ -880,7 +881,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field deleteAllWarehouses(&executor) -> FieldResult<Vec<Warehouse>>  as "Delete all Warehouses." {
         let context = executor.context();
-        let url = format!("{}/{}/clear",
+        let url = format!("{}/{}",
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url());
 
@@ -888,23 +889,24 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createProductInWarehouse(&executor, input: CreateWarehouseProductInput as "Create warehouse product input.") -> FieldResult<WarehouseProduct> as "Creates new warehouse product." {
+    field createProductInWarehouse(&executor, input: CreateStockInput as "Create warehouse product input.") -> FieldResult<Stock> as "Creates new warehouse product." {
         let context = executor.context();
-        let url = format!("{}/{}/{}/{}/{}",
+        let url = format!("{}/{}/by-id/{}/{}",
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
             input.warehouse_id,
-            Model::Product.to_url(),
-            input.product_id);
+            Model::Product.to_url()
+            );
 
+        let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<WarehouseProduct>(Method::Post, url, None)
+        context.request::<Stock>(Method::Post, url, Some(body))
             .wait()
     }
 
-    field updateProductInWarehouse(&executor, input: UpdateWarehouseProductInput as "Create warehouse input.") -> FieldResult<Option<WarehouseProduct>> as "Creates new warehouse product." {
+    field updateProductInWarehouse(&executor, input: UpdateStockInput as "Create warehouse input.") -> FieldResult<Option<Stock>> as "Creates new warehouse product." {
         let context = executor.context();
-        let url = format!("{}/{}/{}/{}/{}",
+        let url = format!("{}/{}/by-id/{}/{}/{}",
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
             input.warehouse_id,
@@ -913,20 +915,20 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<Option<WarehouseProduct>>(Method::Post, url, Some(body))
+        context.request::<Option<Stock>>(Method::Put, url, Some(body))
             .wait()
     }
 
-    field deleteProductInWarehouse(&executor, input: DeleteWarehouseProductInput as "Delete warehouse input.") -> FieldResult<Option<WarehouseProduct>> as "Deletes warehouse product." {
+    field deleteProductInWarehouse(&executor, input: DeleteStockInput as "Delete warehouse input.") -> FieldResult<Option<Stock>> as "Deletes warehouse product." {
         let context = executor.context();
-        let url = format!("{}/{}/{}/{}/{}",
+        let url = format!("{}/{}/by-id/{}/{}/{}",
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
             input.warehouse_id,
             Model::Product.to_url(),
             input.product_id);
 
-        context.request::<Option<WarehouseProduct>>(Method::Delete, url, None)
+        context.request::<Option<Stock>>(Method::Delete, url, None)
             .wait()
     }
 

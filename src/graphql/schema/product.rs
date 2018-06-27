@@ -95,7 +95,7 @@ graphql_object!(Product: Context as "Product" |&self| {
             self.id.to_string()
         );
 
-        context.request::<Vec<WarehouseProduct>>(Method::Get, url, None)
+        context.request::<Vec<Stock>>(Method::Get, url, None)
             .wait()
             .map(|products| {
                 products.iter().fold(0, |acc, p| {

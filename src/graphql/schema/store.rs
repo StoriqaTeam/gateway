@@ -201,7 +201,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         let context = executor.context();
 
        let url = format!(
-            "{}/{}/by_store/{}",
+            "{}/{}/by-store-id/{}",
             &context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
             self.id.to_string()
