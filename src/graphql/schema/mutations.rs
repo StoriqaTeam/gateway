@@ -914,23 +914,34 @@ graphql_object!(Mutation: Context |&self| {
                 &context.config.service_url(Service::Orders));
 
             context.request::<CartHash>(Method::Get, url, None)
-                .map (|hash| hash.into_iter()
-                    .map(|(product_id, info)| OrdersCartProduct {
-                        product_id,
-                        quantity: info.quantity,
-                        store_id: info.store_id,
-                        selected: info.selected,
-                        comment: info.comment,
-                })
-                .map(|p| {
-                    let url = format!("{}/{}/{}",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        p.product_id);
+                .map (|hash|
+                    hash.into_iter()
+                        .map(|(product_id, info)| OrdersCartProduct {
+                            product_id,
+                            quantity: info.quantity,
+                            store_id: info.store_id,
+                            selected: info.selected,
+                            comment: info.comment,
+                    })
+                    .map(|p| {
+                        let url = format!("{}/{}/{}",
+                            context.config.service_url(Service::Stores),
+                            Model::Product.to_url(),
+                            p.product_id);
 
-                    context.request::<Product>(Method::Get, url, None).wait()
-                })
-                .collect::<Result<Vec<Product>, FieldError>>())
+                        context.request::<Option<Product>>(Method::Get, url, None).wait().and_then(|prod|{
+                            if let Some(prod) = prod {
+                                Ok(prod)
+                            } else {
+                                Err(FieldError::new(
+                                    "Could not find product id received from cart in store.",
+                                    graphql_value!({ "code": 100, "details": { "Product id does not exist in stores microservice." }}),
+                                ))
+                            }
+                        })
+                    })
+                    .collect::<FieldResult<Vec<Product>>>()
+                )
                 .map(|p| (p, user.user_id)).wait()?
         }  else {
             return Err(FieldError::new(

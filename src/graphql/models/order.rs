@@ -22,28 +22,22 @@ pub enum OrderStatus {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Order {
     pub id: String,
-    pub status: OrderStatus,
+    pub state: OrderStatus,
+    #[serde(rename = "customer")]
     pub customer_id: i32,
+    #[serde(rename = "product")]
     pub product_id: i32,
     pub quantity: i32,
+    #[serde(rename = "store")]
     pub store_id: i32,
     pub price: f64,
     pub receiver_name: String,
     pub slug: i32,
     pub payment_status: bool,
-    pub delivery_company: String,
+    pub delivery_company: Option<String>,
     pub track_id: Option<String>,
-    pub creation_time: String,
-    pub administrative_area_level_1: Option<String>,
-    pub administrative_area_level_2: Option<String>,
-    pub country: String,
-    pub locality: Option<String>,
-    pub political: Option<String>,
-    pub postal_code: String,
-    pub route: Option<String>,
-    pub street_number: Option<String>,
-    pub address: Option<String>,
-    pub place_id: Option<String>,
+    pub created_at: String,
+    pub address: Address,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]

@@ -23,8 +23,8 @@ graphql_object!(Order: Context as "Order" |&self| {
         self.id.clone().into()
     }
 
-    field status() -> &OrderStatus as "Order Status"{
-        &self.status
+    field state() -> &OrderStatus as "Order Status"{
+        &self.state
     }
 
     field customer_id() -> &i32 as "Customer int id"{
@@ -92,7 +92,7 @@ graphql_object!(Order: Context as "Order" |&self| {
         &self.payment_status
     }
 
-    field delivery_company() -> &str as "Delivery Company" {
+    field delivery_company() -> &Option<String> as "Delivery Company" {
         &self.delivery_company
     }
 
@@ -100,16 +100,16 @@ graphql_object!(Order: Context as "Order" |&self| {
         &self.track_id
     }
 
-    field creation_time() -> &str as "Creation time" {
-        &self.creation_time
+    field created_at() -> &str as "Creation time" {
+        &self.created_at
     }
 
     field receiver_name() -> &str as "Receiver name" {
         &self.receiver_name
     }
 
-    field address_full() -> Address as "Full address" {
-        self.clone().into()
+    field address_full() -> &Address as "Full address" {
+        &self.address
     }
 
     field history(&executor,
