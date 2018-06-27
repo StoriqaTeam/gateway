@@ -2,27 +2,15 @@
 use futures::Future;
 use hyper::Method;
 use juniper::FieldResult;
-use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
-use super::*;
 use graphql::context::Context;
 use graphql::models::*;
 
-graphql_object!(WarehouseProduct: Context as "WarehouseProduct" |&self| {
+graphql_object!(Stock: Context as "Stock" |&self| {
     description: "Warehouse Product info."
-
-    interfaces: [&Node]
-
-    field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Warehouses, Model::WarehouseProduct, self.id).to_string().into()
-    }
-
-    field raw_id() -> &i32 as "Unique int id"{
-        &self.id
-    }
 
     field product_id() -> &i32 as "Product id"{
         &self.product_id
@@ -42,7 +30,7 @@ graphql_object!(WarehouseProduct: Context as "WarehouseProduct" |&self| {
             .wait()
     }
 
-    field warehouse_id() -> &i32 as "Warehouse id"{
+    field warehouse_id() -> &str as "Warehouse id"{
         &self.warehouse_id
     }
 
@@ -50,7 +38,7 @@ graphql_object!(WarehouseProduct: Context as "WarehouseProduct" |&self| {
         let context = executor.context();
 
         let url = format!(
-            "{}/{}/{}",
+            "{}/{}/by-id/{}",
             &context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
             self.warehouse_id.to_string()

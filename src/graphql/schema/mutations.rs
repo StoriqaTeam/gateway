@@ -850,9 +850,10 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateWarehouse(&executor, input: UpdateWarehouseInput as "Update Warehouse input.") -> FieldResult<Option<Warehouse>>  as "Updates existing Warehouse."{
         let context = executor.context();
-        let url = format!("{}/{}",
+        let url = format!("{}/{}/by-id/{}",
             context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url());
+            Model::Warehouse.to_url(),
+            input.id.to_string());
 
         if input.is_none() {
              return Err(FieldError::new(
@@ -861,15 +862,17 @@ graphql_object!(Mutation: Context |&self| {
             ));
         }
 
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let update: UpdateWarehouse = input.into();
+
+        let body: String = serde_json::to_string(&update)?.to_string();
 
         context.request::<Option<Warehouse>>(Method::Put, url, Some(body))
             .wait()
     }
 
-    field deleteWarehouse(&executor, id: i32) -> FieldResult<Option<Warehouse>>  as "Delete existing Warehouse." {
+    field deleteWarehouse(&executor, id: String) -> FieldResult<Option<Warehouse>>  as "Delete existing Warehouse." {
         let context = executor.context();
-        let url = format!("{}/{}/{}",
+        let url = format!("{}/{}/by-id/{}",
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
             id);
@@ -880,7 +883,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field deleteAllWarehouses(&executor) -> FieldResult<Vec<Warehouse>>  as "Delete all Warehouses." {
         let context = executor.context();
-        let url = format!("{}/{}/clear",
+        let url = format!("{}/{}",
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url());
 
@@ -888,23 +891,9 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createProductInWarehouse(&executor, input: CreateWarehouseProductInput as "Create warehouse product input.") -> FieldResult<WarehouseProduct> as "Creates new warehouse product." {
+    field setProductQuantityInWarehouse(&executor, input: ProductQuantityInput as "set Product Quantity In Warehouse input.") -> FieldResult<Option<Stock>> as "Set Product Quantity In Warehouse" {
         let context = executor.context();
-        let url = format!("{}/{}/{}/{}/{}",
-            context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url(),
-            input.warehouse_id,
-            Model::Product.to_url(),
-            input.product_id);
-
-
-        context.request::<WarehouseProduct>(Method::Post, url, None)
-            .wait()
-    }
-
-    field updateProductInWarehouse(&executor, input: UpdateWarehouseProductInput as "Create warehouse input.") -> FieldResult<Option<WarehouseProduct>> as "Creates new warehouse product." {
-        let context = executor.context();
-        let url = format!("{}/{}/{}/{}/{}",
+        let url = format!("{}/{}/by-id/{}/{}/{}",
             context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
             input.warehouse_id,
@@ -913,24 +902,11 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<Option<WarehouseProduct>>(Method::Post, url, Some(body))
+        context.request::<Option<Stock>>(Method::Put, url, Some(body))
             .wait()
     }
 
-    field deleteProductInWarehouse(&executor, input: DeleteWarehouseProductInput as "Delete warehouse input.") -> FieldResult<Option<WarehouseProduct>> as "Deletes warehouse product." {
-        let context = executor.context();
-        let url = format!("{}/{}/{}/{}/{}",
-            context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url(),
-            input.warehouse_id,
-            Model::Product.to_url(),
-            input.product_id);
-
-        context.request::<Option<WarehouseProduct>>(Method::Delete, url, None)
-            .wait()
-    }
-
-    field createOrder(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<Order> as "Creates new order." {
+    field createOrders(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<Vec<Order>> as "Creates orders from cart." {
         let context = executor.context();
 
         let (products, user_id) = if let Some(user) = context.user.clone() {
@@ -969,7 +945,7 @@ graphql_object!(Mutation: Context |&self| {
             customer_id: user_id,
             address: input.address_full,
             receiver_name: input.receiver_name,
-            cart_products: products_with_prices,
+            prices: products_with_prices,
         };
 
         let url = format!("{}/{}/create_from_cart",
@@ -978,7 +954,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&create_order)?.to_string();
 
-        context.request::<Order>(Method::Post, url, Some(body))
+        context.request::<Vec<Order>>(Method::Post, url, Some(body))
             .wait()
     }
 

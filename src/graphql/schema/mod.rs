@@ -15,12 +15,12 @@ pub mod page_info;
 pub mod product;
 pub mod query;
 pub mod search;
+pub mod stock;
 pub mod store;
 pub mod user;
 pub mod user_delivery_address;
 pub mod user_role;
 pub mod warehouse;
-pub mod warehouse_product;
 pub mod wizard_store;
 
 use juniper;
