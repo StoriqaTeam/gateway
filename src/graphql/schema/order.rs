@@ -100,8 +100,8 @@ graphql_object!(Order: Context as "Order" |&self| {
         &self.track_id
     }
 
-    field created_at() -> &str as "Creation time" {
-        &self.created_at
+    field created_at() -> String as "Creation time" {
+        self.created_at.to_rfc3339()
     }
 
     field receiver_name() -> &str as "Receiver name" {
