@@ -57,7 +57,7 @@ graphql_object!(Category: Context as "Category" |&self| {
 
             context.request::<Vec<Attribute>>(Method::Get, url, None)
                 .wait()
-                .map(|u| Some(u))
+                .map(Some)
         }
     }
 });
@@ -92,7 +92,7 @@ graphql_object!(SearchCategory: Context as "SearchCategory" |&self| {
     }
 
     field children() -> Vec<SearchCategory> as "Children categories" {
-        self.0.children.clone().into_iter().map(|c| SearchCategory(c)).collect::<Vec<SearchCategory>>()
+        self.0.children.clone().into_iter().map(SearchCategory).collect::<Vec<SearchCategory>>()
     }
 
 });

@@ -146,7 +146,7 @@ graphql_object!(Store: Context as "Store" |&self| {
                     let mut base_product_edges: Vec<Edge<BaseProduct>> =  vec![];
                     for base_product in base_products {
                         let edge = Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.clone()).to_string()),
+                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id).to_string()),
                                 base_product.clone()
                             );
                         base_product_edges.push(edge);
@@ -156,7 +156,7 @@ graphql_object!(Store: Context as "Store" |&self| {
                         base_product_edges.pop();
                     };
                     let has_previous_page = true;
-                    let start_cursor =  base_product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                    let start_cursor =  base_product_edges.get(0).map(|e| e.cursor.clone());
                     let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
                     let page_info = PageInfo {
                         has_next_page,
@@ -166,7 +166,7 @@ graphql_object!(Store: Context as "Store" |&self| {
                     Connection::new(base_product_edges, page_info)
                 })
                 .wait()
-                .map(|u| Some(u))
+                .map(Some)
         }
 
     field products_count(&executor) -> FieldResult<i32> as "Fetches products count of the store." {
@@ -277,7 +277,7 @@ graphql_object!(Store: Context as "Store" |&self| {
                 Connection::new(orders_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
 });

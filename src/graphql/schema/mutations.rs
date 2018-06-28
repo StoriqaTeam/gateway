@@ -488,7 +488,7 @@ graphql_object!(Mutation: Context |&self| {
                                             .map(|v| (v.quantity, v.selected, v.comment.clone()))
                                             .unwrap_or_default();
 
-                                        let price = if let Some(discount) = variant.discount.clone() {
+                                        let price = if let Some(discount) = variant.discount {
                                             variant.price * ( 1.0 - discount )
                                         } else {
                                             variant.price
@@ -540,7 +540,7 @@ graphql_object!(Mutation: Context |&self| {
                                 let selected = order.selected;
                                 let comment = order.comment;
 
-                                let price = if let Some(discount) = variant.discount.clone() {
+                                let price = if let Some(discount) = variant.discount {
                                     variant.price * ( 1.0 - discount )
                                 } else {
                                     variant.price
@@ -592,7 +592,7 @@ graphql_object!(Mutation: Context |&self| {
                                 let selected = order.selected;
                                 let comment = order.comment;
 
-                                let price = if let Some(discount) = variant.discount.clone() {
+                                let price = if let Some(discount) = variant.discount {
                                     variant.price * ( 1.0 - discount )
                                 } else {
                                     variant.price
@@ -644,7 +644,7 @@ graphql_object!(Mutation: Context |&self| {
                                 let selected = order.selected;
                                 let comment = order.comment;
 
-                                let price = if let Some(discount) = variant.discount.clone() {
+                                let price = if let Some(discount) = variant.discount {
                                     variant.price * ( 1.0 - discount )
                                 } else {
                                     variant.price

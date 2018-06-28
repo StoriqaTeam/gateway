@@ -47,12 +47,8 @@ impl FromStr for ID {
 }
 
 impl ID {
-    pub fn new(service: Service, model: Model, id: i32) -> ID {
-        ID {
-            service: service,
-            model: model,
-            raw_id: id,
-        }
+    pub fn new(service: Service, model: Model, raw_id: i32) -> ID {
+        ID { service, model, raw_id }
     }
 
     pub fn url(self, config: &Config) -> String {

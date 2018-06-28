@@ -69,12 +69,12 @@ graphql_object!(Query: Context |&self| {
             Model::User.to_url());
         context.request::<User>(Method::Get, url, None)
                     .wait()
-                    .map(|u| Some(u))
+                    .map(Some)
     }
 
     field node(&executor, id: GraphqlID as "Base64 Id of a node.") -> FieldResult<Option<Node>> as "Fetches graphql interface node by Base64 id."  {
         let context = executor.context();
-        if id.to_string() == QUERY_NODE_ID.to_string() {
+        if *id == QUERY_NODE_ID.to_string() {
              Ok(Some(Node::Query(Query{})))
         } else {
             let identifier = ID::from_str(&*id)?;
@@ -93,7 +93,7 @@ graphql_object!(Query: Context |&self| {
                 (&Service::Stores, &Model::Store) => {
                     context.request::<Option<Store>>(Method::Get, identifier.url(&context.config), None)
                         .wait()
-                        .map(|res| res.map(Node::Store))
+                        .map(|res| res.map(Box::new).map(Node::Store))
                 },
                 (&Service::Stores, &Model::Product) => {
                     context.request::<Option<Product>>(Method::Get, identifier.url(&context.config), None)
@@ -124,7 +124,7 @@ graphql_object!(Query: Context |&self| {
                 (&Service::Orders, &Model::Order) => {
                     context.request::<Option<Order>>(Method::Get, identifier.url(&context.config), None)
                         .wait()
-                        .map(|res| res.map(Node::Order))
+                        .map(|res| res.map(Box::new).map(Node::Order))
                 },
                 (&Service::Orders, _) => {
                     Err(FieldError::new(
@@ -135,7 +135,7 @@ graphql_object!(Query: Context |&self| {
                 (&Service::Warehouses, &Model::Warehouse) => {
                     context.request::<Option<Warehouse>>(Method::Get, identifier.url(&context.config), None)
                         .wait()
-                        .map(|res| res.map(Node::Warehouse))
+                        .map(|res| res.map(Box::new).map(Node::Warehouse))
                 },
                 (&Service::Warehouses, _) => {
                     Err(FieldError::new(
@@ -182,7 +182,7 @@ graphql_object!(Query: Context |&self| {
 
         context.request::<Vec<Attribute>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field search(&executor) -> Search as "Search endpoint" {
@@ -224,7 +224,7 @@ graphql_object!(Query: Context |&self| {
     field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
         if let Some(session_id) = context.session_id {
-            if let Some(_) = context.user {
+            if context.user.is_some() {
                 let body = serde_json::to_string(&CartMergePayload {user_from: session_id})?;
                 let url = format!("{}/cart/merge",
                     &context.config.service_url(Service::Orders));
@@ -256,26 +256,25 @@ graphql_object!(Query: Context |&self| {
                     .map(|u| Some(Cart::new(u)))
                     .wait()
             }
-        } else {
-            if let Some(_) = context.user {
-                let url = format!("{}/cart/products",
-                    &context.config.service_url(Service::Orders));
+        } else if context.user.is_some() {
+            let url = format!("{}/cart/products",
+                &context.config.service_url(Service::Orders));
 
-                context.request::<CartHash>(Method::Get, url, None)
-                    .map (|hash| hash.into_iter()
-                        .map(|(product_id, info)| OrdersCartProduct {
-                            product_id,
-                            quantity: info.quantity,
-                            store_id: info.store_id,
-                            selected: info.selected,
-                            comment: info.comment,
-                    }).collect::<Vec<OrdersCartProduct>>())
-                    .map(|u| Some(Cart::new(u)))
-                    .wait()
-            }  else {
-                Ok (None)
-            }
+            context.request::<CartHash>(Method::Get, url, None)
+                .map (|hash| hash.into_iter()
+                    .map(|(product_id, info)| OrdersCartProduct {
+                        product_id,
+                        quantity: info.quantity,
+                        store_id: info.store_id,
+                        selected: info.selected,
+                        comment: info.comment,
+                }).collect::<Vec<OrdersCartProduct>>())
+                .map(|u| Some(Cart::new(u)))
+                .wait()
+        }  else {
+            Ok (None)
         }
+
     }
 
 });

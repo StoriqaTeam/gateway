@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use chrono::prelude::*;
 use failure::Error as FailureError;
 use failure::Fail;
@@ -31,14 +29,14 @@ pub mod graphiql;
 pub mod routes;
 
 pub struct ControllerImpl {
-    context: Arc<Context>,
+    context: Context,
     jwt_public_key: Vec<u8>,
 }
 
 impl ControllerImpl {
     /// Create a new controller based on services
     pub fn new(config: config::Config, http_client: ClientHandle, jwt_public_key: Vec<u8>) -> Self {
-        let context = Arc::new(Context::new(Arc::new(config), http_client));
+        let context = Context::new(config, http_client);
         Self { context, jwt_public_key }
     }
 }
@@ -48,7 +46,7 @@ impl Controller for ControllerImpl {
         let context = self.context.clone();
 
         let method = format!("{}", req.method());
-        let path = format!("{}", req.path());
+        let path = req.path().to_string();
         let dt = Local::now();
 
         Box::new(
@@ -106,16 +104,16 @@ impl Controller for ControllerImpl {
                         .into(),
                 )),
             }.then(move |res| {
-                let d = Local::now() - dt.clone();
-                let message = match &res {
-                    &Ok(_) => format!(
+                let d = Local::now() - dt;
+                let message = match res {
+                    Ok(_) => format!(
                         "Response with success: {} {}, elapsed time = {}.{:03}",
                         method,
                         path,
                         d.num_seconds(),
                         d.num_milliseconds()
                     ),
-                    &Err(ref e) => format!(
+                    Err(ref e) => format!(
                         "Response with error {}: {} {}, elapsed time = {}.{:03}",
                         e,
                         method,

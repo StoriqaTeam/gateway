@@ -85,7 +85,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
             } else {
                 ProductsSearchOptionsInput{
                     store_id : Some(self.store_id),
-                    ..Default::default()
+                    ..ProductsSearchOptionsInput::default()
                 }
             };
             SearchProductInput {
@@ -97,7 +97,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                 name: "".to_string(),
                 options: Some(ProductsSearchOptionsInput{
                     store_id : Some(self.store_id),
-                    ..Default::default()
+                    ..ProductsSearchOptionsInput::default()
                 })
             }
         };
@@ -124,7 +124,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                                 stock
                             } else {
                                 Stock {
-                                    product_id: product_id,
+                                    product_id,
                                     warehouse_id: self.id.clone(),
                                     quantity: 0,
                                 }
@@ -132,14 +132,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                         })
                 }).collect::<FieldResult<Vec<Stock>>>()
                 .and_then (|products| {
-                    let mut product_edges: Vec<Edge<Stock>> =  vec![];
-                    for i in 0..products.len() {
-                        let edge = Edge::new(
-                                juniper::ID::from( (i as i32 + offset).to_string()),
-                                products[i].clone()
-                            );
-                        product_edges.push(edge);
-                    }
+                    let mut product_edges = Edge::create_vec(products, offset);
 
                     let body = serde_json::to_string(&search_term)?;
 
@@ -163,7 +156,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                     Ok(Connection::new(product_edges, page_info))
                 })
             })
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field auto_complete_product_name(&executor,
@@ -199,20 +192,13 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
         context.request::<Vec<String>>(Method::Post, url, Some(body))
             .map (|full_names| {
-                let mut full_name_edges: Vec<Edge<String>> =  vec![];
-                for i in 0..full_names.len() {
-                    let edge = Edge::new(
-                            juniper::ID::from( (i as i32 + offset).to_string()),
-                            full_names[i].clone()
-                        );
-                    full_name_edges.push(edge);
-                }
+                let mut full_name_edges = Edge::create_vec(full_names, offset);
                 let has_next_page = full_name_edges.len() as i32 == count + 1;
                 if has_next_page {
                     full_name_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  full_name_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  full_name_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = full_name_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
@@ -222,7 +208,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                 Connection::new(full_name_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
 });

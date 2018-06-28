@@ -9,10 +9,14 @@ pub struct Edge<T> {
 
 impl<T> Edge<T> {
     pub fn new(cursor: juniper::ID, node: T) -> Self {
-        Self {
-            cursor: cursor,
-            node: node,
-        }
+        Self { cursor, node }
+    }
+
+    pub fn create_vec(vec: Vec<T>, offset: i32) -> Vec<Edge<T>> {
+        vec.into_iter()
+            .enumerate()
+            .map(|(i, item)| Edge::new(juniper::ID::from((i as i32 + offset).to_string()), item))
+            .collect()
     }
 }
 
@@ -50,9 +54,6 @@ pub struct Connection<T, P> {
 
 impl<T, P> Connection<T, P> {
     pub fn new(edges: Vec<Edge<T>>, page_info: P) -> Self {
-        Self {
-            edges: edges,
-            page_info: page_info,
-        }
+        Self { edges, page_info }
     }
 }

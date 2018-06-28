@@ -79,6 +79,6 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         context.request::<Vec<AttrValue>>(Method::Get, url, None)
             .wait()
             .or_else(|_| Ok(vec![]))
-            .map(|u| Some(u))
+            .map(Some)
     }
 });
