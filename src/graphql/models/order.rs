@@ -1,4 +1,5 @@
 use juniper::ID as GraphqlID;
+use chrono::prelude::*;
 
 use super::*;
 
@@ -36,7 +37,7 @@ pub struct Order {
     pub payment_status: bool,
     pub delivery_company: Option<String>,
     pub track_id: Option<String>,
-    pub created_at: String,
+    pub created_at: DateTime<Utc>,
     pub address: Address,
 }
 
@@ -180,8 +181,8 @@ pub struct SearchOrder {
     pub slug: Option<String>,
     pub customer: Option<i32>,
     pub store: Option<i32>,
-    pub created_from: Option<i64>,
-    pub created_to: Option<i64>,
+    pub created_from: Option<DateTime<Utc>>,
+    pub created_to: Option<DateTime<Utc>>,
     pub payment_status: Option<bool>,
     pub state: Option<OrderStatus>,
 }

@@ -387,8 +387,8 @@ graphql_object!(User: Context as "User" |&self| {
         let count = cmp::min(items_count, records_limit as i32);
 
         let search_term = search_term_options.clone().map(|options| {
-            let created_from= options.created_from.clone().map(|value| i64::from_str(&value).unwrap_or_default());
-            let created_to= options.created_to.clone().map(|value| i64::from_str(&value).unwrap_or_default());
+            let created_from = options.created_from.clone().and_then(|value| value.parse().ok());
+            let created_to = options.created_to.clone().and_then(|value| value.parse().ok());
 
             SearchOrder {
                 slug: options.slug,
