@@ -5,7 +5,6 @@ use std::str::FromStr;
 
 use futures::Future;
 use hyper::Method;
-use juniper;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 use serde_json;
@@ -60,7 +59,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
                                             .map(|v| (v.quantity, v.selected, v.comment.clone()))
                                             .unwrap_or_default();
 
-                                        let price = if let Some(discount) = variant.discount.clone() {
+                                        let price = if let Some(discount) = variant.discount {
                                             variant.price * ( 1.0 - discount )
                                         } else {
                                             variant.price
@@ -81,17 +80,10 @@ graphql_object!(Cart: Context as "Cart" |&self| {
                         CartStore::new(store, products)
                     })
                     .collect();
-                let mut store_edges: Vec<Edge<CartStore>> =  vec![];
-                for i in 0..cart_stores.len() {
-                    let edge = Edge::new(
-                            juniper::ID::from( (i as i32 + offset).to_string()),
-                            cart_stores[i].clone()
-                        );
-                    store_edges.push(edge);
-                }
+                let mut store_edges = Edge::create_vec(cart_stores, offset);
                 let has_next_page = store_edges.len() as i32 > count;
                 let has_previous_page = true;
-                let start_cursor =  store_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  store_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
@@ -101,7 +93,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
                 Connection::new(store_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
 });

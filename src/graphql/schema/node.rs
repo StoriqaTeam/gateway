@@ -13,7 +13,7 @@ pub struct StaticNodeIds;
 pub enum Node {
     Query(Query),
     User(User),
-    Store(Store),
+    Store(Box<Store>),
     Product(Product),
     BaseProduct(BaseProduct),
     Category(Category),
@@ -21,8 +21,8 @@ pub enum Node {
     Attribute(Attribute),
     CartProduct(CartProduct),
     CartStore(CartStore),
-    Warehouse(Warehouse),
-    Order(Order),
+    Warehouse(Box<Warehouse>),
+    Order(Box<Order>),
 }
 
 graphql_interface!(Node: Context as "Node" |&self| {
@@ -34,7 +34,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
         match *self {
             Node::Query(_)  => QUERY_NODE_ID.to_string().into(),
             Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::User, *id).to_string().into(),
-            Node::Store(Store { ref id, .. })  => ID::new(Service::Stores, Model::Store, *id).to_string().into(),
+            Node::Store(ref s)  => ID::new(Service::Stores, Model::Store, s.id).to_string().into(),
             Node::Product(Product { ref id, .. })  => ID::new(Service::Stores, Model::Product, *id).to_string().into(),
             Node::BaseProduct(BaseProduct { ref id, .. })  => ID::new(Service::Stores, Model::BaseProduct, *id).to_string().into(),
             Node::Category(Category { ref id, .. })  => ID::new(Service::Stores, Model::Category, *id).to_string().into(),
@@ -42,15 +42,15 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::Attribute(Attribute { ref id, .. })  => ID::new(Service::Stores, Model::Attribute, *id).to_string().into(),
             Node::CartProduct(CartProduct { ref id, .. })  => ID::new(Service::Orders, Model::CartProduct, *id).to_string().into(),
             Node::CartStore(CartStore { ref id, .. })  => ID::new(Service::Orders, Model::CartStore, *id).to_string().into(),
-            Node::Warehouse(Warehouse { ref id, .. })  => id.clone().into(),
-            Node::Order(Order { ref id, .. })  => id.clone().into(),
+            Node::Warehouse(ref w)  => w.id.clone().into(),
+            Node::Order(ref o)  => o.id.clone().into(),
         }
     }
 
     instance_resolvers: |_| {
         &Query => match *self { Node::Query(ref h) => Some(h), _ => None },
         &User => match *self { Node::User(ref h) => Some(h), _ => None },
-        &Store => match *self { Node::Store(ref h) => Some(h), _ => None },
+        &Store => match *self { Node::Store(ref h) => Some(&**h), _ => None },
         &Product => match *self { Node::Product(ref h) => Some(h), _ => None },
         &BaseProduct => match *self { Node::BaseProduct(ref h) => Some(h), _ => None },
         &Category => match *self { Node::Category(ref h) => Some(h), _ => None },
@@ -58,8 +58,8 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &Attribute => match *self { Node::Attribute(ref h) => Some(h), _ => None },
         &CartProduct => match *self { Node::CartProduct(ref h) => Some(h), _ => None },
         &CartStore => match *self { Node::CartStore(ref h) => Some(h), _ => None },
-        &Warehouse => match *self { Node::Warehouse(ref h) => Some(h), _ => None },
-        &Order => match *self { Node::Order(ref h) => Some(h), _ => None },
+        &Warehouse => match *self { Node::Warehouse(ref h) => Some(&**h), _ => None },
+        &Order => match *self { Node::Order(ref h) => Some(&**h), _ => None },
     }
 });
 

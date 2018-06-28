@@ -151,13 +151,13 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
                 .skip(offset as usize)
                 .take(first as usize)
                 .map(|product| Edge::new(
-                            juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id.clone()).to_string()),
+                            juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id).to_string()),
                             product.clone()
                         ))
                 .collect();
             let has_next_page = product_edges.len() as i32 > first;
             let has_previous_page = true;
-            let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+            let start_cursor =  product_edges.get(0).map(|e| e.cursor.clone());
             let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
             let page_info = PageInfo {
                 has_next_page,
@@ -178,13 +178,13 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
                     .skip(offset as usize)
                     .take(first as usize)
                     .map(|product| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id.clone()).to_string()),
+                                juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id).to_string()),
                                 product.clone()
                             ))
                     .collect();
                 let has_next_page = product_edges.len() as i32 > first;
                 let has_previous_page = true;
-                let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  product_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
@@ -194,7 +194,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
                 Connection::new(product_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
         }
     }
 

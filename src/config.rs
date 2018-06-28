@@ -53,7 +53,7 @@ impl Config {
 
         s.merge(File::with_name("config/base"))?;
         // Optional file specific for environment
-        let env = env::var("RUN_MODE").unwrap_or("development".into());
+        let env = env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
         s.merge(File::with_name(&format!("config/{}", env.to_string())).required(false))?;
 
         // Add in settings from the environment (with a prefix of STQ_GATEWAY)

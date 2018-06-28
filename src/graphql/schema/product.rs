@@ -82,7 +82,7 @@ graphql_object!(Product: Context as "Product" |&self| {
         context.request::<Vec<AttrValue>>(Method::Get, url, None)
             .wait()
             .or_else(|_| Ok(vec![]))
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field quantity(&executor) -> FieldResult<Option<i32>> as "Fetches product quantity from warehouses." {
@@ -102,7 +102,7 @@ graphql_object!(Product: Context as "Product" |&self| {
                     acc + p.quantity
                 })
             })
-            .map(|u| Some(u))
+            .map(Some)
     }
 
 });

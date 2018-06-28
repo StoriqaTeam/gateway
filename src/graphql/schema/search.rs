@@ -5,7 +5,6 @@ use std::str::FromStr;
 use futures::future;
 use futures::Future;
 use hyper::Method;
-use juniper;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 use serde_json;
@@ -47,21 +46,14 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
             .map (|products| {
-                let mut product_edges: Vec<Edge<BaseProduct>> =  vec![];
-                for i in 0..products.len() {
-                    let edge = Edge::new(
-                            juniper::ID::from( (i as i32 + offset).to_string()),
-                            products[i].clone()
-                        );
-                    product_edges.push(edge);
-                }
+                let mut product_edges = Edge::create_vec(products, offset);
                 let search_filters = ProductsSearchFilters::new(search_term);
                 let has_next_page = product_edges.len() as i32 == count + 1;
                 if has_next_page {
                     product_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  product_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfoProductsSearch {
                     has_next_page,
@@ -72,7 +64,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                 Connection::new(product_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field auto_complete_product_name(&executor,
@@ -108,20 +100,13 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         context.request::<Vec<String>>(Method::Post, url, Some(body))
             .map (|full_names| {
-                let mut full_name_edges: Vec<Edge<String>> =  vec![];
-                for i in 0..full_names.len() {
-                    let edge = Edge::new(
-                            juniper::ID::from( (i as i32 + offset).to_string()),
-                            full_names[i].clone()
-                        );
-                    full_name_edges.push(edge);
-                }
+                let mut full_name_edges = Edge::create_vec(full_names, offset);
                 let has_next_page = full_name_edges.len() as i32 == count + 1;
                 if has_next_page {
                     full_name_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  full_name_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  full_name_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = full_name_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
@@ -131,7 +116,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                 Connection::new(full_name_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field find_store(&executor,
@@ -164,20 +149,13 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
             .and_then (|stores| {
-                let mut store_edges: Vec<Edge<Store>> =  vec![];
-                for i in 0..stores.len() {
-                    let edge = Edge::new(
-                            juniper::ID::from( (i as i32 + offset).to_string()),
-                            stores[i].clone()
-                        );
-                    store_edges.push(edge);
-                }
+                let mut store_edges = Edge::create_vec(stores, offset);
                 let has_next_page = store_edges.len() as i32 == count + 1;
                 if has_next_page {
                     store_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  store_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  store_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
 
                 let search_filters = StoresSearchFilters::new(search_term);
@@ -193,7 +171,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                 future::ok(Connection::new(store_edges, page_info))
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field auto_complete_store_name(&executor,
@@ -222,19 +200,12 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         context.request::<Vec<String>>(Method::Post, url, Some(name))
             .map (|full_names| {
-                let mut full_name_edges: Vec<Edge<String>> =  vec![];
-                for i in 0..full_names.len() {
-                    let edge = Edge::new(
-                            juniper::ID::from( (i as i32 + offset).to_string()),
-                            full_names[i].clone()
-                        );
-                    full_name_edges.push(edge);
-                }
+                let mut full_name_edges = Edge::create_vec(full_names, offset);
                 let has_next_page = full_name_edges.len() as i32 == count + 1;
                 if has_next_page {
                     full_name_edges.pop();
                 };
-                let start_cursor =  full_name_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  full_name_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = full_name_edges.iter().last().map(|e| e.cursor.clone());
 
                 let has_previous_page = true;
@@ -246,7 +217,7 @@ graphql_object!(Search: Context as "Search" |&self| {
                 Connection::new(full_name_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
 });
@@ -265,7 +236,7 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
                     );
         context.request::<RangeFilter>(Method::Post, url, Some(body))
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field categories(&executor) -> FieldResult<Option<SearchCategory>> as "Category."{
@@ -279,7 +250,7 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
                     );
         context.request::<SearchCategory>(Method::Post, url, Some(body))
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field attr_filters(&executor) -> FieldResult<Option<Vec<AttributeFilter>>> as "Attribute filters."{
@@ -365,7 +336,7 @@ graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
 
         context.request::<Vec<String>>(Method::Post, url, Some(body))
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
 });

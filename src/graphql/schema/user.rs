@@ -83,7 +83,7 @@ graphql_object!(User: Context as "User" |&self| {
 
         context.request::<Vec<Role>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field user(&executor, id: GraphqlID as "Base64 Id of a user.") -> FieldResult<Option<User>> as "Fetches user by id." {
@@ -121,7 +121,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
                     .map(|user| Edge::new(
-                                juniper::ID::from(ID::new(Service::Users, Model::User, user.id.clone()).to_string()),
+                                juniper::ID::from(ID::new(Service::Users, Model::User, user.id).to_string()),
                                 user.clone()
                             ))
                     .collect();
@@ -130,7 +130,7 @@ graphql_object!(User: Context as "User" |&self| {
                     user_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  user_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  user_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = user_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
@@ -140,7 +140,7 @@ graphql_object!(User: Context as "User" |&self| {
                 Connection::new(user_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
@@ -182,7 +182,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
                     .map(|store| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.clone()).to_string()),
+                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id).to_string()),
                                 store.clone()
                             ))
                     .collect();
@@ -191,7 +191,7 @@ graphql_object!(User: Context as "User" |&self| {
                     store_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  store_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  store_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
@@ -201,7 +201,7 @@ graphql_object!(User: Context as "User" |&self| {
                 Connection::new(store_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field product(&executor, id: i32 as "Int id of a product.") -> FieldResult<Option<Product>> as "Fetches product by id." {
@@ -243,7 +243,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let mut product_edges: Vec<Edge<Product>> = products
                     .into_iter()
                     .map(|product| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id.clone()).to_string()),
+                                juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id).to_string()),
                                 product.clone()
                             ))
                     .collect();
@@ -252,7 +252,7 @@ graphql_object!(User: Context as "User" |&self| {
                     product_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  product_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
@@ -262,7 +262,7 @@ graphql_object!(User: Context as "User" |&self| {
                 Connection::new(product_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field base_product(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
@@ -304,7 +304,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let mut product_edges: Vec<Edge<BaseProduct>> = products
                     .into_iter()
                     .map(|product| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, product.id.clone()).to_string()),
+                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, product.id).to_string()),
                                 product.clone()
                             ))
                     .collect();
@@ -313,7 +313,7 @@ graphql_object!(User: Context as "User" |&self| {
                     product_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  product_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
@@ -323,7 +323,7 @@ graphql_object!(User: Context as "User" |&self| {
                 Connection::new(product_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field deprecated "use query cart" cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
@@ -371,7 +371,7 @@ graphql_object!(User: Context as "User" |&self| {
 
         context.request::<Vec<UserDeliveryAddress>>(Method::Get, url, None)
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field orders(&executor,
@@ -429,7 +429,7 @@ graphql_object!(User: Context as "User" |&self| {
                 Connection::new(orders_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
 });

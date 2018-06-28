@@ -18,7 +18,7 @@ use graphql::models::jwt::JWTPayload;
 
 #[derive(Clone)]
 pub struct Context {
-    pub config: Arc<Config>,
+    pub config: Config,
     pub schema: Arc<schema::Schema>,
     pub http_client: ClientHandle,
     pub user: Option<JWTPayload>,
@@ -28,7 +28,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(config: Arc<Config>, client_handle: ClientHandle) -> Self {
+    pub fn new(config: Config, client_handle: ClientHandle) -> Self {
         Context {
             config,
             schema: Arc::new(schema::create()),

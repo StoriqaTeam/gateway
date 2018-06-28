@@ -130,20 +130,13 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
 
             context.request::<Vec<BaseProduct>>(Method::Get, url, None)
                 .map (|base_products| {
-                    let mut base_product_edges: Vec<Edge<BaseProduct>> =  vec![];
-                    for i in 0..base_products.len() {
-                        let edge = Edge::new(
-                                juniper::ID::from( (i as i32 + offset).to_string()),
-                                base_products[i].clone()
-                            );
-                        base_product_edges.push(edge);
-                    }
+                    let mut base_product_edges = Edge::create_vec(base_products, offset);
                     let has_next_page = base_product_edges.len() as i32 == count + 1;
                     if has_next_page {
                         base_product_edges.pop();
                     };
                     let has_previous_page = true;
-                    let start_cursor =  base_product_edges.iter().nth(0).map(|e| e.cursor.clone());
+                    let start_cursor =  base_product_edges.get(0).map(|e| e.cursor.clone());
                     let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
                     let page_info = PageInfo {
                         has_next_page,
@@ -153,7 +146,7 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
                     Connection::new(base_product_edges, page_info)
                 })
                 .wait()
-                .map(|u| Some(u))
+                .map(Some)
         } else {
             Ok(None)
         }

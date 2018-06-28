@@ -81,7 +81,7 @@ graphql_object!(Order: Context as "Order" |&self| {
     }
 
     field subtotal() -> f64 as "Subtotal" {
-        self.price * (self.quantity as f64)
+        self.price * f64::from(self.quantity)
     }
 
     field slug() -> &i32 as "Slug" {
@@ -137,20 +137,13 @@ graphql_object!(Order: Context as "Order" |&self| {
 
         context.request::<Vec<OrderHistoryItem>>(Method::Post, url, None)
             .map (|items| {
-                let mut item_edges: Vec<Edge<OrderHistoryItem>> =  vec![];
-                for i in 0..items.len() {
-                    let edge = Edge::new(
-                            juniper::ID::from( (i as i32 + offset).to_string()),
-                            items[i].clone()
-                        );
-                    item_edges.push(edge);
-                }
+                let mut item_edges = Edge::create_vec(items, offset);
                 let has_next_page = item_edges.len() as i32 == count + 1;
                 if has_next_page {
                     item_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  item_edges.iter().nth(0).map(|e| e.cursor.clone());
+                let start_cursor =  item_edges.get(0).map(|e| e.cursor.clone());
                 let end_cursor = item_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
@@ -160,7 +153,7 @@ graphql_object!(Order: Context as "Order" |&self| {
                 Connection::new(item_edges, page_info)
             })
             .wait()
-            .map(|u| Some(u))
+            .map(Some)
     }
 
     field allowed_statuses(&executor) -> FieldResult<Vec<OrderStatus>> as "Allowed statuses" {
