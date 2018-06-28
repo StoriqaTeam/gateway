@@ -118,20 +118,3 @@ impl From<Warehouse> for Address {
         }
     }
 }
-
-impl From<Order> for Address {
-    fn from(address: Order) -> Address {
-        Self {
-            value: address.address,
-            country: Some(address.country),
-            administrative_area_level_1: address.administrative_area_level_1,
-            administrative_area_level_2: address.administrative_area_level_2,
-            locality: address.locality,
-            political: address.political,
-            postal_code: Some(address.postal_code),
-            route: address.route,
-            street_number: address.street_number,
-            place_id: address.place_id,
-        }
-    }
-}
