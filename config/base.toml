@@ -9,16 +9,19 @@ records_limit=100
 url="http://users:8000"
 
 [stores_microservice]
-url="http://stores:8001"
+url="http://stores:8000"
 
 [orders_microservice]
-url="http://orders:8002"
+url="http://orders:8000"
 
 [billing_microservice]
-url="http://billing:8003"
+url="http://billing:8000"
 
 [saga_microservice]
-url="http://saga:8004"
+url="http://saga:8000"
 
 [warehouses_microservice]
-url="http://warehouses:8005"
+url="http://warehouses:8000"
+
+[notifications_microservice]
+url="http://notifications:8000"

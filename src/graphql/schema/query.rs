@@ -143,6 +143,12 @@ graphql_object!(Query: Context |&self| {
                         graphql_value!({ "internal_error": "Unknown model" })
                     ))
                 }
+                (&Service::Notifications, _) => {
+                    Err(FieldError::new(
+                        "Could not get model from notifications microservice.",
+                        graphql_value!({ "internal_error": "Unknown model" })
+                    ))
+                }
             }
         }
     }
