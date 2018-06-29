@@ -6,8 +6,8 @@ use std::str::FromStr;
 use futures::Future;
 use hyper::Method;
 use juniper;
-use juniper::{FieldResult, FieldError};
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
 use serde_json;
 
 use stq_routes::model::Model;
@@ -233,11 +233,11 @@ graphql_object!(Store: Context as "Store" |&self| {
                                 "Parsing created_from error",
                                 graphql_value!({ "code": 300, "details": { "created_from has wrong format." }}),
                             )),
-                        }                        
+                        }
                     },
-                    None => None 
+                    None => None
                 };
-                
+
                 let created_to = match options.created_to.clone() {
                     Some(value) => {
                         match value.parse() {
@@ -246,9 +246,9 @@ graphql_object!(Store: Context as "Store" |&self| {
                                 "Parsing created_to error",
                                 graphql_value!({ "code": 300, "details": { "created_to has wrong format." }}),
                             )),
-                        }                        
+                        }
                     },
-                    None => None 
+                    None => None
                 };
 
                 let customer = options.email.and_then(|email| {
@@ -262,7 +262,7 @@ graphql_object!(Store: Context as "Store" |&self| {
                         .ok()
                         .and_then (|user| user.map(|u|u.id))
                 });
-                
+
                 Some(SearchOrder {
                     slug: options.slug,
                     customer,
@@ -305,6 +305,19 @@ graphql_object!(Store: Context as "Store" |&self| {
             })
             .wait()
             .map(Some)
+    }
+
+    field order(&executor, slug: i32 as "Order slug" ) -> FieldResult<Option<Order>> as "Fetches order." {
+        let context = executor.context();
+
+        let url = format!("{}/{}/by-slug/{}",
+            &context.config.service_url(Service::Orders),
+            Model::Order.to_url(),
+            slug
+            );
+
+        context.request::<Option<Order>>(Method::Get, url, None)
+            .wait()
     }
 
 });
