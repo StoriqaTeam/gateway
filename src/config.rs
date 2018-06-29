@@ -28,8 +28,10 @@ pub struct Config {
     pub orders_microservice: Microservice,
     pub billing_microservice: Microservice,
     pub warehouses_microservice: Microservice,
+    pub notifications_microservice: Microservice,
     pub jwt: JWT,
     pub cors: CORS,
+    pub notification_urls: NotificationUrls,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -42,6 +44,12 @@ pub struct JWT {
 pub struct CORS {
     pub domain: String,
     pub max_age: u32,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct NotificationUrls {
+    pub verify_email_path: String,
+    pub reset_password_path: String,
 }
 
 impl Config {
@@ -75,6 +83,7 @@ impl Config {
             StqService::Stores => self.stores_microservice.url.clone(),
             StqService::Orders => self.orders_microservice.url.clone(),
             StqService::Warehouses => self.warehouses_microservice.url.clone(),
+            StqService::Notifications => self.notifications_microservice.url.clone(),
         }
     }
 }

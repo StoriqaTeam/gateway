@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::str::FromStr;
 
-use futures::Future;
+use futures::{Future, IntoFuture};
 use graphql::context::Context;
 use graphql::models::*;
 use hyper::Method;
@@ -45,7 +45,7 @@ graphql_object!(Mutation: Context |&self| {
         let new_ident = NewIdentity {
             provider: Provider::Email,
             email: input.email.clone(),
-            password: input.password,
+            password: input.password.clone(),
             saga_id: "".to_string(),
         };
         let new_user = NewUser {
@@ -67,6 +67,29 @@ graphql_object!(Mutation: Context |&self| {
         let body: String = serde_json::to_string(&saga_profile)?.to_string();
 
         context.request::<User>(Method::Post, url, Some(body))
+            .and_then(|user| {
+                let url = format!("{}/{}/email_verify_token",
+                    context.config.service_url(Service::Users),
+                    Model::User.to_url());
+                let reset = ResetRequest { email : user.email.clone(), client_mutation_id: input.client_mutation_id};
+                let email = user.email.clone();
+                serde_json::to_string(&reset)
+                    .map_err(From::from)
+                    .into_future()
+                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
+                    .and_then(|token| {
+                        let to = email;
+                        let subject = "Email verification".to_string();
+                        let text = format!("{}/{}", context.config.notification_urls.verify_email_path, token);
+                        let url = format!("{}/sendmail", 
+                            context.config.service_url(Service::Notifications),
+                        );
+                        serde_json::to_string(&ResetMail { to, subject, text })
+                            .map_err(From::from)
+                            .into_future()
+                            .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
+                    }).map(|_| user)
+            })
             .wait()
     }
 
@@ -116,13 +139,24 @@ graphql_object!(Mutation: Context |&self| {
 
     field requestPasswordReset(&executor, input: ResetRequest as "Password reset request input.") -> FieldResult<ResetActionOutput>  as "Requests password reset." {
         let context = executor.context();
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Users),
-            Model::User.to_url(),
-            "password_reset/request");
-        let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<bool>(Method::Post, url, Some(body))
+        let url = format!("{}/{}/password_reset_token",
+            context.config.service_url(Service::Users),
+            Model::User.to_url());
+        let body = serde_json::to_string(&input)?;
+        context.request::<String>(Method::Post, url, Some(body))
+            .and_then(|token| {
+                let to = input.email.clone();
+                let subject = "Password reset".to_string();
+                let text = format!("{}/{}", context.config.notification_urls.reset_password_path, token);
+                let url = format!("{}/sendmail", 
+                    context.config.service_url(Service::Notifications),
+                );
+                serde_json::to_string(&ResetMail { to, subject, text })
+                    .map_err(From::from)
+                    .into_future()
+                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
+            })
             .wait()?;
 
         Ok(ResetActionOutput {
@@ -132,13 +166,24 @@ graphql_object!(Mutation: Context |&self| {
 
     field applyPasswordReset(&executor, input: ResetApply as "Password reset apply input.") -> FieldResult<ResetActionOutput>  as "Applies password reset." {
         let context = executor.context();
-        let url = format!("{}/{}/{}",
+        let url = format!("{}/{}/password_reset_token",
             context.config.service_url(Service::Users),
-            Model::User.to_url(),
-            "password_reset/apply");
+            Model::User.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<bool>(Method::Post, url, Some(body))
+         context.request::<String>(Method::Put, url, Some(body))
+            .and_then(|email| {
+                let to = email.clone();
+                let subject = "Password reset success".to_string();
+                let text = "Password for linked account has been successfully reset.".to_string();
+                let url = format!("{}/sendmail", 
+                    context.config.service_url(Service::Notifications),
+                );
+                serde_json::to_string(&ResetMail { to, subject, text })
+                    .map_err(From::from)
+                    .into_future()
+                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
+            })
             .wait()?;
 
         Ok(ResetActionOutput {
@@ -148,11 +193,24 @@ graphql_object!(Mutation: Context |&self| {
 
     field resendEmailVerificationLink(&executor, input: VerifyEmailResend as "Password reset request input.") -> FieldResult<VerifyEmailOutput>  as "Requests password reset." {
         let context = executor.context();
-        let url = format!("{}/email_verify/resend/{}",
+        let url = format!("{}/{}/email_verify_token",
             context.config.service_url(Service::Users),
-            input.email);
-
-        context.request::<bool>(Method::Post, url, None)
+            Model::User.to_url());
+        let reset = ResetRequest { email : input.email.clone(), client_mutation_id: input.client_mutation_id.clone()};
+        let body = serde_json::to_string(&reset)?;
+        context.request::<String>(Method::Post, url, Some(body))
+            .and_then(|token| {
+                let to = input.email.clone();
+                let subject = "Email verification".to_string();
+                let text = format!("{}/{}", context.config.notification_urls.verify_email_path, token);
+                let url = format!("{}/sendmail", 
+                    context.config.service_url(Service::Notifications),
+                );
+                serde_json::to_string(&ResetMail { to, subject, text })
+                    .map_err(From::from)
+                    .into_future()
+                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
+            })
             .wait()?;
 
         Ok(VerifyEmailOutput {
@@ -162,11 +220,24 @@ graphql_object!(Mutation: Context |&self| {
 
     field verifyEmail(&executor, input: VerifyEmailApply as "Password reset request input.") -> FieldResult<VerifyEmailOutput>  as "Requests password reset." {
         let context = executor.context();
-        let url = format!("{}/email_verify/apply/{}",
+        let url = format!("{}/{}/email_verify_token?token={}",
             context.config.service_url(Service::Users),
-            input.token);
+            Model::User.to_url(),
+            input.token.clone());
 
-        context.request::<bool>(Method::Post, url, None)
+        context.request::<String>(Method::Put, url, None)
+            .and_then(|email| {
+                let to = email;
+                let subject = "Email verification".to_string();
+                let text = "Email for linked account has been verified".to_string();
+                let url = format!("{}/sendmail", 
+                    context.config.service_url(Service::Notifications),
+                );
+                serde_json::to_string(&ResetMail { to, subject, text })
+                    .map_err(From::from)
+                    .into_future()
+                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
+            })
             .wait()?;
 
         Ok(VerifyEmailOutput {
