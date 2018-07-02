@@ -1,21 +1,39 @@
 use chrono::prelude::*;
-use juniper::ID as GraphqlID;
 
 use super::*;
 
 #[derive(GraphQLEnum, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[graphql(name = "OrderStatus", description = "Current order status")]
 pub enum OrderStatus {
-    #[serde(rename = "new")]
-    New,
+    #[graphql(description = "State set on order creation.")]
+    #[serde(rename = "payment_awaited")]
+    PaimentAwaited,
+
+    #[graphql(description = "Set after payment by request of billing")]
     #[serde(rename = "paid")]
     Paid,
+
+    #[graphql(description = "Order is being processed by store management")]
     #[serde(rename = "in_processing")]
     InProcessing,
+
+    #[graphql(description = "Can be cancelled by any party before order being sent.")]
     #[serde(rename = "cancelled")]
     Cancelled,
+
+    #[graphql(description = "Wares are on their way to the customer. Tracking ID must be set.")]
     #[serde(rename = "sent")]
     Sent,
+
+    #[graphql(description = "Wares are delivered to the customer.")]
+    #[serde(rename = "delivered")]
+    Delivered,
+
+    #[graphql(description = "Wares are received by the customer.")]
+    #[serde(rename = "received")]
+    Received,
+
+    #[graphql(description = "Order is complete.")]
     #[serde(rename = "complete")]
     Complete,
 }
@@ -69,56 +87,56 @@ pub struct OrderStatusDeliveryInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Id of order.")]
+    #[graphql(description = "Slug of order.")]
     #[serde(skip_serializing)]
-    pub id: GraphqlID,
+    pub order_slug: i32,
     #[graphql(description = "Track id.")]
-    pub track_id: String,
-    #[graphql(description = "Comments")]
-    pub comments: String,
+    pub track_id: Option<String>,
+    #[graphql(description = "Comment.")]
+    pub comment: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct OrderStatusDelivery {
-    pub status: OrderStatus,
-    pub track_id: String,
-    pub comments: String,
+    pub state: OrderStatus,
+    pub track_id: Option<String>,
+    pub comment: Option<String>,
 }
 
 impl From<OrderStatusDeliveryInput> for OrderStatusDelivery {
     fn from(order: OrderStatusDeliveryInput) -> Self {
         Self {
-            status: OrderStatus::Sent,
+            state: OrderStatus::Sent,
             track_id: order.track_id,
-            comments: order.comments,
+            comment: order.comment,
         }
     }
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
-#[graphql(description = "Order Status Paid input.")]
-pub struct OrderStatusPaidInput {
+#[graphql(description = "Order Status Canceled input.")]
+pub struct OrderStatusCanceledInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Id of order.")]
+    #[graphql(description = "Slug of order.")]
     #[serde(skip_serializing)]
-    pub id: GraphqlID,
-    #[graphql(description = "Comments")]
-    pub comments: String,
+    pub order_slug: i32,
+    #[graphql(description = "Comment")]
+    pub comment: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
-pub struct OrderStatusPaid {
-    pub status: OrderStatus,
-    pub comments: String,
+pub struct OrderStatusCanceled {
+    pub state: OrderStatus,
+    pub comment: Option<String>,
 }
 
-impl From<OrderStatusPaidInput> for OrderStatusPaid {
-    fn from(order: OrderStatusPaidInput) -> Self {
+impl From<OrderStatusCanceledInput> for OrderStatusCanceled {
+    fn from(order: OrderStatusCanceledInput) -> Self {
         Self {
-            status: OrderStatus::Paid,
-            comments: order.comments,
+            state: OrderStatus::Cancelled,
+            comment: order.comment,
         }
     }
 }
@@ -129,34 +147,35 @@ pub struct OrderStatusCompleteInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Id of order.")]
+    #[graphql(description = "Slug of order.")]
     #[serde(skip_serializing)]
-    pub id: GraphqlID,
-    #[graphql(description = "Comments")]
-    pub comments: String,
+    pub order_slug: i32,
+    #[graphql(description = "Comment")]
+    pub comment: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct OrderStatusComplete {
-    pub status: OrderStatus,
-    pub comments: String,
+    pub state: OrderStatus,
+    pub comment: Option<String>,
 }
 
 impl From<OrderStatusCompleteInput> for OrderStatusComplete {
     fn from(order: OrderStatusCompleteInput) -> Self {
         Self {
-            status: OrderStatus::Complete,
-            comments: order.comments,
+            state: OrderStatus::Complete,
+            comment: order.comment,
         }
     }
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct OrderHistoryItem {
-    pub status: OrderStatus,
-    pub user_id: i32,
-    pub comments: Option<String>,
-    pub creation_time: String,
+    pub parent: String,
+    pub committer: i32,
+    pub committed_at: DateTime<Utc>,
+    pub state: OrderStatus,
+    pub comment: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
@@ -192,7 +211,7 @@ pub struct PageInfoOrdersSearch {
     pub total_pages: i32,
     pub current_page: i32,
     pub page_items_count: i32,
-    pub search_term_options: Option<SearchOrderOption>,
+    pub search_term_options: SearchOrderOption,
 }
 
 #[derive(GraphQLObject, Serialize, Clone, Debug, Default)]

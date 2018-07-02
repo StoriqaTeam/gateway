@@ -12,12 +12,16 @@ use graphql::models::*;
 graphql_object!(OrderHistoryItem: Context as "OrderHistoryItem" |&self| {
     description: "Order history item info."
 
-    field status() -> &OrderStatus as "Order Status"{
-        &self.status
+    field state() -> &OrderStatus as "Order Status"{
+        &self.state
     }
 
-    field user_id() -> &i32 as "User int id"{
-        &self.user_id
+    field order_id() -> &str as "Order id"{
+        &self.parent
+    }
+
+    field committer() -> &i32 as "User int id"{
+        &self.committer
     }
 
     field user(&executor) -> FieldResult<Option<User>> as "User" {
@@ -25,18 +29,18 @@ graphql_object!(OrderHistoryItem: Context as "OrderHistoryItem" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
             Model::User.to_url(),
-            self.user_id);
+            self.committer);
 
         context.request::<Option<User>>(Method::Get, url, None)
             .wait()
     }
 
-    field creation_time() -> &str as "Creation time" {
-        &self.creation_time
+    field committed_at() -> String as "Committed at time" {
+        self.committed_at.to_rfc3339()
     }
 
-    field comments() -> &Option<String> as "Comments" {
-        &self.comments
+    field comment() -> &Option<String> as "Comment" {
+        &self.comment
     }
 
 });
