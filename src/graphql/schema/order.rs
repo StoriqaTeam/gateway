@@ -128,16 +128,20 @@ graphql_object!(Order: Context as "Order" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/history?offset={}&count={}",
+        let url = format!("{}/order_diff/by-slug/{}",
             context.config.service_url(Service::Orders),
-            Model::Order.to_url(),
-            offset,
-            count + 1
+            self.slug
             );
 
-        context.request::<Vec<OrderHistoryItem>>(Method::Post, url, None)
+        context.request::<Vec<OrderHistoryItem>>(Method::Get, url, None)
             .map (|items| {
-                let mut item_edges = Edge::create_vec(items, offset);
+                let mut item_edges: Vec<Edge<OrderHistoryItem>> = items
+                    .into_iter()
+                    .skip(offset as usize)
+                    .take(count as usize)
+                    .enumerate()
+                    .map(|(i, item)| Edge::new(juniper::ID::from((i as i32 + offset).to_string()), item))
+                    .collect();
                 let has_next_page = item_edges.len() as i32 == count + 1;
                 if has_next_page {
                     item_edges.pop();

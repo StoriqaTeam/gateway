@@ -214,7 +214,7 @@ graphql_object!(Store: Context as "Store" |&self| {
     field orders(&executor,
         current_page : i32 as "Current page",
         items_count : i32 as "Items count",
-        search_term_options : Option<SearchOrderOptionInput> as "Search options pattern")
+        search_term_options : SearchOrderOptionInput as "Search options pattern")
             -> FieldResult<Option<Connection<Order, PageInfoOrdersSearch>>> as "Fetches orders using relay connection." {
         let context = executor.context();
 
@@ -223,58 +223,53 @@ graphql_object!(Store: Context as "Store" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(items_count, records_limit as i32);
 
-        let search_term = match search_term_options.clone() {
-            Some(options) => {
-                let created_from = match options.created_from.clone() {
-                    Some(value) => {
-                        match value.parse() {
-                            Ok(v) => Some(v),
-                            Err(_) => return Err(FieldError::new(
-                                "Parsing created_from error",
-                                graphql_value!({ "code": 300, "details": { "created_from has wrong format." }}),
-                            )),
-                        }
-                    },
-                    None => None
-                };
-
-                let created_to = match options.created_to.clone() {
-                    Some(value) => {
-                        match value.parse() {
-                            Ok(v) => Some(v),
-                            Err(_) => return Err(FieldError::new(
-                                "Parsing created_to error",
-                                graphql_value!({ "code": 300, "details": { "created_to has wrong format." }}),
-                            )),
-                        }
-                    },
-                    None => None
-                };
-
-                let customer = options.email.and_then(|email| {
-                    let url = format!("{}/{}/by_email?email={}",
-                        context.config.service_url(Service::Users),
-                        Model::User.to_url(),
-                        email);
-
-                    context.request::<Option<User>>(Method::Get, url, None)
-                        .wait()
-                        .ok()
-                        .and_then (|user| user.map(|u|u.id))
-                });
-
-                Some(SearchOrder {
-                    slug: options.slug,
-                    customer,
-                    store: Some(self.id),
-                    created_from,
-                    created_to,
-                    payment_status: options.payment_status,
-                    state: options.order_status,
-                })
+        let created_from = match search_term_options.created_from.clone() {
+            Some(value) => {
+                match value.parse() {
+                    Ok(v) => Some(v),
+                    Err(_) => return Err(FieldError::new(
+                        "Parsing created_from error",
+                        graphql_value!({ "code": 300, "details": { "created_from has wrong format." }}),
+                    )),
+                }
             },
             None => None
         };
+
+        let created_to = match search_term_options.created_to.clone() {
+            Some(value) => {
+                match value.parse() {
+                    Ok(v) => Some(v),
+                    Err(_) => return Err(FieldError::new(
+                        "Parsing created_to error",
+                        graphql_value!({ "code": 300, "details": { "created_to has wrong format." }}),
+                    )),
+                }
+            },
+            None => None
+        };
+
+        let customer = search_term_options.email.clone().and_then(|email| {
+            let url = format!("{}/{}/by_email?email={}",
+                context.config.service_url(Service::Users),
+                Model::User.to_url(),
+                email);
+
+            context.request::<Option<User>>(Method::Get, url, None)
+                .wait()
+                .ok()
+                .and_then (|user| user.map(|u|u.id))
+        });
+
+        let search_term = SearchOrder {
+                slug: search_term_options.slug.clone(),
+                customer,
+                store: Some(self.id),
+                created_from,
+                created_to,
+                payment_status: search_term_options.payment_status.clone(),
+                state: search_term_options.order_status.clone(),
+            };
 
         let body = serde_json::to_string(&search_term)?;
 
@@ -283,7 +278,7 @@ graphql_object!(Store: Context as "Store" |&self| {
             Model::Order.to_url());
 
         context.request::<Vec<Order>>(Method::Post, url, Some(body))
-            .map (|orders| {
+            .map (move |orders| {
                 let total_pages = (orders.iter().count() as i32) / items_count + 1;
 
                 let mut orders_edges: Vec<Edge<Order>> = orders
@@ -300,7 +295,8 @@ graphql_object!(Store: Context as "Store" |&self| {
                     total_pages,
                     current_page,
                     page_items_count: items_count,
-                    search_term_options: search_term_options.map(|s|s.into())};
+                    search_term_options: search_term_options.into()
+                };
                 Connection::new(orders_edges, page_info)
             })
             .wait()

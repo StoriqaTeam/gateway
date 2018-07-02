@@ -1042,12 +1042,21 @@ graphql_object!(Mutation: Context |&self| {
 
     field setOrderStatusDelivery(&executor, input: OrderStatusDeliveryInput as "Order Status Delivery input.") -> FieldResult<Option<Order>>  as "Set Order Status Delivery."{
         let context = executor.context();
-        let url = format!("{}/{}/{}",
+        let url = format!("{}/{}/by-slug/{}/status",
             context.config.service_url(Service::Orders),
             Model::Order.to_url(),
-            input.id.to_string());
+            input.order_slug.to_string());
 
-        let order: OrderStatusDelivery = input.into();
+        let mut order: OrderStatusDelivery = input.into();
+        if let Some(ref track_id) = order.track_id {
+            let comment = if let Some(mut comment) = order.comment {
+                comment += format!(" | Track id: {}", track_id).as_ref();
+                Some(comment)
+            } else {
+                Some(format!("Track id: {}", track_id))
+            };
+            order.comment = comment;
+        }
 
         let body: String = serde_json::to_string(&order)?.to_string();
 
@@ -1055,14 +1064,14 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field setOrderStatusPaid(&executor, input: OrderStatusPaidInput as "Order Status Paid input.") -> FieldResult<Option<Order>>  as "Set Order Status Paid."{
+    field setOrderStatusCanceled(&executor, input: OrderStatusCanceledInput as "Order Status Canceled input.") -> FieldResult<Option<Order>>  as "Set Order Status Canceled."{
         let context = executor.context();
-        let url = format!("{}/{}/{}",
+        let url = format!("{}/{}/by-slug/{}/status",
             context.config.service_url(Service::Orders),
             Model::Order.to_url(),
-            input.id.to_string());
+            input.order_slug.to_string());
 
-        let order: OrderStatusPaid = input.into();
+        let order: OrderStatusCanceled = input.into();
 
         let body: String = serde_json::to_string(&order)?.to_string();
 
@@ -1072,10 +1081,10 @@ graphql_object!(Mutation: Context |&self| {
 
     field setOrderStatusComplete(&executor, input: OrderStatusCompleteInput as "Order Status Complete input.") -> FieldResult<Option<Order>>  as "Set Order Status Complete."{
         let context = executor.context();
-        let url = format!("{}/{}/{}",
+        let url = format!("{}/{}/by-slug/{}/status",
             context.config.service_url(Service::Orders),
             Model::Order.to_url(),
-            input.id.to_string());
+            input.order_slug.to_string());
 
         let order: OrderStatusComplete = input.into();
 
