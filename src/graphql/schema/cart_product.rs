@@ -36,6 +36,10 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     field price() -> &f64 as "Price" {
         &self.price
     }
+    
+    field subtotal() -> f64 as "Subtotal" {
+        self.price * (self.quantity as f64)
+    }
 
     field delivery_cost() -> f64 as "Delivery cost" {
         0.0
