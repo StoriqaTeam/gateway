@@ -143,7 +143,7 @@ graphql_object!(User: Context as "User" |&self| {
             .map(Some)
     }
 
-    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
+    field deprecated "use query store" store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();
 
         let url = format!(
@@ -151,6 +151,20 @@ graphql_object!(User: Context as "User" |&self| {
             &context.config.service_url(Service::Stores),
             Model::Store.to_url(),
             id.to_string()
+        );
+
+        context.request::<Option<Store>>(Method::Get, url, None)
+            .wait()
+    }
+    
+    field my_store(&executor) -> FieldResult<Option<Store>> as "Fetches store of the current user." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/by_user_id/{}",
+            &context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            self.id.to_string()
         );
 
         context.request::<Option<Store>>(Method::Get, url, None)
