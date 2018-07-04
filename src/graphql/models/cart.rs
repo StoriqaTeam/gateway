@@ -35,13 +35,13 @@ pub struct CartProduct {
     pub comment: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Cart {
-    pub inner: Vec<OrdersCartProduct>,
+    pub inner: Vec<CartStore>,
 }
 
 impl Cart {
-    pub fn new(inner: Vec<OrdersCartProduct>) -> Self {
+    pub fn new(inner: Vec<CartStore>) -> Self {
         Self { inner }
     }
 }
@@ -93,7 +93,7 @@ pub struct SetCommentInCartInput {
     #[serde(skip_serializing)]
     pub product_id: i32,
     #[graphql(description = "Product comment.")]
-    pub comment: String,
+    pub value: String,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -152,3 +152,54 @@ pub struct CartMergePayload {
 }
 
 pub type CartProductWithPriceHash = HashMap<i32, f64>;
+
+pub fn convert_to_cart(stores: Vec<Store>, products: Vec<OrdersCartProduct>) -> Cart {
+    let cart_stores: Vec<CartStore> = stores
+        .into_iter()
+        .map(|store| {
+            let products = store
+                .base_products
+                .clone()
+                .unwrap_or_default()
+                .into_iter()
+                .flat_map(|base_product| {
+                    base_product
+                        .variants
+                        .clone()
+                        .and_then(|mut v| {
+                            Some(
+                                v.iter_mut()
+                                    .map(|variant| {
+                                        let (quantity, selected, comment) = products
+                                            .iter()
+                                            .find(|v| v.product_id == variant.id)
+                                            .map(|v| (v.quantity, v.selected, v.comment.clone()))
+                                            .unwrap_or_default();
+
+                                        let price = if let Some(discount) = variant.discount {
+                                            variant.price * (1.0 - discount)
+                                        } else {
+                                            variant.price
+                                        };
+
+                                        CartProduct {
+                                            id: variant.id,
+                                            name: base_product.name.clone(),
+                                            photo_main: variant.photo_main.clone(),
+                                            selected,
+                                            price,
+                                            quantity,
+                                            comment,
+                                        }
+                                    })
+                                    .collect::<Vec<CartProduct>>(),
+                            )
+                        })
+                        .unwrap_or_default()
+                })
+                .collect();
+            CartStore::new(store, products)
+        })
+        .collect();
+    Cart::new(cart_stores)
+}

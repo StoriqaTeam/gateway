@@ -1,13 +1,9 @@
-//! File containing PageInfo object of graphql schema
+//! File containing Cart object of graphql schema
 
 use std::cmp;
 use std::str::FromStr;
 
-use futures::Future;
-use hyper::Method;
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
-use serde_json;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
@@ -20,7 +16,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
     field stores(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID>  as "Offset") 
-            -> FieldResult<Option<Connection<CartStore, PageInfo>>> as "Fetches stores using relay connection." {
+            -> Connection<CartStore, PageInfo> as "Fetches stores using relay connection." {
         let context = executor.context();
 
         let offset = after
@@ -32,68 +28,65 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+        let mut cart_stores: Vec<CartStore> = self.inner.clone()
+            .into_iter()
+            .skip(offset as usize)
+            .take(count as usize)
+            .collect();
+        let mut store_edges = Edge::create_vec(cart_stores, offset);
+        let has_next_page = store_edges.len() as i32 > count;
+        let has_previous_page = true;
+        let start_cursor =  store_edges.get(0).map(|e| e.cursor.clone());
+        let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
+        let page_info = PageInfo {
+            has_next_page,
+            has_previous_page,
+            start_cursor,
+            end_cursor};
+        Connection::new(store_edges, page_info)
+    }
 
-        let body = serde_json::to_string(&self.inner)?;
+    field products_cost() -> f64 as "Products cost" {
+        self.inner.iter().fold(0.0, |acc, store| {
+            let store_products_cost = store.products.iter().fold(0.0, |acc, product| {
+                if product.selected {
+                    acc + product.price * (product.quantity as f64)
+                } else {
+                    acc
+                }
+            });
+            acc + store_products_cost
+        })
+    }
 
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map (|stores| {
-                let mut cart_stores: Vec<CartStore> = stores
-                    .into_iter()
-                    .skip(offset as usize)
-                    .take(count as usize)
-                    .map(|store| {
-                        let products = store.base_products
-                            .clone()
-                            .unwrap_or_default()
-                            .into_iter()
-                            .flat_map(|base_product| {
-                                base_product.variants.clone()
-                                .and_then(|mut v|{
-                                    Some(v.iter_mut().map(|variant| {
-                                        let (quantity, selected, comment) = self.inner
-                                            .iter()
-                                            .find(|v|v.product_id == variant.id)
-                                            .map(|v| (v.quantity, v.selected, v.comment.clone()))
-                                            .unwrap_or_default();
+    field delivery_cost() -> f64 as "Delivery cost" {
+        0.0
+    }
 
-                                        let price = if let Some(discount) = variant.discount {
-                                            variant.price * ( 1.0 - discount )
-                                        } else {
-                                            variant.price
-                                        };
+    field total_cost() -> f64 as "Total cost" {
+        self.inner.iter().fold(0.0, |acc, store| {
+            let store_products_cost = store.products.iter().fold(0.0, |acc, product| {
+                if product.selected {
+                    acc + product.price * (product.quantity as f64)
+                } else {
+                    acc
+                }
+            });
+            acc + store_products_cost
+        })
+    }
 
-                                        CartProduct {
-                                            id: variant.id,
-                                            name: base_product.name.clone(),
-                                            photo_main: variant.photo_main.clone(),
-                                            selected,
-                                            price,
-                                            quantity,
-                                            comment,
-                                        }
-                                    }).collect::<Vec<CartProduct>>())
-                                }).unwrap_or_default()
-                            }).collect();
-                        CartStore::new(store, products)
-                    })
-                    .collect();
-                let mut store_edges = Edge::create_vec(cart_stores, offset);
-                let has_next_page = store_edges.len() as i32 > count;
-                let has_previous_page = true;
-                let start_cursor =  store_edges.get(0).map(|e| e.cursor.clone());
-                let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
-                let page_info = PageInfo {
-                    has_next_page,
-                    has_previous_page,
-                    start_cursor,
-                    end_cursor};
-                Connection::new(store_edges, page_info)
-            })
-            .wait()
-            .map(Some)
+    field total_count() -> i32 as "Total products count" {
+        self.inner.iter().fold(0, |acc, store| {
+            let store_products_cost = store.products.iter().fold(0, |acc, product| {
+                if product.selected {
+                    acc + product.quantity
+                } else {
+                    acc
+                }
+            });
+            acc + store_products_cost
+        })
     }
 
 });

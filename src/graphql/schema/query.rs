@@ -229,44 +229,27 @@ graphql_object!(Query: Context |&self| {
 
     field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
-        if let Some(session_id) = context.session_id {
+        let (body, url) = if let Some(session_id) = context.session_id {
             if context.user.is_some() {
                 let body = serde_json::to_string(&CartMergePayload {user_from: session_id})?;
                 let url = format!("{}/cart/merge",
                     &context.config.service_url(Service::Orders));
-
-                context.request::<CartHash>(Method::Post, url, Some(body))
-                    .map (|hash| hash.into_iter()
-                        .map(|(product_id, info)| OrdersCartProduct {
-                            product_id,
-                            quantity: info.quantity,
-                            store_id: info.store_id,
-                            selected: info.selected,
-                            comment: info.comment,
-                    }).collect::<Vec<OrdersCartProduct>>())
-                    .map(|u| Some(Cart::new(u)))
-                    .wait()
+                (Some(body), Some(url))
             } else {
                 let url = format!("{}/cart/products",
                     &context.config.service_url(Service::Orders));
-
-                context.request::<CartHash>(Method::Get, url, None)
-                    .map (|hash| hash.into_iter()
-                        .map(|(product_id, info)| OrdersCartProduct {
-                            product_id,
-                            quantity: info.quantity,
-                            store_id: info.store_id,
-                            selected: info.selected,
-                            comment: info.comment,
-                    }).collect::<Vec<OrdersCartProduct>>())
-                    .map(|u| Some(Cart::new(u)))
-                    .wait()
+                (None, Some(url))
             }
         } else if context.user.is_some() {
             let url = format!("{}/cart/products",
                 &context.config.service_url(Service::Orders));
+            (None, Some(url))
+        }  else {
+            (None, None)
+        };
 
-            context.request::<CartHash>(Method::Get, url, None)
+        if let Some(url) = url {
+            let products = context.request::<CartHash>(Method::Post, url, body)
                 .map (|hash| hash.into_iter()
                     .map(|(product_id, info)| OrdersCartProduct {
                         product_id,
@@ -275,12 +258,21 @@ graphql_object!(Query: Context |&self| {
                         selected: info.selected,
                         comment: info.comment,
                 }).collect::<Vec<OrdersCartProduct>>())
-                .map(|u| Some(Cart::new(u)))
-                .wait()
-        }  else {
-            Ok (None)
-        }
+                .wait()?;
 
+            let url = format!("{}/{}/cart",
+                context.config.service_url(Service::Stores),
+                Model::Store.to_url());
+
+            let body = serde_json::to_string(&products)?;
+
+            context.request::<Vec<Store>>(Method::Post, url, Some(body))
+                .map(|stores| convert_to_cart(stores, products))
+                .map(Some)
+                .wait()
+        } else {
+            Ok(None)
+        }
     }
 
 });

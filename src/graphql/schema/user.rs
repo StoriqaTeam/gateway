@@ -156,7 +156,7 @@ graphql_object!(User: Context as "User" |&self| {
         context.request::<Option<Store>>(Method::Get, url, None)
             .wait()
     }
-    
+
     field my_store(&executor) -> FieldResult<Option<Store>> as "Fetches store of the current user." {
         let context = executor.context();
 
@@ -341,26 +341,7 @@ graphql_object!(User: Context as "User" |&self| {
     }
 
     field deprecated "use query cart" cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
-        let context = executor.context();
-
-        let id = context.session_id.unwrap_or(self.id);
-
-        let body = serde_json::to_string(&CartMergePayload {user_from: id})?;
-
-        let url = format!("{}/cart/merge",
-            &context.config.service_url(Service::Orders));
-
-        context.request::<CartHash>(Method::Post, url, Some(body))
-            .map (|hash| hash.into_iter()
-                .map(|(product_id, info)| OrdersCartProduct {
-                    product_id,
-                    quantity: info.quantity,
-                    store_id: info.store_id,
-                    selected: info.selected,
-                    comment: info.comment,
-            }).collect::<Vec<OrdersCartProduct>>())
-            .map(|u| Some(Cart::new(u)))
-            .wait()
+        Ok(None)
     }
 
     field wizard_store(&executor) -> FieldResult<Option<WizardStore>> as "Fetches wizard store." {
