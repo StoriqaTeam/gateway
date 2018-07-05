@@ -208,6 +208,10 @@ graphql_object!(Store: Context as "Store" |&self| {
         );
 
         context.request::<Option<Vec<Warehouse>>>(Method::Get, url, None)
+            .map(|warehouses| warehouses.map(|mut w| {
+                w.sort_by(|a, b| a.slug.cmp(&b.slug));
+                w
+            }))
             .wait()
     }
 
