@@ -521,7 +521,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let cp_input = CartProductIncrementPayload { store_id };
         let body: String = serde_json::to_string(&cp_input)?.to_string();
-        let url = format!("{}/cart/products/{}/increment", context.config.service_url(Service::Orders), input.product_id);
+        let url = format!("{}/{}/products/{}/increment", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
         let products = context.request::<CartHash>(Method::Post, url, Some(body))
             .map (|hash| hash.into_iter()
                 .map(|(product_id, info)| OrdersCartProduct {
@@ -548,7 +548,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field setQuantityInCart(&executor, input: SetQuantityInCartInput as "Set product quantity in cart input.") -> FieldResult<Option<Cart>> as "Sets product quantity in cart." {
         let context = executor.context();
-        let url = format!("{}/cart/products/{}/quantity", context.config.service_url(Service::Orders), input.product_id);
+        let url = format!("{}/{}/products/{}/quantity", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
 
         let body = serde_json::to_string(&input)?;
 
@@ -577,7 +577,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<Cart>> as "Select product in cart." {
         let context = executor.context();
-        let url = format!("{}/cart/products/{}/selection", context.config.service_url(Service::Orders), input.product_id);
+        let url = format!("{}/{}/products/{}/selection", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
 
         let body = serde_json::to_string(&input)?;
 
@@ -606,7 +606,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.") -> FieldResult<Option<Cart>> as "product in cart." {
         let context = executor.context();
-        let url = format!("{}/cart/products/{}/comment", context.config.service_url(Service::Orders), input.product_id);
+        let url = format!("{}/{}/products/{}/comment", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
 
         let body = serde_json::to_string(&input)?;
 
@@ -636,7 +636,7 @@ graphql_object!(Mutation: Context |&self| {
     field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Option<CartProductStore>> as "Deletes products from cart." {
         let context = executor.context();
 
-        let url = format!("{}/cart/products/{}", context.config.service_url(Service::Orders), input.product_id);
+        let url = format!("{}/{}/products/{}", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
 
         context.request::<Option<CartProductStore>>(Method::Delete, url, None)
             .wait()
@@ -645,7 +645,7 @@ graphql_object!(Mutation: Context |&self| {
     field clearCart(&executor) -> FieldResult<Mock> as "Clears cart." {
         let context = executor.context();
 
-        let url = format!("{}/cart/clear", context.config.service_url(Service::Orders));
+        let url = format!("{}/{}/clear", context.config.service_url(Service::Orders), Model::Cart.to_url());
 
         context.request::<CartHash>(Method::Post, url, None)
             .wait()?;
@@ -875,8 +875,9 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
 
         let (products, user_id) = if let Some(user) = context.user.clone() {
-            let url = format!("{}/cart/products",
-                &context.config.service_url(Service::Orders));
+            let url = format!("{}/{}/products",
+                &context.config.service_url(Service::Orders),
+                Model::Cart.to_url());
 
             context.request::<CartHash>(Method::Get, url, None)
                 .map (|hash|
@@ -933,8 +934,8 @@ graphql_object!(Mutation: Context |&self| {
         let orders = context.request::<Vec<Order>>(Method::Post, url, Some(body))
             .wait()?;
 
-        let url = format!("{}/cart/products",
-            &context.config.service_url(Service::Orders));
+        let url = format!("{}/{}/products",
+            &context.config.service_url(Service::Orders), Model::Cart.to_url());
 
         let products = context.request::<CartHash>(Method::Get, url, None)
                 .map (|hash| hash.into_iter()

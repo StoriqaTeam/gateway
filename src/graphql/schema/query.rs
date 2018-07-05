@@ -232,17 +232,17 @@ graphql_object!(Query: Context |&self| {
         let (method,body, url) = if let Some(session_id) = context.session_id {
             if context.user.is_some() {
                 let body = serde_json::to_string(&CartMergePayload {user_from: session_id})?;
-                let url = format!("{}/cart/merge",
-                    &context.config.service_url(Service::Orders));
+                let url = format!("{}/{}/merge",
+                    &context.config.service_url(Service::Orders), Model::Cart.to_url(),);
                 (Method::Post, Some(body), url)
             } else {
-                let url = format!("{}/cart/products",
-                    &context.config.service_url(Service::Orders));
+                let url = format!("{}/{}/products",
+                    &context.config.service_url(Service::Orders), Model::Cart.to_url());
                 (Method::Get, None, url)
             }
         } else if context.user.is_some() {
-            let url = format!("{}/cart/products",
-                &context.config.service_url(Service::Orders));
+            let url = format!("{}/{}/products",
+                &context.config.service_url(Service::Orders), Model::Cart.to_url());
             (Method::Get, None, url)
         }  else {
             return Err(FieldError::new(
