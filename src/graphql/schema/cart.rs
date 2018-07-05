@@ -7,11 +7,28 @@ use juniper::ID as GraphqlID;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 
+use super::*;
 use graphql::context::Context;
 use graphql::models::*;
 
 graphql_object!(Cart: Context as "Cart" |&self| {
     description: "Users cart"
+
+    interfaces: [&Node]
+
+    field id(&executor) -> GraphqlID as "Base64 Unique id"{
+        let context = executor.context();
+
+        let id = if let Some(ref user) = context.user {
+            user.user_id
+        } else if let Some(session_id) = context.session_id {
+            session_id
+        }  else {
+            0
+        };
+
+        ID::new(Service::Orders, Model::Cart, id).to_string().into()
+    }
 
     field stores(&executor,
         first = None : Option<i32> as "First edges", 

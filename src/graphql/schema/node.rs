@@ -19,6 +19,7 @@ pub enum Node {
     Category(Category),
     SearchCategory(SearchCategory),
     Attribute(Attribute),
+    Cart,
     CartProduct(CartProduct),
     CartStore(CartStore),
     Warehouse(Box<Warehouse>),
@@ -42,6 +43,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::Attribute(Attribute { ref id, .. })  => ID::new(Service::Stores, Model::Attribute, *id).to_string().into(),
             Node::CartProduct(CartProduct { ref id, .. })  => ID::new(Service::Orders, Model::CartProduct, *id).to_string().into(),
             Node::CartStore(CartStore { ref id, .. })  => ID::new(Service::Orders, Model::CartStore, *id).to_string().into(),
+            Node::Cart => ID::new(Service::Orders, Model::Cart, 0).to_string().into(),
             Node::Warehouse(ref w)  => w.id.clone().into(),
             Node::Order(ref o)  => o.id.clone().into(),
         }
@@ -60,6 +62,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &CartStore => match *self { Node::CartStore(ref h) => Some(h), _ => None },
         &Warehouse => match *self { Node::Warehouse(ref h) => Some(&**h), _ => None },
         &Order => match *self { Node::Order(ref h) => Some(&**h), _ => None },
+        &Cart => None::<&Cart>,
     }
 });
 
