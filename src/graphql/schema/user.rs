@@ -475,14 +475,14 @@ graphql_object!(User: Context as "User" |&self| {
     }
 
 
-    field warehouse(&executor, id: String as "Id of a warehouse.") -> FieldResult<Option<Warehouse>> as "Fetches warehouse by id." {
+    field warehouse(&executor, slug: String as "Slug of a warehouse.") -> FieldResult<Option<Warehouse>> as "Fetches warehouse by slug." {
         let context = executor.context();
 
         let url = format!(
-            "{}/{}/by-id/{}",
+            "{}/{}/by-slug/{}",
             &context.config.service_url(Service::Warehouses),
             Model::Warehouse.to_url(),
-            id
+            slug
         );
 
         context.request::<Option<Warehouse>>(Method::Get, url, None)
