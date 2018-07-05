@@ -172,6 +172,18 @@ graphql_object!(Order: Context as "Order" |&self| {
     }
 });
 
+graphql_object!(CreateOrders: Context as "CreateOrders" |&self| {
+    description:"Create orders object"
+
+    field orders() -> &[Order] {
+        &self.orders
+    }
+
+    field cart() -> &Cart {
+        &self.cart
+    }
+});
+
 graphql_object!(Connection<Order, PageInfo>: Context as "OrdersConnection" |&self| {
     description:"Order Connection"
 

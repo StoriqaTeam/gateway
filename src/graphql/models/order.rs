@@ -243,3 +243,15 @@ impl From<SearchOrderOptionInput> for SearchOrderOption {
         }
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct CreateOrders {
+    pub orders: Vec<Order>,
+    pub cart: Cart,
+}
+
+impl CreateOrders {
+    pub fn new(orders: Vec<Order>, cart: Cart) -> Self {
+        Self { orders, cart }
+    }
+}

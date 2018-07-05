@@ -871,7 +871,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createOrders(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<Vec<Order>> as "Creates orders from cart." {
+    field createOrders(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<CreateOrders> as "Creates orders from cart." {
         let context = executor.context();
 
         let (products, user_id) = if let Some(user) = context.user.clone() {
@@ -930,8 +930,35 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&create_order)?.to_string();
 
-        context.request::<Vec<Order>>(Method::Post, url, Some(body))
-            .wait()
+        let orders = context.request::<Vec<Order>>(Method::Post, url, Some(body))
+            .wait()?;
+
+        let url = format!("{}/cart/products",
+            &context.config.service_url(Service::Orders));
+
+        let products = context.request::<CartHash>(Method::Get, url, None)
+                .map (|hash| hash.into_iter()
+                    .map(|(product_id, info)| OrdersCartProduct {
+                        product_id,
+                        quantity: info.quantity,
+                        store_id: info.store_id,
+                        selected: info.selected,
+                        comment: info.comment,
+                }).collect::<Vec<OrdersCartProduct>>())
+                .wait()?;
+
+            let url = format!("{}/{}/cart",
+                context.config.service_url(Service::Stores),
+                Model::Store.to_url());
+
+            let body = serde_json::to_string(&products)?;
+
+            let cart = context.request::<Vec<Store>>(Method::Post, url, Some(body))
+                .map(|stores| convert_to_cart(stores, products))
+                .wait()?;
+
+        Ok(CreateOrders::new (orders, cart))
+
     }
 
     field setOrderStatusDelivery(&executor, input: OrderStatusDeliveryInput as "Order Status Delivery input.") -> FieldResult<Option<Order>>  as "Set Order Status Delivery."{
