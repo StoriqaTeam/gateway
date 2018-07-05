@@ -633,23 +633,41 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Option<CartProductStore>> as "Deletes products from cart." {
+    field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Cart> as "Deletes products from cart." {
         let context = executor.context();
 
         let url = format!("{}/{}/products/{}", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
 
-        context.request::<Option<CartProductStore>>(Method::Delete, url, None)
+        let products = context.request::<CartHash>(Method::Delete, url, None)
+            .map (|hash| hash.into_iter()
+                .map(|(product_id, info)| OrdersCartProduct {
+                    product_id,
+                    quantity: info.quantity,
+                    store_id: info.store_id,
+                    selected: info.selected,
+                    comment: info.comment,
+            }).collect::<Vec<OrdersCartProduct>>())
+            .wait()?;
+
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
+
+        let body = serde_json::to_string(&products)?;
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores| convert_to_cart(stores, products))
             .wait()
     }
 
-    field clearCart(&executor) -> FieldResult<Mock> as "Clears cart." {
+    field clearCart(&executor) -> FieldResult<Cart> as "Clears cart." {
         let context = executor.context();
 
         let url = format!("{}/{}/clear", context.config.service_url(Service::Orders), Model::Cart.to_url());
 
         context.request::<CartHash>(Method::Post, url, None)
-            .wait()?;
-        Ok(Mock{})
+            .map(|_| convert_to_cart(vec![], vec![]))
+            .wait()
     }
 
     field updateCurrencyExchange(&executor, input: NewCurrencyExchangeInput as "New currency exchange input.") -> FieldResult<CurrencyExchange> as "Updates currencies exchange." {
