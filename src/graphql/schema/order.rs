@@ -185,7 +185,7 @@ graphql_object!(CreateOrders: Context as "CreateOrders" |&self| {
     }
 
     field billing_url() -> &str {
-        "http://payments.tugush.com/" 
+        &self.billing_url
     }
 });
 

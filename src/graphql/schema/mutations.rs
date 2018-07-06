@@ -942,6 +942,7 @@ graphql_object!(Mutation: Context |&self| {
             address: input.address_full,
             receiver_name: input.receiver_name,
             prices: products_with_prices,
+            currency_id: input.currency_id,
         };
 
         let url = format!("{}/{}/create_from_cart",
@@ -950,7 +951,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let body: String = serde_json::to_string(&create_order)?.to_string();
 
-        let orders = context.request::<Vec<Order>>(Method::Post, url, Some(body))
+        let orders = context.request::<BillingOrders>(Method::Post, url, Some(body))
             .wait()?;
 
         let url = format!("{}/{}/products",

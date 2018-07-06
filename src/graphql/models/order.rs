@@ -37,6 +37,8 @@ pub struct CreateOrderInput {
     pub address_full: AddressInput,
     #[graphql(description = "Receiver name")]
     pub receiver_name: String,
+    #[graphql(description = "Currency id that will be paid")]
+    pub currency_id: i32,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
@@ -46,6 +48,13 @@ pub struct CreateOrder {
     pub address: AddressInput,
     pub receiver_name: String,
     pub prices: CartProductWithPriceHash,
+    pub currency_id: i32,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct BillingOrders {
+    pub orders: Vec<Order>,
+    pub url: String,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -215,10 +224,15 @@ impl From<SearchOrderOptionInput> for SearchOrderOption {
 pub struct CreateOrders {
     pub orders: Vec<Order>,
     pub cart: Cart,
+    pub billing_url: String,
 }
 
 impl CreateOrders {
-    pub fn new(orders: Vec<Order>, cart: Cart) -> Self {
-        Self { orders, cart }
+    pub fn new(billing: BillingOrders, cart: Cart) -> Self {
+        Self {
+            cart,
+            orders: billing.orders,
+            billing_url: billing.url,
+        }
     }
 }
