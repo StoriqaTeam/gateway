@@ -105,7 +105,18 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
         let body = serde_json::to_string(&search_term)?;
 
         context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
-            .map(|products| products.into_iter().map(|p| p.id).collect())
+            .map(|base_products|
+                base_products
+                    .into_iter()
+                    .flat_map(|base_product|
+                        base_product
+                            .variants
+                            .unwrap_or_default()
+                            .into_iter()
+                            .map(|mut variant| variant.id)
+                    )
+                    .collect()
+            )
             .wait()
             .and_then (|products: Vec<i32>| {
                 products.into_iter().map(|product_id| {
