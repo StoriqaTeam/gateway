@@ -3,8 +3,8 @@
 use futures::Future;
 use hyper::Method;
 use juniper;
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -103,6 +103,61 @@ graphql_object!(Product: Context as "Product" |&self| {
                 })
             })
             .map(Some)
+    }
+
+    field stocks(&executor) -> FieldResult<Vec<Stock>> as "Find product on warehouses." {
+
+        let context = executor.context();
+
+       let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            self.base_product_id.to_string()
+        );
+
+        let store_id = context.request::<Option<BaseProduct>>(Method::Get, url, None)
+            .wait()?
+            .ok_or_else(|| FieldError::new(
+                        "Base product not found",
+                        graphql_value!({ "code": 400, "details": { "base product for this product not found" }}),
+                    ))
+            .map(|base_product| base_product.store_id)?;
+
+        let url = format!(
+            "{}/{}/by-store-id/{}",
+            &context.config.service_url(Service::Warehouses),
+            Model::Warehouse.to_url(),
+            store_id
+        );
+
+        context.request::<Vec<Warehouse>>(Method::Get, url, None)
+            .wait()
+            .and_then (|warehouses: Vec<Warehouse>| {
+                warehouses.into_iter().map(|warehouse| {
+                    let url = format!("{}/{}/by-id/{}/{}/{}",
+                        context.config.service_url(Service::Warehouses),
+                        Model::Warehouse.to_url(),
+                        warehouse.id.clone(),
+                        Model::Product.to_url(),
+                        self.id,
+                    );
+
+                    context.request::<Option<Stock>>(Method::Get, url, None)
+                        .wait()
+                        .map (|stock| {
+                            if let Some(stock) = stock {
+                                stock
+                            } else {
+                                Stock {
+                                    product_id: self.id.clone(),
+                                    warehouse_id: warehouse.id.clone(),
+                                    quantity: 0,
+                                }
+                            }
+                        })
+                }).collect::<FieldResult<Vec<Stock>>>()
+            })
     }
 
 });
