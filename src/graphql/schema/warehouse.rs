@@ -59,6 +59,8 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
     }
 
     field products(&executor,
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Base64 Id of base product",
         current_page : i32 as "Current page",
         items_count : i32 as "Items count", 
         search_term : Option<SearchProductInput> as "Search pattern") 
@@ -148,15 +150,13 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                     let body = serde_json::to_string(&search_term)?;
 
                     let url = format!("{}/{}/search/filters/count",
-                                context.config.service_url(Service::Stores),
-                                Model::Store.to_url(),
-                                );
+                        context.config.service_url(Service::Stores),
+                        Model::BaseProduct.to_url(),
+                        );
 
                     let total_items = context.request::<i32>(Method::Post, url, Some(body))
                         .wait()?;
-
-                    let total_pages = total_items / items_count + 1;
-
+                    let total_pages = (total_items as f32 / items_count as f32).ceil() as i32;
                     let search_filters = ProductsSearchFilters::new(search_term);
                     let page_info = PageInfoWarehouseProductSearch {
                         total_pages,
