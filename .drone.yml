@@ -12,6 +12,9 @@ pipeline:
       - pull_request
       - push
       - tag
+      branch:
+      - master
+      - release
 
 ###
 # Test PR
@@ -36,6 +39,9 @@ pipeline:
     - cargo test
     when:
       event: pull_request
+      branch:
+      - master
+      - release
 
 ###
 # Build & deploy to nightly / stage
@@ -99,7 +105,7 @@ pipeline:
     - source: k8s_stage_addr
       target: k8s_addr
     when:
-      branch: release*
+      branch: release
       event: push
 
   ###
@@ -145,7 +151,7 @@ pipeline:
     - source: k8s_prod_addr
       target: k8s_addr
     when:
-      branch: release*
+      branch: release
       event: deployment
       environment: production
 
@@ -172,12 +178,13 @@ pipeline:
     icon_url: https://drone.io/favicon.ico
     username: cd.stq.cloud
     template: >
-      {{#success build.status}}
-        Build {{build.number}} for {{repo.name}} branch {{build.branch}} succeeded.
-      {{else}}
         Build {{build.number}} for {{repo.name}} branch {{build.branch}} failed.
-      {{/success}}
     when:
-      event: [ push, deployment, tag ]
-      branch: [ master, release ]
-      status: [ failure, success ]
+      event:
+      - push
+      - deployment
+      - tag
+      branch: 
+      - master
+      - release
+      status: failure
