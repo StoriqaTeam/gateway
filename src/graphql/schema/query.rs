@@ -161,6 +161,10 @@ graphql_object!(Query: Context |&self| {
         Currency::as_vec()
     }
 
+    field order_statuses(&executor) -> Vec<OrderStatus> as "Fetches order statuses." {
+        OrderStatus::as_vec()
+    }
+
     field categories(&executor) -> FieldResult<Option<Category>> as "Fetches categories tree." {
         let context = executor.context();
         let url = format!("{}/{}",
