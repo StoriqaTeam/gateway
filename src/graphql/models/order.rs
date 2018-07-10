@@ -197,7 +197,7 @@ pub struct OrderHistoryItem {
 #[graphql(description = "Search order option input object")]
 pub struct SearchOrderOptionInput {
     #[graphql(description = "Slug")]
-    pub slug: Option<String>,
+    pub slug: Option<i32>,
     #[graphql(description = "Customer email")]
     pub email: Option<String>,
     #[graphql(description = "Min Date")]
@@ -212,7 +212,7 @@ pub struct SearchOrderOptionInput {
 
 #[derive(Serialize, Clone, Debug, Default)]
 pub struct SearchOrder {
-    pub slug: Option<String>,
+    pub slug: Option<i32>,
     pub customer: Option<i32>,
     pub store: Option<i32>,
     pub created_from: Option<DateTime<Utc>>,
@@ -233,7 +233,7 @@ pub struct PageInfoOrdersSearch {
 #[graphql(description = "Search order option object")]
 pub struct SearchOrderOption {
     #[graphql(description = "Slug")]
-    pub slug: Option<String>,
+    pub slug: Option<i32>,
     #[graphql(description = "Customer email")]
     pub email: Option<String>,
     #[graphql(description = "Min Date")]
