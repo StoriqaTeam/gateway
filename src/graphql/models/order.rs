@@ -38,6 +38,21 @@ pub enum OrderStatus {
     Complete,
 }
 
+impl OrderStatus {
+    pub fn as_vec() -> Vec<OrderStatus> {
+        vec![
+            OrderStatus::PaimentAwaited,
+            OrderStatus::Paid,
+            OrderStatus::InProcessing,
+            OrderStatus::Cancelled,
+            OrderStatus::Sent,
+            OrderStatus::Delivered,
+            OrderStatus::Received,
+            OrderStatus::Complete,
+        ]
+    }
+}
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Order {
     pub id: String,
