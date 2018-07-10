@@ -217,7 +217,7 @@ graphql_object!(Query: Context |&self| {
         let context = executor.context();
 
         let url = format!(
-            "{}/{}/{}",
+            "{}/{}/{}/update_view",
             &context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             id.to_string()
