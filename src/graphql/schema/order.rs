@@ -182,6 +182,10 @@ graphql_object!(CreateOrders: Context as "CreateOrders" |&self| {
     field cart() -> &Cart {
         &self.cart
     }
+
+    field billing_url() -> &str { 
+        "http://payments.tugush.com/" 
+    } 
 });
 
 graphql_object!(Connection<Order, PageInfo>: Context as "OrdersConnection" |&self| {
