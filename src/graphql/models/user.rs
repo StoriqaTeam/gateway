@@ -1,14 +1,17 @@
+use std::time::SystemTime;
+
 use chrono::NaiveDate;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
-use std::time::SystemTime;
+
+use stq_types::UserId;
 
 use super::Gender;
 use super::Provider;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct User {
-    pub id: i32,
+    pub id: UserId,
     pub email: String,
     pub is_active: bool,
     pub phone: Option<String>,

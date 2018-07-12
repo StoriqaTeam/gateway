@@ -1,7 +1,7 @@
 //! EAV model attributes
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
-use stq_static_resources::{Translation, TranslationInput};
+use stq_static_resources::{AttributeType, Translation, TranslationInput};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Attribute {
@@ -129,15 +129,6 @@ pub struct AttrValue {
     pub attr_id: i32,
     pub value: String,
     pub meta_field: Option<String>,
-}
-
-#[derive(GraphQLEnum, Deserialize, Serialize, Clone, Debug, PartialEq)]
-#[graphql(name = "AttributeType", description = "Attribute Type")]
-pub enum AttributeType {
-    #[graphql(description = "String type. Can represent enums, bool, int and strings.")]
-    Str,
-    #[graphql(description = "Float type.")]
-    Float,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]

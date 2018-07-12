@@ -4,8 +4,10 @@ use std::cmp;
 use std::str::FromStr;
 
 use juniper::ID as GraphqlID;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_types::UserId;
 
 use super::*;
 use graphql::context::Context;
@@ -24,10 +26,10 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         } else if let Some(session_id) = context.session_id {
             session_id
         }  else {
-            0
+            UserId::default()
         };
 
-        ID::new(Service::Orders, Model::Cart, id).to_string().into()
+        ID::new(Service::Orders, Model::Cart, id.0).to_string().into()
     }
 
     field stores(&executor,
@@ -116,7 +118,7 @@ graphql_object!(CartProductStore: Context as "CartProductStore" |&self| {
     }
 
     field store_id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::CartStore, self.store_id).to_string().into()
+        ID::new(Service::Stores, Model::CartStore, self.store_id.0).to_string().into()
     }
 
 });

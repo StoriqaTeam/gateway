@@ -1,6 +1,8 @@
+use stq_types::WarehouseId;
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Stock {
-    pub warehouse_id: String,
+    pub warehouse_id: WarehouseId,
     pub product_id: i32,
     pub quantity: i32,
 }

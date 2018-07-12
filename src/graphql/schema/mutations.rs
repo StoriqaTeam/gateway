@@ -13,6 +13,7 @@ use std::time::SystemTime;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_types::StoreId;
 
 pub struct Mutation;
 
@@ -516,7 +517,7 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
             input.product_id);
-        let store_id = context.request::<i32>(Method::Get, url, None)
+        let store_id = context.request::<StoreId>(Method::Get, url, None)
             .wait()?;
 
         let cp_input = CartProductIncrementPayload { store_id };

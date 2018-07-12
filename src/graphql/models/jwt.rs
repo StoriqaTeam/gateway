@@ -3,6 +3,8 @@ use std::fmt::Display;
 
 use juniper::Value;
 
+use stq_types::UserId;
+
 use super::Provider;
 
 #[derive(GraphQLObject, Deserialize, Debug)]
@@ -29,7 +31,7 @@ graphql_scalar!(UserStatus {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum UserStatus {
-    New(i32),
+    New(UserId),
     Exists,
 }
 
@@ -64,7 +66,7 @@ pub struct CreateJWTProviderInput {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct JWTPayload {
-    pub user_id: i32,
+    pub user_id: UserId,
     pub exp: i64,
     pub provider: Provider,
 }

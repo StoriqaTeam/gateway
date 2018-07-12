@@ -17,11 +17,11 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::CartStore, self.id).to_string().into()
+        ID::new(Service::Stores, Model::CartStore, self.id.0).to_string().into()
     }
 
     field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+        &self.id.0
     }
 
     field name() -> &[Translation] as "Full Name" {

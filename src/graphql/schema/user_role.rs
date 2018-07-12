@@ -6,7 +6,7 @@ graphql_object!(UserRoles: Context as "UserRoles" |&self| {
     description: "User Roles info."
 
     field user_id() -> &i32 as "User id" {
-        &self.user_id
+        &self.user_id.0
     }
 
     field roles() -> &[Role] as "User Roles" {

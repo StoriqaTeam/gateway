@@ -1,10 +1,13 @@
-use super::*;
 use juniper::ID as GraphqlID;
+
+use stq_types::UserId;
+
+use super::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UserDeliveryAddress {
     pub id: i32,
-    pub user_id: i32,
+    pub user_id: UserId,
     pub administrative_area_level_1: Option<String>,
     pub administrative_area_level_2: Option<String>,
     pub country: String,

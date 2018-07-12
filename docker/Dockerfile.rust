@@ -1,6 +1,3 @@
-FROM rust:latest
-
-# Install cargo-watch
-RUN cargo install cargo-watch --force
+FROM rust:1.26
 
 VOLUME /usr/local/cargo

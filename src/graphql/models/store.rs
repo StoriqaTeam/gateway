@@ -1,12 +1,13 @@
 use juniper::ID as GraphqlID;
 
-use stq_static_resources::{Language, Translation, TranslationInput};
+use stq_static_resources::{Language, ModerationStatus, Translation, TranslationInput};
+use stq_types::StoreId;
 
 use super::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Store {
-    pub id: i32,
+    pub id: StoreId,
     pub name: Vec<Translation>,
     pub is_active: bool,
     pub short_description: Vec<Translation>,
@@ -24,7 +25,7 @@ pub struct Store {
     pub slogan: Option<String>,
     pub rating: f64,
     pub country: Option<String>,
-    pub status: Status,
+    pub status: ModerationStatus,
     pub administrative_area_level_1: Option<String>,
     pub administrative_area_level_2: Option<String>,
     pub locality: Option<String>,
@@ -74,7 +75,7 @@ pub struct UpdateStoreInput {
     #[graphql(description = "Rating")]
     pub rating: Option<f64>,
     #[graphql(description = "Status.")]
-    pub status: Option<Status>,
+    pub status: Option<ModerationStatus>,
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,

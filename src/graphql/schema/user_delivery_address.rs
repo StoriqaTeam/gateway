@@ -22,7 +22,7 @@ graphql_object!(UserDeliveryAddress: Context as "UserDeliveryAddress" |&self| {
     }
 
     field user_id() -> &i32 as "user id"{
-        &self.user_id
+        &self.user_id.0
     }
 
     field address() -> Address as "address" {

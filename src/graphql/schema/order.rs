@@ -9,6 +9,7 @@ use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::OrderState;
 
 use super::*;
 use graphql::context::Context;
@@ -23,12 +24,12 @@ graphql_object!(Order: Context as "Order" |&self| {
         self.id.clone().into()
     }
 
-    field state() -> &OrderStatus as "Order Status"{
+    field state() -> &OrderState as "Order State"{
         &self.state
     }
 
     field customer_id() -> &i32 as "Customer int id"{
-        &self.customer_id
+        &self.customer_id.0
     }
 
     field customer(&executor) -> FieldResult<Option<User>> as "Customer" {
@@ -58,7 +59,7 @@ graphql_object!(Order: Context as "Order" |&self| {
     }
 
     field store_id() -> &i32 as "Store int id"{
-        &self.store_id
+        &self.store_id.0
     }
 
     field store(&executor) -> FieldResult<Option<Store>> as "Store" {
@@ -160,14 +161,14 @@ graphql_object!(Order: Context as "Order" |&self| {
             .map(Some)
     }
 
-    field allowed_statuses(&executor) -> FieldResult<Vec<OrderStatus>> as "Allowed statuses" {
+    field allowed_statuses(&executor) -> FieldResult<Vec<OrderState>> as "Allowed statuses" {
         let context = executor.context();
         let url = format!("{}/{}/{}/allowed_statuses",
             context.config.service_url(Service::Orders),
             Model::Order.to_url(),
             self.id);
 
-        context.request::<Vec<OrderStatus>>(Method::Get, url, None)
+        context.request::<Vec<OrderState>>(Method::Get, url, None)
             .wait()
     }
 });
@@ -183,9 +184,9 @@ graphql_object!(CreateOrders: Context as "CreateOrders" |&self| {
         &self.cart
     }
 
-    field billing_url() -> &str { 
+    field billing_url() -> &str {
         "http://payments.tugush.com/" 
-    } 
+    }
 });
 
 graphql_object!(Connection<Order, PageInfo>: Context as "OrdersConnection" |&self| {

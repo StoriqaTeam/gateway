@@ -34,8 +34,8 @@ graphql_object!(Product: Context as "Product" |&self| {
         &self.discount
     }
 
-    field currency_id() -> &Option<i32> as "Currency id" {
-        &self.currency_id
+    field currency_id() -> Option<i32> as "Currency id" {
+        self.currency_id.map(|c| c.0)
     }
 
     field photo_main() -> &Option<String> as "Photo main" {

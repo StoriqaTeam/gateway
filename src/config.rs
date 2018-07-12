@@ -84,6 +84,7 @@ impl Config {
             StqService::Orders => self.orders_microservice.url.clone(),
             StqService::Warehouses => self.warehouses_microservice.url.clone(),
             StqService::Notifications => self.notifications_microservice.url.clone(),
+            StqService::Billing => self.billing_microservice.url.clone(),
         }
     }
 }

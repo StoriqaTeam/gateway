@@ -1,23 +1,24 @@
 use super::*;
 use juniper::ID as GraphqlID;
-use stq_static_resources::{Translation, TranslationInput};
+use stq_static_resources::{ModerationStatus, Translation, TranslationInput};
+use stq_types::{CurrencyId, StoreId};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct BaseProduct {
     pub id: i32,
     pub is_active: bool,
-    pub store_id: i32,
+    pub store_id: StoreId,
     pub name: Vec<Translation>,
     pub short_description: Vec<Translation>,
     pub long_description: Option<Vec<Translation>>,
     pub seo_title: Option<Vec<Translation>>,
     pub seo_description: Option<Vec<Translation>>,
-    pub currency_id: i32,
+    pub currency_id: CurrencyId,
     pub category_id: i32,
     pub views: i32,
     pub rating: f64,
     pub slug: String,
-    pub status: Status,
+    pub status: ModerationStatus,
     pub variants: Option<Vec<Product>>,
 }
 
@@ -49,7 +50,7 @@ pub struct UpdateBaseProductInput {
     #[graphql(description = "Slug.")]
     pub slug: Option<String>,
     #[graphql(description = "Status.")]
-    pub status: Option<Status>,
+    pub status: Option<ModerationStatus>,
 }
 
 impl UpdateBaseProductInput {

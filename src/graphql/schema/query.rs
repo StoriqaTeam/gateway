@@ -10,7 +10,7 @@ use serde_json;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::{Currency, CurrencyGraphQl};
-use stq_static_resources::{Language, LanguageGraphQl};
+use stq_static_resources::{Language, LanguageGraphQl, OrderState};
 
 use super::*;
 use graphql::context::Context;
@@ -149,6 +149,12 @@ graphql_object!(Query: Context |&self| {
                         graphql_value!({ "internal_error": "Unknown model" })
                     ))
                 }
+                (&Service::Billing, _) => {
+                    Err(FieldError::new(
+                        "Could not get model from billing microservice.",
+                        graphql_value!({ "internal_error": "Unknown model" })
+                    ))
+                }
             }
         }
     }
@@ -161,8 +167,8 @@ graphql_object!(Query: Context |&self| {
         Currency::as_vec()
     }
 
-    field order_statuses(&executor) -> Vec<OrderStatus> as "Fetches order statuses." {
-        OrderStatus::as_vec()
+    field order_statuses(&executor) -> Vec<OrderState> as "Fetches order statuses." {
+        OrderState::as_vec()
     }
 
     field categories(&executor) -> FieldResult<Option<Category>> as "Fetches categories tree." {

@@ -35,17 +35,17 @@ graphql_interface!(Node: Context as "Node" |&self| {
     field id() -> GraphqlID {
         match *self {
             Node::Query(_)  => QUERY_NODE_ID.to_string().into(),
-            Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::User, *id).to_string().into(),
-            Node::Store(ref s)  => ID::new(Service::Stores, Model::Store, s.id).to_string().into(),
+            Node::User(User { ref id, .. })  => ID::new(Service::Users, Model::User, id.0).to_string().into(),
+            Node::Store(ref s)  => ID::new(Service::Stores, Model::Store, s.id.0).to_string().into(),
             Node::Product(Product { ref id, .. })  => ID::new(Service::Stores, Model::Product, *id).to_string().into(),
             Node::BaseProduct(BaseProduct { ref id, .. })  => ID::new(Service::Stores, Model::BaseProduct, *id).to_string().into(),
             Node::Category(Category { ref id, .. })  => ID::new(Service::Stores, Model::Category, *id).to_string().into(),
             Node::SearchCategory(ref c)  => ID::new(Service::Stores, Model::SearchCategory, c.0.id).to_string().into(),
             Node::Attribute(Attribute { ref id, .. })  => ID::new(Service::Stores, Model::Attribute, *id).to_string().into(),
             Node::CartProduct(CartProduct { ref id, .. })  => ID::new(Service::Orders, Model::CartProduct, *id).to_string().into(),
-            Node::CartStore(CartStore { ref id, .. })  => ID::new(Service::Orders, Model::CartStore, *id).to_string().into(),
+            Node::CartStore(CartStore { ref id, .. })  => ID::new(Service::Orders, Model::CartStore, id.0).to_string().into(),
             Node::Cart => ID::new(Service::Orders, Model::Cart, 0).to_string().into(),
-            Node::Warehouse(ref w)  => w.id.clone().into(),
+            Node::Warehouse(ref w)  => w.id.clone().to_string().into(),
             Node::Order(ref o)  => o.id.clone().into(),
             Node::Stock(Stock {ref product_id, ref warehouse_id,..})  => format!("{}{}", warehouse_id, product_id).into(),
         }

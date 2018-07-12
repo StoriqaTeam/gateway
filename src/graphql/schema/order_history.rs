@@ -5,6 +5,7 @@ use juniper::FieldResult;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::OrderState;
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -12,7 +13,7 @@ use graphql::models::*;
 graphql_object!(OrderHistoryItem: Context as "OrderHistoryItem" |&self| {
     description: "Order history item info."
 
-    field state() -> &OrderStatus as "Order Status"{
+    field state() -> &OrderState as "Order State"{
         &self.state
     }
 
@@ -21,7 +22,7 @@ graphql_object!(OrderHistoryItem: Context as "OrderHistoryItem" |&self| {
     }
 
     field committer() -> &i32 as "User int id"{
-        &self.committer
+        &self.committer.0
     }
 
     field user(&executor) -> FieldResult<Option<User>> as "User" {

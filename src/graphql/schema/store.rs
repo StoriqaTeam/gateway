@@ -12,7 +12,7 @@ use serde_json;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::{Language, Translation};
+use stq_static_resources::{Language, ModerationStatus, Translation};
 
 use super::*;
 use graphql::context::Context;
@@ -24,11 +24,11 @@ graphql_object!(Store: Context as "Store" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::Store, self.id).to_string().into()
+        ID::new(Service::Stores, Model::Store, self.id.0).to_string().into()
     }
 
     field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+        &self.id.0
     }
 
     field name() -> &[Translation] as "Full Name" {
@@ -91,7 +91,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         &self.rating
     }
 
-    field status() -> &Status as "Status" {
+    field status() -> &ModerationStatus as "Moderation Status" {
         &self.status
     }
 
