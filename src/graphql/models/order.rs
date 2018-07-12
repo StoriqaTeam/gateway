@@ -1,69 +1,21 @@
 use chrono::prelude::*;
 
+use stq_static_resources::OrderState;
+use stq_types::{StoreId, UserId};
+
 use super::*;
-
-#[derive(GraphQLEnum, Deserialize, Serialize, Debug, Clone, PartialEq)]
-#[graphql(name = "OrderStatus", description = "Current order status")]
-pub enum OrderStatus {
-    #[graphql(description = "State set on order creation.")]
-    #[serde(rename = "payment_awaited")]
-    PaimentAwaited,
-
-    #[graphql(description = "Set after payment by request of billing")]
-    #[serde(rename = "paid")]
-    Paid,
-
-    #[graphql(description = "Order is being processed by store management")]
-    #[serde(rename = "in_processing")]
-    InProcessing,
-
-    #[graphql(description = "Can be cancelled by any party before order being sent.")]
-    #[serde(rename = "cancelled")]
-    Cancelled,
-
-    #[graphql(description = "Wares are on their way to the customer. Tracking ID must be set.")]
-    #[serde(rename = "sent")]
-    Sent,
-
-    #[graphql(description = "Wares are delivered to the customer.")]
-    #[serde(rename = "delivered")]
-    Delivered,
-
-    #[graphql(description = "Wares are received by the customer.")]
-    #[serde(rename = "received")]
-    Received,
-
-    #[graphql(description = "Order is complete.")]
-    #[serde(rename = "complete")]
-    Complete,
-}
-
-impl OrderStatus {
-    pub fn as_vec() -> Vec<OrderStatus> {
-        vec![
-            OrderStatus::PaimentAwaited,
-            OrderStatus::Paid,
-            OrderStatus::InProcessing,
-            OrderStatus::Cancelled,
-            OrderStatus::Sent,
-            OrderStatus::Delivered,
-            OrderStatus::Received,
-            OrderStatus::Complete,
-        ]
-    }
-}
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Order {
     pub id: String,
-    pub state: OrderStatus,
+    pub state: OrderState,
     #[serde(rename = "customer")]
-    pub customer_id: i32,
+    pub customer_id: UserId,
     #[serde(rename = "product")]
     pub product_id: i32,
     pub quantity: i32,
     #[serde(rename = "store")]
-    pub store_id: i32,
+    pub store_id: StoreId,
     pub price: f64,
     pub receiver_name: String,
     pub slug: i32,
@@ -89,7 +41,7 @@ pub struct CreateOrderInput {
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct CreateOrder {
-    pub customer_id: i32,
+    pub customer_id: UserId,
     #[serde(flatten)]
     pub address: AddressInput,
     pub receiver_name: String,
@@ -113,7 +65,7 @@ pub struct OrderStatusDeliveryInput {
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct OrderStatusDelivery {
-    pub state: OrderStatus,
+    pub state: OrderState,
     pub track_id: Option<String>,
     pub comment: Option<String>,
 }
@@ -121,7 +73,7 @@ pub struct OrderStatusDelivery {
 impl From<OrderStatusDeliveryInput> for OrderStatusDelivery {
     fn from(order: OrderStatusDeliveryInput) -> Self {
         Self {
-            state: OrderStatus::Sent,
+            state: OrderState::Sent,
             track_id: order.track_id,
             comment: order.comment,
         }
@@ -143,14 +95,14 @@ pub struct OrderStatusCanceledInput {
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct OrderStatusCanceled {
-    pub state: OrderStatus,
+    pub state: OrderState,
     pub comment: Option<String>,
 }
 
 impl From<OrderStatusCanceledInput> for OrderStatusCanceled {
     fn from(order: OrderStatusCanceledInput) -> Self {
         Self {
-            state: OrderStatus::Cancelled,
+            state: OrderState::Cancelled,
             comment: order.comment,
         }
     }
@@ -171,14 +123,14 @@ pub struct OrderStatusCompleteInput {
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct OrderStatusComplete {
-    pub state: OrderStatus,
+    pub state: OrderState,
     pub comment: Option<String>,
 }
 
 impl From<OrderStatusCompleteInput> for OrderStatusComplete {
     fn from(order: OrderStatusCompleteInput) -> Self {
         Self {
-            state: OrderStatus::Complete,
+            state: OrderState::Complete,
             comment: order.comment,
         }
     }
@@ -187,9 +139,9 @@ impl From<OrderStatusCompleteInput> for OrderStatusComplete {
 #[derive(Deserialize, Debug, Clone)]
 pub struct OrderHistoryItem {
     pub parent: String,
-    pub committer: i32,
+    pub committer: UserId,
     pub committed_at: DateTime<Utc>,
-    pub state: OrderStatus,
+    pub state: OrderState,
     pub comment: Option<String>,
 }
 
@@ -207,18 +159,18 @@ pub struct SearchOrderOptionInput {
     #[graphql(description = "Payment status")]
     pub payment_status: Option<bool>,
     #[graphql(description = "Order status")]
-    pub order_status: Option<OrderStatus>,
+    pub order_status: Option<OrderState>,
 }
 
 #[derive(Serialize, Clone, Debug, Default)]
 pub struct SearchOrder {
     pub slug: Option<i32>,
-    pub customer: Option<i32>,
-    pub store: Option<i32>,
+    pub customer: Option<UserId>,
+    pub store: Option<StoreId>,
     pub created_from: Option<DateTime<Utc>>,
     pub created_to: Option<DateTime<Utc>>,
     pub payment_status: Option<bool>,
-    pub state: Option<OrderStatus>,
+    pub state: Option<OrderState>,
 }
 
 #[derive(Clone, Debug)]
@@ -243,7 +195,7 @@ pub struct SearchOrderOption {
     #[graphql(description = "Payment status")]
     pub payment_status: Option<bool>,
     #[graphql(description = "Order status")]
-    pub order_status: Option<OrderStatus>,
+    pub order_status: Option<OrderState>,
 }
 
 impl From<SearchOrderOptionInput> for SearchOrderOption {

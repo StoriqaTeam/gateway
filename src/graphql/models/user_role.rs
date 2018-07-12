@@ -1,3 +1,5 @@
+use stq_types::UserId;
+
 #[derive(GraphQLEnum, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[graphql(description = "User roles enum")]
 pub enum Role {
@@ -31,6 +33,6 @@ pub struct OldUserRoleInput {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UserRoles {
-    pub user_id: i32,
+    pub user_id: UserId,
     pub roles: Vec<Role>,
 }

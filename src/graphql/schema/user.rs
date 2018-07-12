@@ -24,11 +24,11 @@ graphql_object!(User: Context as "User" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Users, Model::User, self.id).to_string().into()
+        ID::new(Service::Users, Model::User, self.id.0).to_string().into()
     }
 
     field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+        &self.id.0
     }
 
     field email() -> &str as "Email" {
@@ -121,7 +121,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
                     .map(|user| Edge::new(
-                                juniper::ID::from(ID::new(Service::Users, Model::User, user.id).to_string()),
+                                juniper::ID::from(ID::new(Service::Users, Model::User, user.id.0).to_string()),
                                 user.clone()
                             ))
                     .collect();
@@ -196,7 +196,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
                     .map(|store| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id).to_string()),
+                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.0).to_string()),
                                 store.clone()
                             ))
                     .collect();
@@ -421,8 +421,8 @@ graphql_object!(User: Context as "User" |&self| {
 
         let search_term = SearchOrder {
                 slug: search_term_options.slug.clone(),
-                customer,
-                store: Some(self.id),
+                customer: Some(self.id),
+                store: None,
                 created_from,
                 created_to,
                 payment_status: search_term_options.payment_status.clone(),

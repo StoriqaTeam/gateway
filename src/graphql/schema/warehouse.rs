@@ -21,7 +21,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
-        self.id.clone().into()
+        self.id.clone().to_string().into()
     }
 
     field name() -> &Option<String> as "Name"{
@@ -41,7 +41,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
     }
 
     field store_id() -> &i32 as "Store_id"{
-        &self.store_id
+        &self.store_id.0
     }
 
     field store(&executor) -> FieldResult<Option<Store>> as "Fetches store." {
@@ -82,11 +82,11 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
         let search_term = if let Some(search_term) = search_term {
             let options = if let Some(mut options) = search_term.options {
-                options.store_id = Some(self.store_id);
+                options.store_id = Some(self.store_id.0);
                 options
             } else {
                 ProductsSearchOptionsInput{
-                    store_id : Some(self.store_id),
+                    store_id : Some(self.store_id.0),
                     ..ProductsSearchOptionsInput::default()
                 }
             };
@@ -98,7 +98,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
             SearchProductInput {
                 name: "".to_string(),
                 options: Some(ProductsSearchOptionsInput{
-                    store_id : Some(self.store_id),
+                    store_id : Some(self.store_id.0),
                     ..ProductsSearchOptionsInput::default()
                 })
             }
@@ -196,7 +196,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
         let search_term = AutoCompleteProductNameInput {
             name,
-            store_id : Some(self.store_id),
+            store_id : Some(self.store_id.0),
         };
 
         let body = serde_json::to_string(&search_term)?;

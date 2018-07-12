@@ -42,8 +42,8 @@ graphql_object!(Stock: Context as "Stock" |&self| {
             .wait()
     }
 
-    field warehouse_id() -> &str as "Warehouse id"{
-        &self.warehouse_id
+    field warehouse_id() -> String as "Warehouse id"{
+        self.warehouse_id.clone().to_string()
     }
 
     field warehouse(&executor) -> FieldResult<Option<Warehouse>> as "Fetches warehouse." {

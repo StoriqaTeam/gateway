@@ -4,6 +4,7 @@ extern crate stq_http;
 extern crate stq_router;
 extern crate stq_routes;
 extern crate stq_static_resources;
+extern crate stq_types;
 
 extern crate base64;
 extern crate chrono;

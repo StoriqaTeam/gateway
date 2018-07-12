@@ -1,7 +1,9 @@
+use stq_types::{StoreId, UserId};
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct ModeratorProductComments {
     pub id: i32,
-    pub moderator_id: i32,
+    pub moderator_id: UserId,
     pub base_product_id: i32,
     pub comments: String,
 }
@@ -23,8 +25,8 @@ pub struct CreateModeratorProductCommentsInput {
 #[derive(Deserialize, Debug, Clone)]
 pub struct ModeratorStoreComments {
     pub id: i32,
-    pub moderator_id: i32,
-    pub store_id: i32,
+    pub moderator_id: UserId,
+    pub store_id: StoreId,
     pub comments: String,
 }
 

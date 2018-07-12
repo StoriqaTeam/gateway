@@ -22,7 +22,7 @@ graphql_object!(ModeratorProductComments: Context as "ModeratorProductComments" 
     }
 
     field moderator_id() -> &i32 as "Moderator raw id" {
-        &self.moderator_id
+        &self.moderator_id.0
     }
 
     field base_product_id() -> &i32 as "Base product raw id" {
@@ -49,11 +49,11 @@ graphql_object!(ModeratorStoreComments: Context as "ModeratorStoreComments" |&se
     }
 
     field moderator_id() -> &i32 as "Moderator raw id" {
-        &self.moderator_id
+        &self.moderator_id.0
     }
 
     field store_id() -> &i32 as "Store raw id" {
-        &self.store_id
+        &self.store_id.0
     }
 
     field comments() -> &str as "Comments" {

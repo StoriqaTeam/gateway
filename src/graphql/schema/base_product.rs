@@ -10,7 +10,7 @@ use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::Translation;
+use stq_static_resources::{ModerationStatus, Translation};
 
 use super::*;
 use graphql::context::Context;
@@ -54,19 +54,19 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     }
 
     field currency_id() -> &i32 as "Currency Id" {
-        &self.currency_id
+        &self.currency_id.0
     }
 
     field rating() -> &f64 as "Rating" {
         &self.rating
     }
 
-    field status() -> &Status as "Status" {
+    field status() -> &ModerationStatus as "Moderation Status" {
         &self.status
     }
 
     field store_id(&executor) -> &i32 as "Raw store id"{
-        &self.store_id
+        &self.store_id.0
     }
 
     field category_id(&executor) -> &i32 as "Category Id"{

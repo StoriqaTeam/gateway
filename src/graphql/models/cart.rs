@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
+use stq_types::{StoreId, UserId};
 
 use super::*;
 
@@ -8,7 +9,7 @@ use super::*;
 pub struct OrdersCartProduct {
     pub product_id: i32,
     pub quantity: i32,
-    pub store_id: i32,
+    pub store_id: StoreId,
     pub selected: bool,
     pub comment: String,
 }
@@ -17,7 +18,7 @@ pub struct OrdersCartProduct {
 pub struct OrdersCartItemInfo {
     pub quantity: i32,
     pub selected: bool,
-    pub store_id: i32,
+    pub store_id: StoreId,
     pub comment: String,
 }
 
@@ -108,7 +109,7 @@ pub struct DeleteFromCartInput {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct CartStore {
-    pub id: i32,
+    pub id: StoreId,
     pub name: Vec<Translation>,
     pub logo: Option<String>,
     pub cover: Option<String>,
@@ -132,23 +133,23 @@ impl CartStore {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CartProductStore {
     pub product_id: i32,
-    pub store_id: i32,
+    pub store_id: StoreId,
 }
 
 impl CartProductStore {
-    pub fn new(product_id: i32, store_id: i32) -> Self {
+    pub fn new(product_id: i32, store_id: StoreId) -> Self {
         Self { product_id, store_id }
     }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct CartProductIncrementPayload {
-    pub store_id: i32,
+    pub store_id: StoreId,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct CartMergePayload {
-    pub user_from: i32,
+    pub user_from: UserId,
 }
 
 pub type CartProductWithPriceHash = HashMap<i32, f64>;

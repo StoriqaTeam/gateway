@@ -1,11 +1,13 @@
-use graphql::models::{Address, AddressInput};
 use stq_static_resources::Language;
+use stq_types::{StoreId, UserId};
+
+use graphql::models::{Address, AddressInput};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct WizardStore {
     pub id: i32,
-    pub user_id: i32,
-    pub store_id: Option<i32>,
+    pub user_id: UserId,
+    pub store_id: Option<StoreId>,
     pub name: Option<String>,
     pub short_description: Option<String>,
     pub default_language: Option<Language>,

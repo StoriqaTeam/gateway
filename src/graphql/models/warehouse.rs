@@ -1,6 +1,8 @@
 use super::*;
 use juniper::ID as GraphqlID;
 
+use stq_types::{StoreId, WarehouseId};
+
 #[derive(GraphQLEnum, Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[graphql(description = "Warehouse kind")]
 pub enum WarehouseKind {
@@ -32,9 +34,9 @@ pub struct GeoPointInput {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Warehouse {
-    pub id: String,
+    pub id: WarehouseId,
     pub name: Option<String>,
-    pub store_id: i32,
+    pub store_id: StoreId,
     pub location: Option<GeoPoint>,
     pub administrative_area_level_1: Option<String>,
     pub administrative_area_level_2: Option<String>,

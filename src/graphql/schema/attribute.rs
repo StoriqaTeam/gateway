@@ -6,7 +6,7 @@ use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::Translation;
+use stq_static_resources::{AttributeType, Translation};
 
 use super::*;
 use graphql::context::Context;
