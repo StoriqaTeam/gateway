@@ -146,7 +146,7 @@ graphql_object!(Store: Context as "Store" |&self| {
                     let mut base_product_edges: Vec<Edge<BaseProduct>> =  vec![];
                     for base_product in base_products {
                         let edge = Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id).to_string()),
+                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
                                 base_product.clone()
                             );
                         base_product_edges.push(edge);

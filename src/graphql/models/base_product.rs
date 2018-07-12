@@ -1,11 +1,11 @@
 use super::*;
 use juniper::ID as GraphqlID;
 use stq_static_resources::{ModerationStatus, Translation, TranslationInput};
-use stq_types::{CurrencyId, StoreId};
+use stq_types::{CurrencyId, StoreId, BaseProductId};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct BaseProduct {
-    pub id: i32,
+    pub id: BaseProductId,
     pub is_active: bool,
     pub store_id: StoreId,
     pub name: Vec<Translation>,

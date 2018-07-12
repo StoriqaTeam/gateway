@@ -69,7 +69,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         self.inner.iter().fold(0.0, |acc, store| {
             let store_products_cost = store.products.iter().fold(0.0, |acc, product| {
                 if product.selected {
-                    acc + product.price * (product.quantity as f64)
+                    acc + product.price.0 * (product.quantity.0 as f64)
                 } else {
                     acc
                 }
@@ -86,7 +86,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         self.inner.iter().fold(0.0, |acc, store| {
             let store_products_cost = store.products.iter().fold(0.0, |acc, product| {
                 if product.selected {
-                    acc + product.price * (product.quantity as f64)
+                    acc + product.price.0 * (product.quantity.0 as f64)
                 } else {
                     acc
                 }
@@ -99,7 +99,7 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         self.inner.iter().fold(0, |acc, store| {
             let store_products_cost = store.products.iter().fold(0, |acc, product| {
                 if product.selected {
-                    acc + product.quantity
+                    acc + product.quantity.0
                 } else {
                     acc
                 }
@@ -114,7 +114,7 @@ graphql_object!(CartProductStore: Context as "CartProductStore" |&self| {
     description: "Cart product store's info."
 
     field product_id() -> GraphqlID as "Base64 Unique product id"{
-        ID::new(Service::Stores, Model::CartProduct, self.product_id).to_string().into()
+        ID::new(Service::Stores, Model::CartProduct, self.product_id.0).to_string().into()
     }
 
     field store_id() -> GraphqlID as "Base64 Unique id"{

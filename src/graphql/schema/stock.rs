@@ -25,7 +25,7 @@ graphql_object!(Stock: Context as "Stock" |&self| {
     }
 
     field product_id() -> &i32 as "Product id"{
-        &self.product_id
+        &self.product_id.0
     }
 
     field product(&executor) -> FieldResult<Option<Product>> as "Fetches product." {
@@ -61,7 +61,7 @@ graphql_object!(Stock: Context as "Stock" |&self| {
     }
 
     field quantity() -> &i32 as "Quantity"{
-        &self.quantity
+        &self.quantity.0
     }
 
 });

@@ -2,6 +2,7 @@
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::str::FromStr;
+use std::time::SystemTime;
 
 use futures::{Future, IntoFuture};
 use graphql::context::Context;
@@ -9,11 +10,10 @@ use graphql::models::*;
 use hyper::Method;
 use juniper::{FieldError, FieldResult};
 use serde_json;
-use std::time::SystemTime;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::StoreId;
+use stq_types::{ProductId, StoreId, ProductPrice};
 
 pub struct Mutation;
 
@@ -935,7 +935,7 @@ graphql_object!(Mutation: Context |&self| {
             ));
         };
 
-        let products_with_prices = HashMap::<i32, f64>::from_iter(products?.iter().map(|p| (p.id, p.price)));
+        let products_with_prices = HashMap::<ProductId, ProductPrice>::from_iter(products?.iter().map(|p| (p.id, p.price)));
 
         let create_order = CreateOrder {
             customer_id: user_id,
