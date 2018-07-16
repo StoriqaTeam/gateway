@@ -489,6 +489,16 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
+    field invoice(&executor, id: String as "Invoice id") -> FieldResult<Option<Invoice>> as "Invoice" {
+        let context = executor.context();
+        let url = format!("{}/invoices/by-id/{}",
+            context.config.service_url(Service::Billing),
+            id);
+
+        context.request::<Option<Invoice>>(Method::Get, url, None)
+            .wait()
+    }
+
 });
 
 graphql_object!(Connection<User, PageInfo>: Context as "UsersConnection" |&self| {

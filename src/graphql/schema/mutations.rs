@@ -13,7 +13,7 @@ use serde_json;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{ProductId, StoreId, ProductPrice};
+use stq_types::{ProductId, ProductPrice, SagaId, StoreId};
 
 pub struct Mutation;
 
@@ -47,7 +47,7 @@ graphql_object!(Mutation: Context |&self| {
             provider: Provider::Email,
             email: input.email.clone(),
             password: input.password.clone(),
-            saga_id: "".to_string(),
+            saga_id: SagaId::new(),
         };
         let new_user = NewUser {
             email: input.email.clone(),
@@ -58,7 +58,7 @@ graphql_object!(Mutation: Context |&self| {
             gender: Gender::Undefined,
             birthdate: None,
             last_login_at: SystemTime::now(),
-            saga_id: "".to_string(),
+            saga_id: SagaId::new(),
         };
         let saga_profile = SagaCreateProfile {
             identity: new_ident,
@@ -945,13 +945,12 @@ graphql_object!(Mutation: Context |&self| {
             currency_id: input.currency_id,
         };
 
-        let url = format!("{}/{}/create_from_cart",
-            context.config.service_url(Service::Orders),
-            Model::Order.to_url());
+        let url = format!("{}/create_order",
+            context.config.saga_microservice.url.clone());
 
         let body: String = serde_json::to_string(&create_order)?.to_string();
 
-        let orders = context.request::<BillingOrders>(Method::Post, url, Some(body))
+        let invoice = context.request::<Invoice>(Method::Post, url, Some(body))
             .wait()?;
 
         let url = format!("{}/{}/products",
@@ -978,7 +977,7 @@ graphql_object!(Mutation: Context |&self| {
                 .map(|stores| convert_to_cart(stores, products))
                 .wait()?;
 
-        Ok(CreateOrders::new (orders, cart))
+        Ok(CreateOrders::new (invoice, cart))
 
     }
 

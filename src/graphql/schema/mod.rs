@@ -5,6 +5,7 @@ pub mod cart;
 pub mod cart_product;
 pub mod cart_store;
 pub mod category;
+pub mod invoice;
 pub mod main_page;
 pub mod moderator_comment;
 pub mod mutations;

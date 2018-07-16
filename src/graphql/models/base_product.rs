@@ -1,7 +1,7 @@
 use super::*;
 use juniper::ID as GraphqlID;
 use stq_static_resources::{ModerationStatus, Translation, TranslationInput};
-use stq_types::{CurrencyId, StoreId, BaseProductId};
+use stq_types::{BaseProductId, CurrencyId, StoreId};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct BaseProduct {

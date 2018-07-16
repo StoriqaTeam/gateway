@@ -1,7 +1,7 @@
 use super::*;
 use juniper::ID as GraphqlID;
 
-use stq_types::{CurrencyId, ProductId, BaseProductId, ProductPrice};
+use stq_types::{BaseProductId, CurrencyId, ProductId, ProductPrice};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Product {

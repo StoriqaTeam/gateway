@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
-use stq_types::{ProductId, Quantity, StoreId, UserId, ProductPrice};
+use stq_types::{ProductId, ProductPrice, Quantity, StoreId, UserId};
 
 use super::*;
 
@@ -182,7 +182,6 @@ pub fn convert_to_cart(stores: Vec<Store>, products: Vec<OrdersCartProduct>) -> 
                                         } else {
                                             variant.price.0
                                         };
-
 
                                         CartProduct {
                                             id: variant.id,

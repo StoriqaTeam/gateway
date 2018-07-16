@@ -222,17 +222,12 @@ impl From<SearchOrderOptionInput> for SearchOrderOption {
 
 #[derive(Clone, Debug)]
 pub struct CreateOrders {
-    pub orders: Vec<Order>,
+    pub invoice: Invoice,
     pub cart: Cart,
-    pub billing_url: String,
 }
 
 impl CreateOrders {
-    pub fn new(billing: BillingOrders, cart: Cart) -> Self {
-        Self {
-            cart,
-            orders: billing.orders,
-            billing_url: billing.url,
-        }
+    pub fn new(invoice: Invoice, cart: Cart) -> Self {
+        Self { cart, invoice }
     }
 }

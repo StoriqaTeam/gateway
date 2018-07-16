@@ -171,21 +171,27 @@ graphql_object!(Order: Context as "Order" |&self| {
         context.request::<Vec<OrderState>>(Method::Get, url, None)
             .wait()
     }
+
+    field invoice(&executor) -> FieldResult<Invoice> as "Invoice" {
+        let context = executor.context();
+        let url = format!("{}/invoices/by-order-id/{}",
+            context.config.service_url(Service::Billing),
+            self.id);
+
+        context.request::<Invoice>(Method::Get, url, None)
+            .wait()
+    }
 });
 
 graphql_object!(CreateOrders: Context as "CreateOrders" |&self| {
     description:"Create orders object"
 
-    field orders() -> &[Order] {
-        &self.orders
+    field invoice() -> &Invoice {
+        &self.invoice
     }
 
     field cart() -> &Cart {
         &self.cart
-    }
-
-    field billing_url() -> &str {
-        &self.billing_url
     }
 });
 
