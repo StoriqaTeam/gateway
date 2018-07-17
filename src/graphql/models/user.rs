@@ -4,7 +4,7 @@ use chrono::NaiveDate;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_types::UserId;
+use stq_types::{SagaId, UserId};
 
 use super::Gender;
 use super::Provider;
@@ -112,7 +112,7 @@ pub struct NewUser {
     pub gender: Gender,
     pub birthdate: Option<NaiveDate>,
     pub last_login_at: SystemTime,
-    pub saga_id: String,
+    pub saga_id: SagaId,
 }
 
 /// Payload for creating identity
@@ -121,7 +121,7 @@ pub struct NewIdentity {
     pub email: String,
     pub password: String,
     pub provider: Provider,
-    pub saga_id: String,
+    pub saga_id: SagaId,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

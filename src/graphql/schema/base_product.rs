@@ -22,11 +22,11 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::BaseProduct, self.id).to_string().into()
+        ID::new(Service::Stores, Model::BaseProduct, self.id.0).to_string().into()
     }
 
     field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+        &self.id.0
     }
 
     field name() -> &[Translation] as "Full Name" {
@@ -151,7 +151,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
                 .skip(offset as usize)
                 .take(first as usize)
                 .map(|product| Edge::new(
-                            juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id).to_string()),
+                            juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id.0).to_string()),
                             product.clone()
                         ))
                 .collect();
@@ -178,7 +178,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
                     .skip(offset as usize)
                     .take(first as usize)
                     .map(|product| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id).to_string()),
+                                juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id.0).to_string()),
                                 product.clone()
                             ))
                     .collect();

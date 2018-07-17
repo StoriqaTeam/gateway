@@ -8,6 +8,7 @@ use juniper::{FieldError, FieldResult};
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_types::Quantity;
 
 use super::*;
 use graphql::context::Context;
@@ -19,11 +20,11 @@ graphql_object!(Product: Context as "Product" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::Product, self.id).to_string().into()
+        ID::new(Service::Stores, Model::Product, self.id.0).to_string().into()
     }
 
     field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+        &self.id.0
     }
 
     field is_active() -> &bool as "If the product was disabled (deleted), isActive is false" {
@@ -55,7 +56,7 @@ graphql_object!(Product: Context as "Product" |&self| {
     }
 
     field price() -> &f64 as "Price" {
-        &self.price
+        &self.price.0
     }
 
     field base_product(&executor) -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
@@ -99,7 +100,7 @@ graphql_object!(Product: Context as "Product" |&self| {
             .wait()
             .map(|products| {
                 products.iter().fold(0, |acc, p| {
-                    acc + p.quantity
+                    acc + p.quantity.0
                 })
             })
             .map(Some)
@@ -152,7 +153,7 @@ graphql_object!(Product: Context as "Product" |&self| {
                                 Stock {
                                     product_id: self.id.clone(),
                                     warehouse_id: warehouse.id.clone(),
-                                    quantity: 0,
+                                    quantity: Quantity::default(),
                                 }
                             }
                         })

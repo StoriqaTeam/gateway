@@ -1,12 +1,12 @@
 use super::*;
 use juniper::ID as GraphqlID;
 
-use stq_types::CurrencyId;
+use stq_types::{BaseProductId, CurrencyId, ProductId, ProductPrice};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Product {
-    pub id: i32,
-    pub base_product_id: i32,
+    pub id: ProductId,
+    pub base_product_id: BaseProductId,
     pub is_active: bool,
     pub discount: Option<f64>,
     pub photo_main: Option<String>,
@@ -14,7 +14,7 @@ pub struct Product {
     pub vendor_code: String,
     pub cashback: Option<f64>,
     pub currency_id: Option<CurrencyId>,
-    pub price: f64,
+    pub price: ProductPrice,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]

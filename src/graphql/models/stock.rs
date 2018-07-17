@@ -1,10 +1,10 @@
-use stq_types::WarehouseId;
+use stq_types::{ProductId, Quantity, WarehouseId};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Stock {
     pub warehouse_id: WarehouseId,
-    pub product_id: i32,
-    pub quantity: i32,
+    pub product_id: ProductId,
+    pub quantity: Quantity,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

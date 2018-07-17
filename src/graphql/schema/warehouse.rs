@@ -10,6 +10,7 @@ use serde_json;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_types::{ProductId, Quantity};
 
 use super::*;
 use graphql::context::Context;
@@ -120,7 +121,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                     .collect()
             )
             .wait()
-            .and_then (|products: Vec<i32>| {
+            .and_then (|products: Vec<ProductId>| {
                 products.into_iter().map(|product_id| {
                     let url = format!("{}/{}/by-id/{}/{}/{}",
                         context.config.service_url(Service::Warehouses),
@@ -139,7 +140,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                                 Stock {
                                     product_id,
                                     warehouse_id: self.id.clone(),
-                                    quantity: 0,
+                                    quantity: Quantity::default(),
                                 }
                             }
                         })

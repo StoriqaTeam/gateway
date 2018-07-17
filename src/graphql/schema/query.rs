@@ -116,10 +116,10 @@ graphql_object!(Query: Context |&self| {
                         .map(|res| res.map(Node::Attribute))
                 },
                 (&Service::Stores, _) => {
-                                Err(FieldError::new(
-                                    "Could not get model from stores microservice.",
-                                    graphql_value!({ "internal_error": "Unknown model" })
-                                ))
+                    Err(FieldError::new(
+                        "Could not get model from stores microservice.",
+                        graphql_value!({ "internal_error": "Unknown model" })
+                    ))
                 },
                 (&Service::Orders, &Model::Order) => {
                     context.request::<Option<Order>>(Method::Get, identifier.url(&context.config), None)

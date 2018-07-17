@@ -2,6 +2,7 @@
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::str::FromStr;
+use std::time::SystemTime;
 
 use futures::{Future, IntoFuture};
 use graphql::context::Context;
@@ -9,11 +10,10 @@ use graphql::models::*;
 use hyper::Method;
 use juniper::{FieldError, FieldResult};
 use serde_json;
-use std::time::SystemTime;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::StoreId;
+use stq_types::{ProductId, ProductPrice, SagaId, StoreId};
 
 pub struct Mutation;
 
@@ -47,7 +47,7 @@ graphql_object!(Mutation: Context |&self| {
             provider: Provider::Email,
             email: input.email.clone(),
             password: input.password.clone(),
-            saga_id: "".to_string(),
+            saga_id: SagaId::new(),
         };
         let new_user = NewUser {
             email: input.email.clone(),
@@ -58,7 +58,7 @@ graphql_object!(Mutation: Context |&self| {
             gender: Gender::Undefined,
             birthdate: None,
             last_login_at: SystemTime::now(),
-            saga_id: "".to_string(),
+            saga_id: SagaId::new(),
         };
         let saga_profile = SagaCreateProfile {
             identity: new_ident,
@@ -89,7 +89,8 @@ graphql_object!(Mutation: Context |&self| {
                             .map_err(From::from)
                             .into_future()
                             .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
-                    }).map(|_| user)
+                    })
+                    .then(|_| Ok(user))
             })
             .wait()
     }
@@ -935,22 +936,22 @@ graphql_object!(Mutation: Context |&self| {
             ));
         };
 
-        let products_with_prices = HashMap::<i32, f64>::from_iter(products?.iter().map(|p| (p.id, p.price)));
+        let products_with_prices = HashMap::<ProductId, ProductPrice>::from_iter(products?.iter().map(|p| (p.id, p.price)));
 
         let create_order = CreateOrder {
             customer_id: user_id,
             address: input.address_full,
             receiver_name: input.receiver_name,
             prices: products_with_prices,
+            currency_id: input.currency_id,
         };
 
-        let url = format!("{}/{}/create_from_cart",
-            context.config.service_url(Service::Orders),
-            Model::Order.to_url());
+        let url = format!("{}/create_order",
+            context.config.saga_microservice.url.clone());
 
         let body: String = serde_json::to_string(&create_order)?.to_string();
 
-        let orders = context.request::<Vec<Order>>(Method::Post, url, Some(body))
+        let invoice = context.request::<Invoice>(Method::Post, url, Some(body))
             .wait()?;
 
         let url = format!("{}/{}/products",
@@ -977,7 +978,7 @@ graphql_object!(Mutation: Context |&self| {
                 .map(|stores| convert_to_cart(stores, products))
                 .wait()?;
 
-        Ok(CreateOrders::new (orders, cart))
+        Ok(CreateOrders::new (invoice, cart))
 
     }
 

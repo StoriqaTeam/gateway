@@ -257,7 +257,7 @@ graphql_object!(User: Context as "User" |&self| {
                 let mut product_edges: Vec<Edge<Product>> = products
                     .into_iter()
                     .map(|product| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id).to_string()),
+                                juniper::ID::from(ID::new(Service::Stores, Model::Product, product.id.0).to_string()),
                                 product.clone()
                             ))
                     .collect();
@@ -314,27 +314,27 @@ graphql_object!(User: Context as "User" |&self| {
             first + 1);
 
         context.request::<Vec<BaseProduct>>(Method::Get, url, None)
-            .map (|products| {
-                let mut product_edges: Vec<Edge<BaseProduct>> = products
+            .map (|base_products| {
+                let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
                     .into_iter()
-                    .map(|product| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, product.id).to_string()),
-                                product.clone()
+                    .map(|base_product| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
+                                base_product.clone()
                             ))
                     .collect();
-                let has_next_page = product_edges.len() as i32 == first + 1;
+                let has_next_page = base_product_edges.len() as i32 == first + 1;
                 if has_next_page {
-                    product_edges.pop();
+                    base_product_edges.pop();
                 };
                 let has_previous_page = true;
-                let start_cursor =  product_edges.get(0).map(|e| e.cursor.clone());
-                let end_cursor = product_edges.iter().last().map(|e| e.cursor.clone());
+                let start_cursor =  base_product_edges.get(0).map(|e| e.cursor.clone());
+                let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
                 let page_info = PageInfo {
                     has_next_page,
                     has_previous_page,
                     start_cursor,
                     end_cursor};
-                Connection::new(product_edges, page_info)
+                Connection::new(base_product_edges, page_info)
             })
             .wait()
             .map(Some)
@@ -486,6 +486,16 @@ graphql_object!(User: Context as "User" |&self| {
         );
 
         context.request::<Option<Warehouse>>(Method::Get, url, None)
+            .wait()
+    }
+
+    field invoice(&executor, id: String as "Invoice id") -> FieldResult<Option<Invoice>> as "Invoice" {
+        let context = executor.context();
+        let url = format!("{}/invoices/by-id/{}",
+            context.config.service_url(Service::Billing),
+            id);
+
+        context.request::<Option<Invoice>>(Method::Get, url, None)
             .wait()
     }
 

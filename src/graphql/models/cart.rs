@@ -1,14 +1,14 @@
 use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
-use stq_types::{StoreId, UserId};
+use stq_types::{ProductId, ProductPrice, Quantity, StoreId, UserId};
 
 use super::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct OrdersCartProduct {
-    pub product_id: i32,
-    pub quantity: i32,
+    pub product_id: ProductId,
+    pub quantity: Quantity,
     pub store_id: StoreId,
     pub selected: bool,
     pub comment: String,
@@ -16,23 +16,23 @@ pub struct OrdersCartProduct {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct OrdersCartItemInfo {
-    pub quantity: i32,
+    pub quantity: Quantity,
     pub selected: bool,
     pub store_id: StoreId,
     pub comment: String,
 }
 
-pub type CartHash = BTreeMap<i32, OrdersCartItemInfo>;
+pub type CartHash = BTreeMap<ProductId, OrdersCartItemInfo>;
 
 /// Base unit of user's product selection
 #[derive(Deserialize, Debug, Clone)]
 pub struct CartProduct {
-    pub id: i32,
+    pub id: ProductId,
     pub name: Vec<Translation>,
-    pub price: f64,
+    pub price: ProductPrice,
     pub photo_main: Option<String>,
     pub selected: bool,
-    pub quantity: i32,
+    pub quantity: Quantity,
     pub comment: String,
 }
 
@@ -132,12 +132,12 @@ impl CartStore {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CartProductStore {
-    pub product_id: i32,
+    pub product_id: ProductId,
     pub store_id: StoreId,
 }
 
 impl CartProductStore {
-    pub fn new(product_id: i32, store_id: StoreId) -> Self {
+    pub fn new(product_id: ProductId, store_id: StoreId) -> Self {
         Self { product_id, store_id }
     }
 }
@@ -152,7 +152,7 @@ pub struct CartMergePayload {
     pub user_from: UserId,
 }
 
-pub type CartProductWithPriceHash = HashMap<i32, f64>;
+pub type CartProductWithPriceHash = HashMap<ProductId, ProductPrice>;
 
 pub fn convert_to_cart(stores: Vec<Store>, products: Vec<OrdersCartProduct>) -> Cart {
     let cart_stores: Vec<CartStore> = stores
@@ -178,9 +178,9 @@ pub fn convert_to_cart(stores: Vec<Store>, products: Vec<OrdersCartProduct>) -> 
                                             .unwrap_or_default();
 
                                         let price = if let Some(discount) = variant.discount {
-                                            variant.price * (1.0 - discount)
+                                            variant.price.0 * (1.0 - discount)
                                         } else {
-                                            variant.price
+                                            variant.price.0
                                         };
 
                                         CartProduct {
@@ -188,7 +188,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: Vec<OrdersCartProduct>) -> 
                                             name: base_product.name.clone(),
                                             photo_main: variant.photo_main.clone(),
                                             selected,
-                                            price,
+                                            price: ProductPrice(price),
                                             quantity,
                                             comment,
                                         }

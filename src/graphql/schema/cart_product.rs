@@ -18,11 +18,11 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Orders, Model::CartProduct, self.id).to_string().into()
+        ID::new(Service::Orders, Model::CartProduct, self.id.0).to_string().into()
     }
 
     field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+        &self.id.0
     }
 
     field name() -> &[Translation] as "Full Name" {
@@ -30,15 +30,15 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     }
 
     field quantity() -> &i32 as "Quantity" {
-        &self.quantity
+        &self.quantity.0
     }
 
     field price() -> &f64 as "Price" {
-        &self.price
+        &self.price.0
     }
 
     field subtotal() -> f64 as "Subtotal" {
-        self.price * (self.quantity as f64)
+        self.price.0 * (self.quantity.0 as f64)
     }
 
     field delivery_cost() -> f64 as "Delivery cost" {
