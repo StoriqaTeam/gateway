@@ -1,4 +1,5 @@
 //! File containing wizard store object of graphql schema
+use chrono::prelude::*;
 use futures::Future;
 use hyper::Method;
 use juniper::ID as GraphqlID;
@@ -63,14 +64,15 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
     }
 
     field price_reserved_due_date_time() -> String as "price reserved due to date time"{
-        self.price_reserved.to_rfc3339()
+        let datetime: DateTime<Utc> = self.price_reserved.into();
+        datetime.to_rfc3339()
     }
 
     field state() -> &OrderState as "order state"{
         &self.state
     }
 
-    field wallet() -> &str as "wallet"{
+    field wallet() -> &Option<String> as "wallet"{
         &self.wallet
     }
 
@@ -78,8 +80,8 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
         &self.transaction_id
     }
 
-    field transaction_captured_amount() -> Option<f64> as "captured amount"{
-        self.transaction_captured_amount.clone().map(|a| a.into())
+    field transaction_captured_amount() -> &f64 as "captured amount"{
+        &self.transaction_captured_amount.0
     }
 
 });

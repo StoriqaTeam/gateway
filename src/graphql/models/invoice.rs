@@ -1,4 +1,5 @@
-use chrono::prelude::*;
+use std::time::SystemTime;
+
 use stq_static_resources::OrderState;
 use stq_types::{CurrencyId, InvoiceId, ProductPrice};
 
@@ -6,10 +7,10 @@ use stq_types::{CurrencyId, InvoiceId, ProductPrice};
 pub struct Invoice {
     pub invoice_id: InvoiceId,
     pub transaction_id: Option<String>,
-    pub transaction_captured_amount: Option<ProductPrice>,
+    pub transaction_captured_amount: ProductPrice,
     pub amount: ProductPrice,
     pub currency_id: CurrencyId,
-    pub price_reserved: DateTime<Utc>,
+    pub price_reserved: SystemTime,
     pub state: OrderState,
-    pub wallet: String,
+    pub wallet: Option<String>,
 }
