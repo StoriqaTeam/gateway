@@ -89,7 +89,8 @@ graphql_object!(Mutation: Context |&self| {
                             .map_err(From::from)
                             .into_future()
                             .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
-                    }).map(|_| user)
+                    })
+                    .then(|_| Ok(user))
             })
             .wait()
     }
