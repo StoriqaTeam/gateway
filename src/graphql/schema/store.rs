@@ -13,6 +13,7 @@ use serde_json;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Language, ModerationStatus, Translation};
+use stq_types::OrderSlug;
 
 use super::*;
 use graphql::context::Context;
@@ -266,7 +267,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         });
 
         let search_term = SearchOrder {
-                slug: search_term_options.slug.clone(),
+                slug: search_term_options.slug.clone().map(OrderSlug),
                 customer,
                 store: Some(self.id),
                 created_from,
@@ -290,7 +291,7 @@ graphql_object!(Store: Context as "Store" |&self| {
                     .skip(offset as usize)
                     .take(count as usize)
                     .map(|order| Edge::new(
-                                juniper::ID::from(order.id.clone()),
+                                juniper::ID::from(order.id.clone().to_string()),
                                 order.clone()
                             ))
                     .collect();

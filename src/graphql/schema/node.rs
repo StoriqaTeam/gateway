@@ -46,7 +46,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::CartStore(CartStore { ref id, .. })  => ID::new(Service::Orders, Model::CartStore, id.0).to_string().into(),
             Node::Cart => ID::new(Service::Orders, Model::Cart, 0).to_string().into(),
             Node::Warehouse(ref w)  => w.id.clone().to_string().into(),
-            Node::Order(ref o)  => o.id.clone().into(),
+            Node::Order(ref o)  => o.id.clone().to_string().into(),
             Node::Stock(Stock {ref product_id, ref warehouse_id,..})  => format!("{}{}", warehouse_id, product_id).into(),
         }
     }

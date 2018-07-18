@@ -1,24 +1,25 @@
 use chrono::prelude::*;
 
 use stq_static_resources::OrderState;
-use stq_types::{StoreId, UserId};
+use stq_types::*;
 
 use super::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Order {
-    pub id: String,
+    pub id: OrderId,
     pub state: OrderState,
     #[serde(rename = "customer")]
     pub customer_id: UserId,
     #[serde(rename = "product")]
-    pub product_id: i32,
-    pub quantity: i32,
+    pub product_id: ProductId,
+    pub quantity: Quantity,
     #[serde(rename = "store")]
     pub store_id: StoreId,
-    pub price: f64,
+    pub price: ProductPrice,
+    pub currency_id: CurrencyId,
     pub receiver_name: String,
-    pub slug: i32,
+    pub slug: OrderSlug,
     pub payment_status: bool,
     pub delivery_company: Option<String>,
     pub track_id: Option<String>,
@@ -48,7 +49,7 @@ pub struct CreateOrder {
     pub address: AddressInput,
     pub receiver_name: String,
     pub prices: CartProductWithPriceHash,
-    pub currency_id: i32,
+    pub currency_id: CurrencyId,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -173,7 +174,7 @@ pub struct SearchOrderOptionInput {
 
 #[derive(Serialize, Clone, Debug, Default)]
 pub struct SearchOrder {
-    pub slug: Option<i32>,
+    pub slug: Option<OrderSlug>,
     pub customer: Option<UserId>,
     pub store: Option<StoreId>,
     pub created_from: Option<DateTime<Utc>>,
