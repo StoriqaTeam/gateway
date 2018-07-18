@@ -1,6 +1,4 @@
 //! File containing mutations object of graphql schema
-use std::collections::HashMap;
-use std::iter::FromIterator;
 use std::str::FromStr;
 use std::time::SystemTime;
 
@@ -13,7 +11,7 @@ use serde_json;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{ProductId, ProductPrice, SagaId, StoreId};
+use stq_types::{ProductId, ProductSellerPrice, SagaId, StoreId};
 
 pub struct Mutation;
 
@@ -910,23 +908,23 @@ graphql_object!(Mutation: Context |&self| {
                             comment: info.comment,
                     })
                     .map(|p| {
-                        let url = format!("{}/{}/{}",
+                        let url = format!("{}/{}/{}/seller_price",
                             context.config.service_url(Service::Stores),
                             Model::Product.to_url(),
                             p.product_id);
 
-                        context.request::<Option<Product>>(Method::Get, url, None).wait().and_then(|prod|{
-                            if let Some(prod) = prod {
-                                Ok(prod)
+                        context.request::<Option<ProductSellerPrice>>(Method::Get, url, None).wait().and_then(|seller_price|{
+                            if let Some(seller_price) = seller_price {
+                                Ok((p.product_id, seller_price))
                             } else {
                                 Err(FieldError::new(
-                                    "Could not find product id received from cart in store.",
-                                    graphql_value!({ "code": 100, "details": { "Product id does not exist in stores microservice." }}),
+                                    "Could not find product seller price from id received from cart.",
+                                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
                                 ))
                             }
                         })
                     })
-                    .collect::<FieldResult<Vec<Product>>>()
+                    .collect::<FieldResult<Vec<(ProductId, ProductSellerPrice)>>>()
                 )
                 .map(|p| (p, user.user_id)).wait()?
         }  else {
@@ -936,7 +934,7 @@ graphql_object!(Mutation: Context |&self| {
             ));
         };
 
-        let products_with_prices = HashMap::<ProductId, ProductPrice>::from_iter(products?.iter().map(|p| (p.id, p.price)));
+        let products_with_prices = products?.into_iter().collect();
 
         let create_order = CreateOrder {
             customer_id: user_id,
