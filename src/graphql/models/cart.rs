@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
-use stq_types::{ProductId, ProductPrice, Quantity, StoreId, UserId};
+use stq_types::*;
 
 use super::*;
 
@@ -152,7 +152,7 @@ pub struct CartMergePayload {
     pub user_from: UserId,
 }
 
-pub type CartProductWithPriceHash = HashMap<ProductId, ProductPrice>;
+pub type CartProductWithPriceHash = HashMap<ProductId, ProductSellerPrice>;
 
 pub fn convert_to_cart(stores: Vec<Store>, products: Vec<OrdersCartProduct>) -> Cart {
     let cart_stores: Vec<CartStore> = stores
