@@ -21,7 +21,7 @@ graphql_object!(Order: Context as "Order" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
-        self.id.clone().into()
+        self.id.clone().to_string().into()
     }
 
     field state() -> &OrderState as "Order State"{
@@ -44,7 +44,7 @@ graphql_object!(Order: Context as "Order" |&self| {
     }
 
     field product_id() -> &i32 as "Product int id"{
-        &self.product_id
+        &self.product_id.0
     }
 
     field product(&executor) -> FieldResult<Option<Product>> as "Product" {
@@ -74,19 +74,23 @@ graphql_object!(Order: Context as "Order" |&self| {
     }
 
     field quantity() -> &i32 as "Quantity" {
-        &self.quantity
+        &self.quantity.0
     }
 
     field price() -> &f64 as "Price" {
-        &self.price
+        &self.price.0
+    }
+
+    field currency_id() -> &i32 as "Price" {
+        &self.currency_id.0
     }
 
     field subtotal() -> f64 as "Subtotal" {
-        self.price * f64::from(self.quantity)
+        self.price.0 * f64::from(self.quantity.0)
     }
 
     field slug() -> &i32 as "Slug" {
-        &self.slug
+        &self.slug.0
     }
 
     field payment_status() -> &bool as "Payment status" {
