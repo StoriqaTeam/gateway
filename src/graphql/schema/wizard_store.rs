@@ -93,7 +93,7 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
     field address_full() -> Address as "Address full"{
         self.clone().into()
     }
-    
+
     field completed() -> &bool as "Wizard is already completed"{
         &self.completed
     }

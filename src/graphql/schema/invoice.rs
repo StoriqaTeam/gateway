@@ -76,12 +76,20 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
         &self.wallet
     }
 
-    field transaction_id() -> &Option<String> as "id"{
-        &self.transaction_id
+    field transactions() -> &[Transaction] as "Transactions"{
+        &self.transactions
+    }
+});
+
+graphql_object!(Transaction: Context as "Transaction" |&self| {
+    description: "Transaction info"
+
+    field id() -> &str as "id"{
+        &self.id
     }
 
-    field transaction_captured_amount() -> &f64 as "captured amount"{
-        &self.transaction_captured_amount.0
+    field amount() -> &f64 as "amount captured"{
+        &self.amount_captured.0
     }
 
 });
