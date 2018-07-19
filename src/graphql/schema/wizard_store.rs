@@ -93,6 +93,10 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
     field address_full() -> Address as "Address full"{
         self.clone().into()
     }
+    
+    field completed() -> &bool as "Wizard is already completed"{
+        &self.completed
+    }
 
     field deprecated "Use wizard store raw fields" step_one(&executor) -> WizardStepOne as "Fetches wizard step one." {
         let context = executor.context();
