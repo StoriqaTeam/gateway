@@ -21,7 +21,7 @@ graphql_object!(Order: Context as "Order" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
-        self.id.clone().to_string().into()
+        self.id.to_string().into()
     }
 
     field state() -> &OrderState as "Order State"{

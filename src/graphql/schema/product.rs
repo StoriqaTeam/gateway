@@ -139,7 +139,7 @@ graphql_object!(Product: Context as "Product" |&self| {
                     let url = format!("{}/{}/by-id/{}/{}/{}",
                         context.config.service_url(Service::Warehouses),
                         Model::Warehouse.to_url(),
-                        warehouse.id.clone(),
+                        warehouse.id,
                         Model::Product.to_url(),
                         self.id,
                     );
@@ -151,8 +151,8 @@ graphql_object!(Product: Context as "Product" |&self| {
                                 stock
                             } else {
                                 Stock {
-                                    product_id: self.id.clone(),
-                                    warehouse_id: warehouse.id.clone(),
+                                    product_id: self.id,
+                                    warehouse_id: warehouse.id,
                                     quantity: Quantity::default(),
                                 }
                             }

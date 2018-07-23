@@ -43,7 +43,7 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
     field products_cost() -> f64 as "Products cost" {
         self.products.iter().fold(0.0, |acc, x| {
             if x.selected {
-                acc + x.price.0 * (x.quantity.0 as f64)
+                acc + x.price.0 * f64::from(x.quantity.0)
             } else {
                 acc
             }
@@ -57,7 +57,7 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
     field total_cost() -> f64 as "Total cost" {
         self.products.iter().fold(0.0, |acc, x| {
             if x.selected {
-                acc + x.price.0 * (x.quantity.0 as f64)
+                acc + x.price.0 * f64::from(x.quantity.0)
             } else {
                 acc
             }

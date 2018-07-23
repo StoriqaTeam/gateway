@@ -43,7 +43,7 @@ graphql_object!(Stock: Context as "Stock" |&self| {
     }
 
     field warehouse_id() -> String as "Warehouse id"{
-        self.warehouse_id.clone().to_string()
+        self.warehouse_id.to_string()
     }
 
     field warehouse(&executor) -> FieldResult<Option<Warehouse>> as "Fetches warehouse." {
