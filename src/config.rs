@@ -1,6 +1,7 @@
 use std::env;
 
 use stq_http;
+use stq_logging::GrayLogConfig;
 use stq_routes::service::Service as StqService;
 
 use config_crate::{Config as RawConfig, ConfigError, Environment, File};
@@ -32,6 +33,7 @@ pub struct Config {
     pub jwt: JWT,
     pub cors: CORS,
     pub notification_urls: NotificationUrls,
+    pub graylog: Option<GrayLogConfig>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

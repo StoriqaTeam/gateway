@@ -1,6 +1,7 @@
 #![recursion_limit = "128"]
 
 extern crate stq_http;
+extern crate stq_logging;
 extern crate stq_router;
 extern crate stq_routes;
 extern crate stq_static_resources;
@@ -28,21 +29,16 @@ extern crate uuid;
 #[macro_use]
 extern crate failure;
 
-use std::env;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::Write;
 use std::process;
 use std::sync::Arc;
 
-use chrono::prelude::*;
-use env_logger::Builder as LogBuilder;
 use futures::future;
 use futures::prelude::*;
 use futures::stream::Stream;
 use hyper::header::{AccessControlAllowOrigin, AccessControlMaxAge, ContentType};
 use hyper::server::Http;
-use log::LevelFilter as LogLevelFilter;
 use tokio_core::reactor::Core;
 
 use stq_http::controller::Application;
@@ -55,21 +51,6 @@ pub mod errors;
 pub mod graphql;
 
 pub fn start(config: Config) {
-    let mut builder = LogBuilder::new();
-    builder
-        .format(|formatter, record| {
-            let now = Utc::now();
-            writeln!(formatter, "{} - {:5} - {}", now.to_rfc3339(), record.level(), record.args())
-        })
-        .filter(None, LogLevelFilter::Info);
-
-    if env::var("RUST_LOG").is_ok() {
-        builder.parse(&env::var("RUST_LOG").unwrap());
-    }
-
-    // Prepare logger
-    builder.init();
-
     // Prepare reactor
     let mut core = Core::new().expect("Unexpected error creating event loop core");
     let handle = Arc::new(core.handle());
