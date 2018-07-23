@@ -540,7 +540,7 @@ graphql_object!(Mutation: Context |&self| {
         let body = serde_json::to_string(&products)?;
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, products))
+            .map(|stores| convert_to_cart(stores, &products))
             .map(Some)
             .wait()
 
@@ -570,7 +570,7 @@ graphql_object!(Mutation: Context |&self| {
         let body = serde_json::to_string(&products)?;
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, products))
+            .map(|stores| convert_to_cart(stores, &products))
             .map(Some)
             .wait()
     }
@@ -599,7 +599,7 @@ graphql_object!(Mutation: Context |&self| {
         let body = serde_json::to_string(&products)?;
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, products))
+            .map(|stores| convert_to_cart(stores, &products))
             .map(Some)
             .wait()
     }
@@ -628,7 +628,7 @@ graphql_object!(Mutation: Context |&self| {
         let body = serde_json::to_string(&products)?;
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, products))
+            .map(|stores| convert_to_cart(stores, &products))
             .map(Some)
             .wait()
     }
@@ -656,7 +656,7 @@ graphql_object!(Mutation: Context |&self| {
         let body = serde_json::to_string(&products)?;
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, products))
+            .map(|stores| convert_to_cart(stores, &products))
             .wait()
     }
 
@@ -666,7 +666,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}/clear", context.config.service_url(Service::Orders), Model::Cart.to_url());
 
         context.request::<CartHash>(Method::Post, url, None)
-            .map(|_| convert_to_cart(vec![], vec![]))
+            .map(|_| convert_to_cart(vec![], &[]))
             .wait()
     }
 
@@ -973,7 +973,7 @@ graphql_object!(Mutation: Context |&self| {
             let body = serde_json::to_string(&products)?;
 
             let cart = context.request::<Vec<Store>>(Method::Post, url, Some(body))
-                .map(|stores| convert_to_cart(stores, products))
+                .map(|stores| convert_to_cart(stores, &products))
                 .wait()?;
 
         Ok(CreateOrders::new (invoice, cart))

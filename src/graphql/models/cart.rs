@@ -154,7 +154,7 @@ pub struct CartMergePayload {
 
 pub type CartProductWithPriceHash = HashMap<ProductId, ProductSellerPrice>;
 
-pub fn convert_to_cart(stores: Vec<Store>, products: Vec<OrdersCartProduct>) -> Cart {
+pub fn convert_to_cart(stores: Vec<Store>, products: &[OrdersCartProduct]) -> Cart {
     let cart_stores: Vec<CartStore> = stores
         .into_iter()
         .map(|store| {

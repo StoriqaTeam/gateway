@@ -22,7 +22,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
-        self.id.clone().to_string().into()
+        self.id.to_string().into()
     }
 
     field name() -> &Option<String> as "Name"{
@@ -126,7 +126,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                     let url = format!("{}/{}/by-id/{}/{}/{}",
                         context.config.service_url(Service::Warehouses),
                         Model::Warehouse.to_url(),
-                        self.id.clone(),
+                        self.id,
                         Model::Product.to_url(),
                         product_id.to_string(),
                     );
@@ -139,7 +139,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                             } else {
                                 Stock {
                                     product_id,
-                                    warehouse_id: self.id.clone(),
+                                    warehouse_id: self.id,
                                     quantity: Quantity::default(),
                                 }
                             }

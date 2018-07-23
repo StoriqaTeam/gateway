@@ -279,7 +279,7 @@ graphql_object!(Query: Context |&self| {
         let body = serde_json::to_string(&products)?;
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, products))
+            .map(|stores| convert_to_cart(stores, &products))
             .map(Some)
             .wait()
     }

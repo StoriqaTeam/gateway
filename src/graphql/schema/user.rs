@@ -421,12 +421,12 @@ graphql_object!(User: Context as "User" |&self| {
         });
 
         let search_term = SearchOrder {
-                slug: search_term_options.slug.clone().map(OrderSlug),
+                slug: search_term_options.slug.map(OrderSlug),
                 customer: Some(self.id),
                 store: None,
                 created_from,
                 created_to,
-                payment_status: search_term_options.payment_status.clone(),
+                payment_status: search_term_options.payment_status,
                 state: search_term_options.order_status.clone(),
             };
 
@@ -445,7 +445,7 @@ graphql_object!(User: Context as "User" |&self| {
                     .skip(offset as usize)
                     .take(count as usize)
                     .map(|order| Edge::new(
-                                juniper::ID::from(order.id.clone().to_string()),
+                                juniper::ID::from(order.id.to_string()),
                                 order.clone()
                             ))
                     .collect();
