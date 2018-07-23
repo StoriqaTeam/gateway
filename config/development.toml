@@ -9,3 +9,6 @@ max_age = "86400"
 [notification_urls]
 verify_email_path = "https://localhost/verify_email"
 reset_password_path = "https://localhost/password_reset"
+
+[graylog]
+addr = "udplog.stq.cloud:32303"
