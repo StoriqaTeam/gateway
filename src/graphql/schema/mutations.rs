@@ -12,6 +12,7 @@ use serde_json;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId};
+use stq_static_resources::*;
 
 pub struct Mutation;
 
@@ -71,19 +72,21 @@ graphql_object!(Mutation: Context |&self| {
                     context.config.service_url(Service::Users),
                     Model::User.to_url());
                 let reset = ResetRequest { email : user.email.clone(), client_mutation_id: input.client_mutation_id};
-                let email = user.email.clone();
+                let user_email = user.email.clone();
                 serde_json::to_string(&reset)
                     .map_err(From::from)
                     .into_future()
                     .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
                     .and_then(|token| {
-                        let to = email;
-                        let subject = "Email verification".to_string();
-                        let text = format!("{}/{}", context.config.notification_urls.verify_email_path, token);
+                        let email = EmailVerificationForUser {
+                            user_email,
+                            verify_email_path: context.config.notification_urls.verify_email_path.clone(),
+                            token,
+                        };
                         let url = format!("{}/sendmail", 
                             context.config.service_url(Service::Notifications),
                         );
-                        serde_json::to_string(&ResetMail { to, subject, text })
+                        serde_json::to_string(&email.into_send_mail())
                             .map_err(From::from)
                             .into_future()
                             .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
@@ -146,13 +149,15 @@ graphql_object!(Mutation: Context |&self| {
         let body = serde_json::to_string(&input)?;
         context.request::<String>(Method::Post, url, Some(body))
             .and_then(|token| {
-                let to = input.email.clone();
-                let subject = "Password reset".to_string();
-                let text = format!("{}/{}", context.config.notification_urls.reset_password_path, token);
+                let email = PasswordResetForUser {
+                    user_email: input.email.clone(),
+                    reset_password_path: context.config.notification_urls.reset_password_path.clone(),
+                    token,
+                };
                 let url = format!("{}/sendmail", 
                     context.config.service_url(Service::Notifications),
                 );
-                serde_json::to_string(&ResetMail { to, subject, text })
+                serde_json::to_string(&email.into_send_mail())
                     .map_err(From::from)
                     .into_future()
                     .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
@@ -172,14 +177,14 @@ graphql_object!(Mutation: Context |&self| {
         let body: String = serde_json::to_string(&input)?.to_string();
 
          context.request::<String>(Method::Put, url, Some(body))
-            .and_then(|email| {
-                let to = email.clone();
-                let subject = "Password reset success".to_string();
-                let text = "Password for linked account has been successfully reset.".to_string();
+            .and_then(|user_email| {
+                let email = ApplyPasswordResetForUser {
+                    user_email,
+                };
                 let url = format!("{}/sendmail", 
                     context.config.service_url(Service::Notifications),
                 );
-                serde_json::to_string(&ResetMail { to, subject, text })
+                serde_json::to_string(&email.into_send_mail())
                     .map_err(From::from)
                     .into_future()
                     .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
@@ -200,13 +205,15 @@ graphql_object!(Mutation: Context |&self| {
         let body = serde_json::to_string(&reset)?;
         context.request::<String>(Method::Post, url, Some(body))
             .and_then(|token| {
-                let to = input.email.clone();
-                let subject = "Email verification".to_string();
-                let text = format!("{}/{}", context.config.notification_urls.verify_email_path, token);
+                let email = EmailVerificationForUser {
+                    user_email: input.email.clone(),
+                    verify_email_path: context.config.notification_urls.verify_email_path.clone(),
+                    token,
+                };
                 let url = format!("{}/sendmail", 
                     context.config.service_url(Service::Notifications),
                 );
-                serde_json::to_string(&ResetMail { to, subject, text })
+                serde_json::to_string(&email.into_send_mail())
                     .map_err(From::from)
                     .into_future()
                     .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
@@ -226,14 +233,14 @@ graphql_object!(Mutation: Context |&self| {
             input.token.clone());
 
         context.request::<String>(Method::Put, url, None)
-            .and_then(|email| {
-                let to = email;
-                let subject = "Email verification".to_string();
-                let text = "Email for linked account has been verified".to_string();
+            .and_then(|user_email| {
+                let email = ApplyEmailVerificationForUser {
+                    user_email,
+                };
                 let url = format!("{}/sendmail", 
                     context.config.service_url(Service::Notifications),
                 );
-                serde_json::to_string(&ResetMail { to, subject, text })
+                serde_json::to_string(&email.into_send_mail())
                     .map_err(From::from)
                     .into_future()
                     .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
