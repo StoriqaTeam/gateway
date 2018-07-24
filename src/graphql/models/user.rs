@@ -151,10 +151,3 @@ pub struct DeactivateUserInput {
     #[graphql(description = "id of a user.")]
     pub id: GraphqlID,
 }
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ResetMail {
-    pub to: String,
-    pub subject: String,
-    pub text: String,
-}
