@@ -12,6 +12,7 @@ pub struct Invoice {
     pub price_reserved: SystemTime,
     pub state: OrderState,
     pub wallet: Option<String>,
+    pub amount_captured: ProductPrice,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
