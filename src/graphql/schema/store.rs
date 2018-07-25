@@ -503,6 +503,58 @@ graphql_object!(Store: Context as "Store" |&self| {
             .map(Some)
     }
 
+    field auto_complete_product_name(&executor,
+        first = None : Option<i32> as "First edges", 
+        after = None : Option<GraphqlID>  as "Offset form begining", 
+        name : String as "Name part") 
+            -> FieldResult<Option<Connection<String, PageInfo>>> as "Finds products full name by part of the name." {
+
+        let context = executor.context();
+
+        let offset = after
+            .and_then(|id|{
+                i32::from_str(&id).map(|i| i + 1).ok()
+            })
+            .unwrap_or_default();
+
+        let records_limit = context.config.gateway.records_limit;
+        let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}/auto_complete?offset={}&count={}",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            offset,
+            count + 1,
+            );
+
+        let search_term = AutoCompleteProductNameInput {
+            name,
+            store_id : Some(self.id.0),
+        };
+
+        let body = serde_json::to_string(&search_term)?;
+
+        context.request::<Vec<String>>(Method::Post, url, Some(body))
+            .map (|full_names| {
+                let mut full_name_edges = Edge::create_vec(full_names, offset);
+                let has_next_page = full_name_edges.len() as i32 == count + 1;
+                if has_next_page {
+                    full_name_edges.pop();
+                };
+                let has_previous_page = true;
+                let start_cursor =  full_name_edges.get(0).map(|e| e.cursor.clone());
+                let end_cursor = full_name_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page,
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
+                Connection::new(full_name_edges, page_info)
+            })
+            .wait()
+            .map(Some)
+    }
+
 });
 
 graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {
