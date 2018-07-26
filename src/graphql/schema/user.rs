@@ -500,6 +500,29 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
+    field my_balance(&executor) -> FieldResult<Vec<MerchantBalance>> as "Fetches balance of current user." {
+        let context = executor.context();
+
+        let url = format!("{}/merchants/user/{}/balance",
+            &context.config.service_url(Service::Billing),
+            self.id,
+            );
+
+        context.request::<Vec<MerchantBalance>>(Method::Get, url, None)
+            .wait()
+    }
+
+    field store_balance(&executor, id: i32 as "Store id") -> FieldResult<Vec<MerchantBalance>> as "Fetches balance by store id." {
+        let context = executor.context();
+
+        let url = format!("{}/merchants/store/{}/balance",
+            &context.config.service_url(Service::Billing),
+            id,
+            );
+
+        context.request::<Vec<MerchantBalance>>(Method::Get, url, None)
+            .wait()
+    }
 });
 
 graphql_object!(Connection<User, PageInfo>: Context as "UsersConnection" |&self| {

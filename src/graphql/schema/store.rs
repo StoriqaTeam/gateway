@@ -555,6 +555,18 @@ graphql_object!(Store: Context as "Store" |&self| {
             .map(Some)
     }
 
+    field balance(&executor) -> FieldResult<Vec<MerchantBalance>> as "Fetches balance of current store." {
+        let context = executor.context();
+
+        let url = format!("{}/merchants/store/{}/balance",
+            &context.config.service_url(Service::Billing),
+            self.id,
+            );
+
+        context.request::<Vec<MerchantBalance>>(Method::Get, url, None)
+            .wait()
+    }
+
 });
 
 graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {

@@ -11,8 +11,8 @@ use serde_json;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId};
 use stq_static_resources::*;
+use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId};
 
 pub struct Mutation;
 
