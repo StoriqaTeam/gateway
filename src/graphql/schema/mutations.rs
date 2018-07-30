@@ -1041,4 +1041,14 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field recalcInvoiceAmount(&executor, id: String as "Invoice id") -> FieldResult<Invoice> as "Invoice" {
+        let context = executor.context();
+        let url = format!("{}/invoices/by-id/{}/recalc",
+            context.config.service_url(Service::Billing),
+            id);
+
+        context.request::<Invoice>(Method::Post, url, None)
+            .wait()
+    }
+
 });
