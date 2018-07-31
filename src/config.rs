@@ -32,7 +32,6 @@ pub struct Config {
     pub notifications_microservice: Microservice,
     pub jwt: JWT,
     pub cors: CORS,
-    pub notification_urls: NotificationUrls,
     pub graylog: Option<GrayLogConfig>,
 }
 
@@ -46,12 +45,6 @@ pub struct JWT {
 pub struct CORS {
     pub domain: String,
     pub max_age: u32,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct NotificationUrls {
-    pub verify_email_path: String,
-    pub reset_password_path: String,
 }
 
 impl Config {

@@ -1,5 +1,5 @@
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description = "Password reset request input object")]
+#[graphql(description = "Email verify input object")]
 pub struct VerifyEmailResend {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
@@ -9,12 +9,12 @@ pub struct VerifyEmailResend {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description = "Password reset apply input object")]
+#[graphql(description = "Email verify apply input object")]
 pub struct VerifyEmailApply {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Reset token.")]
+    #[graphql(description = "Email verification token.")]
     pub token: String,
 }
 
