@@ -2,7 +2,7 @@
 use std::str::FromStr;
 use std::time::SystemTime;
 
-use futures::{Future, IntoFuture};
+use futures::Future;
 use graphql::context::Context;
 use graphql::models::*;
 use hyper::Method;
@@ -11,7 +11,6 @@ use serde_json;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::*;
 use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId};
 
 pub struct Mutation;
@@ -38,9 +37,8 @@ graphql_object!(Mutation: Context |&self| {
     field createUser(&executor, input: CreateUserInput as "Create user input.") -> FieldResult<User> as "Creates new user." {
         let context = executor.context();
         let saga_addr = context.config.saga_microservice.url.clone();
-        let url = format!("{}/{}",
-            saga_addr,
-            "create_account");
+        let url = format!("{}/create_account",
+            saga_addr);
 
         let new_ident = NewIdentity {
             provider: Provider::Email,
@@ -67,32 +65,6 @@ graphql_object!(Mutation: Context |&self| {
         let body: String = serde_json::to_string(&saga_profile)?.to_string();
 
         context.request::<User>(Method::Post, url, Some(body))
-            .and_then(|user| {
-                let url = format!("{}/{}/email_verify_token",
-                    context.config.service_url(Service::Users),
-                    Model::User.to_url());
-                let reset = ResetRequest { email : user.email.clone(), client_mutation_id: input.client_mutation_id};
-                let user_email = user.email.clone();
-                serde_json::to_string(&reset)
-                    .map_err(From::from)
-                    .into_future()
-                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
-                    .and_then(|token| {
-                        let email = EmailVerificationForUser {
-                            user_email,
-                            verify_email_path: context.config.notification_urls.verify_email_path.clone(),
-                            token,
-                        };
-                        let url = format!("{}/sendmail", 
-                            context.config.service_url(Service::Notifications),
-                        );
-                        serde_json::to_string(&email.into_send_mail())
-                            .map_err(From::from)
-                            .into_future()
-                            .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
-                    })
-                    .then(|_| Ok(user))
-            })
             .wait()
     }
 
@@ -142,26 +114,11 @@ graphql_object!(Mutation: Context |&self| {
 
     field requestPasswordReset(&executor, input: ResetRequest as "Password reset request input.") -> FieldResult<ResetActionOutput>  as "Requests password reset." {
         let context = executor.context();
-
-        let url = format!("{}/{}/password_reset_token",
-            context.config.service_url(Service::Users),
-            Model::User.to_url());
+        let saga_addr = context.config.saga_microservice.url.clone();
+        let url = format!("{}/reset_password",
+            saga_addr);
         let body = serde_json::to_string(&input)?;
-        context.request::<String>(Method::Post, url, Some(body))
-            .and_then(|token| {
-                let email = PasswordResetForUser {
-                    user_email: input.email.clone(),
-                    reset_password_path: context.config.notification_urls.reset_password_path.clone(),
-                    token,
-                };
-                let url = format!("{}/sendmail", 
-                    context.config.service_url(Service::Notifications),
-                );
-                serde_json::to_string(&email.into_send_mail())
-                    .map_err(From::from)
-                    .into_future()
-                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
-            })
+        context.request::<()>(Method::Post, url, Some(body))
             .wait()?;
 
         Ok(ResetActionOutput {
@@ -171,24 +128,11 @@ graphql_object!(Mutation: Context |&self| {
 
     field applyPasswordReset(&executor, input: ResetApply as "Password reset apply input.") -> FieldResult<ResetActionOutput>  as "Applies password reset." {
         let context = executor.context();
-        let url = format!("{}/{}/password_reset_token",
-            context.config.service_url(Service::Users),
-            Model::User.to_url());
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-         context.request::<String>(Method::Put, url, Some(body))
-            .and_then(|user_email| {
-                let email = ApplyPasswordResetForUser {
-                    user_email,
-                };
-                let url = format!("{}/sendmail", 
-                    context.config.service_url(Service::Notifications),
-                );
-                serde_json::to_string(&email.into_send_mail())
-                    .map_err(From::from)
-                    .into_future()
-                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
-            })
+        let saga_addr = context.config.saga_microservice.url.clone();
+        let url = format!("{}/reset_password_apply",
+            saga_addr);
+        let body = serde_json::to_string(&input)?;
+        context.request::<()>(Method::Post, url, Some(body))
             .wait()?;
 
         Ok(ResetActionOutput {
@@ -196,28 +140,14 @@ graphql_object!(Mutation: Context |&self| {
         })
     }
 
-    field resendEmailVerificationLink(&executor, input: VerifyEmailResend as "Password reset request input.") -> FieldResult<VerifyEmailOutput>  as "Requests password reset." {
+    field resendEmailVerificationLink(&executor, input: VerifyEmailResend as "Email verify request input.") -> FieldResult<VerifyEmailOutput>  as "Requests email verification link on email send." {
         let context = executor.context();
-        let url = format!("{}/{}/email_verify_token",
-            context.config.service_url(Service::Users),
-            Model::User.to_url());
-        let reset = ResetRequest { email : input.email.clone(), client_mutation_id: input.client_mutation_id.clone()};
-        let body = serde_json::to_string(&reset)?;
-        context.request::<String>(Method::Post, url, Some(body))
-            .and_then(|token| {
-                let email = EmailVerificationForUser {
-                    user_email: input.email.clone(),
-                    verify_email_path: context.config.notification_urls.verify_email_path.clone(),
-                    token,
-                };
-                let url = format!("{}/sendmail", 
-                    context.config.service_url(Service::Notifications),
-                );
-                serde_json::to_string(&email.into_send_mail())
-                    .map_err(From::from)
-                    .into_future()
-                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
-            })
+        let saga_addr = context.config.saga_microservice.url.clone();
+        let url = format!("{}/email_verify",
+            saga_addr
+            );
+        let body = serde_json::to_string(&input)?;
+        context.request::<()>(Method::Post, url, Some(body))
             .wait()?;
 
         Ok(VerifyEmailOutput {
@@ -225,26 +155,13 @@ graphql_object!(Mutation: Context |&self| {
         })
     }
 
-    field verifyEmail(&executor, input: VerifyEmailApply as "Password reset request input.") -> FieldResult<VerifyEmailOutput>  as "Requests password reset." {
+    field verifyEmail(&executor, input: VerifyEmailApply as "Email verify apply input.") -> FieldResult<VerifyEmailOutput>  as "Applies email verification." {
         let context = executor.context();
-        let url = format!("{}/{}/email_verify_token?token={}",
-            context.config.service_url(Service::Users),
-            Model::User.to_url(),
-            input.token.clone());
-
-        context.request::<String>(Method::Put, url, None)
-            .and_then(|user_email| {
-                let email = ApplyEmailVerificationForUser {
-                    user_email,
-                };
-                let url = format!("{}/sendmail", 
-                    context.config.service_url(Service::Notifications),
-                );
-                serde_json::to_string(&email.into_send_mail())
-                    .map_err(From::from)
-                    .into_future()
-                    .and_then(|body| context.request::<String>(Method::Post, url, Some(body)))
-            })
+        let saga_addr = context.config.saga_microservice.url.clone();
+        let url = format!("{}/email_verify_apply",
+            saga_addr);
+        let body = serde_json::to_string(&input)?;
+        context.request::<()>(Method::Post, url, Some(body))
             .wait()?;
 
         Ok(VerifyEmailOutput {
