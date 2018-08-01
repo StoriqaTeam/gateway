@@ -284,7 +284,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field store_slug_exists(&executor) -> bool as "Checks store slug" {
+    field store_slug_exists(&executor, slug: String as "Stores slug") -> bool as "Checks store slug" {
         true
     }
 
