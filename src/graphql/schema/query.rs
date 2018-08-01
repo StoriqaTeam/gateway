@@ -284,4 +284,8 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
+    field store_slug_exists(&executor) -> bool as "Checks store slug" {
+        true
+    }
+
 });
