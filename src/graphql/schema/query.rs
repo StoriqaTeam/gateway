@@ -284,8 +284,14 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field store_slug_exists(&executor, slug: String as "Stores slug") -> bool as "Checks store slug" {
-        true
+    field store_slug_exists(&executor, slug: String as "Stores slug") -> FieldResult<bool> as "Checks store slug" {
+        let context = executor.context();
+        let url = format!("{}/{}/slug_exists?slug={}",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            slug);
+        context.request::<bool>(Method::Get, url, None)
+            .wait()
     }
 
 });
