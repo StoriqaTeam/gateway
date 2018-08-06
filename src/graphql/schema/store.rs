@@ -467,10 +467,12 @@ graphql_object!(Store: Context as "Store" |&self| {
 
         let options = if let Some(mut options) = search_term.options.clone() {
             options.store_id = Some(self.id.0);
+            options.status = Some(ModerationStatus::Published);
             options
         } else {
             ProductsSearchOptionsInput{
                 store_id : Some(self.id.0),
+                status : Some(ModerationStatus::Published),
                 ..ProductsSearchOptionsInput::default()
             }
         };
@@ -530,6 +532,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         let search_term = AutoCompleteProductNameInput {
             name,
             store_id : Some(self.id.0),
+            status: Some(ModerationStatus::Published),
         };
 
         let body = serde_json::to_string(&search_term)?;

@@ -198,6 +198,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
         let search_term = AutoCompleteProductNameInput {
             name,
             store_id : Some(self.store_id.0),
+            status: None,
         };
 
         let body = serde_json::to_string(&search_term)?;
