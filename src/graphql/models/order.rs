@@ -38,6 +38,8 @@ pub struct CreateOrderInput {
     pub address_full: AddressInput,
     #[graphql(description = "Receiver name")]
     pub receiver_name: String,
+    #[graphql(description = "Receiver phone")]
+    pub receiver_phone: String,
     #[graphql(description = "Currency id that will be paid")]
     pub currency_id: i32,
 }
@@ -50,6 +52,7 @@ pub struct CreateOrder {
     pub receiver_name: String,
     pub prices: CartProductWithPriceHash,
     pub currency_id: CurrencyId,
+    pub receiver_phone: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]

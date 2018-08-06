@@ -864,6 +864,7 @@ graphql_object!(Mutation: Context |&self| {
             customer_id: user_id,
             address: input.address_full,
             receiver_name: input.receiver_name,
+            receiver_phone: input.receiver_phone,
             prices: products_with_prices,
             currency_id: CurrencyId(input.currency_id),
         };
