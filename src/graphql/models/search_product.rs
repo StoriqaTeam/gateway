@@ -1,5 +1,7 @@
 use super::*;
 
+use stq_static_resources::ModerationStatus;
+
 #[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
 pub struct ProductsSearchOptionsInput {
     #[graphql(description = "Attribute filters.")]
@@ -14,6 +16,8 @@ pub struct ProductsSearchOptionsInput {
     pub store_id: Option<i32>,
     #[graphql(description = "Sorting.")]
     pub sort_by: Option<ProductsSorting>,
+    #[graphql(description = "Status.")]
+    pub status: Option<ModerationStatus>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
@@ -32,6 +36,8 @@ pub struct AutoCompleteProductNameInput {
     pub name: String,
     #[graphql(description = "Store id.")]
     pub store_id: Option<i32>,
+    #[graphql(description = "Status.")]
+    pub status: Option<ModerationStatus>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Clone, Debug)]

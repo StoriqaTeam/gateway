@@ -8,8 +8,10 @@ use hyper::Method;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 use serde_json;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::ModerationStatus;
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -42,11 +44,25 @@ graphql_object!(Search: Context as "Search" |&self| {
             count + 1
             );
 
+        let options = if let Some(mut options) = search_term.options.clone() {
+            options.status = Some(ModerationStatus::Published);
+            options
+        } else {
+            ProductsSearchOptionsInput{
+                status : Some(ModerationStatus::Published),
+                ..ProductsSearchOptionsInput::default()
+            }
+        };
+
+        let mut search_term = search_term;
+        search_term.options = Some(options);
+
         let body = serde_json::to_string(&search_term)?;
 
         context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
             .map (|products| {
                 let mut product_edges = Edge::create_vec(products, offset);
+
                 let search_filters = ProductsSearchFilters::new(search_term);
                 let has_next_page = product_edges.len() as i32 == count + 1;
                 if has_next_page {
@@ -94,6 +110,7 @@ graphql_object!(Search: Context as "Search" |&self| {
         let search_term = AutoCompleteProductNameInput {
             name,
             store_id : None,
+            status: Some(ModerationStatus::Published),
         };
 
         let body = serde_json::to_string(&search_term)?;
@@ -274,6 +291,7 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
             .clone()
             .map(|o| o.category_id)
             .and_then(|x| x);
+        options.status = Some(ModerationStatus::Published);
         let mut search_term_only_category = SearchProductInput::default();
         search_term_only_category.options = Some(options);
 

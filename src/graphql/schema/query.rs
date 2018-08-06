@@ -168,7 +168,7 @@ graphql_object!(Query: Context |&self| {
     }
 
     field order_statuses(&executor) -> Vec<OrderState> as "Fetches order statuses." {
-        OrderState::as_vec()
+        OrderState::enum_iter().collect()
     }
 
     field categories(&executor) -> FieldResult<Option<Category>> as "Fetches categories tree." {
