@@ -90,9 +90,9 @@ graphql_object!(Product: Context as "Product" |&self| {
         let context = executor.context();
 
         let url = format!(
-            "{}/{}/{}",
+            "{}/{}/by-product-id/{}",
             &context.config.service_url(Service::Warehouses),
-            Model::Product.to_url(),
+            Model::Stock.to_url(),
             self.id.to_string()
         );
 
