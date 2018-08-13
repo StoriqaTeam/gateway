@@ -440,8 +440,13 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
             input.product_id);
-        let store_id = context.request::<StoreId>(Method::Get, url, None)
-            .wait()?;
+        let store_id = context.request::<Option<StoreId>>(Method::Get, url, None)
+            .wait()?
+            .ok_or_else(||
+                FieldError::new(
+                    "Could not find store for product id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+            ))?;
 
         let cp_input = CartProductIncrementPayload { store_id };
         let body: String = serde_json::to_string(&cp_input)?.to_string();
@@ -864,6 +869,7 @@ graphql_object!(Mutation: Context |&self| {
             customer_id: user_id,
             address: input.address_full,
             receiver_name: input.receiver_name,
+            receiver_phone: input.receiver_phone,
             prices: products_with_prices,
             currency_id: CurrencyId(input.currency_id),
         };

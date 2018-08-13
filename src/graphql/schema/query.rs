@@ -168,7 +168,7 @@ graphql_object!(Query: Context |&self| {
     }
 
     field order_statuses(&executor) -> Vec<OrderState> as "Fetches order statuses." {
-        OrderState::as_vec()
+        OrderState::enum_iter().collect()
     }
 
     field categories(&executor) -> FieldResult<Option<Category>> as "Fetches categories tree." {
@@ -281,6 +281,16 @@ graphql_object!(Query: Context |&self| {
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
             .map(|stores| convert_to_cart(stores, &products))
             .map(Some)
+            .wait()
+    }
+
+    field store_slug_exists(&executor, slug: String as "Stores slug") -> FieldResult<bool> as "Checks store slug" {
+        let context = executor.context();
+        let url = format!("{}/{}/slug_exists?slug={}",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            slug);
+        context.request::<bool>(Method::Get, url, None)
             .wait()
     }
 
