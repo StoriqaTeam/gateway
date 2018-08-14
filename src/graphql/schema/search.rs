@@ -270,20 +270,7 @@ graphql_object!(ProductsSearchFilters: Context as "ProductsSearchFilters" |&self
             .map(Some)
     }
 
-    field attr_filters(&executor) -> FieldResult<Option<Vec<AttributeFilter>>> as "Attribute filters."{
-       let context = executor.context();
-
-        let body = serde_json::to_string(&self.search_term)?;
-
-        let url = format!("{}/{}/search/filters/attributes",
-                        context.config.service_url(Service::Stores),
-                        Model::BaseProduct.to_url(),
-                    );
-        context.request::<Option<Vec<AttributeFilter>>>(Method::Post, url, Some(body))
-            .wait()
-    }
-
-    field attr_filters_category(&executor) -> FieldResult<Option<Vec<AttributeFilter>>> as "Attribute filters for whole category."{
+    field attr_filters(&executor) -> FieldResult<Option<Vec<AttributeFilter>>> as "Attribute filters for whole category."{
         let context = executor.context();
 
         let mut options = ProductsSearchOptionsInput::default();
