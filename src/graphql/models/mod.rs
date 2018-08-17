@@ -5,6 +5,7 @@ pub mod cart;
 pub mod category;
 pub mod connection;
 pub mod currency_exchange;
+pub mod email_template;
 pub mod email_verify;
 pub mod gender;
 pub mod id;
@@ -31,6 +32,7 @@ pub use self::cart::*;
 pub use self::category::*;
 pub use self::connection::*;
 pub use self::currency_exchange::*;
+pub use self::email_template::*;
 pub use self::email_verify::*;
 pub use self::gender::Gender;
 pub use self::id::ID;
@@ -58,5 +60,3 @@ pub struct Search;
 
 //MainPage object, made for displaying info at main page
 pub struct MainPage;
-
-pub struct EmailTemplate;
