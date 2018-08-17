@@ -58,3 +58,5 @@ pub struct Search;
 
 //MainPage object, made for displaying info at main page
 pub struct MainPage;
+
+pub struct EmailTemplate;

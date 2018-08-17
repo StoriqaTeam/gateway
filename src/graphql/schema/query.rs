@@ -209,6 +209,10 @@ graphql_object!(Query: Context |&self| {
         MainPage{}
     }
 
+    field email_template(&executor) -> EmailTemplate as "Template email message endpoint" {
+        EmailTemplate{}
+    }
+
     field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();
 
