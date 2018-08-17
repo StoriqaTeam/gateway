@@ -5,13 +5,15 @@ use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::OrderState;
-use stq_types::OrderId;
+use stq_types::{OrderId, OrderIdentifier};
+use stq_api::orders::OrderClient;
 
 use graphql::context::Context;
 use graphql::models::*;
+use errors::into_graphql;
+
 
 graphql_object!(Invoice: Context as "Invoice" |&self| {
     description: "Invoice info"
@@ -20,7 +22,7 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
         self.invoice_id.to_string().into()
     }
 
-    field orders(&executor) -> FieldResult<Vec<Order>> as "Fetches Orders." {
+    field orders(&executor) -> FieldResult<Vec<GraphQLOrder>> as "Fetches Orders." {
         let context = executor.context();
 
         let url = format!(
@@ -33,17 +35,13 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
             .wait()
             .and_then (|ids| {
                 ids.into_iter().map(|id| {
-                    let url = format!("{}/{}/by-id/{}",
-                        &context.config.service_url(Service::Orders),
-                        Model::Order.to_url(),
-                        id.to_string()
-                    );
-
-                    context.request::<Option<Order>>(Method::Get, url, None)
+                    let rpc_client = context.get_rest_api_client(Service::Orders);
+                    rpc_client.get_order(OrderIdentifier::Id(id))
+                        .map_err(into_graphql)
                         .wait()
                         .and_then(|order|{
                             if let Some(order) = order {
-                                Ok(order)
+                                Ok(GraphQLOrder(order))
                             } else {
                                 Err(FieldError::new(
                                     "Could not find order id received from invoice in orders.",

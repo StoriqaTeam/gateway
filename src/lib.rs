@@ -1,5 +1,6 @@
 #![recursion_limit = "128"]
 
+extern crate stq_api;
 extern crate stq_http;
 extern crate stq_logging;
 extern crate stq_router;
@@ -29,6 +30,11 @@ extern crate uuid;
 #[macro_use]
 extern crate failure;
 
+pub mod config;
+pub mod controller;
+pub mod errors;
+pub mod graphql;
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::process;
@@ -37,6 +43,7 @@ use std::sync::Arc;
 use futures::future;
 use futures::prelude::*;
 use futures::stream::Stream;
+use futures_cpupool::CpuPool;
 use hyper::header::{AccessControlAllowOrigin, AccessControlMaxAge, ContentType};
 use hyper::server::Http;
 use tokio_core::reactor::Core;
@@ -44,11 +51,6 @@ use tokio_core::reactor::Core;
 use stq_http::controller::Application;
 
 use config::Config;
-
-pub mod config;
-pub mod controller;
-pub mod errors;
-pub mod graphql;
 
 pub fn start(config: Config) {
     // Prepare reactor
@@ -68,6 +70,8 @@ pub fn start(config: Config) {
     handle.spawn(client_stream.for_each(|_| Ok(())));
     let domain = config.cors.domain.clone();
     let max_age = config.cors.max_age;
+    let cpu_pool = CpuPool::new(config.gateway.graphql_thread_pool_size);
+    let jwt_leeway = config.jwt.leeway;
 
     let serve = Http::new()
         .serve_addr_handle(&address, &*handle, {
@@ -75,9 +79,11 @@ pub fn start(config: Config) {
                 let domain = domain.to_owned();
                 // Prepare application
                 let app = Application::<errors::Error>::new(controller::ControllerImpl::new(
-                    config.clone(),
                     client_handle.clone(),
                     jwt_public_key.clone(),
+                    cpu_pool.clone(),
+                    jwt_leeway,
+                    config.clone(),
                 )).with_middleware(move |mut resp| {
                     let contains_acao = resp.headers().has::<AccessControlAllowOrigin>();
                     if !contains_acao {

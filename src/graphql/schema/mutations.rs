@@ -12,6 +12,10 @@ use serde_json;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId};
+use stq_types::{OrderSlug, OrderIdentifier};
+use stq_api::orders::OrderClient;
+
+use errors::into_graphql;
 
 pub struct Mutation;
 
@@ -910,13 +914,9 @@ graphql_object!(Mutation: Context |&self| {
 
     }
 
-    field setOrderStatusDelivery(&executor, input: OrderStatusDeliveryInput as "Order Status Delivery input.") -> FieldResult<Option<Order>>  as "Set Order Status Delivery."{
+    field setOrderStatusDelivery(&executor, input: OrderStatusDeliveryInput as "Order Status Delivery input.") -> FieldResult<Option<GraphQLOrder>>  as "Set Order Status Delivery."{
         let context = executor.context();
-        let url = format!("{}/{}/by-slug/{}/status",
-            context.config.service_url(Service::Orders),
-            Model::Order.to_url(),
-            input.order_slug.to_string());
-
+        let slug = input.order_slug;
         let mut order: OrderStatusDelivery = input.into();
         if let Some(ref track_id) = order.track_id {
             let comment = if let Some(mut comment) = order.comment {
@@ -927,41 +927,33 @@ graphql_object!(Mutation: Context |&self| {
             };
             order.comment = comment;
         }
-
-        let body: String = serde_json::to_string(&order)?.to_string();
-
-        context.request::<Option<Order>>(Method::Put, url, Some(body))
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.set_order_state(OrderIdentifier::Slug(OrderSlug(slug)), order.state, order.comment, order.track_id)
             .wait()
+            .map_err(into_graphql)
+            .map(|res| res.map(GraphQLOrder))
     }
 
-    field setOrderStatusCanceled(&executor, input: OrderStatusCanceledInput as "Order Status Canceled input.") -> FieldResult<Option<Order>>  as "Set Order Status Canceled."{
+    field setOrderStatusCanceled(&executor, input: OrderStatusCanceledInput as "Order Status Canceled input.") -> FieldResult<Option<GraphQLOrder>>  as "Set Order Status Canceled."{
         let context = executor.context();
-        let url = format!("{}/{}/by-slug/{}/status",
-            context.config.service_url(Service::Orders),
-            Model::Order.to_url(),
-            input.order_slug.to_string());
-
+        let slug = input.order_slug;
         let order: OrderStatusCanceled = input.into();
-
-        let body: String = serde_json::to_string(&order)?.to_string();
-
-        context.request::<Option<Order>>(Method::Put, url, Some(body))
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.set_order_state(OrderIdentifier::Slug(OrderSlug(slug)), order.state, order.comment, None)
             .wait()
+            .map_err(into_graphql)
+            .map(|res| res.map(GraphQLOrder))
     }
 
-    field setOrderStatusComplete(&executor, input: OrderStatusCompleteInput as "Order Status Complete input.") -> FieldResult<Option<Order>>  as "Set Order Status Complete."{
+    field setOrderStatusComplete(&executor, input: OrderStatusCompleteInput as "Order Status Complete input.") -> FieldResult<Option<GraphQLOrder>>  as "Set Order Status Complete."{
         let context = executor.context();
-        let url = format!("{}/{}/by-slug/{}/status",
-            context.config.service_url(Service::Orders),
-            Model::Order.to_url(),
-            input.order_slug.to_string());
-
+        let slug = input.order_slug;
         let order: OrderStatusComplete = input.into();
-
-        let body: String = serde_json::to_string(&order)?.to_string();
-
-        context.request::<Option<Order>>(Method::Put, url, Some(body))
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.set_order_state(OrderIdentifier::Slug(OrderSlug(slug)), order.state, order.comment, None)
             .wait()
+            .map_err(into_graphql)
+            .map(|res| res.map(GraphQLOrder))
     }
 
     field recalcInvoiceAmount(&executor, id: String as "Invoice id") -> FieldResult<Invoice> as "Invoice" {

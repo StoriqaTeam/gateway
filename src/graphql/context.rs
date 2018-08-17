@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use chrono::prelude::*;
 use futures::prelude::*;
 use hyper;
@@ -7,38 +5,44 @@ use hyper::header::{Authorization, Cookie, Headers};
 use juniper;
 use juniper::FieldError;
 use serde::de::DeserializeOwned;
+use uuid::Uuid;
 
-use super::schema;
 use config::Config;
 
 use stq_http::client::{ClientHandle, Error};
 use stq_http::request_util::CurrencyId as CurrencyIdHeader;
 use stq_types::{CurrencyId, UserId};
+use stq_routes::service::Service;
+use stq_api::rpc_client::RestApiClient;
 
 use graphql::models::jwt::JWTPayload;
 
-#[derive(Clone)]
 pub struct Context {
-    pub config: Config,
-    pub schema: Arc<schema::Schema>,
     pub http_client: ClientHandle,
     pub user: Option<JWTPayload>,
     pub session_id: Option<UserId>,
     pub currency_id: Option<CurrencyId>,
     pub uuid: String,
+    pub config: Config,
 }
 
+impl juniper::Context for Context {}
+
 impl Context {
-    pub fn new(config: Config, client_handle: ClientHandle) -> Self {
+    pub fn new(http_client: ClientHandle, user: Option<JWTPayload>, session_id: Option<UserId>, currency_id: Option<CurrencyId>, config: Config) -> Self {
+        let uuid = Uuid::new_v4().to_string();
         Context {
+            http_client,
+            user,
+            session_id,
+            currency_id,
+            uuid,
             config,
-            schema: Arc::new(schema::create()),
-            http_client: client_handle,
-            user: None,
-            session_id: None,
-            currency_id: None,
-            uuid: "".to_string(),
         }
+    }
+
+    pub fn get_rest_api_client(&self, s: Service) -> RestApiClient {
+        RestApiClient::new(&self.config.service_url(s), self.user.clone().map(|u| u.user_id))
     }
 
     pub fn request<T>(&self, method: hyper::Method, url: String, body: Option<String>) -> Box<Future<Item = T, Error = FieldError> + Send>
@@ -78,4 +82,3 @@ impl Context {
     }
 }
 
-impl juniper::Context for Context {}

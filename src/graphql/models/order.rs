@@ -1,31 +1,13 @@
 use chrono::prelude::*;
 
 use stq_static_resources::OrderState;
-use stq_types::*;
+use stq_types::{UserId, StoreId, CurrencyId, OrderSlug};
+use stq_api::orders::Order;
 
 use super::*;
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct Order {
-    pub id: OrderId,
-    pub state: OrderState,
-    #[serde(rename = "customer")]
-    pub customer_id: UserId,
-    #[serde(rename = "product")]
-    pub product_id: ProductId,
-    pub quantity: Quantity,
-    #[serde(rename = "store")]
-    pub store_id: StoreId,
-    pub price: ProductPrice,
-    pub currency_id: CurrencyId,
-    pub receiver_name: String,
-    pub slug: OrderSlug,
-    pub payment_status: bool,
-    pub delivery_company: Option<String>,
-    pub track_id: Option<String>,
-    pub created_at: DateTime<Utc>,
-    pub address: Address,
-}
+pub struct GraphQLOrder(pub Order);
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Create order input object")]

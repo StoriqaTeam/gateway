@@ -15,21 +15,21 @@ use super::*;
 use graphql::context::Context;
 use graphql::models::*;
 
-graphql_object!(Order: Context as "Order" |&self| {
+graphql_object!(GraphQLOrder: Context as "Order" |&self| {
     description: "Order info."
 
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
-        self.id.to_string().into()
+        self.0.id.to_string().into()
     }
 
     field state() -> &OrderState as "Order State"{
-        &self.state
+        &self.0.state
     }
 
     field customer_id() -> &i32 as "Customer int id"{
-        &self.customer_id.0
+        &self.0.customer.0
     }
 
     field customer(&executor) -> FieldResult<Option<User>> as "Customer" {
@@ -37,14 +37,14 @@ graphql_object!(Order: Context as "Order" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
             Model::User.to_url(),
-            self.customer_id);
+            self.0.customer);
 
         context.request::<Option<User>>(Method::Get, url, None)
             .wait()
     }
 
     field product_id() -> &i32 as "Product int id"{
-        &self.product_id.0
+        &self.0.product.0
     }
 
     field product(&executor) -> FieldResult<Option<Product>> as "Product" {
@@ -52,14 +52,14 @@ graphql_object!(Order: Context as "Order" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
-            self.product_id);
+            self.0.product);
 
         context.request::<Option<Product>>(Method::Get, url, None)
             .wait()
     }
 
     field store_id() -> &i32 as "Store int id"{
-        &self.store_id.0
+        &self.0.store.0
     }
 
     field store(&executor) -> FieldResult<Option<Store>> as "Store" {
@@ -67,54 +67,54 @@ graphql_object!(Order: Context as "Order" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            self.store_id);
+            self.0.store);
 
         context.request::<Option<Store>>(Method::Get, url, None)
             .wait()
     }
 
     field quantity() -> &i32 as "Quantity" {
-        &self.quantity.0
+        &self.0.quantity.0
     }
 
     field price() -> &f64 as "Price" {
-        &self.price.0
+        &self.0.price.0
     }
 
     field currency_id() -> &i32 as "Price" {
-        &self.currency_id.0
+        &self.0.currency_id.0
     }
 
     field subtotal() -> f64 as "Subtotal" {
-        self.price.0 * f64::from(self.quantity.0)
+        self.0.price.0 * f64::from(self.0.quantity.0)
     }
 
     field slug() -> &i32 as "Slug" {
-        &self.slug.0
+        &self.0.slug.0
     }
 
     field payment_status() -> &bool as "Payment status" {
-        &self.payment_status
+        &self.0.payment_status
     }
 
     field delivery_company() -> &Option<String> as "Delivery Company" {
-        &self.delivery_company
+        &self.0.delivery_company
     }
 
     field track_id() -> &Option<String> as "Delivery Company" {
-        &self.track_id
+        &self.0.track_id
     }
 
     field created_at() -> String as "Creation time" {
-        self.created_at.to_rfc3339()
+        self.0.created_at.to_rfc3339()
     }
 
     field receiver_name() -> &str as "Receiver name" {
-        &self.receiver_name
+        &self.0.receiver_name
     }
 
-    field address_full() -> &Address as "Full address" {
-        &self.address
+    field address_full() -> Address as "Full address" {
+        self.0.address.clone().into()
     }
 
     field history(&executor,
@@ -135,7 +135,7 @@ graphql_object!(Order: Context as "Order" |&self| {
 
         let url = format!("{}/order_diff/by-slug/{}",
             context.config.service_url(Service::Orders),
-            self.slug
+            self.0.slug
             );
 
         context.request::<Vec<OrderHistoryItem>>(Method::Get, url, None)
@@ -170,7 +170,7 @@ graphql_object!(Order: Context as "Order" |&self| {
         let url = format!("{}/{}/{}/allowed_statuses",
             context.config.service_url(Service::Orders),
             Model::Order.to_url(),
-            self.id);
+            self.0.id);
 
         context.request::<Vec<OrderState>>(Method::Get, url, None)
             .wait()
@@ -180,7 +180,7 @@ graphql_object!(Order: Context as "Order" |&self| {
         let context = executor.context();
         let url = format!("{}/invoices/by-order-id/{}",
             context.config.service_url(Service::Billing),
-            self.id);
+            self.0.id);
 
         context.request::<Invoice>(Method::Get, url, None)
             .wait()
@@ -199,10 +199,10 @@ graphql_object!(CreateOrders: Context as "CreateOrders" |&self| {
     }
 });
 
-graphql_object!(Connection<Order, PageInfo>: Context as "OrdersConnection" |&self| {
+graphql_object!(Connection<GraphQLOrder, PageInfo>: Context as "OrdersConnection" |&self| {
     description:"Order Connection"
 
-    field edges() -> &[Edge<Order>] {
+    field edges() -> &[Edge<GraphQLOrder>] {
         &self.edges
     }
 
@@ -211,14 +211,14 @@ graphql_object!(Connection<Order, PageInfo>: Context as "OrdersConnection" |&sel
     }
 });
 
-graphql_object!(Edge<Order>: Context as "OrdersEdge" |&self| {
+graphql_object!(Edge<GraphQLOrder>: Context as "OrdersEdge" |&self| {
     description:"Order Edge"
 
     field cursor() -> &juniper::ID {
         &self.cursor
     }
 
-    field node() -> &Order {
+    field node() -> &GraphQLOrder {
         &self.node
     }
 });

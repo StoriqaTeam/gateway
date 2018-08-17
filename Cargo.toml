@@ -14,6 +14,7 @@ path = "src/main.rs"
 
 
 [dependencies]
+stq_api = { path = "vendor/libstqbackend/api" }
 stq_http = { path = "vendor/libstqbackend/http" }
 stq_static_resources = { path = "vendor/libstqbackend/static_resources" }
 stq_routes = { path = "vendor/libstqbackend/routes" }

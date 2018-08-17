@@ -2,6 +2,7 @@ use super::*;
 use juniper::ID as GraphqlID;
 
 use stq_types::{StoreId, WarehouseId};
+use stq_api::warehouses::Warehouse;
 
 #[derive(GraphQLEnum, Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[graphql(description = "Warehouse kind")]
@@ -33,23 +34,7 @@ pub struct GeoPointInput {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct Warehouse {
-    pub id: WarehouseId,
-    pub name: Option<String>,
-    pub store_id: StoreId,
-    pub location: Option<GeoPoint>,
-    pub administrative_area_level_1: Option<String>,
-    pub administrative_area_level_2: Option<String>,
-    pub address: Option<String>,
-    pub country: Option<String>,
-    pub locality: Option<String>,
-    pub political: Option<String>,
-    pub postal_code: Option<String>,
-    pub route: Option<String>,
-    pub street_number: Option<String>,
-    pub place_id: Option<String>,
-    pub slug: String,
-}
+pub struct GraphQLWarehouse(pub Warehouse);
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct ValueContainer<T> {

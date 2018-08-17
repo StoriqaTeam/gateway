@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
-use stq_types::*;
+use stq_types::{ProductId, Quantity, StoreId, ProductPrice, UserId, ProductSellerPrice};
 
 use super::*;
 

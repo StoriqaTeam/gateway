@@ -7,12 +7,13 @@ use hyper::Method;
 use juniper;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
-use serde_json;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::OrderSlug;
+use stq_types::{OrderSlug, OrderIdentifier};
+use stq_api::orders::{OrderClient, OrderSearchTerms};
 
+use errors::into_graphql;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
@@ -374,7 +375,7 @@ graphql_object!(User: Context as "User" |&self| {
         current_page : i32 as "Current page",
         items_count : i32 as "Items count",
         search_term_options : SearchOrderOptionInput as "Search options pattern")
-            -> FieldResult<Option<Connection<Order, PageInfoOrdersSearch>>> as "Fetches orders using relay connection." {
+            -> FieldResult<Option<Connection<GraphQLOrder, PageInfoOrdersSearch>>> as "Fetches orders using relay connection." {
         let context = executor.context();
 
         let offset = items_count * (current_page - 1);
@@ -420,7 +421,7 @@ graphql_object!(User: Context as "User" |&self| {
                 .and_then (|user| user.map(|u|u.id))
         });
 
-        let search_term = SearchOrder {
+        let search_term = OrderSearchTerms {
                 slug: search_term_options.slug.map(OrderSlug),
                 customer: Some(self.id),
                 store: None,
@@ -430,22 +431,19 @@ graphql_object!(User: Context as "User" |&self| {
                 state: search_term_options.order_status.clone(),
             };
 
-        let body = serde_json::to_string(&search_term)?;
-
-        let url = format!("{}/{}/search",
-            context.config.service_url(Service::Orders),
-            Model::Order.to_url());
-
-        context.request::<Vec<Order>>(Method::Post, url, Some(body))
-            .map (move |orders| {
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.search(search_term)
+            .map_err(into_graphql)
+            .map(|res| res.into_iter().map(GraphQLOrder).collect())
+            .map (move |orders: Vec<GraphQLOrder>| {
                 let total_pages = (orders.iter().count() as f32 / items_count as f32).ceil() as i32;
 
-                let mut orders_edges: Vec<Edge<Order>> = orders
+                let mut orders_edges: Vec<Edge<GraphQLOrder>> = orders
                     .into_iter()
                     .skip(offset as usize)
                     .take(count as usize)
                     .map(|order| Edge::new(
-                                juniper::ID::from(order.id.to_string()),
+                                juniper::ID::from(order.0.id.to_string()),
                                 order.clone()
                             ))
                     .collect();
@@ -462,16 +460,13 @@ graphql_object!(User: Context as "User" |&self| {
             .map(Some)
     }
 
-    field order(&executor, slug: i32 as "Order slug" ) -> FieldResult<Option<Order>> as "Fetches order." {
+    field order(&executor, slug: i32 as "Order slug" ) -> FieldResult<Option<GraphQLOrder>> as "Fetches order." {
         let context = executor.context();
 
-        let url = format!("{}/{}/by-slug/{}",
-            &context.config.service_url(Service::Orders),
-            Model::Order.to_url(),
-            slug
-            );
-
-        context.request::<Option<Order>>(Method::Get, url, None)
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.get_order(OrderIdentifier::Slug(OrderSlug(slug)))
+            .map_err(into_graphql)
+            .map(|res| res.map(GraphQLOrder))
             .wait()
     }
 
