@@ -12,7 +12,7 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::{Currency, CurrencyGraphQl};
 use stq_static_resources::{Language, LanguageGraphQl, OrderState};
-use stq_types::{OrderIdentifier, OrderId};
+use stq_types::{OrderIdentifier, OrderId, WarehouseId, WarehouseIdentifier};
 use stq_api::orders::OrderClient;
 
 use super::*;
@@ -148,9 +148,20 @@ graphql_object!(Query: Context |&self| {
                     ))
                 },
                 (&Service::Warehouses, &Model::Warehouse) => {
-                    context.request::<Option<Warehouse>>(Method::Get, identifier.url(&context.config), None)
-                        .wait()
-                        .map(|res| res.map(Box::new).map(Node::Warehouse))
+                    let rpc_client = context.get_rest_api_client(Service::Warehouses);
+                    Uuid::parse_str(&id.to_string())
+                        .map_err(|_| 
+                            FieldError::new(
+                                "Given id can not be parsed as Uuid",
+                                graphql_value!({ "parse_error": "Warehouse id must be uuid" })
+                            )
+                        )
+                        .and_then(|id|{
+                            rpc_client.get_warehouse(WarehouseIdentifier::Id(WarehouseId(id)))
+                                .map_err(into_graphql)
+                                .map(|res| res.map(GraphQLWarehouse).map(Box::new).map(Node::Warehouse))
+                                .wait()
+                        })
                 },
                 (&Service::Warehouses, _) => {
                     Err(FieldError::new(

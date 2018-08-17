@@ -8,12 +8,14 @@ use graphql::models::*;
 use hyper::Method;
 use juniper::{FieldError, FieldResult};
 use serde_json;
+use uuid::Uuid;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId};
-use stq_types::{OrderSlug, OrderIdentifier};
+use stq_types::{OrderSlug, OrderIdentifier, WarehouseId, WarehouseIdentifier};
 use stq_api::orders::OrderClient;
+use stq_api::warehouses::WarehouseClient;
 
 use errors::into_graphql;
 
@@ -752,19 +754,16 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createWarehouse(&executor, input: CreateWarehouseInput as "Create warehouse input.") -> FieldResult<Warehouse> as "Creates new warehouse." {
+    field createWarehouse(&executor, input: CreateWarehouseInput as "Create warehouse input.") -> FieldResult<GraphQLWarehouse> as "Creates new warehouse." {
         let context = executor.context();
-        let url = format!("{}/{}",
-            context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url());
-
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-        context.request::<Warehouse>(Method::Post, url, Some(body))
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        rpc_client.create_warehouse(input.into())
             .wait()
+            .map_err(into_graphql)
+            .map(GraphQLWarehouse)
     }
 
-    field updateWarehouse(&executor, input: UpdateWarehouseInput as "Update Warehouse input.") -> FieldResult<Option<Warehouse>>  as "Updates existing Warehouse."{
+    field updateWarehouse(&executor, input: UpdateWarehouseInput as "Update Warehouse input.") -> FieldResult<Option<GraphQLWarehouse>>  as "Updates existing Warehouse."{
         let context = executor.context();
         let url = format!("{}/{}/by-id/{}",
             context.config.service_url(Service::Warehouses),
@@ -780,31 +779,47 @@ graphql_object!(Mutation: Context |&self| {
 
         let update: UpdateWarehouse = input.into();
 
-        let body: String = serde_json::to_string(&update)?.to_string();
-
-        context.request::<Option<Warehouse>>(Method::Put, url, Some(body))
-            .wait()
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        Uuid::parse_str(&input.id)
+            .map_err(|_| 
+                FieldError::new(
+                    "Given id can not be parsed as Uuid",
+                    graphql_value!({ "parse_error": "Warehouse id must be uuid" })
+                )
+            )
+            .and_then(|id|{
+                rpc_client.update_warehouse(WarehouseIdentifier::Id(WarehouseId(id)), update.into())
+                    .wait()
+                    .map_err(into_graphql)
+                    .map(|res| res.map(GraphQLWarehouse))
+            })
     }
 
-    field deleteWarehouse(&executor, id: String) -> FieldResult<Option<Warehouse>>  as "Delete existing Warehouse." {
+    field deleteWarehouse(&executor, id: String) -> FieldResult<Option<GraphQLWarehouse>>  as "Delete existing Warehouse." {
         let context = executor.context();
-        let url = format!("{}/{}/by-id/{}",
-            context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url(),
-            id);
-
-        context.request::<Option<Warehouse>>(Method::Delete, url, None)
-            .wait()
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        Uuid::parse_str(&id)
+            .map_err(|_| 
+                FieldError::new(
+                    "Given id can not be parsed as Uuid",
+                    graphql_value!({ "parse_error": "Warehouse id must be uuid" })
+                )
+            )
+            .and_then(|id|{
+                rpc_client.delete_warehouse(WarehouseIdentifier::Id(WarehouseId(id)))
+                    .wait()
+                    .map_err(into_graphql)
+                    .map(|res| res.map(GraphQLWarehouse))
+            })
     }
 
-    field deleteAllWarehouses(&executor) -> FieldResult<Vec<Warehouse>>  as "Delete all Warehouses." {
+    field deleteAllWarehouses(&executor) -> FieldResult<Vec<GraphQLWarehouse>>  as "Delete all Warehouses." {
         let context = executor.context();
-        let url = format!("{}/{}",
-            context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url());
-
-        context.request::<Vec<Warehouse>>(Method::Delete, url, None)
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        rpc_client.delete_all_warehouses()
             .wait()
+            .map_err(into_graphql)
+            .map(|res| res.into_iter().map(GraphQLWarehouse).collect())
     }
 
     field setProductQuantityInWarehouse(&executor, input: ProductQuantityInput as "set Product Quantity In Warehouse input.") -> FieldResult<Option<Stock>> as "Set Product Quantity In Warehouse" {

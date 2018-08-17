@@ -16,33 +16,33 @@ use super::*;
 use graphql::context::Context;
 use graphql::models::*;
 
-graphql_object!(Warehouse: Context as "Warehouse" |&self| {
+graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
     description: "Warehouse info."
 
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
-        self.id.to_string().into()
+        self.0.id.to_string().into()
     }
 
     field name() -> &Option<String> as "Name"{
-        &self.name
+        &self.0.name
     }
 
-    field location() -> &Option<GeoPoint> as "Location"{
-        &self.location
+    field location() -> Option<GeoPoint> as "Location"{
+        self.0.clone().location.map(|p| GeoPoint{x: p.x(), y: p.y()})
     }
 
     field slug() -> &str as "Slug"{
-        &self.slug
+        &self.0.slug.to_string()
     }
 
     field address_full() -> Address as "Address full"{
-        self.clone().into()
+        self.0.clone().into()
     }
 
     field store_id() -> &i32 as "Store_id"{
-        &self.store_id.0
+        &self.0.store_id.0
     }
 
     field store(&executor) -> FieldResult<Option<Store>> as "Fetches store." {
@@ -52,7 +52,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
             "{}/{}/{}",
             &context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            self.store_id.to_string()
+            self.0.store_id.to_string()
         );
 
         context.request::<Option<Store>>(Method::Get, url, None)
@@ -83,11 +83,11 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
         let search_term = if let Some(search_term) = search_term {
             let options = if let Some(mut options) = search_term.options {
-                options.store_id = Some(self.store_id.0);
+                options.store_id = Some(self.0.store_id.0);
                 options
             } else {
                 ProductsSearchOptionsInput{
-                    store_id : Some(self.store_id.0),
+                    store_id : Some(self.0.store_id.0),
                     ..ProductsSearchOptionsInput::default()
                 }
             };
@@ -99,7 +99,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
             SearchProductInput {
                 name: "".to_string(),
                 options: Some(ProductsSearchOptionsInput{
-                    store_id : Some(self.store_id.0),
+                    store_id : Some(self.0.store_id.0),
                     ..ProductsSearchOptionsInput::default()
                 })
             }
@@ -126,7 +126,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                     let url = format!("{}/{}/by-id/{}/{}/{}",
                         context.config.service_url(Service::Warehouses),
                         Model::Warehouse.to_url(),
-                        self.id,
+                        self.0.id,
                         Model::Product.to_url(),
                         product_id.to_string(),
                     );
@@ -139,7 +139,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
                             } else {
                                 Stock {
                                     product_id,
-                                    warehouse_id: self.id,
+                                    warehouse_id: self.0.id,
                                     quantity: Quantity::default(),
                                 }
                             }
@@ -197,7 +197,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
         let search_term = AutoCompleteProductNameInput {
             name,
-            store_id : Some(self.store_id.0),
+            store_id : Some(self.0.store_id.0),
             status: None,
         };
 

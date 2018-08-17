@@ -29,6 +29,8 @@ extern crate tokio_core;
 extern crate uuid;
 #[macro_use]
 extern crate failure;
+extern crate geo;
+extern crate geo_types;
 
 pub mod config;
 pub mod controller;
