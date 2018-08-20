@@ -5,15 +5,14 @@ use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
+use stq_api::orders::OrderClient;
 use stq_routes::service::Service;
 use stq_static_resources::OrderState;
 use stq_types::{OrderId, OrderIdentifier};
-use stq_api::orders::OrderClient;
 
+use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
-use errors::into_graphql;
-
 
 graphql_object!(Invoice: Context as "Invoice" |&self| {
     description: "Invoice info"

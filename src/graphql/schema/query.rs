@@ -8,17 +8,18 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
+use stq_api::orders::OrderClient;
+use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::{Currency, CurrencyGraphQl};
 use stq_static_resources::{Language, LanguageGraphQl, OrderState};
-use stq_types::{OrderIdentifier, OrderId, WarehouseId, WarehouseIdentifier};
-use stq_api::orders::OrderClient;
+use stq_types::{OrderId, OrderIdentifier, WarehouseId, WarehouseIdentifier};
 
 use super::*;
+use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
-use errors::into_graphql;
 
 pub const QUERY_NODE_ID: i32 = 1;
 
@@ -128,7 +129,7 @@ graphql_object!(Query: Context |&self| {
                 (Service::Orders, &Model::Order) => {
                     let rpc_client = context.get_rest_api_client(Service::Orders);
                     Uuid::parse_str(&id.to_string())
-                        .map_err(|_| 
+                        .map_err(|_|
                             FieldError::new(
                                 "Given id can not be parsed as Uuid",
                                 graphql_value!({ "parse_error": "Order id must be uuid" })
@@ -150,7 +151,7 @@ graphql_object!(Query: Context |&self| {
                 (&Service::Warehouses, &Model::Warehouse) => {
                     let rpc_client = context.get_rest_api_client(Service::Warehouses);
                     Uuid::parse_str(&id.to_string())
-                        .map_err(|_| 
+                        .map_err(|_|
                             FieldError::new(
                                 "Given id can not be parsed as Uuid",
                                 graphql_value!({ "parse_error": "Warehouse id must be uuid" })

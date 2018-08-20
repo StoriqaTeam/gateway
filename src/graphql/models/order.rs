@@ -1,8 +1,8 @@
 use chrono::prelude::*;
 
-use stq_static_resources::OrderState;
-use stq_types::{UserId, StoreId, CurrencyId, OrderSlug};
 use stq_api::orders::Order;
+use stq_static_resources::OrderState;
+use stq_types::{CurrencyId, OrderSlug, StoreId, UserId};
 
 use super::*;
 

@@ -10,14 +10,15 @@ use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 use serde_json;
 
+use stq_api::orders::{OrderClient, OrderSearchTerms};
+use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Language, ModerationStatus, Translation};
-use stq_types::{OrderSlug, OrderIdentifier};
-use stq_api::orders::{OrderClient, OrderSearchTerms};
+use stq_types::{OrderIdentifier, OrderSlug};
 
-use errors::into_graphql;
 use super::*;
+use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
 
@@ -200,22 +201,14 @@ graphql_object!(Store: Context as "Store" |&self| {
             .wait()
     }
 
-    field warehouses(&executor) -> FieldResult<Option<Vec<Warehouse>>> as "Fetches store warehouses." {
+    field warehouses(&executor) -> FieldResult<Vec<GraphQLWarehouse>> as "Fetches store warehouses." {
         let context = executor.context();
 
-       let url = format!(
-            "{}/{}/by-store-id/{}",
-            &context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url(),
-            self.id.to_string()
-        );
-
-        context.request::<Option<Vec<Warehouse>>>(Method::Get, url, None)
-            .map(|warehouses| warehouses.map(|mut w| {
-                w.sort_by(|a, b| a.slug.cmp(&b.slug));
-                w
-            }))
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        rpc_client.get_warehouses_for_store(self.id)
             .wait()
+            .map_err(into_graphql)
+            .map(|res| res.into_iter().map(GraphQLWarehouse).collect())
     }
 
     field orders(&executor,

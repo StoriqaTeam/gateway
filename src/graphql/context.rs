@@ -9,11 +9,11 @@ use uuid::Uuid;
 
 use config::Config;
 
+use stq_api::rpc_client::RestApiClient;
 use stq_http::client::{ClientHandle, Error};
 use stq_http::request_util::CurrencyId as CurrencyIdHeader;
-use stq_types::{CurrencyId, UserId};
 use stq_routes::service::Service;
-use stq_api::rpc_client::RestApiClient;
+use stq_types::{CurrencyId, UserId};
 
 use graphql::models::jwt::JWTPayload;
 
@@ -29,7 +29,13 @@ pub struct Context {
 impl juniper::Context for Context {}
 
 impl Context {
-    pub fn new(http_client: ClientHandle, user: Option<JWTPayload>, session_id: Option<UserId>, currency_id: Option<CurrencyId>, config: Config) -> Self {
+    pub fn new(
+        http_client: ClientHandle,
+        user: Option<JWTPayload>,
+        session_id: Option<UserId>,
+        currency_id: Option<CurrencyId>,
+        config: Config,
+    ) -> Self {
         let uuid = Uuid::new_v4().to_string();
         Context {
             http_client,
@@ -81,4 +87,3 @@ impl Context {
         )
     }
 }
-

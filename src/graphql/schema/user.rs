@@ -8,13 +8,15 @@ use juniper;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
+use stq_api::orders::{OrderClient, OrderSearchTerms};
+use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{OrderSlug, OrderIdentifier};
-use stq_api::orders::{OrderClient, OrderSearchTerms};
+use stq_types::{OrderIdentifier, OrderSlug};
+use stq_types::{WarehouseIdentifier, WarehouseSlug};
 
-use errors::into_graphql;
 use super::*;
+use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
 
@@ -471,18 +473,14 @@ graphql_object!(User: Context as "User" |&self| {
     }
 
 
-    field warehouse(&executor, slug: String as "Slug of a warehouse.") -> FieldResult<Option<Warehouse>> as "Fetches warehouse by slug." {
+    field warehouse(&executor, slug: String as "Slug of a warehouse.") -> FieldResult<Option<GraphQLWarehouse>> as "Fetches warehouse by slug." {
         let context = executor.context();
 
-        let url = format!(
-            "{}/{}/by-slug/{}",
-            &context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url(),
-            slug
-        );
-
-        context.request::<Option<Warehouse>>(Method::Get, url, None)
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        rpc_client.get_warehouse(WarehouseIdentifier::Slug(WarehouseSlug(slug)))
             .wait()
+            .map_err(into_graphql)
+            .map(|res| res.map(GraphQLWarehouse))
     }
 
     field invoice(&executor, id: String as "Invoice id") -> FieldResult<Option<Invoice>> as "Invoice" {

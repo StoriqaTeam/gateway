@@ -23,13 +23,12 @@ use stq_http::request_util::SessionId as SessionIdHeader;
 use stq_router::RouteParser;
 use stq_types::{CurrencyId, UserId};
 
-use graphql::context::Context;
 use self::routes::Route;
-use errors::Error;
-use graphql::models::jwt::JWTPayload;
 use config::Config;
+use errors::Error;
+use graphql::context::Context;
+use graphql::models::jwt::JWTPayload;
 use graphql::schema;
-
 
 pub mod graphiql;
 pub mod routes;
@@ -47,7 +46,14 @@ impl ControllerImpl {
     /// Create a new controller based on services
     pub fn new(http_client: ClientHandle, jwt_public_key: Vec<u8>, cpu_pool: CpuPool, jwt_leeway: i64, config: Config) -> Self {
         let route_parser = Arc::new(routes::create_route_parser());
-        Self {jwt_leeway, http_client , jwt_public_key, route_parser, cpu_pool, config }
+        Self {
+            jwt_leeway,
+            http_client,
+            jwt_public_key,
+            route_parser,
+            cpu_pool,
+            config,
+        }
     }
 }
 
@@ -92,9 +98,10 @@ impl Controller for ControllerImpl {
                                     .into()
                             })
                             .and_then(move |graphql_req| {
-                                    cpu_pool
+                                cpu_pool
                                     .spawn_fn(move || {
-                                        let graphql_context = Context::new(client, token_payload, session_id_header, currency_id_header, config);
+                                        let graphql_context =
+                                            Context::new(client, token_payload, session_id_header, currency_id_header, config);
                                         let resp = graphql_req.execute(&schema::create(), &graphql_context);
                                         serde_json::to_value(resp)
                                     })

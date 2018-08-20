@@ -1,4 +1,5 @@
 use stq_api::orders::AddressFull as OrdersAddressFull;
+use stq_api::warehouses::Warehouse;
 
 use super::*;
 

@@ -10,12 +10,12 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
-use stq_routes::model::Model;
-use stq_routes::service::Service;
-use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId};
-use stq_types::{OrderSlug, OrderIdentifier, WarehouseId, WarehouseIdentifier};
 use stq_api::orders::OrderClient;
 use stq_api::warehouses::WarehouseClient;
+use stq_routes::model::Model;
+use stq_routes::service::Service;
+use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
+use stq_types::{OrderIdentifier, OrderSlug, WarehouseIdentifier};
 
 use errors::into_graphql;
 
@@ -777,18 +777,16 @@ graphql_object!(Mutation: Context |&self| {
             ));
         }
 
-        let update: UpdateWarehouse = input.into();
-
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
         Uuid::parse_str(&input.id)
-            .map_err(|_| 
+            .map_err(|_|
                 FieldError::new(
                     "Given id can not be parsed as Uuid",
                     graphql_value!({ "parse_error": "Warehouse id must be uuid" })
                 )
             )
             .and_then(|id|{
-                rpc_client.update_warehouse(WarehouseIdentifier::Id(WarehouseId(id)), update.into())
+                rpc_client.update_warehouse(WarehouseIdentifier::Id(WarehouseId(id)), input.into())
                     .wait()
                     .map_err(into_graphql)
                     .map(|res| res.map(GraphQLWarehouse))
@@ -799,7 +797,7 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
         Uuid::parse_str(&id)
-            .map_err(|_| 
+            .map_err(|_|
                 FieldError::new(
                     "Given id can not be parsed as Uuid",
                     graphql_value!({ "parse_error": "Warehouse id must be uuid" })
@@ -822,19 +820,22 @@ graphql_object!(Mutation: Context |&self| {
             .map(|res| res.into_iter().map(GraphQLWarehouse).collect())
     }
 
-    field setProductQuantityInWarehouse(&executor, input: ProductQuantityInput as "set Product Quantity In Warehouse input.") -> FieldResult<Option<Stock>> as "Set Product Quantity In Warehouse" {
+    field setProductQuantityInWarehouse(&executor, input: ProductQuantityInput as "set Product Quantity In Warehouse input.") -> FieldResult<GraphQLStock> as "Set Product Quantity In Warehouse" {
         let context = executor.context();
-        let url = format!("{}/{}/by-id/{}/{}/{}",
-            context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url(),
-            input.warehouse_id,
-            Model::Product.to_url(),
-            input.product_id);
-
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-        context.request::<Option<Stock>>(Method::Put, url, Some(body))
-            .wait()
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        Uuid::parse_str(&input.warehouse_id)
+            .map_err(|_|
+                FieldError::new(
+                    "Given id can not be parsed as Uuid",
+                    graphql_value!({ "parse_error": "Warehouse id must be uuid" })
+                )
+            )
+            .and_then(|id|{
+                rpc_client.set_product_in_warehouse(WarehouseId(id), input.product_id.into(), input.quantity.into())
+                    .wait()
+                    .map_err(into_graphql)
+                    .map(GraphQLStock)
+            })
     }
 
     field createOrders(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<CreateOrders> as "Creates orders from cart." {

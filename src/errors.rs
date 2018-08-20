@@ -1,9 +1,9 @@
 use hyper::StatusCode;
-use serde_json;
 use juniper::FieldError;
+use serde_json;
 
-use stq_http::errors::{Codeable, PayloadCarrier};
 use stq_api::errors::{Error as ApiError, ErrorMessage};
+use stq_http::errors::{Codeable, PayloadCarrier};
 
 #[derive(Debug, Fail)]
 pub enum Error {
