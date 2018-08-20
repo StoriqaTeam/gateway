@@ -7,6 +7,7 @@ use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
 use stq_api::warehouses::{Stock, Warehouse, WarehouseClient};
+use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{Quantity, StockId};
@@ -94,7 +95,7 @@ graphql_object!(Product: Context as "Product" |&self| {
 
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
         rpc_client.find_by_product_id(self.id)
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .map(|products| {
                 products.iter().fold(0, |acc, p| {
@@ -125,13 +126,12 @@ graphql_object!(Product: Context as "Product" |&self| {
 
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
         rpc_client.get_warehouses_for_store(store_id)
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .and_then (|warehouses: Vec<Warehouse>| {
                 warehouses.into_iter().map(|warehouse| {
-                    let rpc_client = context.get_rest_api_client(Service::Warehouses);
                     rpc_client.get_product_in_warehouse(warehouse.id, self.id)
-                        .wait()
+                        .sync()
                         .map_err(into_graphql)
                         .map (|stock| {
                             if let Some(stock) = stock {

@@ -11,6 +11,7 @@ use serde_json;
 use uuid::Uuid;
 
 use stq_api::orders::OrderClient;
+use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -758,7 +759,7 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
         rpc_client.create_warehouse(input.into())
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .map(GraphQLWarehouse)
     }
@@ -787,7 +788,7 @@ graphql_object!(Mutation: Context |&self| {
             )
             .and_then(|id|{
                 rpc_client.update_warehouse(WarehouseIdentifier::Id(WarehouseId(id)), input.into())
-                    .wait()
+                    .sync()
                     .map_err(into_graphql)
                     .map(|res| res.map(GraphQLWarehouse))
             })
@@ -805,7 +806,7 @@ graphql_object!(Mutation: Context |&self| {
             )
             .and_then(|id|{
                 rpc_client.delete_warehouse(WarehouseIdentifier::Id(WarehouseId(id)))
-                    .wait()
+                    .sync()
                     .map_err(into_graphql)
                     .map(|res| res.map(GraphQLWarehouse))
             })
@@ -815,14 +816,13 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
         rpc_client.delete_all_warehouses()
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.into_iter().map(GraphQLWarehouse).collect())
     }
 
     field setProductQuantityInWarehouse(&executor, input: ProductQuantityInput as "set Product Quantity In Warehouse input.") -> FieldResult<GraphQLStock> as "Set Product Quantity In Warehouse" {
         let context = executor.context();
-        let rpc_client = context.get_rest_api_client(Service::Warehouses);
         Uuid::parse_str(&input.warehouse_id)
             .map_err(|_|
                 FieldError::new(
@@ -831,8 +831,9 @@ graphql_object!(Mutation: Context |&self| {
                 )
             )
             .and_then(|id|{
+                let rpc_client = context.get_rest_api_client(Service::Warehouses);
                 rpc_client.set_product_in_warehouse(WarehouseId(id), input.product_id.into(), input.quantity.into())
-                    .wait()
+                    .sync()
                     .map_err(into_graphql)
                     .map(GraphQLStock)
             })
@@ -945,7 +946,7 @@ graphql_object!(Mutation: Context |&self| {
         }
         let rpc_client = context.get_rest_api_client(Service::Orders);
         rpc_client.set_order_state(OrderIdentifier::Slug(OrderSlug(slug)), order.state, order.comment, order.track_id)
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLOrder))
     }
@@ -956,7 +957,7 @@ graphql_object!(Mutation: Context |&self| {
         let order: OrderStatusCanceled = input.into();
         let rpc_client = context.get_rest_api_client(Service::Orders);
         rpc_client.set_order_state(OrderIdentifier::Slug(OrderSlug(slug)), order.state, order.comment, None)
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLOrder))
     }
@@ -967,7 +968,7 @@ graphql_object!(Mutation: Context |&self| {
         let order: OrderStatusComplete = input.into();
         let rpc_client = context.get_rest_api_client(Service::Orders);
         rpc_client.set_order_state(OrderIdentifier::Slug(OrderSlug(slug)), order.state, order.comment, None)
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLOrder))
     }

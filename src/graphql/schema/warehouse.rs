@@ -9,6 +9,7 @@ use juniper::ID as GraphqlID;
 use serde_json;
 
 use stq_api::warehouses::{Stock, WarehouseClient};
+use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{ProductId, Quantity, StockId};
@@ -128,7 +129,7 @@ graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
 
                     let rpc_client = context.get_rest_api_client(Service::Warehouses);
                     rpc_client.get_product_in_warehouse(self.0.id, product_id)
-                        .wait()
+                        .sync()
                         .map_err(into_graphql)
                         .map (|stock| {
                             if let Some(stock) = stock {

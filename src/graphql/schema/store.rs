@@ -12,6 +12,7 @@ use serde_json;
 
 use stq_api::orders::{OrderClient, OrderSearchTerms};
 use stq_api::warehouses::WarehouseClient;
+use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Language, ModerationStatus, Translation};
@@ -206,7 +207,7 @@ graphql_object!(Store: Context as "Store" |&self| {
 
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
         rpc_client.get_warehouses_for_store(self.id)
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.into_iter().map(GraphQLWarehouse).collect())
     }
@@ -273,6 +274,7 @@ graphql_object!(Store: Context as "Store" |&self| {
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
         rpc_client.search(search_term)
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.into_iter().map(GraphQLOrder).collect())
             .map (move |orders: Vec<GraphQLOrder>| {
@@ -296,7 +298,6 @@ graphql_object!(Store: Context as "Store" |&self| {
                 };
                 Connection::new(orders_edges, page_info)
             })
-            .wait()
             .map(Some)
     }
 
@@ -305,9 +306,9 @@ graphql_object!(Store: Context as "Store" |&self| {
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
         rpc_client.get_order(OrderIdentifier::Slug(OrderSlug(slug)))
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLOrder))
-            .wait()
     }
 
     field find_most_viewed_products(&executor,

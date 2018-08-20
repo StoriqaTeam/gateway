@@ -9,6 +9,7 @@ use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
 use stq_api::orders::{OrderClient, OrderSearchTerms};
+use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -435,6 +436,7 @@ graphql_object!(User: Context as "User" |&self| {
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
         rpc_client.search(search_term)
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.into_iter().map(GraphQLOrder).collect())
             .map (move |orders: Vec<GraphQLOrder>| {
@@ -458,7 +460,6 @@ graphql_object!(User: Context as "User" |&self| {
                 };
                 Connection::new(orders_edges, page_info)
             })
-            .wait()
             .map(Some)
     }
 
@@ -467,9 +468,9 @@ graphql_object!(User: Context as "User" |&self| {
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
         rpc_client.get_order(OrderIdentifier::Slug(OrderSlug(slug)))
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLOrder))
-            .wait()
     }
 
 
@@ -478,7 +479,7 @@ graphql_object!(User: Context as "User" |&self| {
 
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
         rpc_client.get_warehouse(WarehouseIdentifier::Slug(WarehouseSlug(slug)))
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLWarehouse))
     }

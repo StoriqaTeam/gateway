@@ -5,6 +5,7 @@ use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
+use stq_api::types::ApiFutureExt;
 use stq_api::orders::OrderClient;
 use stq_routes::service::Service;
 use stq_static_resources::OrderState;
@@ -36,8 +37,8 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
                 ids.into_iter().map(|id| {
                     let rpc_client = context.get_rest_api_client(Service::Orders);
                     rpc_client.get_order(OrderIdentifier::Id(id))
+                        .sync()
                         .map_err(into_graphql)
-                        .wait()
                         .and_then(|order|{
                             if let Some(order) = order {
                                 Ok(GraphQLOrder(order))

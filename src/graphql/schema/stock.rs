@@ -5,6 +5,7 @@ use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_api::warehouses::WarehouseClient;
+use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::WarehouseIdentifier;
@@ -55,7 +56,7 @@ graphql_object!(GraphQLStock: Context as "Stock" |&self| {
 
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
         rpc_client.get_warehouse(WarehouseIdentifier::Id(self.0.warehouse_id))
-            .wait()
+            .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLWarehouse))
     }

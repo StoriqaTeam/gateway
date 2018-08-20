@@ -9,6 +9,7 @@ use serde_json;
 use uuid::Uuid;
 
 use stq_api::orders::OrderClient;
+use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -127,7 +128,6 @@ graphql_object!(Query: Context |&self| {
                     ))
                 },
                 (Service::Orders, &Model::Order) => {
-                    let rpc_client = context.get_rest_api_client(Service::Orders);
                     Uuid::parse_str(&id.to_string())
                         .map_err(|_|
                             FieldError::new(
@@ -136,10 +136,11 @@ graphql_object!(Query: Context |&self| {
                             )
                         )
                         .and_then(|id|{
+                            let rpc_client = context.get_rest_api_client(Service::Orders);
                             rpc_client.get_order(OrderIdentifier::Id(OrderId(id)))
+                                .sync()
                                 .map_err(into_graphql)
                                 .map(|res| res.map(GraphQLOrder).map(Box::new).map(Node::Order))
-                                .wait()
                         })
                 },
                 (Service::Orders, _) => {
@@ -149,7 +150,6 @@ graphql_object!(Query: Context |&self| {
                     ))
                 },
                 (&Service::Warehouses, &Model::Warehouse) => {
-                    let rpc_client = context.get_rest_api_client(Service::Warehouses);
                     Uuid::parse_str(&id.to_string())
                         .map_err(|_|
                             FieldError::new(
@@ -158,10 +158,11 @@ graphql_object!(Query: Context |&self| {
                             )
                         )
                         .and_then(|id|{
+                            let rpc_client = context.get_rest_api_client(Service::Warehouses);
                             rpc_client.get_warehouse(WarehouseIdentifier::Id(WarehouseId(id)))
+                                .sync()
                                 .map_err(into_graphql)
                                 .map(|res| res.map(GraphQLWarehouse).map(Box::new).map(Node::Warehouse))
-                                .wait()
                         })
                 },
                 (&Service::Warehouses, _) => {
