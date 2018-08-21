@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 
-use stq_api::orders::Order;
+use stq_api::orders::{Order, OrderDiff};
 use stq_static_resources::OrderState;
 use stq_types::{CurrencyId, OrderSlug, StoreId, UserId};
 
@@ -132,13 +132,7 @@ impl From<OrderStatusCompleteInput> for OrderStatusComplete {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct OrderHistoryItem {
-    pub parent: String,
-    pub committer: UserId,
-    pub committed_at: DateTime<Utc>,
-    pub state: OrderState,
-    pub comment: Option<String>,
-}
+pub struct OrderHistoryItem(pub OrderDiff);
 
 #[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
 #[graphql(description = "Search order option input object")]

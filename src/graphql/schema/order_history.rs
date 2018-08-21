@@ -14,15 +14,15 @@ graphql_object!(OrderHistoryItem: Context as "OrderHistoryItem" |&self| {
     description: "Order history item info."
 
     field state() -> &OrderState as "Order State"{
-        &self.state
+        &self.0.state
     }
 
-    field order_id() -> &str as "Order id"{
-        &self.parent
+    field order_id() -> String as "Order id"{
+        self.0.parent.to_string()
     }
 
     field committer() -> &i32 as "User int id"{
-        &self.committer.0
+        &self.0.committer.0
     }
 
     field user(&executor) -> FieldResult<Option<User>> as "User" {
@@ -30,18 +30,18 @@ graphql_object!(OrderHistoryItem: Context as "OrderHistoryItem" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
             Model::User.to_url(),
-            self.committer);
+            self.0.committer);
 
         context.request::<Option<User>>(Method::Get, url, None)
             .wait()
     }
 
     field committed_at() -> String as "Committed at time" {
-        self.committed_at.to_rfc3339()
+        self.0.committed_at.to_rfc3339()
     }
 
-    field comment() -> &Option<String> as "Comment" {
-        &self.comment
+    field comment() -> Option<String> as "Comment" {
+        self.0.comment.clone()
     }
 
 });

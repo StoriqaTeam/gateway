@@ -7,11 +7,14 @@ use hyper::Method;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
+use stq_api::orders::OrderClient;
+use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::OrderState;
 
 use super::*;
+use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
 
@@ -133,19 +136,17 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/order_diff/by-slug/{}",
-            context.config.service_url(Service::Orders),
-            self.0.slug
-            );
-
-        context.request::<Vec<OrderHistoryItem>>(Method::Get, url, None)
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.get_order_diff(self.0.slug.into())
+            .sync()
+            .map_err(into_graphql)
             .map (|items| {
                 let mut item_edges: Vec<Edge<OrderHistoryItem>> = items
                     .into_iter()
                     .skip(offset as usize)
                     .take(count as usize)
                     .enumerate()
-                    .map(|(i, item)| Edge::new(juniper::ID::from((i as i32 + offset).to_string()), item))
+                    .map(|(i, item)| Edge::new(juniper::ID::from((i as i32 + offset).to_string()), OrderHistoryItem(item)))
                     .collect();
                 let has_next_page = item_edges.len() as i32 == count + 1;
                 if has_next_page {
@@ -161,7 +162,6 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
                     end_cursor};
                 Connection::new(item_edges, page_info)
             })
-            .wait()
             .map(Some)
     }
 

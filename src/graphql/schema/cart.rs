@@ -21,15 +21,14 @@ graphql_object!(Cart: Context as "Cart" |&self| {
     field id(&executor) -> GraphqlID as "Base64 Unique id"{
         let context = executor.context();
 
-        let id = if let Some(ref user) = context.user {
-            user.user_id
+        if let Some(ref user) = context.user {
+            ID::new(Service::Orders, Model::Cart, user.user_id.0).to_string().into()
         } else if let Some(session_id) = context.session_id {
-            session_id
+            session_id.0.to_string().into()
         }  else {
-            UserId::default()
-        };
+            ID::new(Service::Orders, Model::Cart, UserId::default().0).to_string().into()
+        }
 
-        ID::new(Service::Orders, Model::Cart, id.0).to_string().into()
     }
 
     field stores(&executor,

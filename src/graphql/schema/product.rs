@@ -6,8 +6,8 @@ use juniper;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_api::warehouses::{Stock, Warehouse, WarehouseClient};
 use stq_api::types::ApiFutureExt;
+use stq_api::warehouses::{Stock, Warehouse, WarehouseClient};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{Quantity, StockId};

@@ -4,8 +4,8 @@ use hyper::Method;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
-use stq_api::warehouses::WarehouseClient;
 use stq_api::types::ApiFutureExt;
+use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::WarehouseIdentifier;

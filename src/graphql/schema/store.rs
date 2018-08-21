@@ -11,8 +11,8 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 
 use stq_api::orders::{OrderClient, OrderSearchTerms};
-use stq_api::warehouses::WarehouseClient;
 use stq_api::types::ApiFutureExt;
+use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Language, ModerationStatus, Translation};

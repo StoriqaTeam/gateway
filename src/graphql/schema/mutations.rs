@@ -10,13 +10,13 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
-use stq_api::orders::OrderClient;
+use stq_api::orders::{CartClient, OrderClient};
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_types::OrderSlug;
 use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
-use stq_types::{OrderIdentifier, OrderSlug, WarehouseIdentifier};
 
 use errors::into_graphql;
 
@@ -443,6 +443,17 @@ graphql_object!(Mutation: Context |&self| {
     field incrementInCart(&executor, input: IncrementInCartInput as "Increment in cart input.") -> FieldResult<Option<Cart>> as "Increment in cart." {
         let context = executor.context();
 
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not increment cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
         let url = format!("{}/{}/store_id?product_id={}",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
@@ -455,19 +466,18 @@ graphql_object!(Mutation: Context |&self| {
                     graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
             ))?;
 
-        let cp_input = CartProductIncrementPayload { store_id };
-        let body: String = serde_json::to_string(&cp_input)?.to_string();
-        let url = format!("{}/{}/products/{}/increment", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
-        let products = context.request::<CartHash>(Method::Post, url, Some(body))
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products = rpc_client.increment_item(customer, input.product_id.into(), store_id)
+            .sync()
+            .map_err(into_graphql)
             .map (|hash| hash.into_iter()
-                .map(|(product_id, info)| OrdersCartProduct {
-                    product_id,
-                    quantity: info.quantity,
-                    store_id: info.store_id,
-                    selected: info.selected,
-                    comment: info.comment,
-            }).collect::<Vec<OrdersCartProduct>>())
-            .wait()?;
+                .map(|cart_item| OrdersCartProduct {
+                    product_id: cart_item.product_id,
+                    quantity: cart_item.quantity,
+                    store_id: cart_item.store_id,
+                    selected: cart_item.selected,
+                    comment: cart_item.comment,
+            }).collect::<Vec<OrdersCartProduct>>())?;
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -484,20 +494,30 @@ graphql_object!(Mutation: Context |&self| {
 
     field setQuantityInCart(&executor, input: SetQuantityInCartInput as "Set product quantity in cart input.") -> FieldResult<Option<Cart>> as "Sets product quantity in cart." {
         let context = executor.context();
-        let url = format!("{}/{}/products/{}/quantity", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
 
-        let body = serde_json::to_string(&input)?;
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not set item quantity in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
 
-        let products = context.request::<CartHash>(Method::Put, url, Some(body))
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products = rpc_client.set_quantity(customer, input.product_id.into(), input.value.into())
+            .sync()
+            .map_err(into_graphql)
             .map (|hash| hash.into_iter()
-                .map(|(product_id, info)| OrdersCartProduct {
-                    product_id,
-                    quantity: info.quantity,
-                    store_id: info.store_id,
-                    selected: info.selected,
-                    comment: info.comment,
-            }).collect::<Vec<OrdersCartProduct>>())
-            .wait()?;
+                .map(|cart_item| OrdersCartProduct {
+                    product_id: cart_item.product_id,
+                    quantity: cart_item.quantity,
+                    store_id: cart_item.store_id,
+                    selected: cart_item.selected,
+                    comment: cart_item.comment,
+            }).collect::<Vec<OrdersCartProduct>>())?;
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -513,20 +533,30 @@ graphql_object!(Mutation: Context |&self| {
 
     field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<Cart>> as "Select product in cart." {
         let context = executor.context();
-        let url = format!("{}/{}/products/{}/selection", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
 
-        let body = serde_json::to_string(&input)?;
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not select item in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
 
-        let products = context.request::<CartHash>(Method::Put, url, Some(body))
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products = rpc_client.set_selection(customer, input.product_id.into(), input.value)
+            .sync()
+            .map_err(into_graphql)
             .map (|hash| hash.into_iter()
-                .map(|(product_id, info)| OrdersCartProduct {
-                    product_id,
-                    quantity: info.quantity,
-                    store_id: info.store_id,
-                    selected: info.selected,
-                    comment: info.comment,
-            }).collect::<Vec<OrdersCartProduct>>())
-            .wait()?;
+                .map(|cart_item| OrdersCartProduct {
+                    product_id: cart_item.product_id,
+                    quantity: cart_item.quantity,
+                    store_id: cart_item.store_id,
+                    selected: cart_item.selected,
+                    comment: cart_item.comment,
+            }).collect::<Vec<OrdersCartProduct>>())?;
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -542,20 +572,30 @@ graphql_object!(Mutation: Context |&self| {
 
     field setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.") -> FieldResult<Option<Cart>> as "product in cart." {
         let context = executor.context();
-        let url = format!("{}/{}/products/{}/comment", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
 
-        let body = serde_json::to_string(&input)?;
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not comment item in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
 
-        let products = context.request::<CartHash>(Method::Put, url, Some(body))
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products = rpc_client.set_comment(customer, input.product_id.into(), input.value)
+            .sync()
+            .map_err(into_graphql)
             .map (|hash| hash.into_iter()
-                .map(|(product_id, info)| OrdersCartProduct {
-                    product_id,
-                    quantity: info.quantity,
-                    store_id: info.store_id,
-                    selected: info.selected,
-                    comment: info.comment,
-            }).collect::<Vec<OrdersCartProduct>>())
-            .wait()?;
+                .map(|cart_item| OrdersCartProduct {
+                    product_id: cart_item.product_id,
+                    quantity: cart_item.quantity,
+                    store_id: cart_item.store_id,
+                    selected: cart_item.selected,
+                    comment: cart_item.comment,
+            }).collect::<Vec<OrdersCartProduct>>())?;
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -572,18 +612,29 @@ graphql_object!(Mutation: Context |&self| {
     field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Cart> as "Deletes products from cart." {
         let context = executor.context();
 
-        let url = format!("{}/{}/products/{}", context.config.service_url(Service::Orders), Model::Cart.to_url(), input.product_id);
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not delete item from cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
 
-        let products = context.request::<CartHash>(Method::Delete, url, None)
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products = rpc_client.delete_item(customer, input.product_id.into())
+            .sync()
+            .map_err(into_graphql)
             .map (|hash| hash.into_iter()
-                .map(|(product_id, info)| OrdersCartProduct {
-                    product_id,
-                    quantity: info.quantity,
-                    store_id: info.store_id,
-                    selected: info.selected,
-                    comment: info.comment,
-            }).collect::<Vec<OrdersCartProduct>>())
-            .wait()?;
+                .map(|cart_item| OrdersCartProduct {
+                    product_id: cart_item.product_id,
+                    quantity: cart_item.quantity,
+                    store_id: cart_item.store_id,
+                    selected: cart_item.selected,
+                    comment: cart_item.comment,
+            }).collect::<Vec<OrdersCartProduct>>())?;
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -599,11 +650,22 @@ graphql_object!(Mutation: Context |&self| {
     field clearCart(&executor) -> FieldResult<Cart> as "Clears cart." {
         let context = executor.context();
 
-        let url = format!("{}/{}/clear", context.config.service_url(Service::Orders), Model::Cart.to_url());
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not clear cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
 
-        context.request::<CartHash>(Method::Post, url, None)
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.clear_cart(customer)
+            .sync()
+            .map_err(into_graphql)
             .map(|_| convert_to_cart(vec![], &[]))
-            .wait()
     }
 
     field updateCurrencyExchange(&executor, input: NewCurrencyExchangeInput as "New currency exchange input.") -> FieldResult<CurrencyExchange> as "Updates currencies exchange." {
@@ -787,7 +849,7 @@ graphql_object!(Mutation: Context |&self| {
                 )
             )
             .and_then(|id|{
-                rpc_client.update_warehouse(WarehouseIdentifier::Id(WarehouseId(id)), input.into())
+                rpc_client.update_warehouse(WarehouseId(id).into(), input.into())
                     .sync()
                     .map_err(into_graphql)
                     .map(|res| res.map(GraphQLWarehouse))
@@ -796,7 +858,6 @@ graphql_object!(Mutation: Context |&self| {
 
     field deleteWarehouse(&executor, id: String) -> FieldResult<Option<GraphQLWarehouse>>  as "Delete existing Warehouse." {
         let context = executor.context();
-        let rpc_client = context.get_rest_api_client(Service::Warehouses);
         Uuid::parse_str(&id)
             .map_err(|_|
                 FieldError::new(
@@ -805,7 +866,8 @@ graphql_object!(Mutation: Context |&self| {
                 )
             )
             .and_then(|id|{
-                rpc_client.delete_warehouse(WarehouseIdentifier::Id(WarehouseId(id)))
+                let rpc_client = context.get_rest_api_client(Service::Warehouses);
+                rpc_client.delete_warehouse(WarehouseId(id).into())
                     .sync()
                     .map_err(into_graphql)
                     .map(|res| res.map(GraphQLWarehouse))
@@ -842,52 +904,50 @@ graphql_object!(Mutation: Context |&self| {
     field createOrders(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<CreateOrders> as "Creates orders from cart." {
         let context = executor.context();
 
-        let (products, user_id) = if let Some(user) = context.user.clone() {
-            let url = format!("{}/{}/products",
-                &context.config.service_url(Service::Orders),
-                Model::Cart.to_url());
-
-            context.request::<CartHash>(Method::Get, url, None)
-                .map (|hash|
-                    hash.into_iter()
-                        .map(|(product_id, info)| OrdersCartProduct {
-                            product_id,
-                            quantity: info.quantity,
-                            store_id: info.store_id,
-                            selected: info.selected,
-                            comment: info.comment,
-                    })
-                    .map(|p| {
-                        let url = format!("{}/{}/{}/seller_price",
-                            context.config.service_url(Service::Stores),
-                            Model::Product.to_url(),
-                            p.product_id);
-
-                        context.request::<Option<ProductSellerPrice>>(Method::Get, url, None).wait().and_then(|seller_price|{
-                            if let Some(seller_price) = seller_price {
-                                Ok((p.product_id, seller_price))
-                            } else {
-                                Err(FieldError::new(
-                                    "Could not find product seller price from id received from cart.",
-                                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
-                                ))
-                            }
-                        })
-                    })
-                    .collect::<FieldResult<Vec<(ProductId, ProductSellerPrice)>>>()
-                )
-                .map(|p| (p, user.user_id)).wait()?
-        }  else {
-            return Err(FieldError::new(
-                "Could not create order for unauthorized user.",
+        let user = context.user.clone().ok_or_else(||
+            FieldError::new(
+                "Could not create cart for unauthorized user.",
                 graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-            ));
-        };
+            )
+        )?;
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products = rpc_client.get_cart(user.user_id.into())
+            .sync()
+            .map_err(into_graphql)
+            .map (|hash|
+                hash.into_iter()
+                    .map(|cart_item| OrdersCartProduct {
+                        product_id: cart_item.product_id,
+                        quantity: cart_item.quantity,
+                        store_id: cart_item.store_id,
+                        selected: cart_item.selected,
+                        comment: cart_item.comment,
+                })
+                .map(|p| {
+                    let url = format!("{}/{}/{}/seller_price",
+                        context.config.service_url(Service::Stores),
+                        Model::Product.to_url(),
+                        p.product_id);
+
+                    context.request::<Option<ProductSellerPrice>>(Method::Get, url, None).wait().and_then(|seller_price|{
+                        if let Some(seller_price) = seller_price {
+                            Ok((p.product_id, seller_price))
+                        } else {
+                            Err(FieldError::new(
+                                "Could not find product seller price from id received from cart.",
+                                graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                            ))
+                        }
+                    })
+                })
+                .collect::<FieldResult<Vec<(ProductId, ProductSellerPrice)>>>()
+            )?;
 
         let products_with_prices = products?.into_iter().collect();
 
         let create_order = CreateOrder {
-            customer_id: user_id,
+            customer_id: user.user_id,
             address: input.address_full,
             receiver_name: input.receiver_name,
             receiver_phone: input.receiver_phone,
@@ -903,29 +963,27 @@ graphql_object!(Mutation: Context |&self| {
         let invoice = context.request::<Invoice>(Method::Post, url, Some(body))
             .wait()?;
 
-        let url = format!("{}/{}/products",
-            &context.config.service_url(Service::Orders), Model::Cart.to_url());
+        let products = rpc_client.get_cart(user.user_id.into())
+            .sync()
+            .map_err(into_graphql)
+            .map (|hash| hash.into_iter()
+                .map(|cart_item| OrdersCartProduct {
+                    product_id: cart_item.product_id,
+                    quantity: cart_item.quantity,
+                    store_id: cart_item.store_id,
+                    selected: cart_item.selected,
+                    comment: cart_item.comment,
+                }).collect::<Vec<OrdersCartProduct>>())?;
 
-        let products = context.request::<CartHash>(Method::Get, url, None)
-                .map (|hash| hash.into_iter()
-                    .map(|(product_id, info)| OrdersCartProduct {
-                        product_id,
-                        quantity: info.quantity,
-                        store_id: info.store_id,
-                        selected: info.selected,
-                        comment: info.comment,
-                }).collect::<Vec<OrdersCartProduct>>())
-                .wait()?;
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
 
-            let url = format!("{}/{}/cart",
-                context.config.service_url(Service::Stores),
-                Model::Store.to_url());
+        let body = serde_json::to_string(&products)?;
 
-            let body = serde_json::to_string(&products)?;
-
-            let cart = context.request::<Vec<Store>>(Method::Post, url, Some(body))
-                .map(|stores| convert_to_cart(stores, &products))
-                .wait()?;
+        let cart = context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores| convert_to_cart(stores, &products))
+            .wait()?;
 
         Ok(CreateOrders::new (invoice, cart))
 
@@ -945,7 +1003,7 @@ graphql_object!(Mutation: Context |&self| {
             order.comment = comment;
         }
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        rpc_client.set_order_state(OrderIdentifier::Slug(OrderSlug(slug)), order.state, order.comment, order.track_id)
+        rpc_client.set_order_state(OrderSlug(slug).into(), order.state, order.comment, order.track_id)
             .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLOrder))
@@ -956,7 +1014,7 @@ graphql_object!(Mutation: Context |&self| {
         let slug = input.order_slug;
         let order: OrderStatusCanceled = input.into();
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        rpc_client.set_order_state(OrderIdentifier::Slug(OrderSlug(slug)), order.state, order.comment, None)
+        rpc_client.set_order_state(OrderSlug(slug).into(), order.state, order.comment, None)
             .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLOrder))
@@ -967,7 +1025,7 @@ graphql_object!(Mutation: Context |&self| {
         let slug = input.order_slug;
         let order: OrderStatusComplete = input.into();
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        rpc_client.set_order_state(OrderIdentifier::Slug(OrderSlug(slug)), order.state, order.comment, None)
+        rpc_client.set_order_state(OrderSlug(slug).into(), order.state, order.comment, None)
             .sync()
             .map_err(into_graphql)
             .map(|res| res.map(GraphQLOrder))

@@ -21,7 +21,7 @@ use stq_http::request_util::serialize_future;
 use stq_http::request_util::CurrencyId as CurrencyIdHeader;
 use stq_http::request_util::SessionId as SessionIdHeader;
 use stq_router::RouteParser;
-use stq_types::{CurrencyId, UserId};
+use stq_types::{CurrencyId, SessionId};
 
 use self::routes::Route;
 use config::Config;
@@ -87,7 +87,7 @@ impl Controller for ControllerImpl {
                             .map(|t| t.claims)
                     });
 
-                    let session_id_header = headers.get::<SessionIdHeader>().and_then(|sid| sid.parse::<UserId>().ok());
+                    let session_id_header = headers.get::<SessionIdHeader>().and_then(|sid| sid.parse::<SessionId>().ok());
                     let currency_id_header = headers.get::<CurrencyIdHeader>().and_then(|sid| sid.parse::<CurrencyId>().ok());
 
                     serialize_future::<_, FailureError, _>(

@@ -8,14 +8,14 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
-use stq_api::orders::OrderClient;
+use stq_api::orders::{CartClient, OrderClient};
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::{Currency, CurrencyGraphQl};
 use stq_static_resources::{Language, LanguageGraphQl, OrderState};
-use stq_types::{OrderId, OrderIdentifier, WarehouseId, WarehouseIdentifier};
+use stq_types::{OrderId, WarehouseId};
 
 use super::*;
 use errors::into_graphql;
@@ -137,7 +137,7 @@ graphql_object!(Query: Context |&self| {
                         )
                         .and_then(|id|{
                             let rpc_client = context.get_rest_api_client(Service::Orders);
-                            rpc_client.get_order(OrderIdentifier::Id(OrderId(id)))
+                            rpc_client.get_order(OrderId(id).into())
                                 .sync()
                                 .map_err(into_graphql)
                                 .map(|res| res.map(GraphQLOrder).map(Box::new).map(Node::Order))
@@ -159,7 +159,7 @@ graphql_object!(Query: Context |&self| {
                         )
                         .and_then(|id|{
                             let rpc_client = context.get_rest_api_client(Service::Warehouses);
-                            rpc_client.get_warehouse(WarehouseIdentifier::Id(WarehouseId(id)))
+                            rpc_client.get_warehouse(WarehouseId(id).into())
                                 .sync()
                                 .map_err(into_graphql)
                                 .map(|res| res.map(GraphQLWarehouse).map(Box::new).map(Node::Warehouse))
@@ -267,21 +267,16 @@ graphql_object!(Query: Context |&self| {
 
     field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
-        let (method,body, url) = if let Some(session_id) = context.session_id {
-            if context.user.is_some() {
-                let body = serde_json::to_string(&CartMergePayload {user_from: session_id})?;
-                let url = format!("{}/{}/merge",
-                    &context.config.service_url(Service::Orders), Model::Cart.to_url(),);
-                (Method::Post, Some(body), url)
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let fut = if let Some(session_id) = context.session_id {
+            if let Some(ref user) = context.user {
+                rpc_client.merge(session_id.into(), user.user_id.into())
             } else {
-                let url = format!("{}/{}/products",
-                    &context.config.service_url(Service::Orders), Model::Cart.to_url());
-                (Method::Get, None, url)
+                rpc_client.get_cart(session_id.into())
             }
-        } else if context.user.is_some() {
-            let url = format!("{}/{}/products",
-                &context.config.service_url(Service::Orders), Model::Cart.to_url());
-            (Method::Get, None, url)
+        } else if let Some(ref user) = context.user {
+            rpc_client.get_cart(user.user_id.into())
         }  else {
             return Err(FieldError::new(
                 "Could not get users cart.",
@@ -289,16 +284,17 @@ graphql_object!(Query: Context |&self| {
             ));
         };
 
-        let products = context.request::<CartHash>(method, url, body)
+        let products = fut
+            .sync()
+            .map_err(into_graphql)
             .map (|hash| hash.into_iter()
-                .map(|(product_id, info)| OrdersCartProduct {
-                    product_id,
-                    quantity: info.quantity,
-                    store_id: info.store_id,
-                    selected: info.selected,
-                    comment: info.comment,
-            }).collect::<Vec<OrdersCartProduct>>())
-            .wait()?;
+                .map(|cart_item| OrdersCartProduct {
+                    product_id: cart_item.product_id,
+                    quantity: cart_item.quantity,
+                    store_id: cart_item.store_id,
+                    selected: cart_item.selected,
+                    comment: cart_item.comment,
+            }).collect::<Vec<OrdersCartProduct>>())?;
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),

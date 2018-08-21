@@ -8,8 +8,8 @@ use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 use serde_json;
 
-use stq_api::warehouses::{Stock, WarehouseClient};
 use stq_api::types::ApiFutureExt;
+use stq_api::warehouses::{Stock, WarehouseClient};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{ProductId, Quantity, StockId};

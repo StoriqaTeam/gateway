@@ -84,7 +84,7 @@ impl UpdateWarehouseInput {
 impl From<UpdateWarehouseInput> for WarehouseUpdateData {
     fn from(value: UpdateWarehouseInput) -> Self {
         Self {
-            slug: value.slug.map(|v| WarehouseSlug(v).into()),
+            slug: value.slug.map(WarehouseSlug).map(From::from),
             name: value.name.map(Some).map(From::from),
             location: value.location.map(|p| Point::new(p.x, p.y)).map(Some).map(From::from),
             administrative_area_level_1: value.address_full.administrative_area_level_1.map(Some).map(From::from),

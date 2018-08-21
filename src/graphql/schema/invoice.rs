@@ -5,8 +5,8 @@ use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_api::types::ApiFutureExt;
 use stq_api::orders::OrderClient;
+use stq_api::types::ApiFutureExt;
 use stq_routes::service::Service;
 use stq_static_resources::OrderState;
 use stq_types::{OrderId, OrderIdentifier};

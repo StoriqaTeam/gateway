@@ -13,14 +13,14 @@ use stq_api::rpc_client::RestApiClient;
 use stq_http::client::{ClientHandle, Error};
 use stq_http::request_util::CurrencyId as CurrencyIdHeader;
 use stq_routes::service::Service;
-use stq_types::{CurrencyId, UserId};
+use stq_types::{CurrencyId, SessionId};
 
 use graphql::models::jwt::JWTPayload;
 
 pub struct Context {
     pub http_client: ClientHandle,
     pub user: Option<JWTPayload>,
-    pub session_id: Option<UserId>,
+    pub session_id: Option<SessionId>,
     pub currency_id: Option<CurrencyId>,
     pub uuid: String,
     pub config: Config,
@@ -32,7 +32,7 @@ impl Context {
     pub fn new(
         http_client: ClientHandle,
         user: Option<JWTPayload>,
-        session_id: Option<UserId>,
+        session_id: Option<SessionId>,
         currency_id: Option<CurrencyId>,
         config: Config,
     ) -> Self {
