@@ -14,29 +14,29 @@ path = "src/main.rs"
 
 
 [dependencies]
-stq_api = { path = "vendor/libstqbackend/api" }
-stq_http = { path = "vendor/libstqbackend/http" }
-stq_static_resources = { path = "vendor/libstqbackend/static_resources" }
-stq_routes = { path = "vendor/libstqbackend/routes" }
-stq_router = { path = "vendor/libstqbackend/router" }
-stq_types = { path = "vendor/libstqbackend/types" }
-stq_logging = { path = "vendor/libstqbackend/logging" }
-juniper = "0.9.2"
-hyper = "0.11.22"
-futures = "0.1.17"
-regex = "0.2"
-serde_json = "1.0"
-tokio-core = "0.1"
-config = "0.7"
-serde_derive = "^1.0.8"
-serde = "^1.0.8"
-log="0.4"
-env_logger="0.5.6"
-futures-cpupool="*"
 base64="0.9"
-jsonwebtoken = "4.0.0"
 chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "*", features = ["use_std", "v4", "serde"] }
+config = { version = "0.9", default-features = false, features = ["toml"] }
+env_logger="0.5.6"
 failure = "0.1.1"
+futures = "0.1.17"
+futures-cpupool="*"
 geo = "*"
 geo-types = { version = "*", features = ["serde"] }
+hyper = "0.11.22"
+jsonwebtoken = "4.0.0"
+juniper = "0.9.2"
+log="0.4"
+regex = "0.2"
+serde = "^1.0.8"
+serde_derive = "^1.0.8"
+serde_json = "1.0"
+stq_api = { path = "vendor/libstqbackend/api" }
+stq_http = { path = "vendor/libstqbackend/http" }
+stq_logging = { path = "vendor/libstqbackend/logging" }
+stq_router = { path = "vendor/libstqbackend/router" }
+stq_routes = { path = "vendor/libstqbackend/routes" }
+stq_static_resources = { path = "vendor/libstqbackend/static_resources" }
+stq_types = { path = "vendor/libstqbackend/types" }
+tokio-core = "0.1"
+uuid = { version = "*", features = ["use_std", "v4", "serde"] }
