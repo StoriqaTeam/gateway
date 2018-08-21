@@ -1,31 +1,13 @@
 use chrono::prelude::*;
 
+use stq_api::orders::{Order, OrderDiff};
 use stq_static_resources::OrderState;
-use stq_types::*;
+use stq_types::{CurrencyId, OrderSlug, StoreId, UserId};
 
 use super::*;
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct Order {
-    pub id: OrderId,
-    pub state: OrderState,
-    #[serde(rename = "customer")]
-    pub customer_id: UserId,
-    #[serde(rename = "product")]
-    pub product_id: ProductId,
-    pub quantity: Quantity,
-    #[serde(rename = "store")]
-    pub store_id: StoreId,
-    pub price: ProductPrice,
-    pub currency_id: CurrencyId,
-    pub receiver_name: String,
-    pub slug: OrderSlug,
-    pub payment_status: bool,
-    pub delivery_company: Option<String>,
-    pub track_id: Option<String>,
-    pub created_at: DateTime<Utc>,
-    pub address: Address,
-}
+pub struct GraphQLOrder(pub Order);
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Create order input object")]
@@ -150,13 +132,7 @@ impl From<OrderStatusCompleteInput> for OrderStatusComplete {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct OrderHistoryItem {
-    pub parent: String,
-    pub committer: UserId,
-    pub committed_at: DateTime<Utc>,
-    pub state: OrderState,
-    pub comment: Option<String>,
-}
+pub struct OrderHistoryItem(pub OrderDiff);
 
 #[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
 #[graphql(description = "Search order option input object")]

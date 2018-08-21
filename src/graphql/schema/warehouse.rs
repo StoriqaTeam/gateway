@@ -8,41 +8,44 @@ use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 use serde_json;
 
+use stq_api::types::ApiFutureExt;
+use stq_api::warehouses::{Stock, WarehouseClient};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{ProductId, Quantity};
+use stq_types::{ProductId, Quantity, StockId};
 
 use super::*;
+use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
 
-graphql_object!(Warehouse: Context as "Warehouse" |&self| {
+graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
     description: "Warehouse info."
 
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
-        self.id.to_string().into()
+        self.0.id.to_string().into()
     }
 
     field name() -> &Option<String> as "Name"{
-        &self.name
+        &self.0.name
     }
 
-    field location() -> &Option<GeoPoint> as "Location"{
-        &self.location
+    field location() -> Option<GeoPoint> as "Location"{
+        self.0.clone().location.map(|p| GeoPoint{x: p.x(), y: p.y()})
     }
 
-    field slug() -> &str as "Slug"{
-        &self.slug
+    field slug() -> String as "Slug"{
+        self.0.slug.clone().to_string()
     }
 
     field address_full() -> Address as "Address full"{
-        self.clone().into()
+        self.0.clone().into()
     }
 
     field store_id() -> &i32 as "Store_id"{
-        &self.store_id.0
+        &self.0.store_id.0
     }
 
     field store(&executor) -> FieldResult<Option<Store>> as "Fetches store." {
@@ -52,7 +55,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
             "{}/{}/{}",
             &context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            self.store_id.to_string()
+            self.0.store_id.to_string()
         );
 
         context.request::<Option<Store>>(Method::Get, url, None)
@@ -65,7 +68,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
         current_page : i32 as "Current page",
         items_count : i32 as "Items count", 
         search_term : Option<SearchProductInput> as "Search pattern") 
-            -> FieldResult<Option<Connection<Stock, PageInfoWarehouseProductSearch>>> as "Find products of the warehouse using relay connection." {
+            -> FieldResult<Option<Connection<GraphQLStock, PageInfoWarehouseProductSearch>>> as "Find products of the warehouse using relay connection." {
 
         let context = executor.context();
 
@@ -83,11 +86,11 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
         let search_term = if let Some(search_term) = search_term {
             let options = if let Some(mut options) = search_term.options {
-                options.store_id = Some(self.store_id.0);
+                options.store_id = Some(self.0.store_id.0);
                 options
             } else {
                 ProductsSearchOptionsInput{
-                    store_id : Some(self.store_id.0),
+                    store_id : Some(self.0.store_id.0),
                     ..ProductsSearchOptionsInput::default()
                 }
             };
@@ -99,7 +102,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
             SearchProductInput {
                 name: "".to_string(),
                 options: Some(ProductsSearchOptionsInput{
-                    store_id : Some(self.store_id.0),
+                    store_id : Some(self.0.store_id.0),
                     ..ProductsSearchOptionsInput::default()
                 })
             }
@@ -123,28 +126,25 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
             .wait()
             .and_then (|products: Vec<ProductId>| {
                 products.into_iter().map(|product_id| {
-                    let url = format!("{}/{}/by-id/{}/{}/{}",
-                        context.config.service_url(Service::Warehouses),
-                        Model::Warehouse.to_url(),
-                        self.id,
-                        Model::Product.to_url(),
-                        product_id.to_string(),
-                    );
 
-                    context.request::<Option<Stock>>(Method::Get, url, None)
-                        .wait()
+                    let rpc_client = context.get_rest_api_client(Service::Warehouses);
+                    rpc_client.get_product_in_warehouse(self.0.id, product_id)
+                        .sync()
+                        .map_err(into_graphql)
                         .map (|stock| {
                             if let Some(stock) = stock {
                                 stock
                             } else {
                                 Stock {
+                                    id: StockId::new(),
                                     product_id,
-                                    warehouse_id: self.id,
+                                    warehouse_id: self.0.id,
                                     quantity: Quantity::default(),
                                 }
                             }
                         })
-                }).collect::<FieldResult<Vec<Stock>>>()
+                        .map(GraphQLStock)
+                }).collect::<FieldResult<Vec<GraphQLStock>>>()
                 .and_then (|products| {
                     let mut product_edges = Edge::create_vec(products, offset);
 
@@ -197,7 +197,7 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
         let search_term = AutoCompleteProductNameInput {
             name,
-            store_id : Some(self.store_id.0),
+            store_id : Some(self.0.store_id.0),
             status: None,
         };
 
@@ -226,10 +226,10 @@ graphql_object!(Warehouse: Context as "Warehouse" |&self| {
 
 });
 
-graphql_object!(Connection<Stock, PageInfoWarehouseProductSearch>: Context as "StocksConnection" |&self| {
+graphql_object!(Connection<GraphQLStock, PageInfoWarehouseProductSearch>: Context as "StocksConnection" |&self| {
     description:"Warehouse Products Connection"
 
-    field edges() -> &[Edge<Stock>] {
+    field edges() -> &[Edge<GraphQLStock>] {
         &self.edges
     }
 
@@ -238,14 +238,14 @@ graphql_object!(Connection<Stock, PageInfoWarehouseProductSearch>: Context as "S
     }
 });
 
-graphql_object!(Edge<Stock>: Context as "StocksEdge" |&self| {
+graphql_object!(Edge<GraphQLStock>: Context as "StocksEdge" |&self| {
     description:"Warehouse Product Edge"
 
     field cursor() -> &juniper::ID {
         &self.cursor
     }
 
-    field node() -> &Stock {
+    field node() -> &GraphQLStock {
         &self.node
     }
 });

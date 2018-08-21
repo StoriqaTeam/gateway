@@ -1,3 +1,6 @@
+use stq_api::orders::AddressFull as OrdersAddressFull;
+use stq_api::warehouses::Warehouse;
+
 use super::*;
 
 #[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
@@ -104,6 +107,23 @@ impl From<WizardStore> for Address {
 
 impl From<Warehouse> for Address {
     fn from(address: Warehouse) -> Address {
+        Self {
+            value: address.address,
+            country: address.country,
+            administrative_area_level_1: address.administrative_area_level_1,
+            administrative_area_level_2: address.administrative_area_level_2,
+            locality: address.locality,
+            political: address.political,
+            postal_code: address.postal_code,
+            route: address.route,
+            street_number: address.street_number,
+            place_id: address.place_id,
+        }
+    }
+}
+
+impl From<OrdersAddressFull> for Address {
+    fn from(address: OrdersAddressFull) -> Address {
         Self {
             value: address.address,
             country: address.country,

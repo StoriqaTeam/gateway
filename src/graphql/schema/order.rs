@@ -7,29 +7,32 @@ use hyper::Method;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
+use stq_api::orders::OrderClient;
+use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::OrderState;
 
 use super::*;
+use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
 
-graphql_object!(Order: Context as "Order" |&self| {
+graphql_object!(GraphQLOrder: Context as "Order" |&self| {
     description: "Order info."
 
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Unique id"{
-        self.id.to_string().into()
+        self.0.id.to_string().into()
     }
 
     field state() -> &OrderState as "Order State"{
-        &self.state
+        &self.0.state
     }
 
     field customer_id() -> &i32 as "Customer int id"{
-        &self.customer_id.0
+        &self.0.customer.0
     }
 
     field customer(&executor) -> FieldResult<Option<User>> as "Customer" {
@@ -37,14 +40,14 @@ graphql_object!(Order: Context as "Order" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),
             Model::User.to_url(),
-            self.customer_id);
+            self.0.customer);
 
         context.request::<Option<User>>(Method::Get, url, None)
             .wait()
     }
 
     field product_id() -> &i32 as "Product int id"{
-        &self.product_id.0
+        &self.0.product.0
     }
 
     field product(&executor) -> FieldResult<Option<Product>> as "Product" {
@@ -52,14 +55,14 @@ graphql_object!(Order: Context as "Order" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
-            self.product_id);
+            self.0.product);
 
         context.request::<Option<Product>>(Method::Get, url, None)
             .wait()
     }
 
     field store_id() -> &i32 as "Store int id"{
-        &self.store_id.0
+        &self.0.store.0
     }
 
     field store(&executor) -> FieldResult<Option<Store>> as "Store" {
@@ -67,54 +70,54 @@ graphql_object!(Order: Context as "Order" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            self.store_id);
+            self.0.store);
 
         context.request::<Option<Store>>(Method::Get, url, None)
             .wait()
     }
 
     field quantity() -> &i32 as "Quantity" {
-        &self.quantity.0
+        &self.0.quantity.0
     }
 
     field price() -> &f64 as "Price" {
-        &self.price.0
+        &self.0.price.0
     }
 
     field currency_id() -> &i32 as "Price" {
-        &self.currency_id.0
+        &self.0.currency_id.0
     }
 
     field subtotal() -> f64 as "Subtotal" {
-        self.price.0 * f64::from(self.quantity.0)
+        self.0.price.0 * f64::from(self.0.quantity.0)
     }
 
     field slug() -> &i32 as "Slug" {
-        &self.slug.0
+        &self.0.slug.0
     }
 
     field payment_status() -> &bool as "Payment status" {
-        &self.payment_status
+        &self.0.payment_status
     }
 
     field delivery_company() -> &Option<String> as "Delivery Company" {
-        &self.delivery_company
+        &self.0.delivery_company
     }
 
     field track_id() -> &Option<String> as "Delivery Company" {
-        &self.track_id
+        &self.0.track_id
     }
 
     field created_at() -> String as "Creation time" {
-        self.created_at.to_rfc3339()
+        self.0.created_at.to_rfc3339()
     }
 
     field receiver_name() -> &str as "Receiver name" {
-        &self.receiver_name
+        &self.0.receiver_name
     }
 
-    field address_full() -> &Address as "Full address" {
-        &self.address
+    field address_full() -> Address as "Full address" {
+        self.0.address.clone().into()
     }
 
     field history(&executor,
@@ -133,19 +136,17 @@ graphql_object!(Order: Context as "Order" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/order_diff/by-slug/{}",
-            context.config.service_url(Service::Orders),
-            self.slug
-            );
-
-        context.request::<Vec<OrderHistoryItem>>(Method::Get, url, None)
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.get_order_diff(self.0.slug.into())
+            .sync()
+            .map_err(into_graphql)
             .map (|items| {
                 let mut item_edges: Vec<Edge<OrderHistoryItem>> = items
                     .into_iter()
                     .skip(offset as usize)
                     .take(count as usize)
                     .enumerate()
-                    .map(|(i, item)| Edge::new(juniper::ID::from((i as i32 + offset).to_string()), item))
+                    .map(|(i, item)| Edge::new(juniper::ID::from((i as i32 + offset).to_string()), OrderHistoryItem(item)))
                     .collect();
                 let has_next_page = item_edges.len() as i32 == count + 1;
                 if has_next_page {
@@ -161,7 +162,6 @@ graphql_object!(Order: Context as "Order" |&self| {
                     end_cursor};
                 Connection::new(item_edges, page_info)
             })
-            .wait()
             .map(Some)
     }
 
@@ -170,7 +170,7 @@ graphql_object!(Order: Context as "Order" |&self| {
         let url = format!("{}/{}/{}/allowed_statuses",
             context.config.service_url(Service::Orders),
             Model::Order.to_url(),
-            self.id);
+            self.0.id);
 
         context.request::<Vec<OrderState>>(Method::Get, url, None)
             .wait()
@@ -180,7 +180,7 @@ graphql_object!(Order: Context as "Order" |&self| {
         let context = executor.context();
         let url = format!("{}/invoices/by-order-id/{}",
             context.config.service_url(Service::Billing),
-            self.id);
+            self.0.id);
 
         context.request::<Invoice>(Method::Get, url, None)
             .wait()
@@ -199,10 +199,10 @@ graphql_object!(CreateOrders: Context as "CreateOrders" |&self| {
     }
 });
 
-graphql_object!(Connection<Order, PageInfo>: Context as "OrdersConnection" |&self| {
+graphql_object!(Connection<GraphQLOrder, PageInfo>: Context as "OrdersConnection" |&self| {
     description:"Order Connection"
 
-    field edges() -> &[Edge<Order>] {
+    field edges() -> &[Edge<GraphQLOrder>] {
         &self.edges
     }
 
@@ -211,14 +211,14 @@ graphql_object!(Connection<Order, PageInfo>: Context as "OrdersConnection" |&sel
     }
 });
 
-graphql_object!(Edge<Order>: Context as "OrdersEdge" |&self| {
+graphql_object!(Edge<GraphQLOrder>: Context as "OrdersEdge" |&self| {
     description:"Order Edge"
 
     field cursor() -> &juniper::ID {
         &self.cursor
     }
 
-    field node() -> &Order {
+    field node() -> &GraphQLOrder {
         &self.node
     }
 });

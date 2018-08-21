@@ -1,7 +1,9 @@
 use super::*;
+use geo::Point;
 use juniper::ID as GraphqlID;
 
-use stq_types::{StoreId, WarehouseId};
+use stq_api::warehouses::{Warehouse, WarehouseInput, WarehouseUpdateData};
+use stq_types::{StoreId, WarehouseId, WarehouseSlug};
 
 #[derive(GraphQLEnum, Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[graphql(description = "Warehouse kind")]
@@ -33,34 +35,7 @@ pub struct GeoPointInput {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct Warehouse {
-    pub id: WarehouseId,
-    pub name: Option<String>,
-    pub store_id: StoreId,
-    pub location: Option<GeoPoint>,
-    pub administrative_area_level_1: Option<String>,
-    pub administrative_area_level_2: Option<String>,
-    pub address: Option<String>,
-    pub country: Option<String>,
-    pub locality: Option<String>,
-    pub political: Option<String>,
-    pub postal_code: Option<String>,
-    pub route: Option<String>,
-    pub street_number: Option<String>,
-    pub place_id: Option<String>,
-    pub slug: String,
-}
-
-#[derive(Debug, Serialize, Clone, PartialEq)]
-pub struct ValueContainer<T> {
-    pub value: Option<T>,
-}
-
-impl<T> From<T> for ValueContainer<T> {
-    fn from(value: T) -> Self {
-        Self { value: Some(value) }
-    }
-}
+pub struct GraphQLWarehouse(pub Warehouse);
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update warehouse input object")]
@@ -106,39 +81,22 @@ impl UpdateWarehouseInput {
     }
 }
 
-#[derive(Debug, Serialize, Clone)]
-pub struct UpdateWarehouse {
-    pub slug: Option<ValueContainer<String>>,
-    pub name: Option<ValueContainer<String>>,
-    pub location: Option<ValueContainer<GeoPointInput>>,
-    pub administrative_area_level_1: Option<ValueContainer<String>>,
-    pub administrative_area_level_2: Option<ValueContainer<String>>,
-    pub country: Option<ValueContainer<String>>,
-    pub locality: Option<ValueContainer<String>>,
-    pub political: Option<ValueContainer<String>>,
-    pub postal_code: Option<ValueContainer<String>>,
-    pub route: Option<ValueContainer<String>>,
-    pub street_number: Option<ValueContainer<String>>,
-    pub address: Option<ValueContainer<String>>,
-    pub place_id: Option<ValueContainer<String>>,
-}
-
-impl From<UpdateWarehouseInput> for UpdateWarehouse {
+impl From<UpdateWarehouseInput> for WarehouseUpdateData {
     fn from(value: UpdateWarehouseInput) -> Self {
         Self {
-            slug: value.slug.map(From::from),
-            name: value.name.map(From::from),
-            location: value.location.map(From::from),
-            administrative_area_level_1: value.address_full.administrative_area_level_1.map(From::from),
-            administrative_area_level_2: value.address_full.administrative_area_level_2.map(From::from),
-            country: value.address_full.country.map(From::from),
-            locality: value.address_full.locality.map(From::from),
-            political: value.address_full.political.map(From::from),
-            postal_code: value.address_full.postal_code.map(From::from),
-            route: value.address_full.route.map(From::from),
-            street_number: value.address_full.street_number.map(From::from),
-            address: value.address_full.value.map(From::from),
-            place_id: value.address_full.place_id.map(From::from),
+            slug: value.slug.map(WarehouseSlug).map(From::from),
+            name: value.name.map(Some).map(From::from),
+            location: value.location.map(|p| Point::new(p.x, p.y)).map(Some).map(From::from),
+            administrative_area_level_1: value.address_full.administrative_area_level_1.map(Some).map(From::from),
+            administrative_area_level_2: value.address_full.administrative_area_level_2.map(Some).map(From::from),
+            country: value.address_full.country.map(Some).map(From::from),
+            locality: value.address_full.locality.map(Some).map(From::from),
+            political: value.address_full.political.map(Some).map(From::from),
+            postal_code: value.address_full.postal_code.map(Some).map(From::from),
+            route: value.address_full.route.map(Some).map(From::from),
+            street_number: value.address_full.street_number.map(Some).map(From::from),
+            address: value.address_full.value.map(Some).map(From::from),
+            place_id: value.address_full.place_id.map(Some).map(From::from),
         }
     }
 }
@@ -160,6 +118,27 @@ pub struct CreateWarehouseInput {
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,
+}
+
+impl From<CreateWarehouseInput> for WarehouseInput {
+    fn from(value: CreateWarehouseInput) -> Self {
+        Self {
+            id: WarehouseId::new(),
+            name: value.name.map(From::from),
+            store_id: StoreId(value.store_id),
+            location: value.location.map(|p| Point::new(p.x, p.y)),
+            administrative_area_level_1: value.address_full.administrative_area_level_1.map(From::from),
+            administrative_area_level_2: value.address_full.administrative_area_level_2.map(From::from),
+            country: value.address_full.country.map(From::from),
+            locality: value.address_full.locality.map(From::from),
+            political: value.address_full.political.map(From::from),
+            postal_code: value.address_full.postal_code.map(From::from),
+            route: value.address_full.route.map(From::from),
+            street_number: value.address_full.street_number.map(From::from),
+            address: value.address_full.value.map(From::from),
+            place_id: value.address_full.place_id.map(From::from),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

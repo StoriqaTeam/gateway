@@ -14,6 +14,7 @@ path = "src/main.rs"
 
 
 [dependencies]
+stq_api = { path = "vendor/libstqbackend/api" }
 stq_http = { path = "vendor/libstqbackend/http" }
 stq_static_resources = { path = "vendor/libstqbackend/static_resources" }
 stq_routes = { path = "vendor/libstqbackend/routes" }
@@ -37,3 +38,5 @@ jsonwebtoken = "4.0.0"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "*", features = ["use_std", "v4", "serde"] }
 failure = "0.1.1"
+geo = "*"
+geo-types = { version = "*", features = ["serde"] }

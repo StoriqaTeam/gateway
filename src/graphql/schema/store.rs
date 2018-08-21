@@ -10,12 +10,16 @@ use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 use serde_json;
 
+use stq_api::orders::{OrderClient, OrderSearchTerms};
+use stq_api::types::ApiFutureExt;
+use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Language, ModerationStatus, Translation};
-use stq_types::OrderSlug;
+use stq_types::{OrderIdentifier, OrderSlug};
 
 use super::*;
+use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
 
@@ -198,29 +202,21 @@ graphql_object!(Store: Context as "Store" |&self| {
             .wait()
     }
 
-    field warehouses(&executor) -> FieldResult<Option<Vec<Warehouse>>> as "Fetches store warehouses." {
+    field warehouses(&executor) -> FieldResult<Vec<GraphQLWarehouse>> as "Fetches store warehouses." {
         let context = executor.context();
 
-       let url = format!(
-            "{}/{}/by-store-id/{}",
-            &context.config.service_url(Service::Warehouses),
-            Model::Warehouse.to_url(),
-            self.id.to_string()
-        );
-
-        context.request::<Option<Vec<Warehouse>>>(Method::Get, url, None)
-            .map(|warehouses| warehouses.map(|mut w| {
-                w.sort_by(|a, b| a.slug.cmp(&b.slug));
-                w
-            }))
-            .wait()
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        rpc_client.get_warehouses_for_store(self.id)
+            .sync()
+            .map_err(into_graphql)
+            .map(|res| res.into_iter().map(GraphQLWarehouse).collect())
     }
 
     field orders(&executor,
         current_page : i32 as "Current page",
         items_count : i32 as "Items count",
         search_term_options : SearchOrderOptionInput as "Search options pattern")
-            -> FieldResult<Option<Connection<Order, PageInfoOrdersSearch>>> as "Fetches orders using relay connection." {
+            -> FieldResult<Option<Connection<GraphQLOrder, PageInfoOrdersSearch>>> as "Fetches orders using relay connection." {
         let context = executor.context();
 
         let offset = items_count * (current_page - 1);
@@ -266,7 +262,7 @@ graphql_object!(Store: Context as "Store" |&self| {
                 .and_then (|user| user.map(|u|u.id))
         });
 
-        let search_term = SearchOrder {
+        let search_term = OrderSearchTerms {
                 slug: search_term_options.slug.map(OrderSlug),
                 customer,
                 store: Some(self.id),
@@ -276,22 +272,20 @@ graphql_object!(Store: Context as "Store" |&self| {
                 state: search_term_options.order_status.clone(),
             };
 
-        let body = serde_json::to_string(&search_term)?;
-
-        let url = format!("{}/{}/search",
-            context.config.service_url(Service::Orders),
-            Model::Order.to_url());
-
-        context.request::<Vec<Order>>(Method::Post, url, Some(body))
-            .map (move |orders| {
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.search(search_term)
+            .sync()
+            .map_err(into_graphql)
+            .map(|res| res.into_iter().map(GraphQLOrder).collect())
+            .map (move |orders: Vec<GraphQLOrder>| {
                 let total_pages = (orders.iter().count() as f32 / items_count as f32).ceil() as i32;
 
-                let mut orders_edges: Vec<Edge<Order>> = orders
+                let mut orders_edges: Vec<Edge<GraphQLOrder>> = orders
                     .into_iter()
                     .skip(offset as usize)
                     .take(count as usize)
                     .map(|order| Edge::new(
-                                juniper::ID::from(order.id.to_string()),
+                                juniper::ID::from(order.0.id.to_string()),
                                 order.clone()
                             ))
                     .collect();
@@ -304,21 +298,17 @@ graphql_object!(Store: Context as "Store" |&self| {
                 };
                 Connection::new(orders_edges, page_info)
             })
-            .wait()
             .map(Some)
     }
 
-    field order(&executor, slug: i32 as "Order slug" ) -> FieldResult<Option<Order>> as "Fetches order." {
+    field order(&executor, slug: i32 as "Order slug" ) -> FieldResult<Option<GraphQLOrder>> as "Fetches order." {
         let context = executor.context();
 
-        let url = format!("{}/{}/by-slug/{}",
-            &context.config.service_url(Service::Orders),
-            Model::Order.to_url(),
-            slug
-            );
-
-        context.request::<Option<Order>>(Method::Get, url, None)
-            .wait()
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.get_order(OrderIdentifier::Slug(OrderSlug(slug)))
+            .sync()
+            .map_err(into_graphql)
+            .map(|res| res.map(GraphQLOrder))
     }
 
     field find_most_viewed_products(&executor,
@@ -632,10 +622,10 @@ graphql_object!(Edge<String>: Context as "FullNameEdge" |&self| {
     }
 });
 
-graphql_object!(Connection<Order, PageInfoOrdersSearch>: Context as "OrderSearchConnection" |&self| {
+graphql_object!(Connection<GraphQLOrder, PageInfoOrdersSearch>: Context as "OrderSearchConnection" |&self| {
     description:"Order Search Connection"
 
-    field edges() -> &[Edge<Order>] {
+    field edges() -> &[Edge<GraphQLOrder>] {
         &self.edges
     }
 

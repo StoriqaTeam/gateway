@@ -22,9 +22,9 @@ pub enum Node {
     Cart,
     CartProduct(CartProduct),
     CartStore(CartStore),
-    Warehouse(Box<Warehouse>),
-    Order(Box<Order>),
-    Stock(Stock),
+    Warehouse(Box<GraphQLWarehouse>),
+    Order(Box<GraphQLOrder>),
+    Stock(GraphQLStock),
 }
 
 graphql_interface!(Node: Context as "Node" |&self| {
@@ -45,9 +45,9 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::CartProduct(CartProduct { ref id, .. })  => ID::new(Service::Orders, Model::CartProduct, id.0).to_string().into(),
             Node::CartStore(CartStore { ref id, .. })  => ID::new(Service::Orders, Model::CartStore, id.0).to_string().into(),
             Node::Cart => ID::new(Service::Orders, Model::Cart, 0).to_string().into(),
-            Node::Warehouse(ref w)  => w.id.to_string().into(),
-            Node::Order(ref o)  => o.id.to_string().into(),
-            Node::Stock(Stock {ref product_id, ref warehouse_id,..})  => format!("{}{}", warehouse_id, product_id).into(),
+            Node::Warehouse(ref w)  => w.0.id.to_string().into(),
+            Node::Order(ref o)  => o.0.id.to_string().into(),
+            Node::Stock(ref s)  => format!("{}{}", s.0.warehouse_id, s.0.product_id).into(),
         }
     }
 
@@ -62,9 +62,9 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &Attribute => match *self { Node::Attribute(ref h) => Some(h), _ => None },
         &CartProduct => match *self { Node::CartProduct(ref h) => Some(h), _ => None },
         &CartStore => match *self { Node::CartStore(ref h) => Some(h), _ => None },
-        &Warehouse => match *self { Node::Warehouse(ref h) => Some(&**h), _ => None },
-        &Order => match *self { Node::Order(ref h) => Some(&**h), _ => None },
-        &Stock => match *self { Node::Stock(ref h) => Some(h), _ => None },
+        &GraphQLWarehouse => match *self { Node::Warehouse(ref h) => Some(&**h), _ => None },
+        &GraphQLOrder => match *self { Node::Order(ref h) => Some(&**h), _ => None },
+        &GraphQLStock => match *self { Node::Stock(ref h) => Some(h), _ => None },
         &Cart => None::<&Cart>,
     }
 });

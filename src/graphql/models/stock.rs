@@ -1,11 +1,7 @@
-use stq_types::{ProductId, Quantity, WarehouseId};
+use stq_api::warehouses::Stock;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Stock {
-    pub warehouse_id: WarehouseId,
-    pub product_id: ProductId,
-    pub quantity: Quantity,
-}
+pub struct GraphQLStock(pub Stock);
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create warehouse product input object")]
