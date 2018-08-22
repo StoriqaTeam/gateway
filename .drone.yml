@@ -32,10 +32,12 @@ pipeline:
       event: pull_request
       branch: [ master, release* ]
   test:
-    image: rust:1.26-stretch
+    image: rust:1.28-stretch
     environment:
     - CARGO_HOME=deps
     commands:
+    - rustup component add rustfmt-preview
+    - cargo fmt -- --check
     - cargo test
     when:
       event: pull_request
@@ -48,7 +50,7 @@ pipeline:
 ###
 
   build:
-    image: rust:1.26-stretch
+    image: rust:1.28-stretch
     environment:
     - CARGO_HOME=deps
     commands:

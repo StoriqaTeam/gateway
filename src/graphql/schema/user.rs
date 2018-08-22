@@ -431,7 +431,7 @@ graphql_object!(User: Context as "User" |&self| {
                 created_from,
                 created_to,
                 payment_status: search_term_options.payment_status,
-                state: search_term_options.order_status.clone(),
+                state: search_term_options.order_status,
             };
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
