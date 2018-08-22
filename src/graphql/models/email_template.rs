@@ -12,6 +12,9 @@ pub struct EmailTemplateInput {
 
 impl EmailTemplateInput {
     pub fn is_none(&self) -> bool {
-        Self { data: String::default() } == self.clone()
+        Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            data: String::default(),
+        } == self.clone()
     }
 }
