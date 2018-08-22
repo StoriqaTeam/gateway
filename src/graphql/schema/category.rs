@@ -1,7 +1,4 @@
 //! File containing Category object of graphql schema
-use futures::Future;
-use hyper::Method;
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -44,21 +41,8 @@ graphql_object!(Category: Context as "Category" |&self| {
         &self.children
     }
 
-    field get_attributes(&executor) -> FieldResult<Option<Vec<Attribute>>> as "Fetches category attributes." {
-        if self.attributes.is_some() {
-            Ok(self.attributes.clone())
-        } else {
-            let context = executor.context();
-            let url = format!("{}/{}/{}/attributes",
-                context.config.service_url(Service::Stores),
-                Model::Category.to_url(),
-                self.id
-                );
-
-            context.request::<Vec<Attribute>>(Method::Get, url, None)
-                .wait()
-                .map(Some)
-        }
+    field get_attributes(&executor) -> &[Attribute] as "Fetches category attributes." {
+        &self.attributes
     }
 });
 
