@@ -65,7 +65,7 @@ impl Context {
             cookie.append("SESSION_ID", session_id.to_string());
         };
         if let Some(ref currency_id) = self.currency_id {
-            headers.set(CurrencyIdHeader(currency_id.to_string()));
+            headers.set(CurrencyIdHeader(currency_id.0.to_string()));
         };
         headers.set(cookie);
 
