@@ -1,3 +1,5 @@
+use stq_static_resources::Currency;
+
 #[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "Currency exchange input object")]
 pub struct CurrencyExchange {
@@ -9,8 +11,8 @@ pub struct CurrencyExchange {
     pub dollar: CurrencyExchangeValue,
     #[graphql(description = "bitcoin")]
     pub bitcoin: CurrencyExchangeValue,
-    #[graphql(description = "etherium")]
-    pub etherium: CurrencyExchangeValue,
+    #[graphql(description = "ether")]
+    pub ether: CurrencyExchangeValue,
     #[graphql(description = "stq")]
     pub stq: CurrencyExchangeValue,
 }
@@ -26,8 +28,8 @@ pub struct NewCurrencyExchangeInput {
     pub dollar: CurrencyExchangeValueInput,
     #[graphql(description = "bitcoin")]
     pub bitcoin: CurrencyExchangeValueInput,
-    #[graphql(description = "etherium")]
-    pub etherium: CurrencyExchangeValueInput,
+    #[graphql(description = "ether")]
+    pub ether: CurrencyExchangeValueInput,
     #[graphql(description = "stq")]
     pub stq: CurrencyExchangeValueInput,
 }
@@ -43,8 +45,8 @@ pub struct CurrencyExchangeValueInput {
     pub dollar: f64,
     #[graphql(description = "bitcoin")]
     pub bitcoin: f64,
-    #[graphql(description = "etherium")]
-    pub etherium: f64,
+    #[graphql(description = "ether")]
+    pub ether: f64,
     #[graphql(description = "stq")]
     pub stq: f64,
 }
@@ -60,8 +62,82 @@ pub struct CurrencyExchangeValue {
     pub dollar: f64,
     #[graphql(description = "bitcoin")]
     pub bitcoin: f64,
-    #[graphql(description = "etherium")]
-    pub etherium: f64,
+    #[graphql(description = "ether")]
+    pub ether: f64,
     #[graphql(description = "stq")]
     pub stq: f64,
+}
+
+#[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug, Default)]
+pub struct CurrencyExchange2 {
+    pub key: i32,
+    pub rates: Vec<CurrencyExchangeValue2>,
+}
+
+impl CurrencyExchange2 {
+    pub fn from_v1(v: CurrencyExchange) -> Vec<CurrencyExchange2> {
+        vec![
+            Self {
+                key: Currency::RUB as i32,
+                rates: CurrencyExchangeValue2::from_v1(v.rouble),
+            },
+            Self {
+                key: Currency::EUR as i32,
+                rates: CurrencyExchangeValue2::from_v1(v.euro),
+            },
+            Self {
+                key: Currency::USD as i32,
+                rates: CurrencyExchangeValue2::from_v1(v.dollar),
+            },
+            Self {
+                key: Currency::BTC as i32,
+                rates: CurrencyExchangeValue2::from_v1(v.bitcoin),
+            },
+            Self {
+                key: Currency::ETH as i32,
+                rates: CurrencyExchangeValue2::from_v1(v.ether),
+            },
+            Self {
+                key: Currency::STQ as i32,
+                rates: CurrencyExchangeValue2::from_v1(v.stq),
+            },
+        ]
+    }
+}
+
+#[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug)]
+pub struct CurrencyExchangeValue2 {
+    pub key: i32,
+    pub value: f64,
+}
+
+impl CurrencyExchangeValue2 {
+    pub fn from_v1(v: CurrencyExchangeValue) -> Vec<CurrencyExchangeValue2> {
+        vec![
+            Self {
+                key: Currency::RUB as i32,
+                value: v.rouble,
+            },
+            Self {
+                key: Currency::EUR as i32,
+                value: v.euro,
+            },
+            Self {
+                key: Currency::USD as i32,
+                value: v.dollar,
+            },
+            Self {
+                key: Currency::BTC as i32,
+                value: v.bitcoin,
+            },
+            Self {
+                key: Currency::ETH as i32,
+                value: v.ether,
+            },
+            Self {
+                key: Currency::STQ as i32,
+                value: v.stq,
+            },
+        ]
+    }
 }
