@@ -18,6 +18,7 @@ pub struct Gateway {
     pub http_client_buffer_size: usize,
     pub http_client_retries: usize,
     pub records_limit: usize,
+    pub http_timeout_ms: u64,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -69,6 +70,7 @@ impl Config {
         stq_http::client::Config {
             http_client_buffer_size: self.gateway.http_client_buffer_size,
             http_client_retries: self.gateway.http_client_retries,
+            timeout_duration_ms: self.gateway.http_timeout_ms,
         }
     }
 
