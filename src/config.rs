@@ -31,6 +31,7 @@ pub struct Config {
     pub billing_microservice: Microservice,
     pub warehouses_microservice: Microservice,
     pub notifications_microservice: Microservice,
+    pub delivery_microservice: Microservice,
     pub jwt: JWT,
     pub cors: CORS,
     pub graylog: Option<GrayLogConfig>,
@@ -82,6 +83,7 @@ impl Config {
             StqService::Warehouses => self.warehouses_microservice.url.clone(),
             StqService::Notifications => self.notifications_microservice.url.clone(),
             StqService::Billing => self.billing_microservice.url.clone(),
+            StqService::Delivery => self.delivery_microservice.url.clone(),
         }
     }
 }
