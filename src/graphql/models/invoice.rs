@@ -1,14 +1,14 @@
 use std::time::SystemTime;
 
-use stq_static_resources::OrderState;
-use stq_types::{CurrencyId, InvoiceId, ProductPrice};
+use stq_static_resources::{Currency, OrderState};
+use stq_types::{InvoiceId, ProductPrice};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Invoice {
     pub invoice_id: InvoiceId,
     pub transactions: Vec<Transaction>,
     pub amount: ProductPrice,
-    pub currency_id: CurrencyId,
+    pub currency: Currency,
     pub price_reserved: SystemTime,
     pub state: OrderState,
     pub wallet: Option<String>,

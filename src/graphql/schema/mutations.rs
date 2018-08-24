@@ -16,7 +16,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::OrderSlug;
-use stq_types::{CurrencyId, ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
+use stq_types::{ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 
@@ -941,7 +941,7 @@ graphql_object!(Mutation: Context |&self| {
             receiver_name: input.receiver_name,
             receiver_phone: input.receiver_phone,
             prices: products_with_prices,
-            currency_id: CurrencyId(input.currency_id),
+            currency: input.currency,
         };
 
         let url = format!("{}/create_order",

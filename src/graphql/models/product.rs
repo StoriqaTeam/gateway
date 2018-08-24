@@ -1,7 +1,8 @@
 use super::*;
 use juniper::ID as GraphqlID;
 
-use stq_types::{BaseProductId, CurrencyId, ProductId, ProductPrice};
+use stq_static_resources::Currency;
+use stq_types::{BaseProductId, ProductId, ProductPrice};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Product {
@@ -13,7 +14,7 @@ pub struct Product {
     pub additional_photos: Option<Vec<String>>,
     pub vendor_code: String,
     pub cashback: Option<f64>,
-    pub currency_id: Option<CurrencyId>,
+    pub currency: Currency,
     pub price: ProductPrice,
 }
 

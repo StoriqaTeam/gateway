@@ -13,7 +13,7 @@ use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::currency::{Currency, CurrencyGraphQl};
+use stq_static_resources::currency::Currency;
 use stq_static_resources::{Language, LanguageGraphQl, OrderState};
 use stq_types::{OrderId, WarehouseId};
 
@@ -197,8 +197,8 @@ graphql_object!(Query: Context |&self| {
         Language::as_vec()
     }
 
-    field currencies(&executor) -> Vec<CurrencyGraphQl> as "Fetches currencies." {
-        Currency::as_vec()
+    field currencies(&executor) -> Vec<Currency> as "Fetches currencies." {
+        Currency::enum_iter().collect()
     }
 
     field order_statuses(&executor) -> Vec<OrderState> as "Fetches order statuses." {

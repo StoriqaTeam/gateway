@@ -8,7 +8,7 @@ use juniper::{FieldError, FieldResult};
 use stq_api::orders::OrderClient;
 use stq_api::types::ApiFutureExt;
 use stq_routes::service::Service;
-use stq_static_resources::OrderState;
+use stq_static_resources::{Currency, OrderState};
 use stq_types::{OrderId, OrderIdentifier};
 
 use errors::into_graphql;
@@ -57,8 +57,8 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
         &self.amount.0
     }
 
-    field currency_id() -> &i32 as "currency id"{
-        &self.currency_id.0
+    field currency() -> &Currency as "currency"{
+        &self.currency
     }
 
     field price_reserved_due_date_time() -> String as "price reserved due to date time"{

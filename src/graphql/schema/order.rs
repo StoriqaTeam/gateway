@@ -11,7 +11,7 @@ use stq_api::orders::OrderClient;
 use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::OrderState;
+use stq_static_resources::{Currency, OrderState};
 
 use super::*;
 use errors::into_graphql;
@@ -84,8 +84,8 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         &self.0.price.0
     }
 
-    field currency_id() -> &i32 as "Price" {
-        &self.0.currency_id.0
+    field currency() -> &Currency as "Currency" {
+        &self.0.currency
     }
 
     field subtotal() -> f64 as "Subtotal" {
