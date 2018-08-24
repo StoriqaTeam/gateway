@@ -183,6 +183,12 @@ graphql_object!(Query: Context |&self| {
                         graphql_value!({ "internal_error": "Unknown model" })
                     ))
                 }
+                (&Service::Delivery, _) => {
+                    Err(FieldError::new(
+                        "Could not get model from delivery microservice.",
+                        graphql_value!({ "internal_error": "Unknown model" })
+                    ))
+                }
             }
         }
     }
