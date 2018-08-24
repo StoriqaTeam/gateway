@@ -668,17 +668,6 @@ graphql_object!(Mutation: Context |&self| {
             .map(|_| convert_to_cart(vec![], &[]))
     }
 
-    field updateCurrencyExchange(&executor, input: NewCurrencyExchangeInput as "New currency exchange input.") -> FieldResult<CurrencyExchange> as "Updates currencies exchange." {
-        let context = executor.context();
-
-        let url = format!("{}/currency_exchange", context.config.service_url(Service::Stores));
-
-        let body = serde_json::to_string(&input)?;
-
-        context.request::<CurrencyExchange>(Method::Post, url, Some(body))
-            .wait()
-    }
-
     field createWizardStore(&executor) -> FieldResult<WizardStore> as "Creates new wizard store." {
         let context = executor.context();
         let url = format!("{}/{}",

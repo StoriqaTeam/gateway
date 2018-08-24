@@ -215,14 +215,14 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field currency_exchange(&executor) -> FieldResult<Option<Vec<CurrencyExchange2>>> as "Fetches currency exchange." {
+    field currency_exchange(&executor) -> FieldResult<Option<Vec<CurrencyExchange>>> as "Fetches currency exchange." {
         let context = executor.context();
         let url = format!("{}/currency_exchange",
             context.config.service_url(Service::Stores));
 
-        context.request::<Option<CurrencyExchange>>(Method::Get, url, None)
+        context.request::<Option<CurrencyExchangeData>>(Method::Get, url, None)
             .wait().map(|v| {
-                v.map(CurrencyExchange2::from_v1)
+                v.map(CurrencyExchange::from_data)
             })
     }
 
