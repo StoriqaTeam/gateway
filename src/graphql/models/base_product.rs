@@ -1,7 +1,7 @@
 use super::*;
 use juniper::ID as GraphqlID;
-use stq_static_resources::{ModerationStatus, Translation, TranslationInput};
-use stq_types::{BaseProductId, CurrencyId, StoreId};
+use stq_static_resources::{Currency, ModerationStatus, Translation, TranslationInput};
+use stq_types::{BaseProductId, StoreId};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct BaseProduct {
@@ -13,7 +13,7 @@ pub struct BaseProduct {
     pub long_description: Option<Vec<Translation>>,
     pub seo_title: Option<Vec<Translation>>,
     pub seo_description: Option<Vec<Translation>>,
-    pub currency_id: CurrencyId,
+    pub currency: Currency,
     pub category_id: i32,
     pub views: i32,
     pub rating: f64,
@@ -41,8 +41,8 @@ pub struct UpdateBaseProductInput {
     pub seo_title: Option<Vec<TranslationInput>>,
     #[graphql(description = "seo description")]
     pub seo_description: Option<Vec<TranslationInput>>,
-    #[graphql(description = "currency_id")]
-    pub currency_id: Option<i32>,
+    #[graphql(description = "Currency")]
+    pub currency: Option<Currency>,
     #[graphql(description = "Category id.")]
     pub category_id: Option<i32>,
     #[graphql(description = "Rating.")]
@@ -63,7 +63,7 @@ impl UpdateBaseProductInput {
             long_description: None,
             seo_title: None,
             seo_description: None,
-            currency_id: None,
+            currency: None,
             category_id: None,
             rating: None,
             slug: None,

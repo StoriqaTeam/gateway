@@ -1,8 +1,8 @@
 use chrono::prelude::*;
 
 use stq_api::orders::{Order, OrderDiff};
-use stq_static_resources::OrderState;
-use stq_types::{CurrencyId, OrderSlug, StoreId, UserId};
+use stq_static_resources::{Currency, OrderState};
+use stq_types::{OrderSlug, StoreId, UserId};
 
 use super::*;
 
@@ -22,8 +22,8 @@ pub struct CreateOrderInput {
     pub receiver_name: String,
     #[graphql(description = "Receiver phone")]
     pub receiver_phone: String,
-    #[graphql(description = "Currency id that will be paid")]
-    pub currency_id: i32,
+    #[graphql(description = "Currency that will be paid")]
+    pub currency: Currency,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
@@ -33,7 +33,7 @@ pub struct CreateOrder {
     pub address: AddressInput,
     pub receiver_name: String,
     pub prices: CartProductWithPriceHash,
-    pub currency_id: CurrencyId,
+    pub currency: Currency,
     pub receiver_phone: String,
 }
 

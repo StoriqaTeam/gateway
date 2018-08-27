@@ -10,6 +10,7 @@ use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::{Stock, Warehouse, WarehouseClient};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::Currency;
 use stq_types::{Quantity, StockId};
 
 use errors::into_graphql;
@@ -39,8 +40,8 @@ graphql_object!(Product: Context as "Product" |&self| {
         &self.discount
     }
 
-    field currency_id() -> Option<i32> as "Currency id" {
-        self.currency_id.map(|c| c.0)
+    field currency() -> Currency as "Currency" {
+        self.currency
     }
 
     field photo_main() -> &Option<String> as "Photo main" {

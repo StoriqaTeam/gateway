@@ -21,7 +21,8 @@ use stq_http::request_util::serialize_future;
 use stq_http::request_util::CurrencyId as CurrencyIdHeader;
 use stq_http::request_util::SessionId as SessionIdHeader;
 use stq_router::RouteParser;
-use stq_types::{CurrencyId, SessionId};
+use stq_static_resources::Currency;
+use stq_types::SessionId;
 
 use self::routes::Route;
 use config::Config;
@@ -88,7 +89,7 @@ impl Controller for ControllerImpl {
                     });
 
                     let session_id_header = headers.get::<SessionIdHeader>().and_then(|sid| sid.parse::<SessionId>().ok());
-                    let currency_id_header = headers.get::<CurrencyIdHeader>().and_then(|sid| sid.parse::<CurrencyId>().ok());
+                    let currency_id_header = headers.get::<CurrencyIdHeader>().and_then(|sid| sid.parse::<Currency>().ok());
 
                     serialize_future::<_, FailureError, _>(
                         parse_body::<GraphQLRequest>(req.body())

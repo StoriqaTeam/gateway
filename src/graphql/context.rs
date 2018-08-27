@@ -13,7 +13,8 @@ use stq_api::rpc_client::RestApiClient;
 use stq_http::client::{ClientHandle, Error};
 use stq_http::request_util::CurrencyId as CurrencyIdHeader;
 use stq_routes::service::Service;
-use stq_types::{CurrencyId, SessionId};
+use stq_static_resources::Currency;
+use stq_types::SessionId;
 
 use graphql::models::jwt::JWTPayload;
 
@@ -21,7 +22,7 @@ pub struct Context {
     pub http_client: ClientHandle,
     pub user: Option<JWTPayload>,
     pub session_id: Option<SessionId>,
-    pub currency_id: Option<CurrencyId>,
+    pub currency: Option<Currency>,
     pub uuid: String,
     pub config: Config,
 }
@@ -33,7 +34,7 @@ impl Context {
         http_client: ClientHandle,
         user: Option<JWTPayload>,
         session_id: Option<SessionId>,
-        currency_id: Option<CurrencyId>,
+        currency: Option<Currency>,
         config: Config,
     ) -> Self {
         let uuid = Uuid::new_v4().to_string();
@@ -41,7 +42,7 @@ impl Context {
             http_client,
             user,
             session_id,
-            currency_id,
+            currency,
             uuid,
             config,
         }
@@ -64,8 +65,8 @@ impl Context {
         if let Some(ref session_id) = self.session_id {
             cookie.append("SESSION_ID", session_id.to_string());
         };
-        if let Some(ref currency_id) = self.currency_id {
-            headers.set(CurrencyIdHeader(currency_id.0.to_string()));
+        if let Some(ref currency) = self.currency {
+            headers.set(CurrencyIdHeader(currency.to_string()));
         };
         headers.set(cookie);
 
