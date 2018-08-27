@@ -1206,4 +1206,41 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+
+    field upsertShipping(&executor, input: NewShippingInput as "New shipping input.") -> FieldResult<ShippingOutput> as "Upsert shipping for base product." {
+        let context = executor.context();
+
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        let warehouses = rpc_client.get_warehouses_for_store(input.store_id.into())
+            .sync()
+            .map_err(into_graphql)?;
+
+        if let Some(warehouse) = warehouses.into_iter().nth(0) {
+            if let Some(country) = warehouse.country {
+                let url = format!("{}/{}/{}",
+                    context.config.service_url(Service::Delivery),
+                    Model::Product.to_url(),
+                    input.base_product_id);
+
+                let input : NewShipping = (input, country).into();
+
+                let body: String = serde_json::to_string(&input)?.to_string();
+
+                context.request::<Shipping>(Method::Post, url, Some(body))
+                    .map(From::from)
+                    .wait()
+            } else {
+                Err(FieldError::new(
+                    "There is no country in warehouse address belonging to this store",
+                    graphql_value!({ "code": 300, "details": { "Could not fetch warehouse address info." }}),
+                ))
+            }
+        } else {
+            Err(FieldError::new(
+                "There is no warehouses belonging to this store",
+                    graphql_value!({ "code": 300, "details": { "Could not fetch warehouse address info." }}),
+            ))
+        }
+    }
+
 });
