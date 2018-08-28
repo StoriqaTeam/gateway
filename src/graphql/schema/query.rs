@@ -220,9 +220,9 @@ graphql_object!(Query: Context |&self| {
         let url = format!("{}/currency_exchange",
             context.config.service_url(Service::Stores));
 
-        context.request::<Option<CurrencyExchangeData>>(Method::Get, url, None)
+        context.request::<Option<CurrencyExchangeInfo>>(Method::Get, url, None)
             .wait().map(|v| {
-                v.map(CurrencyExchange::from_data)
+                v.map(|v| CurrencyExchange::from_data(v.data))
             })
     }
 
