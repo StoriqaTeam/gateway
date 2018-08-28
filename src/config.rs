@@ -18,6 +18,7 @@ pub struct Gateway {
     pub http_client_buffer_size: usize,
     pub http_client_retries: usize,
     pub records_limit: usize,
+    pub http_timeout_ms: u64,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -30,6 +31,7 @@ pub struct Config {
     pub billing_microservice: Microservice,
     pub warehouses_microservice: Microservice,
     pub notifications_microservice: Microservice,
+    pub delivery_microservice: Microservice,
     pub jwt: JWT,
     pub cors: CORS,
     pub graylog: Option<GrayLogConfig>,
@@ -69,6 +71,7 @@ impl Config {
         stq_http::client::Config {
             http_client_buffer_size: self.gateway.http_client_buffer_size,
             http_client_retries: self.gateway.http_client_retries,
+            timeout_duration_ms: self.gateway.http_timeout_ms,
         }
     }
 
@@ -80,6 +83,7 @@ impl Config {
             StqService::Warehouses => self.warehouses_microservice.url.clone(),
             StqService::Notifications => self.notifications_microservice.url.clone(),
             StqService::Billing => self.billing_microservice.url.clone(),
+            StqService::Delivery => self.delivery_microservice.url.clone(),
         }
     }
 }

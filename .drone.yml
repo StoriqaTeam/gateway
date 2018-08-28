@@ -1,20 +1,15 @@
-######
 pipeline:
   restore-cache:
     image: plugins/s3-cache:1
     pull: true
     secrets: [ aws_access_key_id, aws_secret_access_key ]
-    mount:
-    - deps
+    mount: deps
     restore: true
     when:
       event:
       - pull_request
       - push
       - tag
-      branch:
-      - master
-      - release
 
 ###
 # Test PR
@@ -30,45 +25,59 @@ pipeline:
     - rm -rf .git && mv -f .git.bak .git
     when:
       event: pull_request
-      branch: [ master, release* ]
   test:
-    image: rust:1.26-stretch
+    image: rust:1.28-stretch
     environment:
+    - RUN_MODE=k8s
+    - RUST_BACKTRACE=1
     - CARGO_HOME=deps
     commands:
+    - rustup component add rustfmt-preview
+    - cargo fmt -- --check
     - cargo test
     when:
       event: pull_request
-      branch:
-      - master
-      - release
 
 ###
-# Build & deploy to nightly / stage
+# Build and deploy to nightly / stage
 ###
 
   build:
-    image: rust:1.26-stretch
+    image: rust:1.28-stretch
     environment:
     - CARGO_HOME=deps
     commands:
     - cargo build --release --locked
     when:
-      event: push
+      event:
+      - push
+      - tag
   package:
     image: plugins/docker
     repo: storiqateam/stq-gw
+    dockerfile: docker/Dockerfile.run
     tags:
     - ${DRONE_BRANCH//\//_}
     - ${DRONE_BRANCH//\//_}${DRONE_BUILD_NUMBER}
-    dockerfile: docker/Dockerfile.run
     secrets:
     - docker_username
     - docker_password
     when:
-      event: [ push, tag ]
+      event: push
+  package:
+    image: plugins/docker
+    repo: storiqateam/stq-gw
+    dockerfile: docker/Dockerfile.run
+    tags:
+    - '${DRONE_TAG}'
+    - latest
+    secrets:
+    - docker_username
+    - docker_password
+    when:
+      event: tag
   deploy2nightly:
-    image: jackthestripper/drone_k8s_rollout:20180610
+    image: jackthestripper/drone_setimage
     namespace: default
     kind: deployment
     object: gateway
@@ -88,13 +97,13 @@ pipeline:
       branch: master
       event: push
   deploy2stage:
-    image: jackthestripper/drone_k8s_rollout:20180610
+    image: jackthestripper/drone_setimage
     namespace: default
     kind: deployment
     object: gateway
     img_names: storiqateam/stq-gw
     img_cnts: gateway
-    img_tags: ${DRONE_BRANCH//\//_}${DRONE_BUILD_NUMBER}
+    img_tags: '${DRONE_TAG}'
     secrets:
     - source: k8s_stage_ca
       target: k8s_ca
@@ -105,15 +114,14 @@ pipeline:
     - source: k8s_stage_addr
       target: k8s_addr
     when:
-      branch: release
-      event: push
+      event: tag
 
-  ###
-  # Deploy to stable / production
-  ###
+###
+# Deploy to stable / production
+###
 
   deploy2stable:
-    image: jackthestripper/drone_k8s_rollout:20180610
+    image: jackthestripper/drone_setimage
     namespace: default
     kind: deployment
     object: gateway
@@ -130,16 +138,15 @@ pipeline:
     - source: k8s_stable_addr
       target: k8s_addr
     when:
-      branch: master
       event: deployment
       environment: stable
   deploy2production:
-    image: jackthestripper/drone_k8s_rollout:20180610
+    image: jackthestripper/drone_setimage
     namespace: default
     kind: deployment
     object: gateway
     img_names: storiqateam/stq-gw
-    img_tags: ${DRONE_BRANCH//\//_}${DRONE_PARENT_BUILD_NUMBER}
+    img_tags: '${DRONE_TAG}'
     img_cnts: gateway
     secrets:
     - source: k8s_prod_ca
@@ -151,40 +158,54 @@ pipeline:
     - source: k8s_prod_addr
       target: k8s_addr
     when:
-      branch: release
       event: deployment
       environment: production
 
-  ###
-  # Notifications and post-deploy ops
-  ###
+###
+# Notifications and post deploy ops
+###
 
   rebuild-cache:
     image: plugins/s3-cache:1
     pull: true
     secrets: [ aws_access_key_id, aws_secret_access_key ]
-    mount:
-    - deps
+    mount: deps
     rebuild: true
     when:
-      event:
-      - push
-      - tag
+      event: push
       branch: master
-  notify_slack:
+  slack:
     image: plugins/slack
     webhook: https://hooks.slack.com/services/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
     channel: release
     icon_url: https://drone.io/favicon.ico
     username: cd.stq.cloud
     template: >
-        Build {{build.number}} for {{repo.name}} branch {{build.branch}} failed.
+      {{#success build.status}}
+        {{repo.name}} has been released to stage.stq.cloud!
+      {{else}}
+        Failed to deploy {{repo.name}} to stage.stq.cloud! More details here {{build.link}}
+      {{/success}}
     when:
-      event:
-      - push
-      - deployment
-      - tag
-      branch: 
-      - master
-      - release
-      status: failure
+      event: tag
+      status:
+      - success
+      - failure
+  slack:
+    image: plugins/slack
+    webhook: https://hooks.slack.com/services/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
+    channel: release
+    icon_url: https://drone.io/favicon.ico
+    username: cd.stq.cloud
+    template: >
+      {{#success build.status}}
+        {{repo.name}} has been released to production.stq.cloud!
+      {{else}}
+        Failed to deploy {{repo.name}} to production.stq.cloud! More details here {{build.link}}
+      {{/success}}
+    when:
+      event: deployment
+      environment: production
+      status:
+      - success
+- failure

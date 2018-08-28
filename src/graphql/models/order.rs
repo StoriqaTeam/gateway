@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 
 use stq_static_resources::OrderState;
-use stq_types::*;
+use stq_types::{OrderId, UserId, ProductId, StoreId, Quantity, ProductPrice, CurrencyId, OrderSlug};
 
 use super::*;
 

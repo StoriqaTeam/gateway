@@ -4,6 +4,7 @@ graphql_thread_pool_size=3
 http_client_buffer_size=3
 http_client_retries=3
 records_limit=100
+http_timeout_ms=15000
 
 [users_microservice]
 url="http://users:8000"
@@ -25,3 +26,6 @@ url="http://warehouses:8000"
 
 [notifications_microservice]
 url="http://notifications:8000"
+
+[delivery_microservice]
+url="http://delivery:8000"
