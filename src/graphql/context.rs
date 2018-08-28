@@ -11,7 +11,7 @@ use config::Config;
 
 use stq_api::rpc_client::RestApiClient;
 use stq_http::client::{ClientHandle, Error};
-use stq_http::request_util::CurrencyId as CurrencyIdHeader;
+use stq_http::request_util::Currency as CurrencyHeader;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
 use stq_types::SessionId;
@@ -66,7 +66,7 @@ impl Context {
             cookie.append("SESSION_ID", session_id.to_string());
         };
         if let Some(ref currency) = self.currency {
-            headers.set(CurrencyIdHeader(currency.to_string()));
+            headers.set(CurrencyHeader(currency.code().into()));
         };
         headers.set(cookie);
 
