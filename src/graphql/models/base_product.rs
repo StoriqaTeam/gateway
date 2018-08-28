@@ -91,7 +91,7 @@ pub struct CreateBaseProductInput {
     #[graphql(description = "SEO description")]
     pub seo_description: Option<Vec<TranslationInput>>,
     #[graphql(description = "Int Sale currency id.")]
-    pub currency_id: i32,
+    pub currency: Currency,
     #[graphql(description = "Int Category id.")]
     pub category_id: i32,
     #[graphql(description = "Slug.")]

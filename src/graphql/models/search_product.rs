@@ -1,6 +1,6 @@
 use super::*;
 
-use stq_static_resources::ModerationStatus;
+use stq_static_resources::{Currency, ModerationStatus};
 
 #[derive(GraphQLInputObject, Serialize, Clone, Debug, Default)]
 pub struct ProductsSearchOptionsInput {
@@ -9,7 +9,7 @@ pub struct ProductsSearchOptionsInput {
     #[graphql(description = "Price filter.")]
     pub price_filter: Option<RangeFilterInput>,
     #[graphql(description = "Currency id.")]
-    pub currency_id: Option<i32>,
+    pub currency: Option<Currency>,
     #[graphql(description = "Category id.")]
     pub category_id: Option<i32>,
     #[graphql(description = "Store id.")]
