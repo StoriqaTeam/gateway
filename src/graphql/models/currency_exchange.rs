@@ -1,9 +1,15 @@
 use std::collections::HashMap;
 use stq_static_resources::Currency;
-use stq_types::ExchangeRate;
+use stq_types::{CurrencyExchangeId, ExchangeRate};
 
 pub type ExchangeRates = HashMap<Currency, ExchangeRate>;
 pub type CurrencyExchangeData = HashMap<Currency, ExchangeRates>;
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct CurrencyExchangeInfo {
+    pub id: CurrencyExchangeId,
+    pub data: CurrencyExchangeData,
+}
 
 #[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CurrencyExchange {
