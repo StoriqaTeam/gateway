@@ -73,9 +73,8 @@ graphql_object!(Query: Context |&self| {
         let url = format!("{}/{}/current",
             context.config.service_url(Service::Users),
             Model::User.to_url());
-        context.request::<User>(Method::Get, url, None)
+        context.request::<Option<User>>(Method::Get, url, None)
                     .wait()
-                    .map(Some)
     }
 
     field node(&executor, id: GraphqlID as "Base64 Id of a node.") -> FieldResult<Option<Node>> as "Fetches graphql interface node by Base64 id."  {

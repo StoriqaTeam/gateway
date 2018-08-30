@@ -11,7 +11,6 @@ extern crate stq_types;
 extern crate base64;
 extern crate chrono;
 extern crate config as config_crate;
-extern crate env_logger;
 extern crate futures;
 extern crate futures_cpupool;
 extern crate hyper;
@@ -30,7 +29,6 @@ extern crate uuid;
 #[macro_use]
 extern crate failure;
 extern crate geo;
-extern crate geo_types;
 
 pub mod config;
 pub mod controller;
