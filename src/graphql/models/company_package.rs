@@ -8,7 +8,7 @@ pub struct CompaniesPackages {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
-#[graphql(description = "New Packages input object")]
+#[graphql(description = "New Companies Packages input object")]
 pub struct NewCompaniesPackagesInput {
     #[graphql(description = "company_id")]
     pub company_id: i32,

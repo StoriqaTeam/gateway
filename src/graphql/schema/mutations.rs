@@ -1209,41 +1209,21 @@ graphql_object!(Mutation: Context |&self| {
 
     field upsertShipping(&executor, input: NewShippingInput as "New shipping input.") -> FieldResult<ShippingOutput> as "Upsert shipping for base product." {
         let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Product.to_url(),
+            input.base_product_id);
 
-        let rpc_client = context.get_rest_api_client(Service::Warehouses);
-        let warehouses = rpc_client.get_warehouses_for_store(input.store_id.into())
-            .sync()
-            .map_err(into_graphql)?;
+        let input : NewShipping = input.into();
 
-        if let Some(warehouse) = warehouses.into_iter().nth(0) {
-            if let Some(country) = warehouse.country {
-                let url = format!("{}/{}/{}",
-                    context.config.service_url(Service::Delivery),
-                    Model::Product.to_url(),
-                    input.base_product_id);
+        let body: String = serde_json::to_string(&input)?.to_string();
 
-                let input : NewShipping = (input, country).into();
-
-                let body: String = serde_json::to_string(&input)?.to_string();
-
-                context.request::<Shipping>(Method::Post, url, Some(body))
-                    .map(From::from)
-                    .wait()
-            } else {
-                Err(FieldError::new(
-                    "There is no country in warehouse address belonging to this store",
-                    graphql_value!({ "code": 300, "details": { "Could not fetch warehouse address info." }}),
-                ))
-            }
-        } else {
-            Err(FieldError::new(
-                "There is no warehouses belonging to this store",
-                    graphql_value!({ "code": 300, "details": { "Could not fetch warehouse address info." }}),
-            ))
-        }
+        context.request::<Shipping>(Method::Post, url, Some(body))
+            .map(From::from)
+            .wait()
     }
 
-    field createCompanyFull(&executor, input: NewCompanyInput as "Create company input.") -> FieldResult<Company> as "Creates new company." {
+    field createCompany(&executor, input: NewCompanyInput as "Create company input.") -> FieldResult<Company> as "Creates new company." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
@@ -1255,7 +1235,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateCompanyFull(&executor, input: UpdateCompanyInput as "Update company input.") -> FieldResult<Company>  as "Updates company."{
+    field updateCompany(&executor, input: UpdateCompanyInput as "Update company input.") -> FieldResult<Company>  as "Updates company."{
         let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Delivery),
@@ -1286,7 +1266,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createPackageFull(&executor, input: NewPackagesInput as "Create package input.") -> FieldResult<Packages> as "Creates new package." {
+    field createPackage(&executor, input: NewPackagesInput as "Create package input.") -> FieldResult<Packages> as "Creates new package." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
@@ -1298,7 +1278,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updatePackageFull(&executor, input: UpdatePackagesInput as "Update package input.") -> FieldResult<Packages>  as "Updates package."{
+    field updatePackage(&executor, input: UpdatePackagesInput as "Update package input.") -> FieldResult<Packages>  as "Updates package."{
         let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Delivery),
@@ -1329,7 +1309,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createCompanyPackageFull(&executor, input: NewCompaniesPackagesInput as "Create company_package input.") -> FieldResult<CompaniesPackages> as "Creates new company_package." {
+    field createCompanyPackage(&executor, input: NewCompaniesPackagesInput as "Create company_package input.") -> FieldResult<CompaniesPackages> as "Creates new company_package." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),

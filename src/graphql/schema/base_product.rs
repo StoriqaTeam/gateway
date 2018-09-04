@@ -242,6 +242,20 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             ))
         }
     }
+
+    field shipping(&executor) -> FieldResult<ShippingOutput> as "Shipping" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Product,
+            self.id.0
+        );
+
+        context.request::<ShippingOutput>(Method::Get, url, None)
+            .map(From::from)
+            .wait()
+    }
+
 });
 
 graphql_object!(Variants: Context as "BaseProductVariants" |&self| {

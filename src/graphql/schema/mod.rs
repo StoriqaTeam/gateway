@@ -22,6 +22,7 @@ pub mod page_info;
 pub mod product;
 pub mod query;
 pub mod search;
+pub mod shipping;
 pub mod stock;
 pub mod store;
 pub mod user;

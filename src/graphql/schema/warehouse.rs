@@ -4,8 +4,8 @@ use std::str::FromStr;
 
 use futures::Future;
 use hyper::Method;
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
 use serde_json;
 
 use stq_api::types::ApiFutureExt;
@@ -60,6 +60,24 @@ graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
 
         context.request::<Option<Store>>(Method::Get, url, None)
             .wait()
+    }
+
+    field country(&executor) -> FieldResult<Option<Country>> as "Fetches warehouse country." {
+        let context = executor.context();
+        if let Some(country) = self.0.country.clone() {
+            let url = format!("{}/{}/search?label={}",
+                context.config.service_url(Service::Delivery),
+                Model::Country.to_url(),
+                country);
+
+            context.request::<Option<Country>>(Method::Get, url, None)
+                .wait()
+        } else {
+            Err(FieldError::new(
+                "There is no country in warehouse address",
+                graphql_value!({ "code": 300, "details": { "Could not fetch warehouse address info." }}),
+            ))
+        }
     }
 
     field products(&executor,

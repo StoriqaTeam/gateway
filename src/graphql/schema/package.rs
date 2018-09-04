@@ -17,6 +17,10 @@ graphql_object!(Packages: Context as "Packages" |&self| {
         ID::new(Service::Delivery, Model::Package, self.id.0).to_string().into()
     }
 
+    field raw_id() -> &i32 as "Int id"{
+        &self.id.0
+    }
+
     field name() -> &str as "Name"{
         &self.name
     }

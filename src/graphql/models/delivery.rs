@@ -24,6 +24,8 @@ pub struct NewLocalShippingProductsInput {
     pub company_package_id: i32,
     #[graphql(description = "price")]
     pub price: Option<f64>,
+    #[graphql(description = "deliveries to")]
+    pub deliveries_to: Vec<CountryInput>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
@@ -34,7 +36,7 @@ pub struct NewInternationalShippingProductsInput {
     #[graphql(description = "price")]
     pub price: Option<f64>,
     #[graphql(description = "deliveries to")]
-    pub deliveries_to: Vec<String>,
+    pub deliveries_to: Vec<CountryInput>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
@@ -60,11 +62,16 @@ pub enum ShippingVariant {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NewShippingProducts {
+    pub product: NewProducts,
+    pub deliveries_to: Vec<CountryInput>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct NewProducts {
     pub base_product_id: BaseProductId,
     pub store_id: StoreId,
     pub company_package_id: CompanyPackageId,
     pub price: Option<ProductPrice>,
-    pub deliveries_to: Vec<CountryLabel>,
     pub shipping: ShippingVariant,
 }
 
@@ -76,35 +83,43 @@ pub struct NewPickups {
     pub price: Option<ProductPrice>,
 }
 
-impl From<(NewShippingInput, String)> for NewShipping {
-    fn from(shippping: (NewShippingInput, String)) -> NewShipping {
-        let country_label = shippping.1.clone();
-        let shippping = shippping.0;
+impl From<NewShippingInput> for NewShipping {
+    fn from(shippping: NewShippingInput) -> NewShipping {
         let base_product_id = shippping.base_product_id.into();
         let store_id = shippping.store_id.into();
         let mut local_shippings = shippping
             .local
             .into_iter()
-            .map(|local| NewShippingProducts {
-                base_product_id,
-                store_id,
-                company_package_id: local.company_package_id.into(),
-                price: local.price.map(|price| price.into()),
-                deliveries_to: vec![country_label.clone().into()],
-                shipping: ShippingVariant::Local,
+            .map(|local| {
+                let product = NewProducts {
+                    base_product_id,
+                    store_id,
+                    company_package_id: local.company_package_id.into(),
+                    price: local.price.map(|price| price.into()),
+                    shipping: ShippingVariant::Local,
+                };
+                NewShippingProducts {
+                    product,
+                    deliveries_to: local.deliveries_to,
+                }
             })
             .collect();
 
         let mut international_shippings = shippping
             .international
             .into_iter()
-            .map(|international| NewShippingProducts {
-                base_product_id,
-                store_id,
-                company_package_id: international.company_package_id.into(),
-                price: international.price.map(|price| price.into()),
-                deliveries_to: international.deliveries_to.into_iter().map(|d| d.into()).collect(),
-                shipping: ShippingVariant::International,
+            .map(|international| {
+                let product = NewProducts {
+                    base_product_id,
+                    store_id,
+                    company_package_id: international.company_package_id.into(),
+                    price: international.price.map(|price| price.into()),
+                    shipping: ShippingVariant::International,
+                };
+                NewShippingProducts {
+                    product,
+                    deliveries_to: international.deliveries_to,
+                }
             })
             .collect();
 
@@ -131,6 +146,12 @@ pub struct Shipping {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ShippingProducts {
+    pub product: Products,
+    pub deliveries_to: Vec<Country>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Products {
     pub id: i32,
     pub base_product_id: BaseProductId,
     pub store_id: StoreId,
@@ -149,43 +170,30 @@ pub struct Pickups {
     pub price: Option<ProductPrice>,
 }
 
-#[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug)]
-#[graphql(description = "Shipping Output")]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ShippingOutput {
-    #[graphql(description = "local shipping")]
     pub local: Vec<LocalShippingProducts>,
-    #[graphql(description = "international shipping")]
     pub international: Vec<InternationalShippingProducts>,
-    #[graphql(description = "pickups")]
     pub pickup: Option<PickupsOutput>,
 }
 
-#[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug)]
-#[graphql(description = " Local Shipping Products Output")]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LocalShippingProducts {
-    #[graphql(description = "company package id")]
-    pub company_package_id: i32,
-    #[graphql(description = "price")]
+    pub company_package_id: CompanyPackageId,
     pub price: Option<f64>,
+    pub deliveries_to: Vec<Country>,
 }
 
-#[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug)]
-#[graphql(description = " International Shipping Products Output")]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InternationalShippingProducts {
-    #[graphql(description = "company package id")]
-    pub company_package_id: i32,
-    #[graphql(description = "price")]
+    pub company_package_id: CompanyPackageId,
     pub price: Option<f64>,
-    #[graphql(description = "deliveries to")]
-    pub deliveries_to: Vec<String>,
+    pub deliveries_to: Vec<Country>,
 }
 
-#[derive(GraphQLObject, Serialize, Deserialize, Clone, Debug)]
-#[graphql(description = " Pickups Output")]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PickupsOutput {
-    #[graphql(description = "pickup")]
     pub pickup: bool,
-    #[graphql(description = "price")]
     pub price: Option<f64>,
 }
 
@@ -194,19 +202,20 @@ impl From<Shipping> for ShippingOutput {
         let mut local = vec![];
         let mut international = vec![];
         for item in shipping.items {
-            match item.shipping {
+            match item.product.shipping {
                 ShippingVariant::International => {
                     international.push(InternationalShippingProducts {
-                        company_package_id: item.company_package_id.0,
-                        price: item.price.map(|price| price.0),
-                        deliveries_to: item.deliveries_to.into_iter().map(|d| d.0).collect(),
+                        company_package_id: item.product.company_package_id,
+                        price: item.product.price.map(|price| price.0),
+                        deliveries_to: item.deliveries_to,
                     });
                 }
 
                 ShippingVariant::Local => {
                     local.push(LocalShippingProducts {
-                        company_package_id: item.company_package_id.0,
-                        price: item.price.map(|price| price.0),
+                        company_package_id: item.product.company_package_id,
+                        price: item.product.price.map(|price| price.0),
+                        deliveries_to: item.deliveries_to,
                     });
                 }
             }
