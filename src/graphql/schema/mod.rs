@@ -24,6 +24,8 @@ pub mod user_delivery_address;
 pub mod user_role;
 pub mod warehouse;
 pub mod wizard_store;
+pub mod country;
+pub mod available_packages;
 
 use juniper;
 

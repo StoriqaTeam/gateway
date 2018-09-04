@@ -209,7 +209,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         &self.slug
     }
 
-    field available_delivery_companies(&executor) -> FieldResult<Option<AvailableDeliveryCompanies>> as "Available Delivery Companies" {
+    field available_packages(&executor) -> FieldResult<AvailablePackagesOutput> as "Available Packages" {
         let context = executor.context();
 
         let rpc_client = context.get_rest_api_client(Service::Warehouses);
@@ -219,14 +219,15 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
 
         if let Some(warehouse) = warehouses.into_iter().nth(0) {
             if let Some(country) = warehouse.country {
-                let url = format!("{}/companies/available?country={}&weight={}&size={}",
+                let url = format!("{}/available_packages?country={}&weight={}&size={}",
                     context.config.service_url(Service::Delivery),
                     country,
                     0, // TODO: replace with real weight
                     0  // TODO: replace with real size
                     );
 
-                context.request::<Option<AvailableDeliveryCompanies>>(Method::Get, url, None)
+                context.request::<Vec<AvailablePackages>>(Method::Get, url, None)
+                    .map(From::from)
                     .wait()
             } else {
                 Err(FieldError::new(

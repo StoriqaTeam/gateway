@@ -1,5 +1,7 @@
 use stq_types::*;
 
+use graphql::models::*;
+
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "New Shipping Input")]
 pub struct NewShippingInput {
@@ -88,7 +90,7 @@ impl From<(NewShippingInput, String)> for NewShipping {
                 store_id,
                 company_package_id: local.company_package_id.into(),
                 price: local.price.map(|price| price.into()),
-                deliveries_to: vec![country_label.into()],
+                deliveries_to: vec![country_label.clone().into()],
                 shipping: ShippingVariant::Local,
             })
             .collect();
@@ -106,7 +108,7 @@ impl From<(NewShippingInput, String)> for NewShipping {
             })
             .collect();
 
-        let items = vec![];
+        let mut items = vec![];
         items.append(&mut local_shippings);
         items.append(&mut international_shippings);
 
@@ -189,8 +191,8 @@ pub struct PickupsOutput {
 
 impl From<Shipping> for ShippingOutput {
     fn from(shipping: Shipping) -> ShippingOutput {
-        let local = vec![];
-        let international = vec![];
+        let mut local = vec![];
+        let mut international = vec![];
         for item in shipping.items {
             match item.shipping {
                 ShippingVariant::International => {
@@ -223,10 +225,38 @@ impl From<Shipping> for ShippingOutput {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AvailablePackages {
     pub id: CompanyPackageId,
     pub name: String,
-    pub deliveries_to: Vec<CountryLabel>,
+    pub deliveries_to: Vec<Country>,
     pub local_available: bool,
 }
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AvailablePackagesOutput {
+    pub local: Vec<AvailablePackages>,
+    pub international: Vec<AvailablePackages>,
+}
+
+impl From<Vec<AvailablePackages>> for AvailablePackagesOutput {
+    fn from(packages: Vec<AvailablePackages>) -> Self {
+        let mut local = vec![];
+        let mut international = vec![];
+        for item in packages {
+            if item.local_available  {
+                international.push(item.clone());
+                local.push(item.clone());
+            } else {
+                international.push(item.clone());
+            } 
+        }
+
+        AvailablePackagesOutput {
+            local,
+            international,
+        }
+    }
+}
+

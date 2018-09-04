@@ -213,6 +213,16 @@ graphql_object!(Query: Context |&self| {
         context.request::<Option<Category>>(Method::Get, url, None)
             .wait()
     }
+    
+    field countries(&executor) -> FieldResult<Country> as "Fetches country tree." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Country.to_url());
+
+        context.request::<Country>(Method::Get, url, None)
+            .wait()
+    }
 
     field currency_exchange(&executor) -> FieldResult<Option<Vec<CurrencyExchange>>> as "Fetches currency exchange." {
         let context = executor.context();
