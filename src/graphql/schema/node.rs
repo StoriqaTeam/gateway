@@ -25,6 +25,9 @@ pub enum Node {
     Warehouse(Box<GraphQLWarehouse>),
     Order(Box<GraphQLOrder>),
     Stock(GraphQLStock),
+    Company(Company),
+    Package(Packages),
+    CompanyPackage(CompaniesPackages),
 }
 
 graphql_interface!(Node: Context as "Node" |&self| {
@@ -48,6 +51,9 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::Warehouse(ref w)  => w.0.id.to_string().into(),
             Node::Order(ref o)  => o.0.id.to_string().into(),
             Node::Stock(ref s)  => format!("{}{}", s.0.warehouse_id, s.0.product_id).into(),
+            Node::Company(Company { ref id, .. })  => ID::new(Service::Delivery, Model::Company, id.0).to_string().into(),
+            Node::Package(Packages { ref id, .. })  => ID::new(Service::Delivery, Model::Package, id.0).to_string().into(),
+            Node::CompanyPackage(CompaniesPackages { ref id, .. })  => ID::new(Service::Delivery, Model::CompanyPackage, id.0).to_string().into(),
         }
     }
 
@@ -65,6 +71,9 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &GraphQLWarehouse => match *self { Node::Warehouse(ref h) => Some(&**h), _ => None },
         &GraphQLOrder => match *self { Node::Order(ref h) => Some(&**h), _ => None },
         &GraphQLStock => match *self { Node::Stock(ref h) => Some(h), _ => None },
+        &Company => match *self { Node::Company(ref h) => Some(h), _ => None },
+        &Packages => match *self { Node::Package(ref h) => Some(h), _ => None },
+        &CompaniesPackages => match *self { Node::CompanyPackage(ref h) => Some(h), _ => None },
         &Cart => None::<&Cart>,
     }
 });

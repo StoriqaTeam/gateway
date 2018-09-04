@@ -233,7 +233,6 @@ pub struct AvailablePackages {
     pub local_available: bool,
 }
 
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AvailablePackagesOutput {
     pub local: Vec<AvailablePackages>,
@@ -245,18 +244,14 @@ impl From<Vec<AvailablePackages>> for AvailablePackagesOutput {
         let mut local = vec![];
         let mut international = vec![];
         for item in packages {
-            if item.local_available  {
+            if item.local_available {
                 international.push(item.clone());
                 local.push(item.clone());
             } else {
                 international.push(item.clone());
-            } 
+            }
         }
 
-        AvailablePackagesOutput {
-            local,
-            international,
-        }
+        AvailablePackagesOutput { local, international }
     }
 }
-

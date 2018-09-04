@@ -182,6 +182,21 @@ graphql_object!(Query: Context |&self| {
                         graphql_value!({ "internal_error": "Unknown model" })
                     ))
                 }
+                (&Service::Delivery, &Model::Company) => {
+                    context.request::<Option<Company>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::Company))
+                },
+                (&Service::Delivery, &Model::Package) => {
+                    context.request::<Option<Packages>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::Package))
+                },
+                (&Service::Delivery, &Model::CompanyPackage) => {
+                    context.request::<Option<CompaniesPackages>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::CompanyPackage))
+                },
                 (&Service::Delivery, _) => {
                     Err(FieldError::new(
                         "Could not get model from delivery microservice.",
@@ -213,7 +228,7 @@ graphql_object!(Query: Context |&self| {
         context.request::<Option<Category>>(Method::Get, url, None)
             .wait()
     }
-    
+
     field countries(&executor) -> FieldResult<Country> as "Fetches country tree." {
         let context = executor.context();
         let url = format!("{}/{}",

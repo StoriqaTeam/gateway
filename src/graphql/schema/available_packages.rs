@@ -30,7 +30,7 @@ graphql_object!(AvailablePackagesOutput: Context as "Available Packages Output "
     field local() -> &[AvailablePackages] as "Local packages"{
         &self.local
     }
-    
+
     field international() -> &[AvailablePackages] as "International packages"{
         &self.international
     }
