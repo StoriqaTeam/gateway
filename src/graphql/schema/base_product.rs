@@ -5,14 +5,17 @@ use std::str::FromStr;
 use futures::Future;
 use hyper::Method;
 use juniper;
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
 
+use stq_api::types::ApiFutureExt;
+use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, ModerationStatus, Translation};
 
 use super::*;
+use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
 
@@ -205,6 +208,54 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     field slug() -> &str as "Slug" {
         &self.slug
     }
+
+    field available_packages(&executor) -> FieldResult<AvailablePackagesOutput> as "Available Packages" {
+        let context = executor.context();
+
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        let warehouses = rpc_client.get_warehouses_for_store(self.store_id)
+            .sync()
+            .map_err(into_graphql)?;
+
+        if let Some(warehouse) = warehouses.into_iter().nth(0) {
+            if let Some(country) = warehouse.country {
+                let url = format!("{}/available_packages?country={}&weight={}&size={}",
+                    context.config.service_url(Service::Delivery),
+                    country,
+                    0, // TODO: replace with real weight
+                    0  // TODO: replace with real size
+                    );
+
+                context.request::<Vec<AvailablePackages>>(Method::Get, url, None)
+                    .map(From::from)
+                    .wait()
+            } else {
+                Err(FieldError::new(
+                    "There is no country in warehouse address belonging to this store",
+                    graphql_value!({ "code": 300, "details": { "Could not fetch warehouse address info." }}),
+                ))
+            }
+        } else {
+            Err(FieldError::new(
+                "There is no warehouses belonging to this store",
+                    graphql_value!({ "code": 300, "details": { "Could not fetch warehouse address info." }}),
+            ))
+        }
+    }
+
+    field shipping(&executor) -> FieldResult<ShippingOutput> as "Shipping" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Product,
+            self.id.0
+        );
+
+        context.request::<ShippingOutput>(Method::Get, url, None)
+            .map(From::from)
+            .wait()
+    }
+
 });
 
 graphql_object!(Variants: Context as "BaseProductVariants" |&self| {

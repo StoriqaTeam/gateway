@@ -1206,4 +1206,130 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+
+    field upsertShipping(&executor, input: NewShippingInput as "New shipping input.") -> FieldResult<ShippingOutput> as "Upsert shipping for base product." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Product.to_url(),
+            input.base_product_id);
+
+        let input : NewShipping = input.into();
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Shipping>(Method::Post, url, Some(body))
+            .map(From::from)
+            .wait()
+    }
+
+    field createCompany(&executor, input: NewCompanyInput as "Create company input.") -> FieldResult<Company> as "Creates new company." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Company.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Company>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field updateCompany(&executor, input: UpdateCompanyInput as "Update company input.") -> FieldResult<Company>  as "Updates company."{
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Company.to_url(),
+            input.id.to_string());
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Company>(Method::Put, url, Some(body))
+            .wait()
+    }
+
+    field deleteCompany(&executor, id: i32 as "Raw id of company") -> FieldResult<Company>  as "Deletes company." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Company.to_url(),
+            id);
+
+        context.request::<Company>(Method::Delete, url, None)
+            .wait()
+    }
+
+    field createPackage(&executor, input: NewPackagesInput as "Create package input.") -> FieldResult<Packages> as "Creates new package." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Package.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Packages>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field updatePackage(&executor, input: UpdatePackagesInput as "Update package input.") -> FieldResult<Packages>  as "Updates package."{
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Package.to_url(),
+            input.id.to_string());
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Packages>(Method::Put, url, Some(body))
+            .wait()
+    }
+
+    field deletePackage(&executor, id: i32 as "Raw id of package") -> FieldResult<Packages>  as "Deletes package." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Package.to_url(),
+            id);
+
+        context.request::<Packages>(Method::Delete, url, None)
+            .wait()
+    }
+
+    field createCompanyPackage(&executor, input: NewCompaniesPackagesInput as "Create company_package input.") -> FieldResult<CompaniesPackages> as "Creates new company_package." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::CompanyPackage.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<CompaniesPackages>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field deleteCompanyPackage(&executor, id: i32 as "Raw id of company_package") -> FieldResult<CompaniesPackages>  as "Deletes company_package." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::CompanyPackage.to_url(),
+            id);
+
+        context.request::<CompaniesPackages>(Method::Delete, url, None)
+            .wait()
+    }
+
 });

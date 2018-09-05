@@ -113,7 +113,7 @@ impl Controller for ControllerImpl {
 
                 // Fallback
                 (m, _) => Box::new(future::err(
-                    format_err!("Request to non existing endpoint in notifications microservice! {:?} {:?}", m, path)
+                    format_err!("Request to non existing endpoint in gateway microservice! {:?} {:?}", m, path)
                         .context(Error::NotFound)
                         .into(),
                 )),
