@@ -264,3 +264,16 @@ impl From<Vec<AvailablePackages>> for AvailablePackagesOutput {
         AvailablePackagesOutput { local, international }
     }
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AvailablePackageForUser {
+    pub id: CompanyPackageId,
+    pub name: String,
+    pub price: Option<ProductPrice>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AvailableShipppingForUser {
+    pub packages: Vec<AvailablePackageForUser>,
+    pub pickups: Option<PickupsOutput>,
+}
