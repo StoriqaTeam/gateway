@@ -1,6 +1,6 @@
 use juniper::ID as GraphqlID;
 
-use stq_types::{CompanyId, CountryLabel};
+use stq_types::{Alpha3, CompanyId};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Company {
@@ -8,7 +8,7 @@ pub struct Company {
     pub name: String,
     pub label: String,
     pub description: Option<String>,
-    pub deliveries_from: Vec<CountryLabel>,
+    pub deliveries_from: Vec<Alpha3>,
     pub logo: String,
 }
 

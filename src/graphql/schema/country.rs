@@ -9,8 +9,8 @@ graphql_object!(Country: Context as "Country" |&self| {
         &self.label.0
     }
 
-    field parent_label() -> Option<String> as "Parent label"{
-        self.parent_label.clone().map(|p| p.0)
+    field parent() -> Option<String> as "Parent Alpha3 code"{
+        self.parent.clone().map(|p| p.0)
     }
 
     field level() -> &i32 as "Level" {
@@ -22,11 +22,11 @@ graphql_object!(Country: Context as "Country" |&self| {
     }
 
     field alpha2() -> &str as "alpha2" {
-        &self.alpha2
+        &self.alpha2.0
     }
 
     field alpha3() -> &str as "alpha3" {
-        &self.alpha3
+        &self.alpha3.0
     }
 
     field numeric() -> &i32 as "numeric" {

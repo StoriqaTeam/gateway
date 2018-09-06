@@ -1,13 +1,13 @@
-use stq_types::CountryLabel;
+use stq_types::{Alpha2, Alpha3, CountryLabel};
 
 /// Payload for creating countries
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Country {
     pub label: CountryLabel,
-    pub parent_label: Option<CountryLabel>,
+    pub parent: Option<Alpha3>,
     pub level: i32,
-    pub alpha2: String,
-    pub alpha3: String,
+    pub alpha2: Alpha2,
+    pub alpha3: Alpha3,
     pub numeric: i32,
     pub is_selected: bool,
     pub children: Vec<Country>,
@@ -18,8 +18,8 @@ pub struct Country {
 pub struct CountryInput {
     #[graphql(description = "label")]
     pub label: String,
-    #[graphql(description = "parent_label")]
-    pub parent_label: Option<String>,
+    #[graphql(description = "parent Alpha3 code")]
+    pub parent: Option<String>,
     #[graphql(description = "level")]
     pub level: i32,
     #[graphql(description = "alpha2")]
