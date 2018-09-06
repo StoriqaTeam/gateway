@@ -10,12 +10,11 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
-use stq_api::orders::{CartClient, OrderClient};
+use stq_api::orders::{CartClient, Order};
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::OrderSlug;
 use stq_types::{ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
@@ -991,33 +990,51 @@ graphql_object!(Mutation: Context |&self| {
             };
             order.comment = comment;
         }
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        rpc_client.set_order_state(OrderSlug(slug).into(), order.state, order.comment, order.track_id)
-            .sync()
-            .map_err(into_graphql)
+        let url = format!("{}/{}/{}/set_state",
+            context.config.saga_microservice.url.clone(),
+            Model::Order.to_url(),
+            slug,
+            );
+
+        let body = serde_json::to_string(&order)?;
+
+        context.request::<Option<Order>>(Method::Post, url, Some(body))
             .map(|res| res.map(GraphQLOrder))
+            .wait()
     }
 
     field setOrderStatusCanceled(&executor, input: OrderStatusCanceledInput as "Order Status Canceled input.") -> FieldResult<Option<GraphQLOrder>>  as "Set Order Status Canceled."{
         let context = executor.context();
         let slug = input.order_slug;
         let order: OrderStatusCanceled = input.into();
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        rpc_client.set_order_state(OrderSlug(slug).into(), order.state, order.comment, None)
-            .sync()
-            .map_err(into_graphql)
+        let url = format!("{}/{}/{}/set_state",
+            context.config.saga_microservice.url.clone(),
+            Model::Order.to_url(),
+            slug,
+            );
+
+        let body = serde_json::to_string(&order)?;
+
+        context.request::<Option<Order>>(Method::Post, url, Some(body))
             .map(|res| res.map(GraphQLOrder))
+            .wait()
     }
 
     field setOrderStatusComplete(&executor, input: OrderStatusCompleteInput as "Order Status Complete input.") -> FieldResult<Option<GraphQLOrder>>  as "Set Order Status Complete."{
         let context = executor.context();
         let slug = input.order_slug;
         let order: OrderStatusComplete = input.into();
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        rpc_client.set_order_state(OrderSlug(slug).into(), order.state, order.comment, None)
-            .sync()
-            .map_err(into_graphql)
+        let url = format!("{}/{}/{}/set_state",
+            context.config.saga_microservice.url.clone(),
+            Model::Order.to_url(),
+            slug,
+            );
+
+        let body = serde_json::to_string(&order)?;
+
+        context.request::<Option<Order>>(Method::Post, url, Some(body))
             .map(|res| res.map(GraphQLOrder))
+            .wait()
     }
 
     field recalcInvoiceAmount(&executor, id: String as "Invoice id") -> FieldResult<Invoice> as "Invoice" {

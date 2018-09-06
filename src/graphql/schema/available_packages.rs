@@ -28,7 +28,7 @@ graphql_object!(AvailablePackages: Context as "AvailablePackages" |&self| {
 
 });
 
-graphql_object!(AvailablePackagesOutput: Context as "AvailablePackagesOutput " |&self| {
+graphql_object!(AvailablePackagesOutput: Context as "AvailablePackagesOutput" |&self| {
     description: "Available Packages info."
 
     field local() -> &[AvailablePackages] as "Local packages"{
@@ -62,7 +62,7 @@ graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&
 
 });
 
-graphql_object!(AvailableShipppingForUser: Context as "AvailableShipppingForUser " |&self| {
+graphql_object!(AvailableShipppingForUser: Context as "AvailableShipppingForUser" |&self| {
     description: "Available Packages info."
 
     field packages() -> &[AvailablePackageForUser] as "Available Packages For Users"{
