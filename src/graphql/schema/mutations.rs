@@ -764,8 +764,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field createUserDeliveryAddressFull(&executor, input: NewUserDeliveryAddressFullInput  as "Create delivery address full input.") -> FieldResult<UserDeliveryAddress> as "Creates new user delivery address full." {
         let context = executor.context();
-        let url = format!("{}/{}/delivery_addresses",
-            context.config.service_url(Service::Users),
+        let url = format!("{}/{}/addresses",
+            context.config.service_url(Service::Delivery),
             Model::User.to_url());
 
         let body: String = serde_json::to_string(&input)?.to_string();
@@ -776,8 +776,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateUserDeliveryAddressFull(&executor, input: UpdateUserDeliveryAddressFullInput as "Update delivery address full input.") -> FieldResult<UserDeliveryAddress>  as "Updates delivery address full."{
         let context = executor.context();
-        let url = format!("{}/{}/delivery_addresses/{}",
-            context.config.service_url(Service::Users),
+        let url = format!("{}/{}/addresses/{}",
+            context.config.service_url(Service::Delivery),
             Model::User.to_url(),
             input.id.to_string());
 
@@ -796,8 +796,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field deleteUserDeliveryAddress(&executor, id: i32 as "Raw id of delivery address") -> FieldResult<UserDeliveryAddress>  as "Deletes delivery address." {
         let context = executor.context();
-        let url = format!("{}/{}/delivery_addresses/{}",
-            context.config.service_url(Service::Users),
+        let url = format!("{}/{}/addresses/{}",
+            context.config.service_url(Service::Delivery),
             Model::User.to_url(),
             id);
 

@@ -364,8 +364,8 @@ graphql_object!(User: Context as "User" |&self| {
     field delivery_addresses(&executor) -> FieldResult<Option<Vec<UserDeliveryAddress>>> as "Fetches delivery addresses for user." {
         let context = executor.context();
 
-        let url = format!("{}/{}/delivery_addresses/{}",
-            context.config.service_url(Service::Users),
+        let url = format!("{}/{}/{}/addresses",
+            context.config.service_url(Service::Delivery),
             Model::User.to_url(),
             self.id);
 
