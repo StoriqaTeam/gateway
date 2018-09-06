@@ -37,7 +37,7 @@ graphql_object!(PageInfoStoresSearch: Context as "PageInfoStoresSearch" |&self| 
         &self.has_previous_page
     }
 
-    field deprecated "Use search_filters.total_count " total_count() -> Option<i32> as "total elements count" {
+    field deprecated "Use search_filters.total_count" total_count() -> Option<i32> as "total elements count" {
         Some(0)
     }
 
