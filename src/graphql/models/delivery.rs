@@ -157,7 +157,7 @@ pub struct Products {
     pub store_id: StoreId,
     pub company_package_id: CompanyPackageId,
     pub price: Option<ProductPrice>,
-    pub deliveries_to: Vec<CountryLabel>,
+    pub deliveries_to: Vec<Alpha3>,
     pub shipping: ShippingVariant,
 }
 
