@@ -320,6 +320,48 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
+    field company(&executor, id: i32 as "Int Id of a company.") -> FieldResult<Option<Company>> as "Fetches company by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Delivery),
+            Model::Company.to_url(),
+            id.to_string()
+        );
+
+        context.request::<Option<Company>>(Method::Get, url, None)
+            .wait()
+    }
+
+    field package(&executor, id: i32 as "Int Id of a package.") -> FieldResult<Option<Packages>> as "Fetches package by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Delivery),
+            Model::Package.to_url(),
+            id.to_string()
+        );
+
+        context.request::<Option<Packages>>(Method::Get, url, None)
+            .wait()
+    }
+
+    field company_package(&executor, id: i32 as "Int Id of a company_package.") -> FieldResult<Option<CompaniesPackages>> as "Fetches company_package by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Delivery),
+            Model::CompanyPackage.to_url(),
+            id.to_string()
+        );
+
+        context.request::<Option<CompaniesPackages>>(Method::Get, url, None)
+            .wait()
+    }
+
     field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 

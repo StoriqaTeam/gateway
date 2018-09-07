@@ -1,4 +1,7 @@
 //! File containing Category object of graphql schema
+use futures::Future;
+use hyper::Method;
+use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
@@ -43,6 +46,21 @@ graphql_object!(Packages: Context as "Packages" |&self| {
 
     field deliveries_to() -> Vec<String> as "deliveries_to" {
         self.deliveries_to.clone().into_iter().map(|d| d.0).collect()
+    }
+
+    field companies(&executor) -> FieldResult<Vec<Company>> as "Fetches companies by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}/{}",
+            &context.config.service_url(Service::Delivery),
+            Model::Package.to_url(),
+            self.id,
+            Model::Company.to_url(),
+        );
+
+        context.request::<Vec<Company>>(Method::Get, url, None)
+            .wait()
     }
 
 });
