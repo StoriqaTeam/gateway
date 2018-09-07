@@ -9,7 +9,6 @@ pub mod category;
 pub mod company;
 pub mod company_package;
 pub mod country;
-pub mod email_template;
 pub mod invoice;
 pub mod main_page;
 pub mod moderator_comment;

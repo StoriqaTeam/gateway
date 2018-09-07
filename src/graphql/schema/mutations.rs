@@ -15,7 +15,6 @@ use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::TemplateVariant;
 use stq_types::{ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
@@ -1049,22 +1048,13 @@ graphql_object!(Mutation: Context |&self| {
     }
 
     field updateEmailTemplate(&executor,
-        input: EmailTemplateInput as "Update EmailTemplate input.",
-        variant: TemplateVariant as "Email template variant") -> FieldResult<String> as "Update email messages template" {
+        input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template" {
         let context = executor.context();
 
         let url = format!(
-            "{}/{}/{}",
+            "{}/templates/{}",
             &context.config.service_url(Service::Notifications),
-            "templates",
-            variant);
-
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
+            input.variant);
 
         let body: String = input.data;
 
