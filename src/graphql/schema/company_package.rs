@@ -1,4 +1,7 @@
 //! File containing Category object of graphql schema
+use futures::Future;
+use hyper::Method;
+use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
@@ -25,8 +28,36 @@ graphql_object!(CompaniesPackages: Context as "CompaniesPackages" |&self| {
         &self.company_id.0
     }
 
+    field company(&executor) -> FieldResult<Option<Company>> as "Fetches company." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Delivery),
+            Model::Company.to_url(),
+            self.company_id
+        );
+
+        context.request::<Option<Company>>(Method::Get, url, None)
+            .wait()
+    }
+
     field package_id() -> &i32 as "package_id"{
         &self.package_id.0
+    }
+
+    field package(&executor) -> FieldResult<Option<Packages>> as "Fetches package." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Delivery),
+            Model::Package.to_url(),
+            self.package_id
+        );
+
+        context.request::<Option<Packages>>(Method::Get, url, None)
+            .wait()
     }
 
 });
