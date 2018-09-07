@@ -1047,182 +1047,20 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field updateTemplateOrderUpdateStateForUser(&executor, input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template for user order update state event" {
+    field updateEmailTemplate(&executor,
+        input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template" {
         let context = executor.context();
 
         let url = format!(
-            "{}/{}/{}",
+            "{}/templates/{}",
             &context.config.service_url(Service::Notifications),
-            Model::User.to_url(),
-            "template-order-update-state");
-
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
+            input.variant);
 
         let body: String = input.data;
 
         context.request::<String>(Method::Put, url, Some(body))
             .wait()
     }
-
-    field updateTemplateOrderUpdateStateForStore(&executor, input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template for store order update state event" {
-        let context = executor.context();
-
-        let url = format!(
-            "{}/{}/{}",
-            &context.config.service_url(Service::Notifications),
-            Model::Store.to_url(),
-            "template-order-update-state");
-
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = input.data;
-
-        context.request::<String>(Method::Put, url, Some(body))
-            .wait()
-    }
-
-    field updateTemplateOrderCreateForUser(&executor, input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template for user order create event" {
-        let context = executor.context();
-
-        let url = format!(
-            "{}/{}/{}",
-            &context.config.service_url(Service::Notifications),
-            Model::User.to_url(),
-            "template-order-create");
-
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = input.data;
-
-        context.request::<String>(Method::Put, url, Some(body))
-            .wait()
-    }
-
-    field updateTemplateOrderCreateForStore(&executor, input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template for store order create event" {
-        let context = executor.context();
-
-        let url = format!(
-            "{}/{}/{}",
-            &context.config.service_url(Service::Notifications),
-            Model::Store.to_url(),
-            "template-order-create");
-
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = input.data;
-
-        context.request::<String>(Method::Put, url, Some(body))
-            .wait()
-    }
-
-    field updateTemplateEmailVerificationForUser(&executor, input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template for user email verification event" {
-        let context = executor.context();
-
-        let url = format!(
-            "{}/{}/{}",
-            &context.config.service_url(Service::Notifications),
-            Model::User.to_url(),
-            "template-email-verification");
-
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = input.data;
-
-        context.request::<String>(Method::Put, url, Some(body))
-            .wait()
-    }
-
-    field updateTemplateApplyEmailVerificationForUser(&executor, input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template for user apply email verification event" {
-        let context = executor.context();
-
-        let url = format!(
-            "{}/{}/{}",
-            &context.config.service_url(Service::Notifications),
-            Model::User.to_url(),
-            "template-apply-email-verification");
-
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = input.data;
-
-        context.request::<String>(Method::Put, url, Some(body))
-            .wait()
-    }
-
-    field updateTemplatePasswordResetForUser(&executor, input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template for user password reset event" {
-        let context = executor.context();
-
-        let url = format!(
-            "{}/{}/{}",
-            &context.config.service_url(Service::Notifications),
-            Model::User.to_url(),
-            "template-password-reset");
-
-       if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = input.data;
-
-        context.request::<String>(Method::Put, url, Some(body))
-            .wait()
-    }
-
-    field updateTemplateApplyPasswordResetForUser(&executor, input: EmailTemplateInput as "Update EmailTemplate input.") -> FieldResult<String> as "Update email messages template for user apply password reset event" {
-        let context = executor.context();
-
-        let url = format!(
-            "{}/{}/{}",
-            &context.config.service_url(Service::Notifications),
-            Model::User.to_url(),
-            "template-apply-password-reset");
-
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = input.data;
-
-        context.request::<String>(Method::Put, url, Some(body))
-            .wait()
-    }
-
 
     field upsertShipping(&executor, input: NewShippingInput as "New shipping input.") -> FieldResult<ShippingOutput> as "Upsert shipping for base product." {
         let context = executor.context();

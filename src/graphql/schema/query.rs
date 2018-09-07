@@ -14,7 +14,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::Currency;
-use stq_static_resources::{Language, LanguageGraphQl, OrderState};
+use stq_static_resources::{Language, LanguageGraphQl, OrderState, TemplateVariant};
 use stq_types::{OrderId, WarehouseId};
 
 use super::*;
@@ -280,8 +280,16 @@ graphql_object!(Query: Context |&self| {
         MainPage{}
     }
 
-    field email_template(&executor) -> EmailTemplate as "Template email message endpoint" {
-        EmailTemplate{}
+    field email_template(&executor, variant: TemplateVariant) -> FieldResult<String> as "Template email message endpoint" {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/templates/{}",
+            &context.config.service_url(Service::Notifications),
+            variant);
+
+        context.request::<String>(Method::Get, url, None)
+            .wait()
     }
 
     field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {

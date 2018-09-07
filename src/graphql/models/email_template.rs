@@ -1,4 +1,4 @@
-pub struct EmailTemplate;
+use stq_static_resources::TemplateVariant;
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update email template input object")]
@@ -8,13 +8,6 @@ pub struct EmailTemplateInput {
     pub client_mutation_id: String,
     #[graphql(description = "Data of a email template.")]
     pub data: String,
-}
-
-impl EmailTemplateInput {
-    pub fn is_none(&self) -> bool {
-        Self {
-            client_mutation_id: self.client_mutation_id.clone(),
-            data: String::default(),
-        } == self.clone()
-    }
+    #[graphql(description = "Template variant")]
+    pub variant: TemplateVariant,
 }
