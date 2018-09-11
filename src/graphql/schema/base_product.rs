@@ -250,7 +250,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             self.id.0
         );
 
-        context.request::<ShippingOutput>(Method::Get, url, None)
+        context.request::<Shipping>(Method::Get, url, None)
             .map(From::from)
             .wait()
     }
