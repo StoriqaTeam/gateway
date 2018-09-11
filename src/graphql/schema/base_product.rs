@@ -134,8 +134,8 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     }
 
     field products(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset from begining") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset from begining")
             -> FieldResult<Option<Connection<Product, PageInfo>>> as "Fetches products using relay connection." {
         let context = executor.context();
 
@@ -245,9 +245,8 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
 
     field shipping(&executor) -> FieldResult<ShippingOutput> as "Shipping" {
         let context = executor.context();
-        let url = format!("{}/{}/{}",
+        let url = format!("{}/products/{}",
             context.config.service_url(Service::Delivery),
-            Model::Product,
             self.id.0
         );
 
