@@ -25,7 +25,7 @@ pub struct NewLocalShippingProductsInput {
     #[graphql(description = "price")]
     pub price: Option<f64>,
     #[graphql(description = "deliveries to")]
-    pub deliveries_to: Vec<CountryInput>,
+    pub deliveries_to: Vec<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
@@ -36,7 +36,7 @@ pub struct NewInternationalShippingProductsInput {
     #[graphql(description = "price")]
     pub price: Option<f64>,
     #[graphql(description = "deliveries to")]
-    pub deliveries_to: Vec<CountryInput>,
+    pub deliveries_to: Vec<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
@@ -50,7 +50,7 @@ pub struct NewPickupsInput {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NewShipping {
-    pub items: Vec<NewShippingProducts>,
+    pub items: Vec<NewProducts>,
     pub pickup: Option<NewPickups>,
 }
 
@@ -61,17 +61,12 @@ pub enum ShippingVariant {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct NewShippingProducts {
-    pub product: NewProducts,
-    pub deliveries_to: Vec<CountryInput>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NewProducts {
     pub base_product_id: BaseProductId,
     pub store_id: StoreId,
     pub company_package_id: CompanyPackageId,
     pub price: Option<ProductPrice>,
+    pub deliveries_to: Vec<Alpha3>,
     pub shipping: ShippingVariant,
 }
 
@@ -84,42 +79,32 @@ pub struct NewPickups {
 }
 
 impl From<NewShippingInput> for NewShipping {
-    fn from(shippping: NewShippingInput) -> NewShipping {
-        let base_product_id = shippping.base_product_id.into();
-        let store_id = shippping.store_id.into();
-        let mut local_shippings = shippping
+    fn from(shipping: NewShippingInput) -> NewShipping {
+        let base_product_id = shipping.base_product_id.into();
+        let store_id = shipping.store_id.into();
+        let mut local_shippings = shipping
             .local
             .into_iter()
-            .map(|local| {
-                let product = NewProducts {
-                    base_product_id,
-                    store_id,
-                    company_package_id: local.company_package_id.into(),
-                    price: local.price.map(|price| price.into()),
-                    shipping: ShippingVariant::Local,
-                };
-                NewShippingProducts {
-                    product,
-                    deliveries_to: local.deliveries_to,
-                }
+            .map(|local| NewProducts {
+                base_product_id,
+                store_id,
+                company_package_id: local.company_package_id.into(),
+                price: local.price.map(|price| price.into()),
+                deliveries_to: local.deliveries_to.into_iter().map(|v| Alpha3(v)).collect(),
+                shipping: ShippingVariant::Local,
             })
             .collect();
 
-        let mut international_shippings = shippping
+        let mut international_shippings = shipping
             .international
             .into_iter()
-            .map(|international| {
-                let product = NewProducts {
-                    base_product_id,
-                    store_id,
-                    company_package_id: international.company_package_id.into(),
-                    price: international.price.map(|price| price.into()),
-                    shipping: ShippingVariant::International,
-                };
-                NewShippingProducts {
-                    product,
-                    deliveries_to: international.deliveries_to,
-                }
+            .map(|international| NewProducts {
+                base_product_id,
+                store_id,
+                company_package_id: international.company_package_id.into(),
+                price: international.price.map(|price| price.into()),
+                deliveries_to: international.deliveries_to.into_iter().map(|v| Alpha3(v)).collect(),
+                shipping: ShippingVariant::International,
             })
             .collect();
 
@@ -127,7 +112,7 @@ impl From<NewShippingInput> for NewShipping {
         items.append(&mut local_shippings);
         items.append(&mut international_shippings);
 
-        let pickup = shippping.pickup.map(|pickups| NewPickups {
+        let pickup = shipping.pickup.map(|pickups| NewPickups {
             base_product_id,
             store_id,
             pickup: pickups.pickup,
