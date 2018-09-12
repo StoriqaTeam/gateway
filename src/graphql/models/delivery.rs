@@ -238,6 +238,7 @@ impl From<Shipping> for ShippingOutput {
 pub struct AvailablePackages {
     pub id: CompanyPackageId,
     pub name: String,
+    pub logo: String,
     pub deliveries_to: Vec<Country>,
     pub local_available: bool,
 }
@@ -269,6 +270,7 @@ impl From<Vec<AvailablePackages>> for AvailablePackagesOutput {
 pub struct AvailablePackageForUser {
     pub id: CompanyPackageId,
     pub name: String,
+    pub logo: String,
     pub price: Option<ProductPrice>,
 }
 

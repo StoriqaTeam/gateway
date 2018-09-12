@@ -22,6 +22,10 @@ graphql_object!(AvailablePackages: Context as "AvailablePackages" |&self| {
         &self.name
     }
 
+    field logo() -> &str as "Company logo"{
+        &self.logo
+    }
+
     field deliveries_to() -> &[Country] as "Deliveries to Countries." {
         &self.deliveries_to
     }
@@ -54,6 +58,10 @@ graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&
 
     field name() -> &str as "Available package name"{
         &self.name
+    }
+
+    field logo() -> &str as "Company logo"{
+        &self.logo
     }
 
     field price() -> Option<f64> as "Package price." {
