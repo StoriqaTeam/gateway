@@ -255,7 +255,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             .wait()
     }
 
-    field available_shipping_for_user(&executor, user_country: String) -> FieldResult<AvailableShipppingForUser> as "Available shipping for user" {
+    field available_shipping_for_user(&executor, user_country: String) -> FieldResult<AvailableShippingForUser> as "Available shipping for user" {
         let context = executor.context();
         let url = format!("{}/available_packages_for_user/{}?user_country={}",
             context.config.service_url(Service::Delivery),
@@ -263,7 +263,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             user_country
         );
 
-        context.request::<AvailableShipppingForUser>(Method::Get, url, None)
+        context.request::<AvailableShippingForUser>(Method::Get, url, None)
             .wait()
     }
 
