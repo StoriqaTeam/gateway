@@ -260,7 +260,7 @@ pub struct AvailablePackageForUser {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AvailableShipppingForUser {
+pub struct AvailableShippingForUser {
     pub packages: Vec<AvailablePackageForUser>,
     pub pickups: Option<PickupsOutput>,
 }

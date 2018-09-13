@@ -70,7 +70,7 @@ graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&
 
 });
 
-graphql_object!(AvailableShipppingForUser: Context as "AvailableShipppingForUser" |&self| {
+graphql_object!(AvailableShippingForUser: Context as "AvailableShippingForUser" |&self| {
     description: "Available Packages info."
 
     field packages() -> &[AvailablePackageForUser] as "Available Packages For Users"{
