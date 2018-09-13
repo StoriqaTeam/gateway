@@ -762,6 +762,17 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field deprecated "use deleteUserDeliveryAddressFull" deleteUserDeliveryAddress(&executor, id: i32 as "Raw id of delivery address") -> FieldResult<UserDeliveryAddress>  as "Deletes delivery address." {
+        let context = executor.context();
+        let url = format!("{}/{}/delivery_addresses/{}",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            id);
+
+        context.request::<UserDeliveryAddress>(Method::Delete, url, None)
+            .wait()
+    }
+
     field createUserDeliveryAddressFull(&executor, input: NewUserDeliveryAddressFullInput  as "Create delivery address full input.") -> FieldResult<UserDeliveryAddress> as "Creates new user delivery address full." {
         let context = executor.context();
         let url = format!("{}/{}/addresses",
@@ -794,7 +805,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deleteUserDeliveryAddress(&executor, id: i32 as "Raw id of delivery address") -> FieldResult<UserDeliveryAddress>  as "Deletes delivery address." {
+    field deleteUserDeliveryAddressFull(&executor, id: i32 as "Raw id of delivery address") -> FieldResult<UserDeliveryAddress>  as "Deletes delivery address." {
         let context = executor.context();
         let url = format!("{}/{}/addresses/{}",
             context.config.service_url(Service::Delivery),

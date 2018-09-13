@@ -361,7 +361,20 @@ graphql_object!(User: Context as "User" |&self| {
             .wait()
     }
 
-    field delivery_addresses(&executor) -> FieldResult<Option<Vec<UserDeliveryAddress>>> as "Fetches delivery addresses for user." {
+    field deprecated "use query delivery_addresses_full" delivery_addresses(&executor) -> FieldResult<Option<Vec<UserDeliveryAddress>>> as "Fetches delivery addresses for user." {
+        let context = executor.context();
+
+        let url = format!("{}/{}/delivery_addresses/{}",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            self.id);
+
+        context.request::<Vec<UserDeliveryAddress>>(Method::Get, url, None)
+            .wait()
+            .map(Some)
+    }
+
+    field delivery_addresses_full(&executor) -> FieldResult<Option<Vec<UserDeliveryAddress>>> as "Fetches delivery addresses for user." {
         let context = executor.context();
 
         let url = format!("{}/{}/{}/addresses",
