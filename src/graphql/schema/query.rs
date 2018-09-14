@@ -239,12 +239,12 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field country(&executor, aplha3: String as "Alpha3 code") -> FieldResult<Option<Country>> as "Find country by alpha3 code." {
+    field country(&executor, alpha3: String as "Alpha3 code") -> FieldResult<Option<Country>> as "Find country by alpha3 code." {
         let context = executor.context();
-        let url = format!("{}/{}/aplha3/{}",
+        let url = format!("{}/{}/alpha3/{}",
             context.config.service_url(Service::Delivery),
             Model::Country.to_url(),
-            aplha3);
+            alpha3);
 
         context.request::<Option<Country>>(Method::Get, url, None)
             .wait()
