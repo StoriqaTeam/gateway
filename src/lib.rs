@@ -29,11 +29,14 @@ extern crate uuid;
 #[macro_use]
 extern crate failure;
 extern crate geo;
+#[macro_use]
+extern crate sentry;
 
 pub mod config;
 pub mod controller;
 pub mod errors;
 pub mod graphql;
+pub mod sentry_integration;
 
 use std::fs::File;
 use std::io::prelude::*;
