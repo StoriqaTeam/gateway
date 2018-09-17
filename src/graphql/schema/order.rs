@@ -180,13 +180,13 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
             .wait()
     }
 
-    field invoice(&executor) -> FieldResult<Invoice> as "Invoice" {
+    field invoice(&executor) -> FieldResult<Option<Invoice>> as "Invoice" {
         let context = executor.context();
         let url = format!("{}/invoices/by-order-id/{}",
             context.config.service_url(Service::Billing),
             self.0.id);
 
-        context.request::<Invoice>(Method::Get, url, None)
+        context.request::<Option<Invoice>>(Method::Get, url, None)
             .wait()
     }
 });
