@@ -6,7 +6,7 @@ use stq_routes::service::Service as StqService;
 
 use config_crate::{Config as RawConfig, ConfigError, Environment, File};
 
-use sentry_integration;
+use sentry_integration::SentryConfig;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Microservice {
@@ -37,7 +37,7 @@ pub struct Config {
     pub jwt: JWT,
     pub cors: CORS,
     pub graylog: Option<GrayLogConfig>,
-    pub sentry: Option<sentry_integration::SentryConfig>,
+    pub sentry: Option<SentryConfig>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

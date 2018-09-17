@@ -1,11 +1,11 @@
-use config;
 use sentry;
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct SentryConfig {
     pub dsn: String,
 }
-pub fn init(config: &config::Config) -> Option<sentry::ClientInitGuard> {
-    config.sentry.as_ref().map(|config_sentry| {
+pub fn init(sentry_config: Option<&SentryConfig>) -> Option<sentry::ClientInitGuard> {
+    sentry_config.map(|config_sentry| {
         println!("initialization support with sentry");
         let result = sentry::init((
             config_sentry.dsn.clone(),

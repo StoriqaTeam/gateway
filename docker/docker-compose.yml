@@ -4,7 +4,7 @@ services:
     image: gateway
     build:
       context: .
-      dockerfile: Dockerfile.rust
+      dockerfile: Dockerfile.gateway
     container_name: gateway
     working_dir: /app
     command: cargo run
