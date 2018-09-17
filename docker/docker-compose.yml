@@ -1,10 +1,10 @@
 version: '3'
 services:
   gateway:
-    image: rust
+    image: gateway
     build:
-      context: ..
-      dockerfile: docker/Dockerfile.rust
+      context: .
+      dockerfile: Dockerfile.rust
     container_name: gateway
     working_dir: /app
     command: cargo run

@@ -51,6 +51,7 @@ use tokio_core::reactor::Core;
 use stq_http::controller::Application;
 
 use config::Config;
+use graphql::schema;
 
 pub fn start(config: Config) {
     // Prepare reactor
@@ -72,6 +73,7 @@ pub fn start(config: Config) {
     let max_age = config.cors.max_age;
     let cpu_pool = CpuPool::new(config.gateway.graphql_thread_pool_size);
     let jwt_leeway = config.jwt.leeway;
+    let schema = Arc::new(schema::create());
 
     let serve = Http::new()
         .serve_addr_handle(&address, &*handle, {
@@ -84,6 +86,7 @@ pub fn start(config: Config) {
                     cpu_pool.clone(),
                     jwt_leeway,
                     config.clone(),
+                    schema.clone(),
                 )).with_middleware(move |mut resp| {
                     let contains_acao = resp.headers().has::<AccessControlAllowOrigin>();
                     if !contains_acao {
@@ -96,8 +99,7 @@ pub fn start(config: Config) {
 
                 Ok(app)
             }
-        })
-        .unwrap_or_else(|reason| {
+        }).unwrap_or_else(|reason| {
             eprintln!("Http Server Initialization Error: {}", reason);
             process::exit(1);
         });
@@ -110,8 +112,7 @@ pub fn start(config: Config) {
                     handle.spawn(conn.map(|_| ()).map_err(|why| eprintln!("Server Error: {:?}", why)));
                     Ok(())
                 }
-            })
-            .map_err(|_| ()),
+            }).map_err(|_| ()),
     );
 
     //info!("Listening on http://{}, threads: {}", address, thread_count);

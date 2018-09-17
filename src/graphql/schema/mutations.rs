@@ -1075,8 +1075,9 @@ graphql_object!(Mutation: Context |&self| {
 
     field upsertShipping(&executor, input: NewShippingInput as "New shipping input.") -> FieldResult<ShippingOutput> as "Upsert shipping for base product." {
         let context = executor.context();
-        let url = format!("{}/products/{}",
+        let url = format!("{}/{}/{}",
             context.config.service_url(Service::Delivery),
+            Model::Product.to_url(),
             input.base_product_id);
 
         let input : NewShipping = input.into();
