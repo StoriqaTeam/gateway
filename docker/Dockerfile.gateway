@@ -1,0 +1,8 @@
+FROM rust:1.29.0-stretch
+
+# Install deps, add user and cleanup
+RUN apt-get update \
+  && apt-get install -y libclang1 clang \
+  && apt-get autoremove -y
+
+VOLUME /usr/local/cargo
