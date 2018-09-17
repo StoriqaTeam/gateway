@@ -57,6 +57,7 @@ impl UpdateWizardStoreInput {
             default_language: None,
             address_full: AddressInput {
                 country: None,
+                country_code: None,
                 administrative_area_level_1: None,
                 administrative_area_level_2: None,
                 locality: None,

@@ -36,6 +36,8 @@ pub struct AddressInput {
     pub value: Option<String>,
     #[graphql(description = "Country")]
     pub country: Option<String>,
+    #[graphql(description = "Country code Alpha3")]
+    pub country_code: Option<String>,
     #[graphql(description = "administrative_area_level_1")]
     pub administrative_area_level_1: Option<String>,
     #[graphql(description = "administrative_area_level_2")]
