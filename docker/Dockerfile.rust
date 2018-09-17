@@ -1,3 +1,3 @@
-FROM rust:1.28
+FROM rust:1.29.0-stretch
 
 VOLUME /usr/local/cargo

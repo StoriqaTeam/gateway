@@ -92,8 +92,7 @@ impl From<NewShippingInput> for NewShipping {
                 price: local.price.map(|price| price.into()),
                 deliveries_to: local.deliveries_to.into_iter().map(|v| Alpha3(v)).collect(),
                 shipping: ShippingVariant::Local,
-            })
-            .collect();
+            }).collect();
 
         let mut international_shippings = shipping
             .international
@@ -105,8 +104,7 @@ impl From<NewShippingInput> for NewShipping {
                 price: international.price.map(|price| price.into()),
                 deliveries_to: international.deliveries_to.into_iter().map(|v| Alpha3(v)).collect(),
                 shipping: ShippingVariant::International,
-            })
-            .collect();
+            }).collect();
 
         let mut items = vec![];
         items.append(&mut local_shippings);

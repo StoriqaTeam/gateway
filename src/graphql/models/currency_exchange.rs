@@ -23,8 +23,7 @@ impl CurrencyExchange {
             .map(|(cur, rates)| CurrencyExchange {
                 code: cur.code(),
                 rates: CurrencyExchangeValue::from_data(rates),
-            })
-            .collect()
+            }).collect()
     }
 }
 
@@ -40,7 +39,6 @@ impl CurrencyExchangeValue {
             .map(|(cur, rate)| Self {
                 code: cur.code(),
                 value: rate.0,
-            })
-            .collect()
+            }).collect()
     }
 }

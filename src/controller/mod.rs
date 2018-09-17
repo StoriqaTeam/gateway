@@ -29,7 +29,7 @@ use config::Config;
 use errors::Error;
 use graphql::context::Context;
 use graphql::models::jwt::JWTPayload;
-use graphql::schema;
+use graphql::schema::Schema;
 
 pub mod graphiql;
 pub mod routes;
@@ -41,12 +41,21 @@ pub struct ControllerImpl {
     http_client: ClientHandle,
     jwt_leeway: i64,
     config: Config,
+    schema: Arc<Schema>,
 }
 
 impl ControllerImpl {
     /// Create a new controller based on services
-    pub fn new(http_client: ClientHandle, jwt_public_key: Vec<u8>, cpu_pool: CpuPool, jwt_leeway: i64, config: Config) -> Self {
+    pub fn new(
+        http_client: ClientHandle,
+        jwt_public_key: Vec<u8>,
+        cpu_pool: CpuPool,
+        jwt_leeway: i64,
+        config: Config,
+        schema: Arc<Schema>,
+    ) -> Self {
         let route_parser = Arc::new(routes::create_route_parser());
+
         Self {
             jwt_leeway,
             http_client,
@@ -54,6 +63,7 @@ impl ControllerImpl {
             route_parser,
             cpu_pool,
             config,
+            schema,
         }
     }
 }
@@ -68,6 +78,7 @@ impl Controller for ControllerImpl {
         let leeway = self.jwt_leeway;
         let jwt_public_key = self.jwt_public_key.clone();
         let cpu_pool = self.cpu_pool.clone();
+        let schema = self.schema.clone();
 
         Box::new(
             match (&req.method().clone(), self.route_parser.test(req.path())) {
@@ -97,16 +108,14 @@ impl Controller for ControllerImpl {
                                 e.context("Parsing body // POST /graphql in GraphQLRequest failed!")
                                     .context(Error::Parse)
                                     .into()
-                            })
-                            .and_then(move |graphql_req| {
+                            }).and_then(move |graphql_req| {
                                 cpu_pool
                                     .spawn_fn(move || {
                                         let graphql_context =
                                             Context::new(client, token_payload, session_id_header, currency_header, config);
-                                        let resp = graphql_req.execute(&schema::create(), &graphql_context);
+                                        let resp = graphql_req.execute(&*schema, &graphql_context);
                                         serde_json::to_value(resp)
-                                    })
-                                    .map_err(From::from)
+                                    }).map_err(From::from)
                             }),
                     )
                 }

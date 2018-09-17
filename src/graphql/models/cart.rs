@@ -192,15 +192,11 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[OrdersCartProduct]) -> Ca
                                             quantity,
                                             comment,
                                         }
-                                    })
-                                    .collect::<Vec<CartProduct>>(),
+                                    }).collect::<Vec<CartProduct>>(),
                             )
-                        })
-                        .unwrap_or_default()
-                })
-                .collect();
+                        }).unwrap_or_default()
+                }).collect();
             CartStore::new(store, products)
-        })
-        .collect();
+        }).collect();
     Cart::new(cart_stores)
 }

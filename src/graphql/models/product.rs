@@ -64,12 +64,13 @@ impl UpdateProductWithAttributesInput {
                 price: None,
             }),
             attributes: Some(vec![]),
-        } == self.clone() || Self {
-            client_mutation_id: self.client_mutation_id.clone(),
-            id: self.id.clone(),
-            product: None,
-            attributes: None,
         } == self.clone()
+            || Self {
+                client_mutation_id: self.client_mutation_id.clone(),
+                id: self.id.clone(),
+                product: None,
+                attributes: None,
+            } == self.clone()
     }
 }
 
