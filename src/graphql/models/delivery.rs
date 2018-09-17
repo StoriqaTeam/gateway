@@ -24,8 +24,6 @@ pub struct NewLocalShippingProductsInput {
     pub company_package_id: i32,
     #[graphql(description = "price")]
     pub price: Option<f64>,
-    #[graphql(description = "deliveries to")]
-    pub deliveries_to: Vec<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
@@ -78,8 +76,10 @@ pub struct NewPickups {
     pub price: Option<ProductPrice>,
 }
 
-impl From<NewShippingInput> for NewShipping {
-    fn from(shipping: NewShippingInput) -> NewShipping {
+impl From<(NewShippingInput, Alpha3)> for NewShipping {
+    fn from(shipping: (NewShippingInput, Alpha3)) -> NewShipping {
+        let local_deliveries_to = shipping.1;
+        let shipping = shipping.0;
         let base_product_id = shipping.base_product_id.into();
         let store_id = shipping.store_id.into();
         let mut local_shippings = shipping
@@ -90,7 +90,7 @@ impl From<NewShippingInput> for NewShipping {
                 store_id,
                 company_package_id: local.company_package_id.into(),
                 price: local.price.map(|price| price.into()),
-                deliveries_to: local.deliveries_to.into_iter().map(|v| Alpha3(v)).collect(),
+                deliveries_to: vec![local_deliveries_to.clone()],
                 shipping: ShippingVariant::Local,
             }).collect();
 

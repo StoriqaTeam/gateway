@@ -1075,12 +1075,35 @@ graphql_object!(Mutation: Context |&self| {
 
     field upsertShipping(&executor, input: NewShippingInput as "New shipping input.") -> FieldResult<ShippingOutput> as "Upsert shipping for base product." {
         let context = executor.context();
+
+        let rpc_client = context.get_rest_api_client(Service::Warehouses);
+        let warehouses = rpc_client.get_warehouses_for_store(input.store_id.into())
+            .sync()
+            .map_err(into_graphql)?;
+
+        let deliveries_to = warehouses.into_iter().nth(0)
+            .map(|warehouse|
+                warehouse.country_code
+                .ok_or_else(||
+                    FieldError::new(
+                        "Could not find country for warehouse.",
+                        graphql_value!({ "code": 100, "details": { "Country does not set in warehouse." }}),
+                    )
+                )
+            )
+            .ok_or_else(||
+                FieldError::new(
+                    "Could not find warehouse for store.",
+                    graphql_value!({ "code": 100, "details": { "Warehouses do not exist in stores microservice." }}),
+                )
+            )?;
+
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Delivery),
             Model::Product.to_url(),
             input.base_product_id);
 
-        let input : NewShipping = input.into();
+        let input : NewShipping = (input, deliveries_to?).into();
 
         let body: String = serde_json::to_string(&input)?.to_string();
 
