@@ -78,19 +78,6 @@ graphql_object!(User: Context as "User" |&self| {
         context.user.clone().map(|payload| payload.provider)
     }
 
-    field roles(&executor) -> FieldResult<Option<Vec<Role>>> as "Fetches roles for user." {
-        let context = executor.context();
-
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Users),
-            Model::UserRoles.to_url(),
-            self.id);
-
-        context.request::<Vec<Role>>(Method::Get, url, None)
-            .wait()
-            .map(Some)
-    }
-
     field user(&executor, id: GraphqlID as "Base64 Id of a user.") -> FieldResult<Option<User>> as "Fetches user by id." {
         let context = executor.context();
 
