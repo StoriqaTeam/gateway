@@ -3,7 +3,7 @@ use geo::Point;
 use juniper::ID as GraphqlID;
 
 use stq_api::warehouses::{Warehouse, WarehouseInput, WarehouseUpdateData};
-use stq_types::{StoreId, WarehouseId, WarehouseSlug};
+use stq_types::{Alpha3, StoreId, WarehouseId, WarehouseSlug};
 
 #[derive(GraphQLEnum, Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[graphql(description = "Warehouse kind")]
@@ -67,6 +67,7 @@ impl UpdateWarehouseInput {
             slug: None,
             address_full: AddressInput {
                 country: None,
+                country_code: None,
                 administrative_area_level_1: None,
                 administrative_area_level_2: None,
                 locality: None,
@@ -97,6 +98,7 @@ impl From<UpdateWarehouseInput> for WarehouseUpdateData {
             street_number: value.address_full.street_number.map(Some).map(From::from),
             address: value.address_full.value.map(Some).map(From::from),
             place_id: value.address_full.place_id.map(Some).map(From::from),
+            country_code: value.address_full.country_code.map(Alpha3).map(Some).map(From::from),
         }
     }
 }
@@ -130,6 +132,7 @@ impl From<CreateWarehouseInput> for WarehouseInput {
             administrative_area_level_1: value.address_full.administrative_area_level_1.map(From::from),
             administrative_area_level_2: value.address_full.administrative_area_level_2.map(From::from),
             country: value.address_full.country.map(From::from),
+            country_code: value.address_full.country_code.map(From::from),
             locality: value.address_full.locality.map(From::from),
             political: value.address_full.political.map(From::from),
             postal_code: value.address_full.postal_code.map(From::from),
