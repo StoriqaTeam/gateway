@@ -212,7 +212,7 @@ graphql_object!(Query: Context |&self| {
     }
 
     field currencies(&executor) -> Vec<Currency> as "Fetches currencies." {
-        // Trello #317
+        // trello: https://trello.com/c/Q5ZdFhNF (#317)
         vec![Currency::STQ]
     }
 
