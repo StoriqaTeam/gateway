@@ -212,7 +212,8 @@ graphql_object!(Query: Context |&self| {
     }
 
     field currencies(&executor) -> Vec<Currency> as "Fetches currencies." {
-        Currency::enum_iter().collect()
+        // trello: https://trello.com/c/Q5ZdFhNF (#317)
+        vec![Currency::STQ]
     }
 
     field order_statuses(&executor) -> Vec<OrderState> as "Fetches order statuses." {
