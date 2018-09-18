@@ -218,10 +218,10 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             .map_err(into_graphql)?;
 
         if let Some(warehouse) = warehouses.into_iter().nth(0) {
-            if let Some(country) = warehouse.country {
+            if let Some(country_code) = warehouse.country_code {
                 let url = format!("{}/available_packages?country={}&weight={}&size={}",
                     context.config.service_url(Service::Delivery),
-                    country,
+                    country_code.to_string(),
                     0, // TODO: replace with real weight
                     0  // TODO: replace with real size
                     );
