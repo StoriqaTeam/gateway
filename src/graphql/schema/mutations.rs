@@ -103,6 +103,28 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field blockUser(&executor, id: i32 as "Users raw id.") -> FieldResult<User>  as "Block existing user." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/block",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            id);
+
+        context.request::<User>(Method::Post, url, None)
+            .wait()
+    }
+
+    field unblockUser(&executor, id: i32 as "Users raw id.") -> FieldResult<User>  as "Unblock existing user." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/unblock",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            id);
+
+        context.request::<User>(Method::Post, url, None)
+            .wait()
+    }
+
     field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
         let context = executor.context();
         let url = format!("{}/{}/password_change",
