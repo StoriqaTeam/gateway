@@ -106,3 +106,14 @@ pub struct DeactivateBaseProductInput {
     #[graphql(description = "Id of a base_product.")]
     pub id: GraphqlID,
 }
+
+#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
+#[graphql(description = "Search base product by moderator input object")]
+pub struct SearchModeratorBaseProductInput {
+    #[graphql(description = "Name part of the base product.")]
+    pub name: Option<String>,
+    #[graphql(description = "Store id of the base product.")]
+    pub store_id: Option<i32>,
+    #[graphql(description = "Moderation state of the base product.")]
+    pub state: Option<ModerationStatus>,
+}
