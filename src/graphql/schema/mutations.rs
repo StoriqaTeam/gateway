@@ -258,6 +258,28 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field publishStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Publish store." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/publish",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            id);
+
+        context.request::<Store>(Method::Post, url, None)
+            .wait()
+    }
+    
+    field draftStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Draft store." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/draft",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            id);
+
+        context.request::<Store>(Method::Post, url, None)
+            .wait()
+    }
+
     field createProduct(&executor, input: CreateProductWithAttributesInput as "Create product with attributes input.") -> FieldResult<Product> as "Creates new product." {
         let context = executor.context();
         let url = format!("{}/{}",
