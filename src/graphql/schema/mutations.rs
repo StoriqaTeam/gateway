@@ -533,8 +533,20 @@ graphql_object!(Mutation: Context |&self| {
                     graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
             ))?;
 
+        let url = format!("{}/{}/products/{}",
+            context.config.service_url(Service::Stores),
+            Model::Product.to_url(),
+            input.product_id);
+        let product = context.request::<Option<Product>>(Method::Get, url, None)
+            .wait()?
+            .ok_or_else(||
+                FieldError::new(
+                    "Could not find product by id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+            ))?;
+
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products = rpc_client.increment_item(customer, input.product_id.into(), store_id)
+        let products = rpc_client.increment_item(customer, input.product_id.into(), store_id, product.pre_order, product.pre_order_days)
             .sync()
             .map_err(into_graphql)
             .map (|hash| hash.into_iter()
