@@ -36,6 +36,24 @@ graphql_object!(Store: Context as "Store" |&self| {
         &self.id.0
     }
 
+    field user_id() -> &i32 as "Store manager id"{
+        &self.user_id.0
+    }
+
+    field store_manager(&executor) -> FieldResult<Option<User>> as "Fetches store manager by user_id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            self.user_id.to_string()
+        );
+
+        context.request::<Option<User>>(Method::Get, url, None)
+            .wait()
+    }
+
     field name() -> &[Translation] as "Full Name" {
         &self.name
     }
