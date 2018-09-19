@@ -1,13 +1,14 @@
 use juniper::ID as GraphqlID;
 
 use stq_static_resources::{Language, ModerationStatus, Translation, TranslationInput};
-use stq_types::StoreId;
+use stq_types::{StoreId, UserId};
 
 use super::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Store {
     pub id: StoreId,
+    pub user_id: UserId,
     pub name: Vec<Translation>,
     pub is_active: bool,
     pub short_description: Vec<Translation>,
@@ -184,6 +185,34 @@ pub struct SearchStoreInput {
     pub get_stores_total_count: bool,
     #[graphql(description = "Searching options")]
     pub options: Option<StoresSearchOptionsInput>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Clone, Debug)]
+#[graphql(description = "Search store by moderator input object")]
+pub struct SearchModeratorStoreInput {
+    #[graphql(description = "Name part of the store.")]
+    pub name: Option<String>,
+    #[graphql(description = "Email of store manager of the store.")]
+    pub store_manager_email: Option<String>,
+    #[graphql(description = "Moderation state of the store.")]
+    pub state: Option<ModerationStatus>,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct SearchModeratorStore {
+    pub name: Option<String>,
+    pub store_manager_id: Option<UserId>,
+    pub state: Option<ModerationStatus>,
+}
+
+impl SearchModeratorStore {
+    pub fn new(search_term: SearchModeratorStoreInput, store_manager_id: Option<UserId>) -> Self {
+        Self {
+            name: search_term.name,
+            store_manager_id,
+            state: search_term.state,
+        }
+    }
 }
 
 #[derive(Serialize, Clone, Debug)]

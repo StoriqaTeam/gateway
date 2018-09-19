@@ -191,6 +191,72 @@ graphql_object!(User: Context as "User" |&self| {
             .map(Some)
     }
 
+    field stores_search(&executor,
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Base64 Id of a store",
+        search_term : SearchModeratorStoreInput as "Search pattern"
+        )
+            -> FieldResult<Option<Connection<Store, PageInfo>>> as "Searching stores by moderator using relay connection." {
+        let context = executor.context();
+
+        let store_manager_id = if let Some(ref store_manager_email) = search_term.store_manager_email {
+            let url = format!("{}/{}/by_email?email={}",
+                context.config.service_url(Service::Users),
+                Model::User.to_url(),
+                store_manager_email);
+
+            context.request::<Option<User>>(Method::Get, url, None)
+                .wait()?
+                .map(|user| user.id)
+        } else {
+            None
+        };
+
+        let term: SearchModeratorStore = SearchModeratorStore::new(search_term, store_manager_id);
+
+        let body = serde_json::to_string(&term)?;
+
+        let raw_id = match after {
+            Some(val) => ID::from_str(&*val)?.raw_id,
+            None => MIN_ID
+        };
+
+        let records_limit = context.config.gateway.records_limit;
+        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}/moderator_search?offset={}&count={}",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            raw_id,
+            first + 1);
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map (|stores| {
+                let mut store_edges: Vec<Edge<Store>> = stores
+                    .into_iter()
+                    .map(|store| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.0).to_string()),
+                                store.clone()
+                            ))
+                    .collect();
+                let has_next_page = store_edges.len() as i32 == first + 1;
+                if has_next_page {
+                    store_edges.pop();
+                };
+                let has_previous_page = true;
+                let start_cursor =  store_edges.get(0).map(|e| e.cursor.clone());
+                let end_cursor = store_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page,
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
+                Connection::new(store_edges, page_info)
+            })
+            .wait()
+            .map(Some)
+    }
+
     field deprecated "use query store" store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
         let context = executor.context();
 
