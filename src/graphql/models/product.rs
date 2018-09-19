@@ -16,6 +16,8 @@ pub struct Product {
     pub cashback: Option<f64>,
     pub currency: Currency,
     pub price: ProductPrice,
+    pub pre_order: bool,
+    pub pre_order_days: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -48,6 +50,10 @@ pub struct UpdateProduct {
     pub cashback: Option<f64>,
     #[graphql(description = "price")]
     pub price: Option<f64>,
+    #[graphql(description = "Pre-order.")]
+    pub pre_order: Option<bool>,
+    #[graphql(description = "Pre-order days.")]
+    pub pre_order_days: Option<i32>,
 }
 
 impl UpdateProductWithAttributesInput {
@@ -62,6 +68,8 @@ impl UpdateProductWithAttributesInput {
                 vendor_code: None,
                 cashback: None,
                 price: None,
+                pre_order: None,
+                pre_order_days: None,
             }),
             attributes: Some(vec![]),
         } == self.clone()
@@ -103,6 +111,10 @@ pub struct NewProduct {
     pub cashback: Option<f64>,
     #[graphql(description = "Price.")]
     pub price: f64,
+    #[graphql(description = "Pre-order.")]
+    pub pre_order: bool,
+    #[graphql(description = "Pre-order days.")]
+    pub pre_order_days: i32,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
