@@ -268,7 +268,7 @@ graphql_object!(Mutation: Context |&self| {
         context.request::<Store>(Method::Post, url, None)
             .wait()
     }
-    
+
     field draftStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Draft store." {
         let context = executor.context();
         let url = format!("{}/{}/{}/draft",
