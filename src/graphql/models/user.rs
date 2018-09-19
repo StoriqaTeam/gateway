@@ -21,6 +21,7 @@ pub struct User {
     pub gender: Gender,
     pub birthdate: Option<String>,
     pub avatar: Option<String>,
+    pub is_blocked: bool,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -150,4 +151,20 @@ pub struct DeactivateUserInput {
     pub client_mutation_id: String,
     #[graphql(description = "id of a user.")]
     pub id: GraphqlID,
+}
+
+/// Payload for searching for user
+#[derive(GraphQLInputObject, Debug, Serialize, Deserialize)]
+#[graphql(description = "Search user input object")]
+pub struct SearchUserInput {
+    #[graphql(description = "Email of a user.")]
+    pub email: Option<String>,
+    #[graphql(description = "Phone of a user.")]
+    pub phone: Option<String>,
+    #[graphql(description = "first name of a user.")]
+    pub first_name: Option<String>,
+    #[graphql(description = "last name of a user.")]
+    pub last_name: Option<String>,
+    #[graphql(description = "Blocked status of a user.")]
+    pub is_blocked: Option<bool>,
 }
