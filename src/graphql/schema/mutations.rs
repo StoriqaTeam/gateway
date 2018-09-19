@@ -360,6 +360,30 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field publishBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Published base_products." {
+        let context = executor.context();
+        let url = format!("{}/{}/publish",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url());
+
+        let body: String = serde_json::to_string(&ids)?.to_string();
+
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field draftBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Draft base_products." {
+        let context = executor.context();
+        let url = format!("{}/{}/draft",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url());
+
+        let body: String = serde_json::to_string(&ids)?.to_string();
+
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
+            .wait()
+    }
+
     field getJWTByEmail(&executor, input: CreateJWTEmailInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by email." {
         let context = executor.context();
         let url = format!("{}/{}/email",
