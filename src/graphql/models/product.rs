@@ -112,9 +112,9 @@ pub struct NewProduct {
     #[graphql(description = "Price.")]
     pub price: f64,
     #[graphql(description = "Pre-order.")]
-    pub pre_order: bool,
+    pub pre_order: Option<bool>,
     #[graphql(description = "Pre-order days.")]
-    pub pre_order_days: i32,
+    pub pre_order_days: Option<i32>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
