@@ -256,10 +256,14 @@ graphql_object!(Query: Context |&self| {
         let url = format!("{}/currency_exchange",
             context.config.service_url(Service::Stores));
 
-        context.request::<Option<CurrencyExchangeInfo>>(Method::Get, url, None)
+        // trello: https://trello.com/c/Q5ZdFhNF (#317)
+        let _ = context.request::<Option<CurrencyExchangeInfo>>(Method::Get, url, None)
             .wait().map(|v| {
                 v.map(|v| CurrencyExchange::from_data(v.data))
-            })
+            });
+
+        Ok(Some(vec![]))
+
     }
 
     field attributes(&executor) -> FieldResult<Option<Vec<Attribute>>> as "Fetches all attributes." {
