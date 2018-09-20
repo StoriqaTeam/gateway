@@ -15,7 +15,7 @@ use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
+use stq_types::{CartItem, ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 
@@ -521,42 +521,28 @@ graphql_object!(Mutation: Context |&self| {
             ));
         };
 
-        let url = format!("{}/{}/store_id?product_id={}",
+        let url = format!("{}/{}/by_product/{}",
             context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
+            Model::BaseProduct.to_url(),
             input.product_id);
-        let store_id = context.request::<Option<StoreId>>(Method::Get, url, None)
+        let base_product = context.request::<Option<BaseProduct>>(Method::Get, url, None)
             .wait()?
             .ok_or_else(||
                 FieldError::new(
-                    "Could not find store for product id.",
-                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                    "Could not find base product for product id.",
+                    graphql_value!({ "code": 100, "details": { "Base product does not exist in stores microservice." }}),
             ))?;
-
-        let url = format!("{}/{}/products/{}",
-            context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
-            input.product_id);
-        let product = context.request::<Option<Product>>(Method::Get, url, None)
-            .wait()?
-            .ok_or_else(||
+        let product = base_product.variants.and_then(|v| v.get(0).cloned()).ok_or_else(||
                 FieldError::new(
-                    "Could not find product by id.",
-                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                    "Could not find product in base product variants.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in variants." }}),
             ))?;
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products = rpc_client.increment_item(customer, input.product_id.into(), store_id, product.pre_order, product.pre_order_days)
+
+        let products: Vec<_> = rpc_client.increment_item(customer, input.product_id.into(), base_product.store_id, product.pre_order, product.pre_order_days)
             .sync()
-            .map_err(into_graphql)
-            .map (|hash| hash.into_iter()
-                .map(|cart_item| OrdersCartProduct {
-                    product_id: cart_item.product_id,
-                    quantity: cart_item.quantity,
-                    store_id: cart_item.store_id,
-                    selected: cart_item.selected,
-                    comment: cart_item.comment,
-            }).collect::<Vec<OrdersCartProduct>>())?;
+            .map_err(into_graphql)?.into_iter().collect();
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -586,17 +572,10 @@ graphql_object!(Mutation: Context |&self| {
         };
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products = rpc_client.set_quantity(customer, input.product_id.into(), input.value.into())
+        let products:Vec<_> = rpc_client.set_quantity(customer, input.product_id.into(), input.value.into())
             .sync()
-            .map_err(into_graphql)
-            .map (|hash| hash.into_iter()
-                .map(|cart_item| OrdersCartProduct {
-                    product_id: cart_item.product_id,
-                    quantity: cart_item.quantity,
-                    store_id: cart_item.store_id,
-                    selected: cart_item.selected,
-                    comment: cart_item.comment,
-            }).collect::<Vec<OrdersCartProduct>>())?;
+            .map_err(into_graphql)?
+            .into_iter().collect();
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -625,17 +604,10 @@ graphql_object!(Mutation: Context |&self| {
         };
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products = rpc_client.set_selection(customer, input.product_id.into(), input.value)
+        let products: Vec<_> = rpc_client.set_selection(customer, input.product_id.into(), input.value)
             .sync()
-            .map_err(into_graphql)
-            .map (|hash| hash.into_iter()
-                .map(|cart_item| OrdersCartProduct {
-                    product_id: cart_item.product_id,
-                    quantity: cart_item.quantity,
-                    store_id: cart_item.store_id,
-                    selected: cart_item.selected,
-                    comment: cart_item.comment,
-            }).collect::<Vec<OrdersCartProduct>>())?;
+            .map_err(into_graphql)?
+            .into_iter().collect();
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -664,17 +636,10 @@ graphql_object!(Mutation: Context |&self| {
         };
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products = rpc_client.set_comment(customer, input.product_id.into(), input.value)
+        let products:Vec<_> = rpc_client.set_comment(customer, input.product_id.into(), input.value)
             .sync()
-            .map_err(into_graphql)
-            .map (|hash| hash.into_iter()
-                .map(|cart_item| OrdersCartProduct {
-                    product_id: cart_item.product_id,
-                    quantity: cart_item.quantity,
-                    store_id: cart_item.store_id,
-                    selected: cart_item.selected,
-                    comment: cart_item.comment,
-            }).collect::<Vec<OrdersCartProduct>>())?;
+            .map_err(into_graphql)?
+            .into_iter().collect();
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -703,17 +668,10 @@ graphql_object!(Mutation: Context |&self| {
         };
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products = rpc_client.delete_item(customer, input.product_id.into())
+        let products:Vec<_> = rpc_client.delete_item(customer, input.product_id.into())
             .sync()
-            .map_err(into_graphql)
-            .map (|hash| hash.into_iter()
-                .map(|cart_item| OrdersCartProduct {
-                    product_id: cart_item.product_id,
-                    quantity: cart_item.quantity,
-                    store_id: cart_item.store_id,
-                    selected: cart_item.selected,
-                    comment: cart_item.comment,
-            }).collect::<Vec<OrdersCartProduct>>())?;
+            .map_err(into_graphql)?
+            .into_iter().collect();
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
@@ -996,13 +954,6 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)
             .map (|hash|
                 hash.into_iter()
-                    .map(|cart_item| OrdersCartProduct {
-                        product_id: cart_item.product_id,
-                        quantity: cart_item.quantity,
-                        store_id: cart_item.store_id,
-                        selected: cart_item.selected,
-                        comment: cart_item.comment,
-                })
                 .map(|p| {
                     let url = format!("{}/{}/{}/seller_price",
                         context.config.service_url(Service::Stores),
@@ -1042,17 +993,10 @@ graphql_object!(Mutation: Context |&self| {
         let invoice = context.request::<Invoice>(Method::Post, url, Some(body))
             .wait()?;
 
-        let products = rpc_client.get_cart(user.user_id.into())
+        let products:Vec<CartItem> = rpc_client.get_cart(user.user_id.into())
             .sync()
-            .map_err(into_graphql)
-            .map (|hash| hash.into_iter()
-                .map(|cart_item| OrdersCartProduct {
-                    product_id: cart_item.product_id,
-                    quantity: cart_item.quantity,
-                    store_id: cart_item.store_id,
-                    selected: cart_item.selected,
-                    comment: cart_item.comment,
-                }).collect::<Vec<OrdersCartProduct>>())?;
+            .map_err(into_graphql)?
+            .into_iter().collect();
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),
