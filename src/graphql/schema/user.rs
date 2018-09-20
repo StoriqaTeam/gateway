@@ -14,6 +14,7 @@ use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::{Gender, Provider};
 use stq_types::{OrderIdentifier, OrderSlug};
 use stq_types::{WarehouseIdentifier, WarehouseSlug};
 
@@ -57,7 +58,7 @@ graphql_object!(User: Context as "User" |&self| {
         &self.middle_name
     }
 
-    field gender() -> &Gender as "Gender" {
+    field gender() -> &Option<Gender> as "Gender" {
         &self.gender
     }
 

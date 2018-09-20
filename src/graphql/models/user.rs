@@ -4,10 +4,8 @@ use chrono::NaiveDate;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
+use stq_static_resources::{Gender, Provider};
 use stq_types::{SagaId, UserId};
-
-use super::Gender;
-use super::Provider;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct User {
@@ -18,7 +16,7 @@ pub struct User {
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub middle_name: Option<String>,
-    pub gender: Gender,
+    pub gender: Option<Gender>,
     pub birthdate: Option<String>,
     pub avatar: Option<String>,
     pub is_blocked: bool,
@@ -110,7 +108,7 @@ pub struct NewUser {
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub middle_name: Option<String>,
-    pub gender: Gender,
+    pub gender: Option<Gender>,
     pub birthdate: Option<NaiveDate>,
     pub last_login_at: SystemTime,
     pub saga_id: SagaId,

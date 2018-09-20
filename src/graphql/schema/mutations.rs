@@ -15,6 +15,7 @@ use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::Provider;
 use stq_types::{CartItem, ProductId, ProductSellerPrice, SagaId, WarehouseId};
 
 use errors::into_graphql;
@@ -58,7 +59,7 @@ graphql_object!(Mutation: Context |&self| {
             first_name: Some(input.first_name.clone()),
             last_name: Some(input.last_name.clone()),
             middle_name: None,
-            gender: Gender::Undefined,
+            gender: None,
             birthdate: None,
             last_login_at: SystemTime::now(),
             saga_id: SagaId::new(),
