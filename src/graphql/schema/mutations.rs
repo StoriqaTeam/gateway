@@ -15,7 +15,7 @@ use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{CartItem, ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
+use stq_types::{CartItem, ProductId, ProductSellerPrice, SagaId, WarehouseId};
 
 use errors::into_graphql;
 
