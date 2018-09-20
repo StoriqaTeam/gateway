@@ -1,4 +1,4 @@
-use stq_types::UserId;
+use stq_types::{RoleId, StoreId, UserId};
 
 #[derive(GraphQLEnum, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[graphql(description = "Users microservice role")]
@@ -41,14 +41,10 @@ pub struct NewStoresRoleInput {
     pub role: StoresMicroserviceRole,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct UsersRoles {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NewRole<Role> {
+    pub id: RoleId,
     pub user_id: UserId,
-    pub roles: Vec<UserMicroserviceRole>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct StoresRoles {
-    pub user_id: UserId,
-    pub roles: Vec<StoresMicroserviceRole>,
+    pub name: Role,
+    pub data: Option<StoreId>,
 }

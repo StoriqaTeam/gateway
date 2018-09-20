@@ -2,26 +2,26 @@
 use graphql::context::Context;
 use graphql::models::*;
 
-graphql_object!(UsersRoles: Context as "UsersRoles" |&self| {
+graphql_object!(NewRole<UserMicroserviceRole>: Context as "UsersRoles" |&self| {
     description: "Users Roles info."
 
     field user_id() -> &i32 as "User id" {
         &self.user_id.0
     }
 
-    field roles() -> &[UserMicroserviceRole] as "User Roles" {
-        &self.roles
+    field name() -> &UserMicroserviceRole as "User Roles" {
+        &self.name
     }
 });
 
-graphql_object!(StoresRoles: Context as "StoresRoles" |&self| {
-    description: "Stores Roles info."
+graphql_object!(NewRole<StoresMicroserviceRole>: Context as "StoresRoles" |&self| {
+    description: "Users Roles info."
 
     field user_id() -> &i32 as "User id" {
         &self.user_id.0
     }
 
-    field roles() -> &[StoresMicroserviceRole] as "Stores Roles" {
-        &self.roles
+    field name() -> &StoresMicroserviceRole as "User Roles" {
+        &self.name
     }
 });

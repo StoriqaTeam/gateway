@@ -3,9 +3,8 @@ use std::fmt::Display;
 
 use juniper::Value;
 
+use stq_static_resources::Provider;
 use stq_types::UserId;
-
-use super::Provider;
 
 #[derive(GraphQLObject, Deserialize, Debug)]
 #[graphql(description = "JWT Token")]
