@@ -197,25 +197,25 @@ graphql_object!(Mutation: Context |&self| {
         })
     }
 
-    field addRoleToUserOnUsersMicroservice(&executor, input: NewUsersRoleInput as "New Users  Role Input.") -> FieldResult<UsersRoles>  as "Adds users  role to user." {
+    field addRoleToUserOnUsersMicroservice(&executor, input: NewUsersRoleInput as "New Users  Role Input.") -> FieldResult<NewRole<UserMicroserviceRole>>  as "Adds users  role to user." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Users),
             Model::UserRoles.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<UsersRoles>(Method::Post, url, Some(body))
+        context.request::<NewRole<UserMicroserviceRole>>(Method::Post, url, Some(body))
             .wait()
     }
 
-    field addRoleToUserOnStoresMicroservice(&executor, input: NewStoresRoleInput as "New Stores  Role Input.") -> FieldResult<StoresRoles>  as "Adds stores role to user." {
+    field addRoleToUserOnStoresMicroservice(&executor, input: NewStoresRoleInput as "New Stores  Role Input.") -> FieldResult<NewRole<StoresMicroserviceRole>>  as "Adds stores role to user." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
             Model::UserRoles.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<StoresRoles>(Method::Post, url, Some(body))
+        context.request::<NewRole<StoresMicroserviceRole>>(Method::Post, url, Some(body))
             .wait()
     }
 
