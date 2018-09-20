@@ -420,4 +420,26 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
+    field available_packages(&executor, country_code: String as "Alpha3 code country", size: f64 as "Size product", weight: f64 as "Weight product") -> FieldResult<AvailablePackagesOutput> as "Available Packages" {
+        let context = executor.context();
+
+        if !country_code.is_empty() {
+            let url = format!("{}/available_packages?country={}&weight={}&size={}",
+                context.config.service_url(Service::Delivery),
+                country_code,
+                size,
+                weight
+                );
+
+            context.request::<Vec<AvailablePackages>>(Method::Get, url, None)
+                .map(From::from)
+                .wait()
+        } else {
+            Err(FieldError::new(
+                "There is country code is empty",
+                graphql_value!({ "code": 300, "details": { "Country code need length > 0." }}),
+            ))
+        }
+    }
+
 });
