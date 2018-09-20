@@ -535,7 +535,7 @@ graphql_object!(Mutation: Context |&self| {
         let product = base_product.variants.and_then(|v| v.get(0).cloned()).ok_or_else(||
                 FieldError::new(
                     "Could not find product in base product variants.",
-                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in variants." }}),
+                    graphql_value!({ "code": 100, "details": { "Product does not exist in variants." }}),
             ))?;
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
