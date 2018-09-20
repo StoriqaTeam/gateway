@@ -386,17 +386,9 @@ graphql_object!(Query: Context |&self| {
             ));
         };
 
-        let products = fut
+        let products: Vec<_> = fut
             .sync()
-            .map_err(into_graphql)
-            .map (|hash| hash.into_iter()
-                .map(|cart_item| OrdersCartProduct {
-                    product_id: cart_item.product_id,
-                    quantity: cart_item.quantity,
-                    store_id: cart_item.store_id,
-                    selected: cart_item.selected,
-                    comment: cart_item.comment,
-            }).collect::<Vec<OrdersCartProduct>>())?;
+            .map_err(into_graphql)?.into_iter().collect();
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),

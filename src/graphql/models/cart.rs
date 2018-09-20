@@ -1,18 +1,9 @@
 use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
-use stq_types::{ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId, UserId};
+use stq_types::{CartItem, ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId, UserId};
 
 use super::*;
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct OrdersCartProduct {
-    pub product_id: ProductId,
-    pub quantity: Quantity,
-    pub store_id: StoreId,
-    pub selected: bool,
-    pub comment: String,
-}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct OrdersCartItemInfo {
@@ -154,7 +145,7 @@ pub struct CartMergePayload {
 
 pub type CartProductWithPriceHash = HashMap<ProductId, ProductSellerPrice>;
 
-pub fn convert_to_cart(stores: Vec<Store>, products: &[OrdersCartProduct]) -> Cart {
+pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
     let cart_stores: Vec<CartStore> = stores
         .into_iter()
         .map(|store| {
