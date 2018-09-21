@@ -66,3 +66,6 @@ pub struct Search;
 
 //MainPage object, made for displaying info at main page
 pub struct MainPage;
+
+//Admin object, made for displaying info at admin page
+pub struct Admin;
