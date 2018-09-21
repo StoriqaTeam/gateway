@@ -169,6 +169,20 @@ graphql_object!(User: Context as "User" |&self| {
             .map(Some)
     }
 
+    field deprecated "use query store" store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            &context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            id.to_string()
+        );
+
+        context.request::<Option<Store>>(Method::Get, url, None)
+            .wait()
+    }
+
     field product(&executor, id: i32 as "Int id of a product.") -> FieldResult<Option<Product>> as "Fetches product by id." {
         let context = executor.context();
 
@@ -308,6 +322,19 @@ graphql_object!(User: Context as "User" |&self| {
 
         let url = format!("{}/{}/{}/addresses",
             context.config.service_url(Service::Delivery),
+            Model::User.to_url(),
+            self.id);
+
+        context.request::<Vec<UserDeliveryAddress>>(Method::Get, url, None)
+            .wait()
+            .map(Some)
+    }
+
+    field deprecated "use query delivery_addresses_full" delivery_addresses(&executor) -> FieldResult<Option<Vec<UserDeliveryAddress>>> as "Fetches delivery addresses for user." {
+        let context = executor.context();
+
+        let url = format!("{}/{}/delivery_addresses/{}",
+            context.config.service_url(Service::Users),
             Model::User.to_url(),
             self.id);
 
