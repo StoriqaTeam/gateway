@@ -1,0 +1,20 @@
+version: '3'
+services:
+  node:
+    image: node:9.9
+    container_name: node_schema
+    working_dir: /app
+    volumes:
+      - stq_front:/app/front
+      - $PWD/node_schema.sh:/app/node_schema.sh
+    stdin_open: true
+    command: bash -x /app/node_schema.sh
+
+volumes:
+  stq_front:
+
+networks:
+  default:
+    external:
+      name: storiqa
+

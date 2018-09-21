@@ -11,3 +11,11 @@ Graphql backend service that acts as a gateway for web browser / mobile
 ### Run shell with Rust
 
 `docker-compose run --service-ports gateway bash`
+
+### Check if front is able to fetch schema
+
+After running gateway in Docker Compose, from `docker` directory run:
+
+```
+docker-compose -f compose-test.yml up
+```
