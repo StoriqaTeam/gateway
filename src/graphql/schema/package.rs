@@ -44,8 +44,8 @@ graphql_object!(Packages: Context as "Packages" |&self| {
         &self.min_weight
     }
 
-    field deliveries_to() -> Vec<String> as "deliveries_to" {
-        self.deliveries_to.clone().into_iter().map(|d| d.0).collect()
+    field deliveries_to() -> &[Country] as "deliveries_to" {
+        &self.deliveries_to
     }
 
     field companies(&executor) -> FieldResult<Vec<Company>> as "Fetches companies by id." {
