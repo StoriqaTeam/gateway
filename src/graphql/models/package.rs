@@ -1,4 +1,5 @@
-use stq_types::{Alpha3, PackageId};
+use graphql::models::*;
+use stq_types::PackageId;
 
 use juniper::ID as GraphqlID;
 
@@ -10,7 +11,7 @@ pub struct Packages {
     pub min_size: f64,
     pub max_weight: f64,
     pub min_weight: f64,
-    pub deliveries_to: Vec<Alpha3>,
+    pub deliveries_to: Vec<Country>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]

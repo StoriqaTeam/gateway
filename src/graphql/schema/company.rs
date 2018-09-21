@@ -40,8 +40,8 @@ graphql_object!(Company: Context as "Company" |&self| {
         &self.logo
     }
 
-    field deliveries_from() -> Vec<String> as "deliveries_from" {
-        self.deliveries_from.clone().into_iter().map(|d| d.0).collect()
+    field deliveries_from() -> &[Country] as "deliveries_from" {
+        &self.deliveries_from
     }
 
     field packages(&executor) -> FieldResult<Vec<Packages>> as "Fetches packages by id." {

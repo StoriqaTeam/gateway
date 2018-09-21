@@ -1,4 +1,5 @@
 //! Mod containing all graphql schema
+pub mod admin;
 pub mod attribute;
 pub mod available_packages;
 pub mod base_product;
