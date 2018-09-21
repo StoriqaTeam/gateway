@@ -1223,7 +1223,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createCompanyPackage(&executor, input: NewCompaniesPackagesInput as "Create company_package input.") -> FieldResult<CompaniesPackages> as "Creates new company_package." {
+    field addPackageToCompany(&executor, input: NewCompaniesPackagesInput as "Create company_package input.") -> FieldResult<CompaniesPackages> as "Creates new company_package." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
