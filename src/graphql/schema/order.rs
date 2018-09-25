@@ -4,10 +4,11 @@ use std::str::FromStr;
 
 use futures::Future;
 use hyper::Method;
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
+use serde_json;
 
-use stq_api::orders::OrderClient;
+use stq_api::orders::{CartClient, OrderClient};
 use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
@@ -191,16 +192,48 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
     }
 });
 
-graphql_object!(CreateOrders: Context as "CreateOrders" |&self| {
+graphql_object!(CreateOrdersOutput: Context as "CreateOrdersOutput" |&self| {
     description:"Create orders object"
 
     field invoice() -> &Invoice {
-        &self.invoice
+        &self.0
     }
 
-    field cart() -> &Cart {
-        &self.cart
+    field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+        let context = executor.context();
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let fut = if let Some(session_id) = context.session_id {
+            if let Some(ref user) = context.user {
+                rpc_client.merge(session_id.into(), user.user_id.into())
+            } else {
+                rpc_client.get_cart(session_id.into())
+            }
+        } else if let Some(ref user) = context.user {
+            rpc_client.get_cart(user.user_id.into())
+        }  else {
+            return Err(FieldError::new(
+                "Could not get users cart.",
+                graphql_value!({ "code": 100, "details": { "No user id or session id in request header." }}),
+            ));
+        };
+
+        let products: Vec<_> = fut
+            .sync()
+            .map_err(into_graphql)?.into_iter().collect();
+
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
+
+        let body = serde_json::to_string(&products)?;
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores| convert_to_cart(stores, &products))
+            .map(Some)
+            .wait()
     }
+
 });
 
 graphql_object!(Connection<GraphQLOrder, PageInfo>: Context as "OrdersConnection" |&self| {

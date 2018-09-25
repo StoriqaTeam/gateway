@@ -26,6 +26,21 @@ pub struct CreateOrderInput {
     pub currency: Currency,
 }
 
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Create order paying with FIAT input object")]
+pub struct CreateOrderFiatInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Address")]
+    #[serde(flatten)]
+    pub address_full: AddressInput,
+    #[graphql(description = "Receiver name")]
+    pub receiver_name: String,
+    #[graphql(description = "Receiver phone")]
+    pub receiver_phone: String,
+}
+
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct CreateOrder {
     pub customer_id: UserId,
@@ -34,6 +49,16 @@ pub struct CreateOrder {
     pub receiver_name: String,
     pub prices: CartProductWithPriceHash,
     pub currency: Currency,
+    pub receiver_phone: String,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct CreateOrderFiat {
+    pub customer_id: UserId,
+    #[serde(flatten)]
+    pub address: AddressInput,
+    pub receiver_name: String,
+    pub prices: CartProductWithPriceHash,
     pub receiver_phone: String,
 }
 
@@ -201,13 +226,4 @@ impl From<SearchOrderOptionInput> for SearchOrderOption {
 }
 
 #[derive(Clone, Debug)]
-pub struct CreateOrders {
-    pub invoice: Invoice,
-    pub cart: Cart,
-}
-
-impl CreateOrders {
-    pub fn new(invoice: Invoice, cart: Cart) -> Self {
-        Self { cart, invoice }
-    }
-}
+pub struct CreateOrdersOutput(pub Invoice);
