@@ -26,7 +26,7 @@ pub struct NewUsersRoleInput {
     #[graphql(description = "User id")]
     pub user_id: i32,
     #[graphql(description = "New Role")]
-    pub role: UserMicroserviceRole,
+    pub name: UserMicroserviceRole,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
@@ -38,7 +38,7 @@ pub struct RemoveUsersRoleInput {
     #[graphql(description = "User id")]
     pub user_id: i32,
     #[graphql(description = "Removed Role")]
-    pub role: UserMicroserviceRole,
+    pub name: UserMicroserviceRole,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
@@ -50,7 +50,7 @@ pub struct NewStoresRoleInput {
     #[graphql(description = "User id")]
     pub user_id: i32,
     #[graphql(description = "New Role")]
-    pub role: StoresMicroserviceRole,
+    pub name: StoresMicroserviceRole,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
@@ -62,7 +62,7 @@ pub struct RemoveStoresRoleInput {
     #[graphql(description = "User id")]
     pub user_id: i32,
     #[graphql(description = "Removed Role")]
-    pub role: StoresMicroserviceRole,
+    pub name: StoresMicroserviceRole,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
