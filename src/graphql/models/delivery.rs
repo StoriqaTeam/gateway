@@ -5,6 +5,9 @@ use graphql::models::*;
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "New Shipping Input")]
 pub struct NewShippingInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "local shipping")]
     pub local: Vec<NewLocalShippingProductsInput>,
     #[graphql(description = "international shipping")]
@@ -20,6 +23,9 @@ pub struct NewShippingInput {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "New Local Shipping Products Input")]
 pub struct NewLocalShippingProductsInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "company package id")]
     pub company_package_id: i32,
     #[graphql(description = "price")]
@@ -29,6 +35,9 @@ pub struct NewLocalShippingProductsInput {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "New International Shipping Products Input")]
 pub struct NewInternationalShippingProductsInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "company package id")]
     pub company_package_id: i32,
     #[graphql(description = "price")]
@@ -40,6 +49,9 @@ pub struct NewInternationalShippingProductsInput {
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug)]
 #[graphql(description = "New Pickups Input")]
 pub struct NewPickupsInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
     #[graphql(description = "pickup")]
     pub pickup: bool,
     #[graphql(description = "price")]
