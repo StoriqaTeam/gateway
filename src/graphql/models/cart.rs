@@ -25,6 +25,8 @@ pub struct CartProduct {
     pub selected: bool,
     pub quantity: Quantity,
     pub comment: String,
+    pub pre_order: bool,
+    pub pre_order_days: i32,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -182,6 +184,8 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                             price: ProductPrice(price),
                                             quantity,
                                             comment,
+                                            pre_order: variant.pre_order,
+                                            pre_order_days: variant.pre_order_days,
                                         }
                                     }).collect::<Vec<CartProduct>>(),
                             )

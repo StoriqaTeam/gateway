@@ -73,6 +73,14 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         "Seller"
     }
 
+    field pre_order() -> &bool as "Pre order" {
+        &self.pre_order
+    }
+
+    field pre_order_days() -> &i32 as "Pre order days" {
+        &self.pre_order_days
+    }
+
     field attributes(&executor) -> FieldResult<Option<Vec<AttrValue>>> as "Variants" {
        let context = executor.context();
         let url = format!("{}/{}/{}/attributes",
