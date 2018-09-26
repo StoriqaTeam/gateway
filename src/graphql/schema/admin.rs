@@ -39,7 +39,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
         let context = executor.context();
 
         let raw_id = match after {
-            Some(val) => ID::from_str(&*val)?.raw_id,
+            Some(val) => ID::from_str(&*val)?.raw_id + 1,
             None => MIN_ID
         };
 
@@ -107,7 +107,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
         let body = serde_json::to_string(&term)?;
 
         let raw_id = match after {
-            Some(val) => ID::from_str(&*val)?.raw_id,
+            Some(val) => ID::from_str(&*val)?.raw_id + 1,
             None => MIN_ID
         };
 
@@ -158,7 +158,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
         let body = serde_json::to_string(&search_term)?;
 
         let raw_id = match after {
-            Some(val) => ID::from_str(&*val)?.raw_id,
+            Some(val) => ID::from_str(&*val)?.raw_id + 1,
             None => MIN_ID
         };
 
