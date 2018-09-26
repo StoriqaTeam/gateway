@@ -125,9 +125,17 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         self.0.address.clone().into()
     }
 
+    field pre_order() -> &bool as "Pre order" {
+        &self.0.pre_order
+    }
+
+    field pre_order_days() -> &i32 as "Pre order days" {
+        &self.0.pre_order_days
+    }
+
     field history(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset form begining")
             -> FieldResult<Option<Connection<OrderHistoryItem, PageInfo>>> as "History" {
 
         let context = executor.context();
