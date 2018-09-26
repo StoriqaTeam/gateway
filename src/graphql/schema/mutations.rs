@@ -201,9 +201,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field addRoleToUserOnUsersMicroservice(&executor, input: NewUsersRoleInput as "New Users  Role Input.") -> FieldResult<NewRole<UserMicroserviceRole>>  as "Adds users  role to user." {
         let context = executor.context();
-        let url = format!("{}/{}",
-            context.config.service_url(Service::Users),
-            Model::UserRoles.to_url());
+        let url = format!("{}/roles",
+            context.config.service_url(Service::Users));
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.request::<NewRole<UserMicroserviceRole>>(Method::Post, url, Some(body))
@@ -212,12 +211,31 @@ graphql_object!(Mutation: Context |&self| {
 
     field addRoleToUserOnStoresMicroservice(&executor, input: NewStoresRoleInput as "New Stores  Role Input.") -> FieldResult<NewRole<StoresMicroserviceRole>>  as "Adds stores role to user." {
         let context = executor.context();
-        let url = format!("{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::UserRoles.to_url());
+        let url = format!("{}/roles",
+            context.config.service_url(Service::Stores));
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.request::<NewRole<StoresMicroserviceRole>>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field removeRoleFromUserOnUsersMicroservice(&executor, input: RemoveUsersRoleInput as "New Users  Role Input.") -> FieldResult<NewRole<UserMicroserviceRole>>  as "Removes users role." {
+        let context = executor.context();
+        let url = format!("{}/roles",
+            context.config.service_url(Service::Users));
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<NewRole<UserMicroserviceRole>>(Method::Delete, url, Some(body))
+            .wait()
+    }
+
+    field removeRoleFromUserOnStoresMicroservice(&executor, input: RemoveStoresRoleInput as "New Stores  Role Input.") -> FieldResult<NewRole<StoresMicroserviceRole>>  as "Removes stores role." {
+        let context = executor.context();
+        let url = format!("{}/roles",
+            context.config.service_url(Service::Stores));
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<NewRole<StoresMicroserviceRole>>(Method::Delete, url, Some(body))
             .wait()
     }
 
