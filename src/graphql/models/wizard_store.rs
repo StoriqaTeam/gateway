@@ -1,5 +1,5 @@
 use stq_static_resources::Language;
-use stq_types::{StoreId, UserId};
+use stq_types::{Alpha3, StoreId, UserId};
 
 use graphql::models::{Address, AddressInput};
 
@@ -13,6 +13,7 @@ pub struct WizardStore {
     pub default_language: Option<Language>,
     pub slug: Option<String>,
     pub country: Option<String>,
+    pub country_code: Option<Alpha3>,
     pub address: Option<String>,
     pub administrative_area_level_1: Option<String>,
     pub administrative_area_level_2: Option<String>,

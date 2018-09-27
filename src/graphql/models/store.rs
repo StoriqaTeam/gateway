@@ -1,7 +1,7 @@
 use juniper::ID as GraphqlID;
 
 use stq_static_resources::{Language, ModerationStatus, Translation, TranslationInput};
-use stq_types::{StoreId, UserId};
+use stq_types::{Alpha3, StoreId, UserId};
 
 use super::*;
 
@@ -26,6 +26,7 @@ pub struct Store {
     pub slogan: Option<String>,
     pub rating: f64,
     pub country: Option<String>,
+    pub country_code: Option<Alpha3>,
     pub status: ModerationStatus,
     pub administrative_area_level_1: Option<String>,
     pub administrative_area_level_2: Option<String>,
