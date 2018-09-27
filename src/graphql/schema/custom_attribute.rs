@@ -50,6 +50,10 @@ graphql_object!(CustomAttributeValue: Context as "CustomAttributeValue" |&self| 
         &self.custom_attribute_id
     }
 
+    field product_id() -> &i32 as "Product variant id" {
+        &self.product_id.0
+    }
+
     field value() -> &str as "Custom attribute value of product variant" {
         &self.value
     }

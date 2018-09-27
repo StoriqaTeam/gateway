@@ -1,4 +1,4 @@
-use stq_types::BaseProductId;
+use stq_types::{BaseProductId, ProductId};
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create custom attribute input object")]
@@ -30,6 +30,7 @@ pub struct NewCustomAttributeValue {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct CustomAttributeValue {
+    pub product_id: ProductId,
     pub custom_attribute_id: i32,
     pub value: String,
 }
