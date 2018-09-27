@@ -63,7 +63,7 @@ impl From<Store> for Address {
         Self {
             value: store.address,
             country: store.country,
-            country_code: None,
+            country_code: store.country_code.map(|c| c.into()),
             administrative_area_level_1: store.administrative_area_level_1,
             administrative_area_level_2: store.administrative_area_level_2,
             locality: store.locality,
@@ -99,7 +99,7 @@ impl From<WizardStore> for Address {
         Self {
             value: address.address,
             country: address.country,
-            country_code: None,
+            country_code: address.country_code.map(|c| c.into()),
             administrative_area_level_1: address.administrative_area_level_1,
             administrative_area_level_2: address.administrative_area_level_2,
             locality: address.locality,
@@ -117,7 +117,7 @@ impl From<Warehouse> for Address {
         Self {
             value: address.address,
             country: address.country,
-            country_code: address.country_code.map(|c| c.0),
+            country_code: address.country_code.map(|c| c.into()),
             administrative_area_level_1: address.administrative_area_level_1,
             administrative_area_level_2: address.administrative_area_level_2,
             locality: address.locality,
