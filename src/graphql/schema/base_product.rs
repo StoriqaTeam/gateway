@@ -209,6 +209,20 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         &self.slug
     }
 
+    field custom_attributes(&executor) -> FieldResult<Vec<CustomAttribute>> as "Custom attributes" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            self.id,
+            Model::CustomAttribute.to_url(),
+            );
+
+        context.request::<Vec<CustomAttribute>>(Method::Get, url, None)
+            .map(From::from)
+            .wait()
+    }
+
     field available_packages(&executor) -> FieldResult<AvailablePackagesOutput> as "Available Packages" {
         let context = executor.context();
 
