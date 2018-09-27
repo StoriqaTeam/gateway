@@ -7,8 +7,10 @@ use hyper::Method;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 use serde_json;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::ModerationStatus;
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -38,6 +40,19 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
             offset,
             count + 1
             );
+
+        let options = if let Some(mut options) = search_term.options.clone() {
+            options.status = Some(ModerationStatus::Published);
+            options
+        } else {
+            ProductsSearchOptionsInput{
+                status : Some(ModerationStatus::Published),
+                ..ProductsSearchOptionsInput::default()
+            }
+        };
+
+        let mut search_term = search_term;
+        search_term.options = Some(options);
 
         let body = serde_json::to_string(&search_term)?;
 
@@ -85,6 +100,19 @@ graphql_object!(MainPage: Context as "MainPage" |&self| {
             offset,
             count + 1
             );
+
+        let options = if let Some(mut options) = search_term.options.clone() {
+            options.status = Some(ModerationStatus::Published);
+            options
+        } else {
+            ProductsSearchOptionsInput{
+                status : Some(ModerationStatus::Published),
+                ..ProductsSearchOptionsInput::default()
+            }
+        };
+
+        let mut search_term = search_term;
+        search_term.options = Some(options);
 
         let body = serde_json::to_string(&search_term)?;
 
