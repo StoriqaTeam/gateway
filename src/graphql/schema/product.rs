@@ -99,7 +99,7 @@ graphql_object!(Product: Context as "Product" |&self| {
             .map(Some)
     }
 
-    field custom_attributes(&executor) -> FieldResult<Option<Vec<CustomAttributeValue>>> as "Custom attributes values" {
+    field custom_attributes(&executor) -> FieldResult<Vec<CustomAttributeValue>> as "Custom attributes values" {
        let context = executor.context();
         let url = format!("{}/{}/{}/{}",
             context.config.service_url(Service::Stores),
@@ -109,8 +109,6 @@ graphql_object!(Product: Context as "Product" |&self| {
 
         context.request::<Vec<CustomAttributeValue>>(Method::Get, url, None)
             .wait()
-            .or_else(|_| Ok(vec![]))
-            .map(Some)
     }
 
     field quantity(&executor) -> FieldResult<Option<i32>> as "Fetches product quantity from warehouses." {
