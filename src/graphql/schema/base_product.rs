@@ -2,6 +2,7 @@
 use std::cmp;
 use std::str::FromStr;
 
+use chrono::prelude::*;
 use futures::Future;
 use hyper::Method;
 use juniper;
@@ -74,6 +75,16 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
 
     field category_id(&executor) -> &i32 as "Category Id"{
         &self.category_id
+    }
+
+    field created_at() -> String as "Created at" {
+        let datetime: DateTime<Utc> = self.created_at.into();
+        datetime.to_rfc3339()
+    }
+
+    field updated_at() -> String as "Updated at" {
+        let datetime: DateTime<Utc> = self.updated_at.into();
+        datetime.to_rfc3339()
     }
 
     field moderator_comment(&executor) -> FieldResult<Option<ModeratorProductComments>> as "Fetches moderator comment by id." {

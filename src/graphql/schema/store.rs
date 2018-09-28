@@ -3,6 +3,7 @@
 use std::cmp;
 use std::str::FromStr;
 
+use chrono::prelude::*;
 use futures::Future;
 use hyper::Method;
 use juniper;
@@ -72,6 +73,16 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     field slug() -> &str as "Slug" {
         &self.slug
+    }
+
+    field created_at() -> String as "Created at" {
+        let datetime: DateTime<Utc> = self.created_at.into();
+        datetime.to_rfc3339()
+    }
+
+    field updated_at() -> String as "Updated at" {
+        let datetime: DateTime<Utc> = self.updated_at.into();
+        datetime.to_rfc3339()
     }
 
     field cover() -> &Option<String> as "Cover" {

@@ -20,6 +20,8 @@ pub struct User {
     pub birthdate: Option<String>,
     pub avatar: Option<String>,
     pub is_blocked: bool,
+    pub created_at: SystemTime,
+    pub updated_at: SystemTime,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]

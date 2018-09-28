@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use juniper::ID as GraphqlID;
 
 use stq_static_resources::{Language, ModerationStatus, Translation, TranslationInput};
@@ -36,6 +38,8 @@ pub struct Store {
     pub route: Option<String>,
     pub street_number: Option<String>,
     pub place_id: Option<String>,
+    pub created_at: SystemTime,
+    pub updated_at: SystemTime,
     pub base_products: Option<Vec<BaseProduct>>,
 }
 

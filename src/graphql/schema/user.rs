@@ -2,6 +2,7 @@
 use std::cmp;
 use std::str::FromStr;
 
+use chrono::prelude::*;
 use futures::Future;
 use hyper::Method;
 use juniper;
@@ -75,6 +76,16 @@ graphql_object!(User: Context as "User" |&self| {
 
     field is_blocked() -> &bool as "Block status of a user" {
         &self.is_blocked
+    }
+
+    field created_at() -> String as "Created at" {
+        let datetime: DateTime<Utc> = self.created_at.into();
+        datetime.to_rfc3339()
+    }
+
+    field updated_at() -> String as "Updated at" {
+        let datetime: DateTime<Utc> = self.updated_at.into();
+        datetime.to_rfc3339()
     }
 
     field admin() -> Admin as "Admin routes" {
