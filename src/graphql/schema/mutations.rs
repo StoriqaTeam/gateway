@@ -430,6 +430,17 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field deleteCustomAttribute(&executor, input: DeleteCustomAttributeInput as "Delete custom attribute input.") -> FieldResult<CustomAttribute> as "Deletes custom attribute" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::CustomAttribute.to_url(),
+            input.custom_attribute_id);
+
+        context.request::<CustomAttribute>(Method::Delete, url, None)
+            .wait()
+    }
+
     field getJWTByEmail(&executor, input: CreateJWTEmailInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by email." {
         let context = executor.context();
         let url = format!("{}/{}/email",
