@@ -20,9 +20,9 @@ graphql_object!(Search: Context as "Search" |&self| {
     description: "Searching endpoint."
 
     field find_product(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining", 
-        search_term : SearchProductInput as "Search pattern") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset form beginning",
+        search_term : SearchProductInput as "Search pattern")
             -> FieldResult<Option<Connection<BaseProduct, PageInfoProductsSearch>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
@@ -84,9 +84,9 @@ graphql_object!(Search: Context as "Search" |&self| {
     }
 
     field auto_complete_product_name(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining", 
-        name : String as "Name part") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset form beginning",
+        name : String as "Name part")
             -> FieldResult<Option<Connection<String, PageInfo>>> as "Finds products full name by part of the name." {
 
         let context = executor.context();
@@ -137,9 +137,9 @@ graphql_object!(Search: Context as "Search" |&self| {
     }
 
     field find_store(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining", 
-        search_term : SearchStoreInput as "Search store input") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset form beginning",
+        search_term : SearchStoreInput as "Search store input")
             -> FieldResult<Option<Connection<Store, PageInfoStoresSearch>>> as "Finds stores by name using relay connection." {
 
         let context = executor.context();
@@ -192,9 +192,9 @@ graphql_object!(Search: Context as "Search" |&self| {
     }
 
     field auto_complete_store_name(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining", 
-        name : String as "Name part") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset form beginning",
+        name : String as "Name part")
             -> FieldResult<Option<Connection<String, PageInfo>>> as "Finds stores full name by part of the name." {
         let context = executor.context();
 
