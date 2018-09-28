@@ -1,7 +1,11 @@
-use super::*;
+use std::time::SystemTime;
+
 use juniper::ID as GraphqlID;
+
 use stq_static_resources::{Currency, ModerationStatus, Translation, TranslationInput};
 use stq_types::{BaseProductId, StoreId};
+
+use super::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct BaseProduct {
@@ -20,6 +24,8 @@ pub struct BaseProduct {
     pub slug: String,
     pub status: ModerationStatus,
     pub variants: Option<Vec<Product>>,
+    pub created_at: SystemTime,
+    pub updated_at: SystemTime,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
