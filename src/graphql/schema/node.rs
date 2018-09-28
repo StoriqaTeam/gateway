@@ -19,6 +19,7 @@ pub enum Node {
     Category(Category),
     SearchCategory(SearchCategory),
     Attribute(Attribute),
+    CustomAttribute(CustomAttribute),
     Cart,
     CartProduct(CartProduct),
     CartStore(CartStore),
@@ -31,8 +32,8 @@ pub enum Node {
 }
 
 graphql_interface!(Node: Context as "Node" |&self| {
-    description: "The Node interface contains a single field, 
-        id, which is a ID!. The node root field takes a single argument, 
+    description: "The Node interface contains a single field,
+        id, which is a ID!. The node root field takes a single argument,
         a ID!, and returns a Node. These two work in concert to allow refetching."
 
     field id() -> GraphqlID {
@@ -45,6 +46,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::Category(Category { ref id, .. })  => ID::new(Service::Stores, Model::Category, *id).to_string().into(),
             Node::SearchCategory(ref c)  => ID::new(Service::Stores, Model::SearchCategory, c.0.id).to_string().into(),
             Node::Attribute(Attribute { ref id, .. })  => ID::new(Service::Stores, Model::Attribute, *id).to_string().into(),
+            Node::CustomAttribute(CustomAttribute { ref id, .. })  => ID::new(Service::Stores, Model::CustomAttribute, *id).to_string().into(),
             Node::CartProduct(CartProduct { ref id, .. })  => ID::new(Service::Orders, Model::CartProduct, id.0).to_string().into(),
             Node::CartStore(CartStore { ref id, .. })  => ID::new(Service::Orders, Model::CartStore, id.0).to_string().into(),
             Node::Cart => ID::new(Service::Orders, Model::Cart, 0).to_string().into(),
@@ -66,6 +68,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &Category => match *self { Node::Category(ref h) => Some(h), _ => None },
         &SearchCategory => match *self { Node::SearchCategory(ref h) => Some(h), _ => None },
         &Attribute => match *self { Node::Attribute(ref h) => Some(h), _ => None },
+        &CustomAttribute => match *self { Node::CustomAttribute(ref h) => Some(h), _ => None },
         &CartProduct => match *self { Node::CartProduct(ref h) => Some(h), _ => None },
         &CartStore => match *self { Node::CartStore(ref h) => Some(h), _ => None },
         &GraphQLWarehouse => match *self { Node::Warehouse(ref h) => Some(&**h), _ => None },

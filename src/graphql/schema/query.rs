@@ -120,6 +120,11 @@ graphql_object!(Query: Context |&self| {
                         .wait()
                         .map(|res| res.map(Node::Attribute))
                 },
+                (&Service::Stores, &Model::CustomAttribute) => {
+                    context.request::<Option<CustomAttribute>>(Method::Get, identifier.url(&context.config), None)
+                        .wait()
+                        .map(|res| res.map(Node::CustomAttribute))
+                },
                 (&Service::Stores, _) => {
                     Err(FieldError::new(
                         "Could not get model from stores microservice.",

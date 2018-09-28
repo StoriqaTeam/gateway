@@ -404,6 +404,32 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field createCustomAttribute(&executor, input: NewCustomAttributeInput as "Create custom attribute input.") -> FieldResult<CustomAttribute> as "Creates new custom attribute" {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::CustomAttribute.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<CustomAttribute>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field upsertCustomAttributes(&executor, input: NewCustomAttributeValuesInput as "Custom attributes for product") -> FieldResult<Vec<CustomAttributeValue>> as " Custom attributes values for product" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Product.to_url(),
+            input.product_id,
+            Model::CustomAttribute.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<Vec<CustomAttributeValue>>(Method::Post, url, Some(body))
+            .wait()
+    }
+
     field getJWTByEmail(&executor, input: CreateJWTEmailInput as "Create jwt input.") -> FieldResult<JWT> as "Get JWT Token by email." {
         let context = executor.context();
         let url = format!("{}/{}/email",
