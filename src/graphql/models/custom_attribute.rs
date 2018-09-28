@@ -46,3 +46,13 @@ pub struct NewCustomAttributeValuesInput {
     #[graphql(description = "Custom attributes with values.")]
     pub values: Vec<NewCustomAttributeValue>,
 }
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Delete custom attribute input object")]
+pub struct DeleteCustomAttributeInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Attribute id.")]
+    pub custom_attribute_id: i32,
+}
