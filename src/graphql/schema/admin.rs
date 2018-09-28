@@ -89,20 +89,21 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             -> FieldResult<Option<Connection<Store, PageInfo>>> as "Searching stores by moderator using relay connection." {
         let context = executor.context();
 
-        let store_manager_id = if let Some(ref store_manager_email) = search_term.store_manager_email {
+        let store_manager_ids = if let Some(ref store_manager_email) = search_term.store_manager_email {
             let url = format!("{}/{}/by_email?email={}",
                 context.config.service_url(Service::Users),
                 Model::User.to_url(),
                 store_manager_email);
 
-            context.request::<Option<User>>(Method::Get, url, None)
+            context.request::<Vec<User>>(Method::Get, url, None)
                 .wait()?
-                .map(|user| user.id)
+                .into_iter()
+                .map(|user| user.id).collect()
         } else {
-            None
+            vec![]
         };
 
-        let term: SearchModeratorStore = SearchModeratorStore::new(search_term, store_manager_id);
+        let term: SearchModeratorStore = SearchModeratorStore::new(search_term, store_manager_ids);
 
         let body = serde_json::to_string(&term)?;
 

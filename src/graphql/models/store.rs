@@ -202,15 +202,15 @@ pub struct SearchModeratorStoreInput {
 #[derive(Serialize, Clone, Debug)]
 pub struct SearchModeratorStore {
     pub name: Option<String>,
-    pub store_manager_id: Option<UserId>,
+    pub store_manager_ids: Vec<UserId>,
     pub state: Option<ModerationStatus>,
 }
 
 impl SearchModeratorStore {
-    pub fn new(search_term: SearchModeratorStoreInput, store_manager_id: Option<UserId>) -> Self {
+    pub fn new(search_term: SearchModeratorStoreInput, store_manager_ids: Vec<UserId>) -> Self {
         Self {
             name: search_term.name,
-            store_manager_id,
+            store_manager_ids,
             state: search_term.state,
         }
     }
