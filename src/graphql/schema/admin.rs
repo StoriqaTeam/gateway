@@ -95,12 +95,13 @@ graphql_object!(Admin: Context as "Admin" |&self| {
                 Model::User.to_url(),
                 store_manager_email);
 
-            context.request::<Vec<User>>(Method::Get, url, None)
+            let users_ids = context.request::<Vec<User>>(Method::Get, url, None)
                 .wait()?
                 .into_iter()
-                .map(|user| user.id).collect()
+                .map(|user| user.id).collect();
+            Some(users_ids)
         } else {
-            vec![]
+            None
         };
 
         let term: SearchModeratorStore = SearchModeratorStore::new(search_term, store_manager_ids);
