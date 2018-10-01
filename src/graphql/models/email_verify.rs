@@ -1,3 +1,5 @@
+use stq_static_resources::Device;
+
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Email verify input object")]
 pub struct VerifyEmailResend {
@@ -6,6 +8,8 @@ pub struct VerifyEmailResend {
     pub client_mutation_id: String,
     #[graphql(description = "Email of a user.")]
     pub email: String,
+    #[graphql(description = "Device type")]
+    pub device: Option<Device>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

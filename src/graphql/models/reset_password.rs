@@ -1,3 +1,5 @@
+use stq_static_resources::Device;
+
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Password reset request input object")]
 pub struct ResetRequest {
@@ -6,6 +8,8 @@ pub struct ResetRequest {
     pub client_mutation_id: String,
     #[graphql(description = "Email of a user.")]
     pub email: String,
+    #[graphql(description = "Device type")]
+    pub device: Option<Device>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
