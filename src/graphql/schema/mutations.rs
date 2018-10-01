@@ -157,21 +157,22 @@ graphql_object!(Mutation: Context |&self| {
         })
     }
 
-    field applyPasswordReset(&executor, input: ResetApply as "Password reset apply input.") -> FieldResult<ResetActionOutput>  as "Applies password reset." {
+    field applyPasswordReset(&executor, input: ResetApply as "Password reset apply input.") -> FieldResult<ResetApplyActionOutput>  as "Applies password reset." {
         let context = executor.context();
         let saga_addr = context.config.saga_microservice.url.clone();
         let url = format!("{}/reset_password_apply",
             saga_addr);
         let body = serde_json::to_string(&input)?;
-        context.request::<()>(Method::Post, url, Some(body))
+        let token = context.request::<String>(Method::Post, url, Some(body))
             .wait()?;
 
-        Ok(ResetActionOutput {
+        Ok(ResetApplyActionOutput {
             success: true,
+            token,
         })
     }
 
-    field resendEmailVerificationLink(&executor, input: VerifyEmailResend as "Email verify request input.") -> FieldResult<VerifyEmailOutput>  as "Requests email verification link on email send." {
+    field resendEmailVerificationLink(&executor, input: VerifyEmailResend as "Email verify request input.") -> FieldResult<VerifyEmailResendOutput>  as "Requests email verification link on email send." {
         let context = executor.context();
         let saga_addr = context.config.saga_microservice.url.clone();
         let url = format!("{}/email_verify",
@@ -181,22 +182,23 @@ graphql_object!(Mutation: Context |&self| {
         context.request::<()>(Method::Post, url, Some(body))
             .wait()?;
 
-        Ok(VerifyEmailOutput {
+        Ok(VerifyEmailResendOutput {
             success: true,
         })
     }
 
-    field verifyEmail(&executor, input: VerifyEmailApply as "Email verify apply input.") -> FieldResult<VerifyEmailOutput>  as "Applies email verification." {
+    field verifyEmail(&executor, input: VerifyEmailApply as "Email verify apply input.") -> FieldResult<VerifyEmailApplyOutput>  as "Applies email verification." {
         let context = executor.context();
         let saga_addr = context.config.saga_microservice.url.clone();
         let url = format!("{}/email_verify_apply",
             saga_addr);
         let body = serde_json::to_string(&input)?;
-        context.request::<()>(Method::Post, url, Some(body))
+        let token = context.request::<String>(Method::Post, url, Some(body))
             .wait()?;
 
-        Ok(VerifyEmailOutput {
+        Ok(VerifyEmailApplyOutput {
             success: true,
+            token,
         })
     }
 

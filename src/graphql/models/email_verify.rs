@@ -23,6 +23,13 @@ pub struct VerifyEmailApply {
 }
 
 #[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
-pub struct VerifyEmailOutput {
+pub struct VerifyEmailResendOutput {
     pub success: bool,
+}
+
+#[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
+pub struct VerifyEmailApplyOutput {
+    pub success: bool,
+    #[graphql(description = "Email verification token.")]
+    pub token: String,
 }

@@ -28,3 +28,10 @@ pub struct ResetApply {
 pub struct ResetActionOutput {
     pub success: bool,
 }
+
+#[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
+pub struct ResetApplyActionOutput {
+    pub success: bool,
+    #[graphql(description = "Reset token.")]
+    pub token: String,
+}
