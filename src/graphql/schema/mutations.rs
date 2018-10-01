@@ -1268,10 +1268,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateCompany(&executor, input: UpdateCompanyInput as "Update company input.") -> FieldResult<Company>  as "Updates company."{
         let context = executor.context();
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Delivery),
-            Model::Company.to_url(),
-            input.id.to_string());
+        let identifier = ID::from_str(&*input.id)?;
+        let url = identifier.url(&context.config);
 
         if input.is_none() {
              return Err(FieldError::new(
