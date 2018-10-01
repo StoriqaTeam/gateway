@@ -68,6 +68,7 @@ graphql_object!(Mutation: Context |&self| {
         let saga_profile = SagaCreateProfile {
             identity: new_ident,
             user: Some(new_user),
+            device: input.device,
         };
 
         let body: String = serde_json::to_string(&saga_profile)?.to_string();
