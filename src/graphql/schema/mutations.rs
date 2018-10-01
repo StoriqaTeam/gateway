@@ -1310,10 +1310,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field updatePackage(&executor, input: UpdatePackagesInput as "Update package input.") -> FieldResult<Packages>  as "Updates package."{
         let context = executor.context();
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Delivery),
-            Model::Package.to_url(),
-            input.id.to_string());
+        let identifier = ID::from_str(&*input.id)?;
+        let url = identifier.url(&context.config);
 
         if input.is_none() {
              return Err(FieldError::new(
