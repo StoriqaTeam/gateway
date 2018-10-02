@@ -2,7 +2,7 @@ use chrono::prelude::*;
 
 use stq_api::orders::{Order, OrderDiff};
 use stq_static_resources::{Currency, OrderState};
-use stq_types::{OrderSlug, StoreId, UserId};
+use stq_types::{OrderSlug, ProductId, ProductSellerPrice, StoreId, UserId};
 
 use super::*;
 
@@ -227,3 +227,36 @@ impl From<SearchOrderOptionInput> for SearchOrderOption {
 
 #[derive(Clone, Debug)]
 pub struct CreateOrdersOutput(pub Invoice);
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Buy now input object")]
+pub struct BuyNowInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Product id")]
+    pub product_id: i32,
+    #[graphql(description = "Quantity")]
+    pub quantity: i32,
+    #[graphql(description = "Address")]
+    #[serde(flatten)]
+    pub address_full: AddressInput,
+    #[graphql(description = "Receiver name")]
+    pub receiver_name: String,
+    #[graphql(description = "Receiver phone")]
+    pub receiver_phone: String,
+    #[graphql(description = "Currency that will be paid")]
+    pub currency: Currency,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct BuyNow {
+    pub customer_id: UserId,
+    #[serde(flatten)]
+    pub address: AddressInput,
+    pub product_id: ProductId,
+    pub receiver_name: String,
+    pub price: ProductSellerPrice,
+    pub currency: Currency,
+    pub receiver_phone: String,
+}

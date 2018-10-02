@@ -1060,6 +1060,55 @@ graphql_object!(Mutation: Context |&self| {
             .map(CreateOrdersOutput)
     }
 
+    field buyNow(&executor, input: BuyNowInput as "Buy now input.") -> FieldResult<CreateOrdersOutput> as "Creates orders." {
+        let context = executor.context();
+
+        let user = context.user.clone().ok_or_else(||
+            FieldError::new(
+                "Could not create cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            )
+        )?;
+
+        let url = format!("{}/{}/{}/seller_price",
+                        context.config.service_url(Service::Stores),
+                        Model::Product.to_url(),
+                        input.product_id);
+
+
+        let product_price = context.request::<Option<ProductSellerPrice>>(Method::Get, url, None)
+        .wait()
+            .and_then(|seller_price|{
+            if let Some(seller_price) = seller_price {
+                Ok(seller_price)
+            } else {
+                Err(FieldError::new(
+                    "Could not find product seller price from product id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                    ))
+            }
+        })?;
+
+        let buy_now = BuyNow {
+            customer_id: user.user_id,
+            address: input.address_full,
+            receiver_name: input.receiver_name,
+            receiver_phone: input.receiver_phone,
+            product_id: input.product_id.into(),
+            price: product_price,
+            currency: input.currency,
+        };
+
+        let url = format!("{}/buy_now",
+            context.config.saga_microservice.url.clone());
+
+        let body: String = serde_json::to_string(&buy_now)?.to_string();
+
+        context.request::<Invoice>(Method::Post, url, Some(body))
+            .wait()
+            .map(CreateOrdersOutput)
+    }
+
     field createOrdersFiat(&executor, input: CreateOrderFiatInput as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart with FIAT billing." {
         let context = executor.context();
 
