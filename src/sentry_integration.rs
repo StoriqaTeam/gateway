@@ -4,7 +4,7 @@ use sentry;
 pub struct SentryConfig {
     pub dsn: String,
 }
-pub fn init(sentry_config: Option<&SentryConfig>) -> Option<sentry::ClientInitGuard> {
+pub fn init(sentry_config: Option<&SentryConfig>) -> Option<sentry::internals::ClientInitGuard> {
     sentry_config.map(|config_sentry| {
         println!("initialization support with sentry");
         let result = sentry::init((
