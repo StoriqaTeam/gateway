@@ -282,6 +282,17 @@ graphql_object!(Query: Context |&self| {
             .map(Some)
     }
 
+    field custom_attributes(&executor) -> FieldResult<Option<Vec<CustomAttribute>>> as "Fetches all custom attributes." {
+        let context = executor.context();
+        let url = format!("{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::CustomAttribute.to_url());
+
+        context.request::<Vec<CustomAttribute>>(Method::Get, url, None)
+            .wait()
+            .map(Some)
+    }
+
     field search(&executor) -> Search as "Search endpoint" {
         Search{}
     }
