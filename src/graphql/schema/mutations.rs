@@ -17,7 +17,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{ProductSellerPrice, SagaId, WarehouseId};
+use stq_types::{ProductSellerPrice, Quantity, SagaId, WarehouseId};
 
 use errors::into_graphql;
 
@@ -602,7 +602,19 @@ graphql_object!(Mutation: Context |&self| {
 
         let products: Vec<_> = rpc_client.increment_item(customer, input.product_id.into(), base_product.store_id, product.pre_order, product.pre_order_days)
             .sync()
-            .map_err(into_graphql)?.into_iter().collect();
+            .map_err(into_graphql)
+            .and_then(|p| {
+                if let Some(value) = input.value {
+                    let quantity = Quantity(value);
+
+                    rpc_client.set_quantity(customer, input.product_id.into(), quantity)
+                    .sync()
+                    .map_err(into_graphql)
+                } else {
+                    Ok(p)
+                }
+            })?
+            .into_iter().collect();
 
         let url = format!("{}/{}/cart",
             context.config.service_url(Service::Stores),

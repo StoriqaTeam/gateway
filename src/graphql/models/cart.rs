@@ -49,6 +49,8 @@ pub struct IncrementInCartInput {
     #[graphql(description = "Product id.")]
     #[serde(skip_serializing)]
     pub product_id: i32,
+    #[graphql(description = "Product quantity.")]
+    pub value: Option<i32>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
