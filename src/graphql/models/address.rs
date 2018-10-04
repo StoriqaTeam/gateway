@@ -81,7 +81,7 @@ impl From<UserDeliveryAddress> for Address {
         Self {
             value: address.address,
             country: Some(address.country),
-            country_code: None,
+            country_code: address.country_code.map(|c| c.into()),
             administrative_area_level_1: address.administrative_area_level_1,
             administrative_area_level_2: address.administrative_area_level_2,
             locality: address.locality,

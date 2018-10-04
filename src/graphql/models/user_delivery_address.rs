@@ -11,6 +11,7 @@ pub struct UserDeliveryAddress {
     pub administrative_area_level_1: Option<String>,
     pub administrative_area_level_2: Option<String>,
     pub country: String,
+    pub country_code: Option<String>,
     pub locality: Option<String>,
     pub political: Option<String>,
     pub postal_code: String,
@@ -33,8 +34,10 @@ pub struct NewUserDeliveryAddressInput {
     pub administrative_area_level_1: Option<String>,
     #[graphql(description = "administrative_area_level_2")]
     pub administrative_area_level_2: Option<String>,
-    #[graphql(description = "country")]
+    #[graphql(description = "Country")]
     pub country: String,
+    #[graphql(description = "Country code")]
+    pub country_code: Option<String>,
     #[graphql(description = "locality")]
     pub locality: Option<String>,
     #[graphql(description = "political")]
@@ -66,8 +69,10 @@ pub struct UpdateUserDeliveryAddressInput {
     pub administrative_area_level_1: Option<String>,
     #[graphql(description = "administrative_area_level_2")]
     pub administrative_area_level_2: Option<String>,
-    #[graphql(description = "country")]
+    #[graphql(description = "Country")]
     pub country: Option<String>,
+    #[graphql(description = "Country code")]
+    pub country_code: Option<String>,
     #[graphql(description = "locality")]
     pub locality: Option<String>,
     #[graphql(description = "political")]
@@ -94,6 +99,7 @@ impl UpdateUserDeliveryAddressInput {
             administrative_area_level_1: None,
             administrative_area_level_2: None,
             country: None,
+            country_code: None,
             locality: None,
             political: None,
             postal_code: None,
