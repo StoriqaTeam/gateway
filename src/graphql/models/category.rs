@@ -56,9 +56,7 @@ pub struct CreateCategoryInput {
     #[graphql(description = "Meta field of a category.")]
     pub meta_field: Option<String>,
     #[graphql(description = "Parent category id.")]
-    pub parent_id: Option<i32>,
-    #[graphql(description = "Category level.")]
-    pub level: i32,
+    pub parent_id: Option<i32>
 }
 
 /// Payload for adding category attributes
