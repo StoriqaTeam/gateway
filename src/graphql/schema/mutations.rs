@@ -419,20 +419,6 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field upsertCustomAttributes(&executor, input: NewCustomAttributeValuesInput as "Custom attributes for product") -> FieldResult<Vec<CustomAttributeValue>> as " Custom attributes values for product" {
-        let context = executor.context();
-        let url = format!("{}/{}/{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
-            input.product_id,
-            Model::CustomAttribute.to_url());
-
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-        context.request::<Vec<CustomAttributeValue>>(Method::Post, url, Some(body))
-            .wait()
-    }
-
     field deleteCustomAttribute(&executor, input: DeleteCustomAttributeInput as "Delete custom attribute input.") -> FieldResult<CustomAttribute> as "Deletes custom attribute" {
         let context = executor.context();
         let url = format!("{}/{}/{}",
