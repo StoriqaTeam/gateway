@@ -28,6 +28,17 @@ graphql_object!(CustomAttribute: Context as "CustomAttribute" |&self| {
         &self.attribute_id
     }
 
+    field attribute(&executor) -> FieldResult<Option<Attribute>> as "Attribute" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Attribute.to_url(),
+            self.attribute_id);
+
+        context.request::<Option<Attribute>>(Method::Get, url, None)
+            .wait()
+    }
+
     field base_product_id() -> &i32 as "Unique int base product id"{
         &self.base_product_id.0
     }
