@@ -24,7 +24,7 @@ graphql_object!(CustomAttribute: Context as "CustomAttribute" |&self| {
         &self.id
     }
 
-    field attribute_id() -> &i32 as "Unique int custom attribute id"{
+    field attribute_id() -> &i32 as "Unique int attribute id"{
         &self.attribute_id
     }
 
