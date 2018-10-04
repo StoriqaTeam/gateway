@@ -19,9 +19,9 @@ pub struct CustomAttribute {
     pub base_product_id: BaseProductId,
 }
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Custom attribute value input object")]
-pub struct NewCustomAttributeValue {
+pub struct CustomAttributeValueInput {
     #[graphql(description = "Custom attribute id.")]
     pub custom_attribute_id: i32,
     #[graphql(description = "Value.")]
@@ -33,18 +33,6 @@ pub struct CustomAttributeValue {
     pub product_id: ProductId,
     pub custom_attribute_id: i32,
     pub value: String,
-}
-
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description = "Create custom attribute values input object")]
-pub struct NewCustomAttributeValuesInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
-    #[graphql(description = "Product variant id.")]
-    pub product_id: i32,
-    #[graphql(description = "Custom attributes with values.")]
-    pub values: Vec<NewCustomAttributeValue>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
