@@ -1,4 +1,6 @@
+use failure::Error;
 use sentry;
+use sentry::integrations::failure::capture_error;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct SentryConfig {
@@ -17,4 +19,9 @@ pub fn init(sentry_config: Option<&SentryConfig>) -> Option<sentry::internals::C
         sentry::integrations::panic::register_panic_handler();
         result
     })
+}
+
+pub fn log_and_capture_error(error: &Error) {
+    error!("Internal server error: {:?}", error);
+    capture_error(error);
 }

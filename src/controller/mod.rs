@@ -16,6 +16,7 @@ use serde_json;
 use stq_http::client::ClientHandle;
 use stq_http::controller::Controller;
 use stq_http::controller::ControllerFuture;
+use stq_http::errors::ErrorMessageWrapper;
 use stq_http::request_util::parse_body;
 use stq_http::request_util::serialize_future;
 use stq_http::request_util::Currency as CurrencyHeader;
@@ -30,6 +31,7 @@ use errors::Error;
 use graphql::context::Context;
 use graphql::models::jwt::JWTPayload;
 use graphql::schema::Schema;
+use sentry_integration::log_and_capture_error;
 
 pub mod graphiql;
 pub mod routes;
@@ -136,14 +138,21 @@ impl Controller for ControllerImpl {
                         d.num_seconds(),
                         d.num_milliseconds()
                     ),
-                    Err(ref e) => format!(
-                        "Response with error {}: {} {}, elapsed time = {}.{:03}",
-                        e,
-                        method,
-                        path,
-                        d.num_seconds(),
-                        d.num_milliseconds()
-                    ),
+                    Err(ref e) => {
+                        let wrapper = ErrorMessageWrapper::<Error>::from(&e);
+                        if wrapper.inner.code == 500 {
+                            log_and_capture_error(&e);
+                        }
+
+                        format!(
+                            "Response with error {}: {} {}, elapsed time = {}.{:03}",
+                            e,
+                            method,
+                            path,
+                            d.num_seconds(),
+                            d.num_milliseconds()
+                        )
+                    }
                 };
                 debug!("{}", message);
                 res
