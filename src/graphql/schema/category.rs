@@ -1,5 +1,9 @@
 //! File containing Category object of graphql schema
+use futures::Future;
+use hyper::Method;
+use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Translation;
@@ -31,6 +35,22 @@ graphql_object!(Category: Context as "Category" |&self| {
 
     field parent_id() -> &Option<i32> as "Parent id" {
         &self.parent_id
+    }
+
+    field parent(&executor) -> FieldResult<Option<Category>> as "Parent category" {
+        match self.parent_id.as_ref() {
+            Some(parent_id) => {
+                let context = executor.context();
+                let url = format!("{}/{}/{}",
+                context.config.service_url(Service::Stores),
+                Model::Category.to_url(),
+                parent_id);
+
+                context.request::<Option<Category>>(Method::Get, url, None)
+                    .wait()
+            },
+            None => Ok(None)
+        }
     }
 
     field level() -> &i32 as "Level" {
