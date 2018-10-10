@@ -24,6 +24,8 @@ use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
 
+const MIN_ID: i32 = 0;
+
 graphql_object!(Store: Context as "Store" |&self| {
     description: "Store's info."
 
@@ -587,6 +589,60 @@ graphql_object!(Store: Context as "Store" |&self| {
 
         context.request::<Vec<MerchantBalance>>(Method::Get, url, None)
             .wait()
+    }
+
+    field find_products_admin(&executor,
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Base64 Id of a base_product",
+        search_term : SearchModeratorBaseProductInput as "Search pattern"
+        )
+            -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Searching base_products by moderator using relay connection." {
+        let context = executor.context();
+
+        let mut search_term = search_term;
+        search_term.store_id = Some(self.id.0);
+
+        let body = serde_json::to_string(&search_term)?;
+
+        let raw_id = match after {
+            Some(val) => ID::from_str(&*val)?.raw_id + 1,
+            None => MIN_ID
+        };
+
+        let records_limit = context.config.gateway.records_limit;
+        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+        let url = format!("{}/{}/moderator_search?offset={}&count={}",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            raw_id,
+            first + 1);
+
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
+            .map (|base_products| {
+                let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
+                    .into_iter()
+                    .map(|base_product| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
+                                base_product.clone()
+                            ))
+                    .collect();
+                let has_next_page = base_product_edges.len() as i32 == first + 1;
+                if has_next_page {
+                    base_product_edges.pop();
+                };
+                let has_previous_page = true;
+                let start_cursor =  base_product_edges.get(0).map(|e| e.cursor.clone());
+                let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
+                let page_info = PageInfo {
+                    has_next_page,
+                    has_previous_page,
+                    start_cursor,
+                    end_cursor};
+                Connection::new(base_product_edges, page_info)
+            })
+            .wait()
+            .map(Some)
     }
 
 });
