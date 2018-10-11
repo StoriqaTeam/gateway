@@ -17,15 +17,15 @@ graphql_object!(CustomAttribute: Context as "CustomAttribute" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::CustomAttribute, self.id).to_string().into()
+        ID::new(Service::Stores, Model::CustomAttribute, self.id.0).to_string().into()
     }
 
     field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+        &self.id.0
     }
 
     field attribute_id() -> &i32 as "Unique int attribute id"{
-        &self.attribute_id
+        &self.attribute_id.0
     }
 
     field attribute(&executor) -> FieldResult<Option<Attribute>> as "Attribute" {
@@ -33,7 +33,7 @@ graphql_object!(CustomAttribute: Context as "CustomAttribute" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Attribute.to_url(),
-            self.attribute_id);
+            self.attribute_id.0);
 
         context.request::<Option<Attribute>>(Method::Get, url, None)
             .wait()
