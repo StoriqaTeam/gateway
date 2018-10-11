@@ -43,30 +43,3 @@ graphql_object!(CustomAttribute: Context as "CustomAttribute" |&self| {
         &self.base_product_id.0
     }
 });
-
-graphql_object!(CustomAttributeValue: Context as "CustomAttributeValue" |&self| {
-    description: "Product variant custom attributes with values."
-
-    field custom_attribute(&executor) -> FieldResult<Option<CustomAttribute>> as "CustomAttribute" {
-        let context = executor.context();
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::CustomAttribute.to_url(),
-            self.custom_attribute_id);
-        context.request::<Option<CustomAttribute>>(Method::Get, url, None)
-            .wait()
-    }
-
-    field custom_attribute_id() -> &i32 as "Custom attribute id" {
-        &self.custom_attribute_id
-    }
-
-    field product_id() -> &i32 as "Product variant id" {
-        &self.product_id.0
-    }
-
-    field value() -> &str as "Custom attribute value of product variant" {
-        &self.value
-    }
-
-});

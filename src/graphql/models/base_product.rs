@@ -105,8 +105,8 @@ pub struct CreateBaseProductInput {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
-#[graphql(description = "Create base_product with variant input object")]
-pub struct CreateBaseProductWithVariantsInput {
+#[graphql(description = "Create base product with variant input object")]
+pub struct NewBaseProductWithVariantInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
@@ -129,7 +129,9 @@ pub struct CreateBaseProductWithVariantsInput {
     #[graphql(description = "Slug.")]
     pub slug: Option<String>,
     #[graphql(description = "New product with attributes.")]
-    pub variants: Vec<CreateProductWithAttributesInput>,
+    pub variant: CreateProductWithAttributesInput,
+    #[graphql(description = "Selected raw id attributes.")]
+    pub selected_attributes: Vec<i32>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
