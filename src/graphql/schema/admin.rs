@@ -90,7 +90,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
         let context = executor.context();
 
         let store_manager_ids = if let Some(ref store_manager_email) = search_term.store_manager_email {
-            let url = format!("{}/{}/by_email?email={}",
+            let url = format!("{}/{}/search/by_email?email={}",
                 context.config.service_url(Service::Users),
                 Model::User.to_url(),
                 store_manager_email);
