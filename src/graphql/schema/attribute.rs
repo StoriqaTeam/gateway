@@ -18,11 +18,11 @@ graphql_object!(Attribute: Context as "Attribute" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::Attribute, self.id).to_string().into()
+        ID::new(Service::Stores, Model::Attribute, self.id.0).to_string().into()
     }
 
     field raw_id() -> &i32 as "Unique int id"{
-        &self.id
+        &self.id.0
     }
 
     field name() -> &[Translation] as "Full Name" {
@@ -46,17 +46,17 @@ graphql_object!(AttrValue: Context as "AttributeValue" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Attribute.to_url(),
-            self.attr_id);
+            self.attr_id.0);
         context.request::<Option<Attribute>>(Method::Get, url, None)
             .wait()
     }
 
     field attr_id() -> &i32 as "Attribute id" {
-        &self.attr_id
+        &self.attr_id.0
     }
 
     field value() -> &str as "Attribute value of product variant" {
-        &self.value
+        &self.value.0
     }
 
     field meta_field() -> &Option<String> as "Meta field of product attribute value" {

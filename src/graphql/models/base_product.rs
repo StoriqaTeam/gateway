@@ -104,6 +104,36 @@ pub struct CreateBaseProductInput {
     pub slug: Option<String>,
 }
 
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Create base product with variant input object")]
+pub struct NewBaseProductWithVariantInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Name of new base_product.")]
+    pub name: Vec<TranslationInput>,
+    #[graphql(description = "Int Store id base_product belonging to.")]
+    pub store_id: i32,
+    #[graphql(description = "Short description")]
+    pub short_description: Vec<TranslationInput>,
+    #[graphql(description = "Long description")]
+    pub long_description: Option<Vec<TranslationInput>>,
+    #[graphql(description = "SEO title")]
+    pub seo_title: Option<Vec<TranslationInput>>,
+    #[graphql(description = "SEO description")]
+    pub seo_description: Option<Vec<TranslationInput>>,
+    #[graphql(description = "Int Sale currency id.")]
+    pub currency: Currency,
+    #[graphql(description = "Int Category id.")]
+    pub category_id: i32,
+    #[graphql(description = "Slug.")]
+    pub slug: Option<String>,
+    #[graphql(description = "New product with attributes.")]
+    pub variant: CreateProductWithAttributesInput,
+    #[graphql(description = "Selected raw id attributes.")]
+    pub selected_attributes: Vec<i32>,
+}
+
 #[derive(GraphQLInputObject, Debug, Clone)]
 #[graphql(description = "Deactivate base_product input object")]
 pub struct DeactivateBaseProductInput {

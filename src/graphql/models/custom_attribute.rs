@@ -1,4 +1,4 @@
-use stq_types::{BaseProductId, ProductId};
+use stq_types::{AttributeId, BaseProductId, CustomAttributeId};
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create custom attribute input object")]
@@ -14,25 +14,9 @@ pub struct NewCustomAttributeInput {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct CustomAttribute {
-    pub id: i32,
-    pub attribute_id: i32,
+    pub id: CustomAttributeId,
+    pub attribute_id: AttributeId,
     pub base_product_id: BaseProductId,
-}
-
-#[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone, PartialEq)]
-#[graphql(description = "Custom attribute value input object")]
-pub struct CustomAttributeValueInput {
-    #[graphql(description = "Custom attribute id.")]
-    pub custom_attribute_id: i32,
-    #[graphql(description = "Value.")]
-    pub value: String,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct CustomAttributeValue {
-    pub product_id: ProductId,
-    pub custom_attribute_id: i32,
-    pub value: String,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -41,6 +25,6 @@ pub struct DeleteCustomAttributeInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Attribute id.")]
+    #[graphql(description = "Custom attribute id.")]
     pub custom_attribute_id: i32,
 }

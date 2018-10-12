@@ -33,8 +33,6 @@ pub struct UpdateProductWithAttributesInput {
     pub product: Option<UpdateProduct>,
     #[graphql(description = "Attributes")]
     pub attributes: Option<Vec<AttrValueInput>>,
-    #[graphql(description = "Values custom attributes")]
-    pub custom_attributes: Option<Vec<CustomAttributeValueInput>>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -74,14 +72,12 @@ impl UpdateProductWithAttributesInput {
                 pre_order_days: None,
             }),
             attributes: Some(vec![]),
-            custom_attributes: Some(vec![]),
         } == self.clone()
             || Self {
                 client_mutation_id: self.client_mutation_id.clone(),
                 id: self.id.clone(),
                 product: None,
                 attributes: None,
-                custom_attributes: None,
             } == self.clone()
     }
 }
@@ -102,7 +98,7 @@ pub struct CreateProductWithAttributesInput {
 #[graphql(description = "New Product")]
 pub struct NewProduct {
     #[graphql(description = "Int Base product id variant belonging to.")]
-    pub base_product_id: i32,
+    pub base_product_id: Option<i32>,
     #[graphql(description = "Discount.")]
     pub discount: Option<f64>,
     #[graphql(description = "Main photo of the product.")]

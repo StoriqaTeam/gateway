@@ -355,6 +355,18 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field createBaseProductWithVariant(&executor, input: NewBaseProductWithVariantInput as "Create base product with variant input.") -> FieldResult<BaseProduct> as "Creates new base product with variant." {
+        let context = executor.context();
+        let url = format!("{}/{}/with_variants",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url());
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<BaseProduct>(Method::Post, url, Some(body))
+            .wait()
+    }
+
     field updateBaseProduct(&executor, input: UpdateBaseProductInput as "Update base product input.") -> FieldResult<BaseProduct>  as "Updates existing base product."{
 
         let context = executor.context();

@@ -2,10 +2,11 @@
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 use stq_static_resources::{AttributeType, Translation, TranslationInput};
+use stq_types::{AttributeId, AttributeValue};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Attribute {
-    pub id: i32,
+    pub id: AttributeId,
     pub name: Vec<Translation>,
     pub value_type: AttributeType,
     pub meta_field: Option<AttributeMetaField>,
@@ -126,8 +127,8 @@ pub struct AttrValueInput {
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct AttrValue {
-    pub attr_id: i32,
-    pub value: String,
+    pub attr_id: AttributeId,
+    pub value: AttributeValue,
     pub meta_field: Option<String>,
 }
 
