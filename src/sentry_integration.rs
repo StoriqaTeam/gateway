@@ -5,7 +5,9 @@ use sentry::integrations::failure::capture_error;
 #[derive(Debug, Deserialize, Clone)]
 pub struct SentryConfig {
     pub dsn: String,
+    pub environment: String,
 }
+
 pub fn init(sentry_config: Option<&SentryConfig>) -> Option<sentry::internals::ClientInitGuard> {
     sentry_config.map(|config_sentry| {
         println!("initialization support with sentry");
@@ -13,6 +15,7 @@ pub fn init(sentry_config: Option<&SentryConfig>) -> Option<sentry::internals::C
             config_sentry.dsn.clone(),
             sentry::ClientOptions {
                 release: sentry_crate_release!(),
+                environment: Some(config_sentry.environment.clone().into()),
                 ..Default::default()
             },
         ));
