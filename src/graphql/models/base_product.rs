@@ -3,7 +3,7 @@ use std::time::SystemTime;
 use juniper::ID as GraphqlID;
 
 use stq_static_resources::{Currency, ModerationStatus, Translation, TranslationInput};
-use stq_types::{BaseProductId, StoreId};
+use stq_types::{BaseProductId, CategoryId, StoreId};
 
 use super::*;
 
@@ -18,7 +18,7 @@ pub struct BaseProduct {
     pub seo_title: Option<Vec<Translation>>,
     pub seo_description: Option<Vec<Translation>>,
     pub currency: Currency,
-    pub category_id: i32,
+    pub category_id: CategoryId,
     pub views: i32,
     pub rating: f64,
     pub slug: String,
@@ -106,7 +106,7 @@ pub struct CreateBaseProductInput {
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create base product with variant input object")]
-pub struct NewBaseProductWithVariantInput {
+pub struct NewBaseProductWithVariantsInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
@@ -128,8 +128,8 @@ pub struct NewBaseProductWithVariantInput {
     pub category_id: i32,
     #[graphql(description = "Slug.")]
     pub slug: Option<String>,
-    #[graphql(description = "New product with attributes.")]
-    pub variant: CreateProductWithAttributesInput,
+    #[graphql(description = "New products with attributes.")]
+    pub variants: Vec<CreateProductWithAttributesInput>,
     #[graphql(description = "Selected raw id attributes.")]
     pub selected_attributes: Vec<i32>,
 }

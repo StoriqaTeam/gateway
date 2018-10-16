@@ -355,7 +355,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field createBaseProductWithVariant(&executor, input: NewBaseProductWithVariantInput as "Create base product with variant input.") -> FieldResult<BaseProduct> as "Creates new base product with variant." {
+    field createBaseProductWithVariants(&executor, input: NewBaseProductWithVariantsInput as "Create base product with variants input.") -> FieldResult<BaseProduct> as "Creates new base product with variants." {
         let context = executor.context();
         let url = format!("{}/{}/with_variants",
             context.config.service_url(Service::Stores),

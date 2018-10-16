@@ -12,6 +12,7 @@ use serde_json;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::ModerationStatus;
+use stq_types::CategoryId;
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -324,7 +325,7 @@ graphql_object!(StoresSearchFilters: Context as "StoresSearchFilters" |&self| {
         context.request::<Category>(Method::Post, url, Some(body))
             .wait()
             .map(|mut cat|{
-                cat.id = -1; //for Relay: root category and searched category must not have equal id
+                cat.id = CategoryId(-1); //for Relay: root category and searched category must not have equal id
                 Some(cat)
             })
     }
