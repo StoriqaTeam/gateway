@@ -1,14 +1,15 @@
 use super::Attribute;
 use juniper::ID as GraphqlID;
 use stq_static_resources::{Translation, TranslationInput};
+use stq_types::CategoryId;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Category {
-    pub id: i32,
+    pub id: CategoryId,
     pub name: Vec<Translation>,
     pub meta_field: Option<String>,
     pub children: Vec<Category>,
-    pub parent_id: Option<i32>,
+    pub parent_id: Option<CategoryId>,
     pub level: i32,
     pub attributes: Vec<Attribute>,
 }

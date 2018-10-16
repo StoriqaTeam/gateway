@@ -3,7 +3,7 @@ use std::time::SystemTime;
 use juniper::ID as GraphqlID;
 
 use stq_static_resources::{Currency, ModerationStatus, Translation, TranslationInput};
-use stq_types::{BaseProductId, StoreId};
+use stq_types::{BaseProductId, CategoryId, StoreId};
 
 use super::*;
 
@@ -18,7 +18,7 @@ pub struct BaseProduct {
     pub seo_title: Option<Vec<Translation>>,
     pub seo_description: Option<Vec<Translation>>,
     pub currency: Currency,
-    pub category_id: i32,
+    pub category_id: CategoryId,
     pub views: i32,
     pub rating: f64,
     pub slug: String,

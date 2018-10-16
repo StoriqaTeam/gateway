@@ -74,7 +74,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
     }
 
     field category_id(&executor) -> &i32 as "Category Id"{
-        &self.category_id
+        &self.category_id.0
     }
 
     field created_at() -> String as "Created at" {
@@ -120,7 +120,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Category.to_url(),
-            self.category_id);
+            self.category_id.0);
 
         context.request::<Option<Category>>(Method::Get, url, None)
             .wait()

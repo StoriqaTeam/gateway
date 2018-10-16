@@ -18,11 +18,11 @@ graphql_object!(Category: Context as "Category" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::Category, self.id).to_string().into()
+        ID::new(Service::Stores, Model::Category, self.id.0).to_string().into()
     }
 
     field raw_id() -> i32 as "Unique int id"{
-        self.id
+        self.id.0
     }
 
     field name() -> &[Translation] as "Full Name" {
@@ -33,8 +33,8 @@ graphql_object!(Category: Context as "Category" |&self| {
         &self.meta_field
     }
 
-    field parent_id() -> &Option<i32> as "Parent id" {
-        &self.parent_id
+    field parent_id() -> Option<i32> as "Parent id" {
+        self.parent_id.map(|id| id.0)
     }
 
     field parent(&executor) -> FieldResult<Option<Category>> as "Parent category" {
@@ -44,7 +44,7 @@ graphql_object!(Category: Context as "Category" |&self| {
                 let url = format!("{}/{}/{}",
                 context.config.service_url(Service::Stores),
                 Model::Category.to_url(),
-                parent_id);
+                parent_id.0);
 
                 context.request::<Option<Category>>(Method::Get, url, None)
                     .wait()
@@ -72,11 +72,11 @@ graphql_object!(SearchCategory: Context as "SearchCategory" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::SearchCategory, self.0.id).to_string().into()
+        ID::new(Service::Stores, Model::SearchCategory, self.0.id.0).to_string().into()
     }
 
     field raw_id() -> i32 as "Unique int id"{
-        self.0.id
+        self.0.id.0
     }
 
     field name() -> &[Translation] as "Full Name" {
@@ -87,8 +87,8 @@ graphql_object!(SearchCategory: Context as "SearchCategory" |&self| {
         &self.0.meta_field
     }
 
-    field parent_id() -> &Option<i32> as "Parent id" {
-        &self.0.parent_id
+    field parent_id() -> Option<i32> as "Parent id" {
+        self.0.parent_id.map(|id| id.0)
     }
 
     field level() -> &i32 as "Level" {
