@@ -97,7 +97,7 @@ graphql_object!(User: Context as "User" |&self| {
         context.user.clone().map(|payload| payload.provider)
     }
 
-    field roles_on_user_microservices(&executor) -> FieldResult<Vec<UserMicroserviceRole>> as "Fetches user roles on users microservice." {
+    field roles_on_user_microservices(&executor) -> Option<Vec<UserMicroserviceRole>> as "Fetches user roles on users microservice." {
         let context = executor.context();
 
         let url = format!("{}/roles/by-user-id/{}",
@@ -105,10 +105,10 @@ graphql_object!(User: Context as "User" |&self| {
             self.id);
 
         context.request::<Vec<UserMicroserviceRole>>(Method::Get, url, None)
-            .wait()
+            .wait().ok()
     }
 
-    field roles_on_stores_microservices(&executor) -> FieldResult<Vec<StoresMicroserviceRole>> as "Fetches user roles on stores microservice." {
+    field roles_on_stores_microservices(&executor) -> Option<Vec<StoresMicroserviceRole>> as "Fetches user roles on stores microservice." {
         let context = executor.context();
 
         let url = format!("{}/roles/by-user-id/{}",
@@ -116,7 +116,7 @@ graphql_object!(User: Context as "User" |&self| {
             self.id);
 
         context.request::<Vec<StoresMicroserviceRole>>(Method::Get, url, None)
-            .wait()
+            .wait().ok()
     }
 
     field my_store(&executor) -> FieldResult<Option<Store>> as "Fetches store of the current user." {
