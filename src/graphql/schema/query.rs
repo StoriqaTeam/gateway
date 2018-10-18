@@ -341,6 +341,19 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
+    field companies(&executor) -> FieldResult<Option<Vec<Company>>> as "Fetches all companies." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}",
+            &context.config.service_url(Service::Delivery),
+            Model::Company.to_url()
+        );
+
+        context.request::<Option<Vec<Company>>>(Method::Get, url, None)
+            .wait()
+    }
+
     field company(&executor, id: i32 as "Int Id of a company.") -> FieldResult<Option<Company>> as "Fetches company by id." {
         let context = executor.context();
 
