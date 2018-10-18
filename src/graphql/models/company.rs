@@ -1,5 +1,6 @@
 use juniper::ID as GraphqlID;
 
+use stq_static_resources::Currency;
 use stq_types::CompanyId;
 
 use graphql::models::*;
@@ -11,6 +12,7 @@ pub struct Company {
     pub label: String,
     pub description: Option<String>,
     pub deliveries_from: Vec<Country>,
+    pub currency: String,
     pub logo: String,
 }
 
@@ -28,6 +30,8 @@ pub struct NewCompanyInput {
     pub description: Option<String>,
     #[graphql(description = "deliveries_from")]
     pub deliveries_from: Vec<String>,
+    #[graphql(description = "currency")]
+    pub currency: String,
     #[graphql(description = "logo")]
     pub logo: String,
 }
@@ -49,6 +53,8 @@ pub struct UpdateCompanyInput {
     pub description: Option<String>,
     #[graphql(description = "deliveries_from")]
     pub deliveries_from: Option<Vec<String>>,
+    #[graphql(description = "currency")]
+    pub currency: String,
     #[graphql(description = "logo")]
     pub logo: Option<String>,
 }
@@ -62,6 +68,7 @@ impl UpdateCompanyInput {
             label: None,
             description: None,
             deliveries_from: None,
+            currency: Currency::STQ.code().to_string(),
             logo: None,
         } == self.clone()
     }

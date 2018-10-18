@@ -36,6 +36,10 @@ graphql_object!(Company: Context as "Company" |&self| {
         self.description.clone()
     }
 
+    field currency() -> &str as "currency" {
+        &self.currency
+    }
+
     field logo() -> &str as "logo" {
         &self.logo
     }
