@@ -72,6 +72,14 @@ graphql_object!(Product: Context as "Product" |&self| {
         &self.pre_order_days
     }
 
+    field seller_price() -> &f64 as "Seller price" {
+        &self.seller_price.price.0
+    }
+
+    field seller_currency() -> &Currency as "Seller currency" {
+        &self.seller_price.currency
+    }
+
     field base_product(&executor) -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
         let context = executor.context();
 
