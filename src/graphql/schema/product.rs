@@ -72,6 +72,10 @@ graphql_object!(Product: Context as "Product" |&self| {
         &self.pre_order_days
     }
 
+    field customer_price() -> &CustomerPrice as "Customer price" {
+        &self.customer_price
+    }
+
     field base_product(&executor) -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
         let context = executor.context();
 
@@ -159,6 +163,18 @@ graphql_object!(Product: Context as "Product" |&self| {
             })
     }
 
+});
+
+graphql_object!(CustomerPrice: Context as "CustomerPrice" |&self| {
+    description: "Customer price."
+
+    field price() -> &f64 as "Price" {
+        &self.price.0
+    }
+
+    field currency() -> &Currency as "Currency" {
+        &self.currency
+    }
 });
 
 graphql_object!(Connection<Product, PageInfo>: Context as "ProductsConnection" |&self| {
