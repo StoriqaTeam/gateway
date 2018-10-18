@@ -12,7 +12,7 @@ pub struct Company {
     pub label: String,
     pub description: Option<String>,
     pub deliveries_from: Vec<Country>,
-    pub currency: String,
+    pub currency: Currency,
     pub logo: String,
 }
 
@@ -31,7 +31,7 @@ pub struct NewCompanyInput {
     #[graphql(description = "deliveries_from")]
     pub deliveries_from: Vec<String>,
     #[graphql(description = "currency")]
-    pub currency: String,
+    pub currency: Currency,
     #[graphql(description = "logo")]
     pub logo: String,
 }
@@ -54,7 +54,7 @@ pub struct UpdateCompanyInput {
     #[graphql(description = "deliveries_from")]
     pub deliveries_from: Option<Vec<String>>,
     #[graphql(description = "currency")]
-    pub currency: String,
+    pub currency: Option<Currency>,
     #[graphql(description = "logo")]
     pub logo: Option<String>,
 }
@@ -68,7 +68,7 @@ impl UpdateCompanyInput {
             label: None,
             description: None,
             deliveries_from: None,
-            currency: Currency::STQ.code().to_string(),
+            currency: None,
             logo: None,
         } == self.clone()
     }

@@ -6,6 +6,7 @@ use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::Currency;
 
 use super::*;
 use graphql::context::Context;
@@ -36,8 +37,8 @@ graphql_object!(Company: Context as "Company" |&self| {
         self.description.clone()
     }
 
-    field currency() -> &str as "currency" {
-        &self.currency
+    field currency() -> Currency as "currency" {
+        self.currency
     }
 
     field logo() -> &str as "logo" {
