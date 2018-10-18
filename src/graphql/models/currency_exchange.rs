@@ -20,8 +20,6 @@ pub struct CurrencyExchange {
 impl CurrencyExchange {
     pub fn from_data(v: CurrencyExchangeData) -> Vec<CurrencyExchange> {
         v.into_iter()
-            // https://trello.com/c/JXabXsoX (#474)
-            .filter(|(cur, _)| cur == &Currency::USD)
             .map(|(cur, rates)| CurrencyExchange {
                 code: cur.code(),
                 rates: CurrencyExchangeValue::from_data(rates),
