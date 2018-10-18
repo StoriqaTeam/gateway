@@ -68,7 +68,7 @@ impl UpdateCompanyInput {
             label: None,
             description: None,
             deliveries_from: None,
-            currency: Currency::STQ.code().to_owned(),
+            currency: Currency::STQ.code().to_string(),
             logo: None,
         } == self.clone()
     }
