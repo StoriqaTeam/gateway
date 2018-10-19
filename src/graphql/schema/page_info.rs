@@ -26,6 +26,22 @@ graphql_object!(PageInfo: Context as "PageInfo" |&self| {
 
 });
 
+graphql_object!(PageInfoSegments: Context as "PageInfoSegments" |&self| {
+    description: "Page info for classic pagination"
+
+    field current_page() -> &i32 as "current page" {
+        &self.current_page
+    }
+
+    field page_items_count() -> &i32 as "item count per page" {
+        &self.page_items_count
+    }
+
+    field total_pages() -> &i32 as "total pages" {
+        &self.total_pages
+    }
+});
+
 graphql_object!(PageInfoStoresSearch: Context as "PageInfoStoresSearch" |&self| {
     description: "Page Info from relay spec: https://facebook.github.io/relay/graphql/connections.htm."
 
