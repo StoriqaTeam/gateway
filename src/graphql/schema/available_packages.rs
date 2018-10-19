@@ -3,6 +3,7 @@ use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::Currency;
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -28,6 +29,10 @@ graphql_object!(AvailablePackages: Context as "AvailablePackages" |&self| {
 
     field deliveries_to() -> &[Country] as "Deliveries to Countries." {
         &self.deliveries_to
+    }
+
+    field currency() -> Currency as "Company currency" {
+        self.currency
     }
 
 });
