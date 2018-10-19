@@ -659,6 +659,18 @@ graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&sel
     }
 });
 
+graphql_object!(Connection<Store, PageInfoSegments>: Context as "StoresConnectionPages" |&self| {
+    description: "Stores Connection"
+
+    field edges() -> &[Edge<Store>] {
+        &self.edges
+    }
+
+    field page_info() -> &PageInfoSegments {
+        &self.page_info
+    }
+});
+
 graphql_object!(Edge<Store>: Context as "StoresEdge" |&self| {
     description:"Stores Edge"
 
