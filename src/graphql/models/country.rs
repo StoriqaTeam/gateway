@@ -34,20 +34,10 @@ pub struct CountryInput {
     pub children: Vec<CountryInput>,
 }
 
-impl Country {
-    pub fn childless_entries(&self) -> Vec<&Country> {
-        let mut childless_entries = Vec::new();
-        add_childless_entries(self, &mut childless_entries);
-        childless_entries
-    }
-}
-
-fn add_childless_entries<'a, 'b>(country: &'a Country, accumulator: &'b mut Vec<&'a Country>) {
-    if country.children.is_empty() {
-        accumulator.push(country);
-    } else {
-        for child in &country.children {
-            add_childless_entries(child, accumulator);
-        }
-    }
+pub fn is_all_codes_valid(countries: &[Country], codes: &[String]) -> bool {
+    let valid_codes = countries
+        .iter()
+        .map(|country| &country.alpha3.0)
+        .collect::<::std::collections::HashSet<_>>();
+    codes.iter().all(|code| valid_codes.contains(code))
 }

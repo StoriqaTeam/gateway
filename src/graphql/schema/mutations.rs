@@ -1318,8 +1318,14 @@ graphql_object!(Mutation: Context |&self| {
 
     field createCompany(&executor, input: NewCompanyInput as "Create company input.") -> FieldResult<Company> as "Creates new company." {
         let context = executor.context();
-
-        validate_country_codes(context, &input.deliveries_from)?;
+        let countries_url = format!("{}/{}?flatten=true", context.config.service_url(Service::Delivery), Model::Country.to_url());
+        let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+        if !is_all_codes_valid(&all_countries, &input.deliveries_from) {
+            return Err(FieldError::new(
+                "Invalid country code.",
+                graphql_value!({ "code": 100, "details": { "deliveries_from have invalid value(s)." }}),
+            ));
+        }
 
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
@@ -1344,7 +1350,14 @@ graphql_object!(Mutation: Context |&self| {
         }
 
         if let Some(deliveries_from) = &input.deliveries_from {
-            validate_country_codes(context, &deliveries_from)?;
+            let countries_url = format!("{}/{}?flatten=true", context.config.service_url(Service::Delivery), Model::Country.to_url());
+            let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+            if !is_all_codes_valid(&all_countries, deliveries_from) {
+                return Err(FieldError::new(
+                    "Invalid country code.",
+                    graphql_value!({ "code": 100, "details": { "deliveries_from have invalid value(s)." }}),
+                ));
+            }
         }
 
         let body: String = serde_json::to_string(&input)?.to_string();
@@ -1366,8 +1379,14 @@ graphql_object!(Mutation: Context |&self| {
 
     field createPackage(&executor, input: NewPackagesInput as "Create package input.") -> FieldResult<Packages> as "Creates new package." {
         let context = executor.context();
-
-        validate_country_codes(context, &input.deliveries_to)?;
+        let countries_url = format!("{}/{}?flatten=true", context.config.service_url(Service::Delivery), Model::Country.to_url());
+        let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+        if !is_all_codes_valid(&all_countries, &input.deliveries_to) {
+            return Err(FieldError::new(
+                "Invalid country code.",
+                graphql_value!({ "code": 100, "details": { "deliveries_to have invalid value(s)." }}),
+            ));
+        }
 
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
@@ -1392,7 +1411,14 @@ graphql_object!(Mutation: Context |&self| {
         }
 
         if let Some(deliveries_to) = &input.deliveries_to {
-            validate_country_codes(context, &deliveries_to)?;
+            let countries_url = format!("{}/{}?flatten=true", context.config.service_url(Service::Delivery), Model::Country.to_url());
+            let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+            if !is_all_codes_valid(&all_countries, deliveries_to) {
+                return Err(FieldError::new(
+                    "Invalid country code.",
+                    graphql_value!({ "code": 100, "details": { "deliveries_to have invalid value(s)." }}),
+                ));
+            }
         }
 
         let body: String = serde_json::to_string(&input)?.to_string();
@@ -1436,24 +1462,3 @@ graphql_object!(Mutation: Context |&self| {
     }
 
 });
-
-fn validate_country_codes(context: &Context, country_codes: &[String]) -> FieldResult<()> {
-    let countries_url = format!("{}/{}", context.config.service_url(Service::Delivery), Model::Country.to_url());
-
-    let root_country = context.request::<Country>(Method::Get, countries_url, None).wait()?;
-
-    let childless = root_country
-        .childless_entries()
-        .into_iter()
-        .map(|country| &country.alpha3.0)
-        .collect::<::std::collections::HashSet<_>>();
-
-    if !country_codes.iter().all(|deliveries_from| childless.contains(deliveries_from)) {
-        return Err(FieldError::new(
-            "Invalid country code.",
-            graphql_value!({ "code": 100, "details": { "Country codes have invalid value(s)." }}),
-        ));
-    }
-
-    Ok(())
-}
