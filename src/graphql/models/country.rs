@@ -33,3 +33,21 @@ pub struct CountryInput {
     #[graphql(description = "children")]
     pub children: Vec<CountryInput>,
 }
+
+impl Country {
+    pub fn childless_entries(&self) -> Vec<&Country> {
+        let mut childless_entries = Vec::new();
+        add_childless_entries(self, &mut childless_entries);
+        childless_entries
+    }
+}
+
+fn add_childless_entries<'a, 'b>(country: &'a Country, accumulator: &'b mut Vec<&'a Country>) {
+    if country.children.is_empty() {
+        accumulator.push(country);
+    } else {
+        for child in &country.children {
+            add_childless_entries(child, accumulator);
+        }
+    }
+}
