@@ -2,7 +2,7 @@ use chrono::prelude::*;
 
 use stq_api::orders::{Order, OrderDiff};
 use stq_static_resources::{Currency, OrderState};
-use stq_types::{OrderSlug, ProductId, ProductSellerPrice, StoreId, UserId};
+use stq_types::{OrderSlug, ProductId, ProductSellerPrice, Quantity, StoreId, UserId};
 
 use super::*;
 
@@ -251,12 +251,15 @@ pub struct BuyNowInput {
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct BuyNow {
-    pub customer_id: UserId,
-    #[serde(flatten)]
-    pub address: AddressInput,
     pub product_id: ProductId,
+    pub customer_id: UserId,
+    pub store_id: StoreId,
+    pub address: AddressInput,
     pub receiver_name: String,
     pub price: ProductSellerPrice,
+    pub quantity: Quantity,
     pub currency: Currency,
     pub receiver_phone: String,
+    pub pre_order: bool,
+    pub pre_order_days: i32,
 }
