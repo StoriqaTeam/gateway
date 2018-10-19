@@ -1318,6 +1318,15 @@ graphql_object!(Mutation: Context |&self| {
 
     field createCompany(&executor, input: NewCompanyInput as "Create company input.") -> FieldResult<Company> as "Creates new company." {
         let context = executor.context();
+        let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
+        let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+        if !is_all_codes_valid(&all_countries, &input.deliveries_from) {
+            return Err(FieldError::new(
+                "Invalid country code.",
+                graphql_value!({ "code": 100, "details": { "deliveries_from have invalid value(s)." }}),
+            ));
+        }
+
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
             Model::Company.to_url());
@@ -1340,6 +1349,17 @@ graphql_object!(Mutation: Context |&self| {
             ));
         }
 
+        if let Some(deliveries_from) = &input.deliveries_from {
+            let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
+            let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+            if !is_all_codes_valid(&all_countries, deliveries_from) {
+                return Err(FieldError::new(
+                    "Invalid country code.",
+                    graphql_value!({ "code": 100, "details": { "deliveries_from have invalid value(s)." }}),
+                ));
+            }
+        }
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.request::<Company>(Method::Put, url, Some(body))
@@ -1359,6 +1379,15 @@ graphql_object!(Mutation: Context |&self| {
 
     field createPackage(&executor, input: NewPackagesInput as "Create package input.") -> FieldResult<Packages> as "Creates new package." {
         let context = executor.context();
+        let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
+        let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+        if !is_all_codes_valid(&all_countries, &input.deliveries_to) {
+            return Err(FieldError::new(
+                "Invalid country code.",
+                graphql_value!({ "code": 100, "details": { "deliveries_to have invalid value(s)." }}),
+            ));
+        }
+
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
             Model::Package.to_url());
@@ -1379,6 +1408,17 @@ graphql_object!(Mutation: Context |&self| {
                 "Nothing to update",
                 graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
             ));
+        }
+
+        if let Some(deliveries_to) = &input.deliveries_to {
+            let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
+            let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+            if !is_all_codes_valid(&all_countries, deliveries_to) {
+                return Err(FieldError::new(
+                    "Invalid country code.",
+                    graphql_value!({ "code": 100, "details": { "deliveries_to have invalid value(s)." }}),
+                ));
+            }
         }
 
         let body: String = serde_json::to_string(&input)?.to_string();
