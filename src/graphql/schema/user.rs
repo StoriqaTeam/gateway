@@ -500,13 +500,25 @@ graphql_object!(User: Context as "User" |&self| {
 });
 
 graphql_object!(Connection<User, PageInfo>: Context as "UsersConnection" |&self| {
-    description:"Users Connection"
+    description: "Users Connection"
 
     field edges() -> &[Edge<User>] {
         &self.edges
     }
 
     field page_info() -> &PageInfo {
+        &self.page_info
+    }
+});
+
+graphql_object!(Connection<User, PageInfoSegments>: Context as "UsersConnectionPages" |&self| {
+    description: "Users Connection"
+
+    field edges() -> &[Edge<User>] {
+        &self.edges
+    }
+
+    field page_info() -> &PageInfoSegments {
         &self.page_info
     }
 });

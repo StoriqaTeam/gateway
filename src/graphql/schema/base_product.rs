@@ -324,6 +324,18 @@ graphql_object!(Connection<BaseProduct, PageInfo>: Context as "BaseProductsConne
     }
 });
 
+graphql_object!(Connection<BaseProduct, PageInfoSegments>: Context as "BaseProductsConnectionPages" |&self| {
+    description:"Base Products Connection"
+
+    field edges() -> &[Edge<BaseProduct>] {
+        &self.edges
+    }
+
+    field page_info() -> &PageInfoSegments {
+        &self.page_info
+    }
+});
+
 graphql_object!(Edge<BaseProduct>: Context as "BaseProductsEdge" |&self| {
     description:"Base Products Edge"
 

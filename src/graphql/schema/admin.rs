@@ -30,7 +30,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             .wait()
     }
 
-    field users_search(&executor,
+    field deprecated "use usersSearchPages" users_search(&executor,
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Base64 Id of a user",
         search_term : SearchUserInput as "Search pattern"
@@ -81,7 +81,57 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             .map(Some)
     }
 
-    field stores_search(&executor,
+    field users_search_pages(&executor,
+        current_page : i32 as "Current page",
+        items_count : i32 as "Items count",
+        search_term : SearchUserInput as "Search pattern"
+        )
+            -> FieldResult<Option<Connection<User, PageInfoSegments>>> as "Searching for users using relay connection." {
+        let context = executor.context();
+
+        let current_page = cmp::max(current_page, 1);
+
+        let records_limit = context.config.gateway.records_limit;
+        let items_count = cmp::max(1, cmp::min(items_count, records_limit as i32));
+
+        let skip = items_count * (current_page - 1);
+
+        let url = format!(
+            "{}/{}/search?skip={}&count={}",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            skip, items_count,
+        );
+
+        let body = serde_json::to_string(&search_term)?;
+
+        let user_count_url = format!(
+            "{}/{}/count",
+            context.config.service_url(Service::Users),
+            Model::User.to_url());
+        let user_count_fut = context.request::<i32>(Method::Get, user_count_url, None);
+
+        context.request::<Vec<User>>(Method::Post, url, Some(body))
+            .join(user_count_fut)
+            .map(|(users, total_count)| {
+                let total_pages = total_count / items_count + 1;
+                let mut user_edges: Vec<Edge<User>> = users
+                    .into_iter()
+                    .map(|user| Edge::new(
+                        juniper::ID::from(ID::new(Service::Users, Model::User, user.id.0).to_string()), user.clone()
+                    )).collect();
+                let page_info = PageInfoSegments {
+                    current_page,
+                    page_items_count: items_count,
+                    total_pages,
+                };
+                Connection::new(user_edges, page_info)
+            })
+            .wait()
+            .map(Some)
+    }
+
+    field deprecated "use storesSearchPages" stores_search(&executor,
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Base64 Id of a store",
         search_term : SearchModeratorStoreInput as "Search pattern"
@@ -123,7 +173,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             first + 1);
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map (|stores| {
+            .map(|stores| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
                     .map(|store| Edge::new(
@@ -149,7 +199,75 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             .map(Some)
     }
 
-    field base_products_search(&executor,
+    field stores_search_pages(&executor,
+        current_page : i32 as "Current page",
+        items_count : i32 as "Items count",
+        search_term : SearchModeratorStoreInput as "Search pattern"
+        )
+            -> FieldResult<Option<Connection<Store, PageInfoSegments>>> as "Searching stores by moderator using relay connection." {
+        let context = executor.context();
+
+        let store_manager_ids = if let Some(ref store_manager_email) = search_term.store_manager_email {
+            let url = format!("{}/{}/search/by_email?email={}",
+                context.config.service_url(Service::Users),
+                Model::User.to_url(),
+                store_manager_email);
+
+            let users_ids = context.request::<Vec<User>>(Method::Get, url, None)
+                .wait()?
+                .into_iter()
+                .map(|user| user.id).collect();
+            Some(users_ids)
+        } else {
+            None
+        };
+
+        let term: SearchModeratorStore = SearchModeratorStore::new(search_term, store_manager_ids);
+
+        let current_page = cmp::max(current_page, 1);
+
+        let records_limit = context.config.gateway.records_limit;
+        let items_count = cmp::max(1, cmp::min(items_count, records_limit as i32));
+
+        let skip = items_count * (current_page - 1);
+
+        let body = serde_json::to_string(&term)?;
+
+        let url = format!("{}/{}/moderator_search?skip={}&count={}",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            skip, items_count,
+        );
+
+        let store_count_url = format!(
+            "{}/{}/count",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
+        let store_count_fut = context.request::<i32>(Method::Get, store_count_url, None);
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .join(store_count_fut)
+            .map(|(stores, total_count)| {
+                let total_pages = total_count / items_count + 1;
+                let mut store_edges: Vec<Edge<Store>> = stores
+                    .into_iter()
+                    .map(|store| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.0).to_string()),
+                                store.clone()
+                            ))
+                    .collect();
+                let page_info = PageInfoSegments {
+                    current_page,
+                    page_items_count: items_count,
+                    total_pages,
+                };
+                Connection::new(store_edges, page_info)
+            })
+            .wait()
+            .map(Some)
+    }
+
+    field deprecated "use baseProductsSearchPages" base_products_search(&executor,
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Base64 Id of a base_product",
         search_term : SearchModeratorBaseProductInput as "Search pattern"
@@ -200,4 +318,56 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             .map(Some)
     }
 
+    field base_products_search_pages(&executor,
+        current_page : i32 as "Current page",
+        items_count : i32 as "Items count",
+        search_term : SearchModeratorBaseProductInput as "Search pattern"
+        )
+            -> FieldResult<Option<Connection<BaseProduct, PageInfoSegments>>> as "Searching base_products by moderator using relay connection." {
+        let context = executor.context();
+
+        let current_page = cmp::max(current_page, 1);
+
+        let records_limit = context.config.gateway.records_limit;
+        let items_count = cmp::max(1, cmp::min(items_count, records_limit as i32));
+
+        let skip = items_count * (current_page - 1);
+
+        let body = serde_json::to_string(&search_term)?;
+
+        let url = format!("{}/{}/moderator_search?skip={}&count={}",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            skip, items_count,
+        );
+
+        let base_product_count_url = format!(
+            "{}/{}/count",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url());
+        let base_product_count_fut = context.request::<i32>(Method::Get, base_product_count_url, None);
+
+        let body = serde_json::to_string(&search_term)?;
+
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
+            .join(base_product_count_fut)
+            .map(|(base_products, total_count)| {
+                let total_pages = total_count / items_count + 1;
+                let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
+                    .into_iter()
+                    .map(|base_product| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
+                                base_product.clone()
+                            ))
+                    .collect();
+                let page_info = PageInfoSegments {
+                    current_page,
+                    page_items_count: items_count,
+                    total_pages,
+                };
+                Connection::new(base_product_edges, page_info)
+            })
+            .wait()
+            .map(Some)
+    }
 });

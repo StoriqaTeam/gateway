@@ -29,6 +29,13 @@ pub struct PageInfo {
 }
 
 #[derive(Clone, Debug)]
+pub struct PageInfoSegments {
+    pub current_page: i32,
+    pub page_items_count: i32,
+    pub total_pages: i32,
+}
+
+#[derive(Clone, Debug)]
 pub struct PageInfoStoresSearch {
     pub has_next_page: bool,
     pub has_previous_page: bool,
