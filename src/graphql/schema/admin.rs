@@ -267,7 +267,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             .map(Some)
     }
 
-    field base_products_search(&executor,
+    field deprecated "use baseProductsSearchPages" base_products_search(&executor,
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Base64 Id of a base_product",
         search_term : SearchModeratorBaseProductInput as "Search pattern"
@@ -318,4 +318,56 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             .map(Some)
     }
 
+    field base_products_search_pages(&executor,
+        current_page : i32 as "Current page",
+        items_count : i32 as "Items count",
+        search_term : SearchModeratorBaseProductInput as "Search pattern"
+        )
+            -> FieldResult<Option<Connection<BaseProduct, PageInfoSegments>>> as "Searching base_products by moderator using relay connection." {
+        let context = executor.context();
+
+        let current_page = cmp::max(current_page, 1);
+
+        let records_limit = context.config.gateway.records_limit;
+        let items_count = cmp::max(1, cmp::min(items_count, records_limit as i32));
+
+        let skip = items_count * (current_page - 1);
+
+        let body = serde_json::to_string(&search_term)?;
+
+        let url = format!("{}/{}/moderator_search?skip={}&count={}",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            skip, items_count,
+        );
+
+        let base_product_count_url = format!(
+            "{}/{}/count",
+            context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url());
+        let base_product_count_fut = context.request::<i32>(Method::Get, base_product_count_url, None);
+
+        let body = serde_json::to_string(&search_term)?;
+
+        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
+            .join(base_product_count_fut)
+            .map(|(base_products, total_count)| {
+                let total_pages = total_count / items_count + 1;
+                let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
+                    .into_iter()
+                    .map(|base_product| Edge::new(
+                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
+                                base_product.clone()
+                            ))
+                    .collect();
+                let page_info = PageInfoSegments {
+                    current_page,
+                    page_items_count: items_count,
+                    total_pages,
+                };
+                Connection::new(base_product_edges, page_info)
+            })
+            .wait()
+            .map(Some)
+    }
 });
