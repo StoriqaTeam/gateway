@@ -1,4 +1,5 @@
 use stq_types::*;
+use stq_static_resources::Currency;
 
 use graphql::models::*;
 
@@ -226,6 +227,7 @@ pub struct AvailablePackages {
     pub name: String,
     pub logo: String,
     pub deliveries_to: Vec<Country>,
+    pub currency: Currency,
     pub local_available: bool,
 }
 
