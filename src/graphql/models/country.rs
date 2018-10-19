@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use stq_types::{Alpha2, Alpha3, CountryLabel};
 
 /// Payload for creating countries
@@ -35,9 +37,6 @@ pub struct CountryInput {
 }
 
 pub fn is_all_codes_valid(countries: &[Country], codes: &[String]) -> bool {
-    let valid_codes = countries
-        .iter()
-        .map(|country| &country.alpha3.0)
-        .collect::<::std::collections::HashSet<_>>();
+    let valid_codes: HashSet<&String> = countries.iter().map(|country| &country.alpha3.0).collect();
     codes.iter().all(|code| valid_codes.contains(code))
 }
