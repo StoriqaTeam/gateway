@@ -1318,7 +1318,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field createCompany(&executor, input: NewCompanyInput as "Create company input.") -> FieldResult<Company> as "Creates new company." {
         let context = executor.context();
-        let countries_url = format!("{}/{}?flatten=true", context.config.service_url(Service::Delivery), Model::Country.to_url());
+        let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
         let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
         if !is_all_codes_valid(&all_countries, &input.deliveries_from) {
             return Err(FieldError::new(
@@ -1350,7 +1350,7 @@ graphql_object!(Mutation: Context |&self| {
         }
 
         if let Some(deliveries_from) = &input.deliveries_from {
-            let countries_url = format!("{}/{}?flatten=true", context.config.service_url(Service::Delivery), Model::Country.to_url());
+            let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
             let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
             if !is_all_codes_valid(&all_countries, deliveries_from) {
                 return Err(FieldError::new(
@@ -1379,7 +1379,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field createPackage(&executor, input: NewPackagesInput as "Create package input.") -> FieldResult<Packages> as "Creates new package." {
         let context = executor.context();
-        let countries_url = format!("{}/{}?flatten=true", context.config.service_url(Service::Delivery), Model::Country.to_url());
+        let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
         let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
         if !is_all_codes_valid(&all_countries, &input.deliveries_to) {
             return Err(FieldError::new(
@@ -1411,7 +1411,7 @@ graphql_object!(Mutation: Context |&self| {
         }
 
         if let Some(deliveries_to) = &input.deliveries_to {
-            let countries_url = format!("{}/{}?flatten=true", context.config.service_url(Service::Delivery), Model::Country.to_url());
+            let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
             let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
             if !is_all_codes_valid(&all_countries, deliveries_to) {
                 return Err(FieldError::new(
