@@ -218,7 +218,7 @@ graphql_object!(Query: Context |&self| {
 
     field currencies(&executor) -> Vec<Currency> as "Fetches currencies." {
         // trello: https://trello.com/c/Q5ZdFhNF (#317)
-        vec![Currency::STQ, Currency::USD]
+        vec![Currency::STQ]
     }
 
     field order_statuses(&executor) -> Vec<OrderState> as "Fetches order statuses." {
@@ -338,6 +338,19 @@ graphql_object!(Query: Context |&self| {
         );
 
         context.request::<Option<BaseProduct>>(Method::Get, url, None)
+            .wait()
+    }
+
+    field companies(&executor) -> FieldResult<Option<Vec<Company>>> as "Fetches all companies." {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}",
+            &context.config.service_url(Service::Delivery),
+            Model::Company.to_url()
+        );
+
+        context.request::<Option<Vec<Company>>>(Method::Get, url, None)
             .wait()
     }
 

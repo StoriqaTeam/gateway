@@ -18,6 +18,13 @@ pub struct Product {
     pub price: ProductPrice,
     pub pre_order: bool,
     pub pre_order_days: i32,
+    pub customer_price: CustomerPrice,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CustomerPrice {
+    pub price: ProductPrice,
+    pub currency: Currency,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]

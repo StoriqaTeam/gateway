@@ -17,7 +17,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{ProductSellerPrice, Quantity, SagaId, WarehouseId};
+use stq_types::{ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 
@@ -1099,14 +1099,54 @@ graphql_object!(Mutation: Context |&self| {
             }
         })?;
 
+        let url_store_id = format!("{}/{}/store_id?product_id={}",
+                        context.config.service_url(Service::Stores),
+                        Model::Product.to_url(),
+                        input.product_id);
+
+        let store_id = context.request::<Option<StoreId>>(Method::Get, url_store_id, None)
+        .wait()
+            .and_then(|id|{
+            if let Some(id) = id {
+                Ok(id)
+            } else {
+                Err(FieldError::new(
+                    "Could not find store_id from product id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                    ))
+            }
+        })?;
+
+        let url_product = format!("{}/{}/{}",
+                        context.config.service_url(Service::Stores),
+                        Model::Product.to_url(),
+                        input.product_id);
+
+        let product = context.request::<Option<Product>>(Method::Get, url_product, None)
+        .wait()
+            .and_then(|value|{
+            if let Some(value) = value {
+                Ok(value)
+            } else {
+                Err(FieldError::new(
+                    "Could not find Product from product id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                    ))
+            }
+        })?;
+
         let buy_now = BuyNow {
+            product_id: input.product_id.into(),
+            store_id,
             customer_id: user.user_id,
             address: input.address_full,
             receiver_name: input.receiver_name,
             receiver_phone: input.receiver_phone,
-            product_id: input.product_id.into(),
             price: product_price,
+            quantity: input.quantity.into(),
             currency: input.currency,
+            pre_order: product.pre_order,
+            pre_order_days: product.pre_order_days,
         };
 
         let url = format!("{}/buy_now",
@@ -1318,6 +1358,15 @@ graphql_object!(Mutation: Context |&self| {
 
     field createCompany(&executor, input: NewCompanyInput as "Create company input.") -> FieldResult<Company> as "Creates new company." {
         let context = executor.context();
+        let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
+        let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+        if !is_all_codes_valid(&all_countries, &input.deliveries_from) {
+            return Err(FieldError::new(
+                "Invalid country code.",
+                graphql_value!({ "code": 100, "details": { "deliveries_from have invalid value(s)." }}),
+            ));
+        }
+
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
             Model::Company.to_url());
@@ -1340,6 +1389,17 @@ graphql_object!(Mutation: Context |&self| {
             ));
         }
 
+        if let Some(deliveries_from) = &input.deliveries_from {
+            let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
+            let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+            if !is_all_codes_valid(&all_countries, deliveries_from) {
+                return Err(FieldError::new(
+                    "Invalid country code.",
+                    graphql_value!({ "code": 100, "details": { "deliveries_from have invalid value(s)." }}),
+                ));
+            }
+        }
+
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.request::<Company>(Method::Put, url, Some(body))
@@ -1359,6 +1419,15 @@ graphql_object!(Mutation: Context |&self| {
 
     field createPackage(&executor, input: NewPackagesInput as "Create package input.") -> FieldResult<Packages> as "Creates new package." {
         let context = executor.context();
+        let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
+        let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+        if !is_all_codes_valid(&all_countries, &input.deliveries_to) {
+            return Err(FieldError::new(
+                "Invalid country code.",
+                graphql_value!({ "code": 100, "details": { "deliveries_to have invalid value(s)." }}),
+            ));
+        }
+
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
             Model::Package.to_url());
@@ -1379,6 +1448,17 @@ graphql_object!(Mutation: Context |&self| {
                 "Nothing to update",
                 graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
             ));
+        }
+
+        if let Some(deliveries_to) = &input.deliveries_to {
+            let countries_url = format!("{}/{}/flatten", context.config.service_url(Service::Delivery), Model::Country.to_url());
+            let all_countries = context.request::<Vec<Country>>(Method::Get, countries_url, None).wait()?;
+            if !is_all_codes_valid(&all_countries, deliveries_to) {
+                return Err(FieldError::new(
+                    "Invalid country code.",
+                    graphql_value!({ "code": 100, "details": { "deliveries_to have invalid value(s)." }}),
+                ));
+            }
         }
 
         let body: String = serde_json::to_string(&input)?.to_string();
