@@ -1,5 +1,5 @@
-use stq_types::*;
 use stq_static_resources::Currency;
+use stq_types::*;
 
 use graphql::models::*;
 
