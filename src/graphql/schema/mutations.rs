@@ -1530,7 +1530,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field addBaseProductToCoupon(&executor, input: ChangeBaseProductsInCoupon as "Add base product input") ->  FieldResult<Coupon> as "Add base product to coupon." {
+    field addBaseProductToCoupon(&executor, input: ChangeBaseProductsInCoupon as "Add base product input") ->  FieldResult<Mock> as "Add base product to coupon." {
         let context = executor.context();
         let url = format!(
             "{}/{}/{}/base_products/{}",
@@ -1540,11 +1540,12 @@ graphql_object!(Mutation: Context |&self| {
             &input.raw_base_product_id,
         );
 
-        context.request::<Coupon>(Method::Post, url, None)
-            .wait()
+        context.request::<CouponScopeBaseProducts>(Method::Post, url, None)
+            .wait()?;
+        Ok(Mock{})
     }
 
-    field deleteBaseProductFromCoupon(&executor, input: ChangeBaseProductsInCoupon as "Delete base product input") ->  FieldResult<Coupon> as "Delete base product from coupon." {
+    field deleteBaseProductFromCoupon(&executor, input: ChangeBaseProductsInCoupon as "Delete base product input") ->  FieldResult<Mock> as "Delete base product from coupon." {
         let context = executor.context();
         let url = format!(
             "{}/{}/{}/base_products/{}",
@@ -1554,8 +1555,9 @@ graphql_object!(Mutation: Context |&self| {
             &input.raw_base_product_id,
         );
 
-        context.request::<Coupon>(Method::Delete, url, None)
-            .wait()
+        context.request::<CouponScopeBaseProducts>(Method::Delete, url, None)
+            .wait()?;
+        Ok(Mock{})
     }
 
 });

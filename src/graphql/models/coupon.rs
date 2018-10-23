@@ -2,7 +2,7 @@ use std::time::{Duration, SystemTime};
 
 use chrono::prelude::*;
 
-use stq_types::{CouponId, StoreId};
+use stq_types::{BaseProductId, CouponId, StoreId};
 
 /// Payload for coupon
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -93,6 +93,13 @@ pub struct UpdateCoupon {
     pub quantity: Option<i32>,
     pub expired_at: Option<SystemTime>,
     pub is_active: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CouponScopeBaseProducts {
+    pub id: i32,
+    pub coupon_id: CouponId,
+    pub base_product_id: BaseProductId,
 }
 
 #[derive(GraphQLEnum, Serialize, Deserialize, Clone, Copy, Debug)]
