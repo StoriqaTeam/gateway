@@ -1501,4 +1501,33 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field createCoupon(&executor, input: NewCouponInput as "Create coupon input") -> FieldResult<Coupon> as "Creates new coupon." {
+        let context = executor.context();
+        let url = format!(
+            "{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Coupon.to_url()
+        );
+
+        let body: String = serde_json::to_string(&NewCoupon::from(input))?.to_string();
+
+        context.request::<Coupon>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field updateCoupon(&executor, input: UpdateCouponInput as "Update coupon input") -> FieldResult<Coupon> as "Updates coupon." {
+        let context = executor.context();
+        let url = format!(
+            "{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Coupon.to_url(),
+            &input.id
+        );
+
+        let body: String = serde_json::to_string(&UpdateCoupon::from(input))?.to_string();
+
+        context.request::<Coupon>(Method::Put, url, Some(body))
+            .wait()
+    }
+
 });
