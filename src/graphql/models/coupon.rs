@@ -1,14 +1,15 @@
 use std::time::{Duration, SystemTime};
 
 use chrono::prelude::*;
+use juniper::ID as GraphqlID;
 
-use stq_types::{BaseProductId, CouponId, StoreId};
+use stq_types::{BaseProductId, CouponCode, CouponId, StoreId};
 
 /// Payload for coupon
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Coupon {
     pub id: CouponId,
-    pub code: String,
+    pub code: CouponCode,
     pub title: String,
     pub store_id: StoreId,
     pub scope: CouponScope,
@@ -52,7 +53,7 @@ pub struct UpdateCouponInput {
     pub client_mutation_id: String,
     #[graphql(description = "Id of a coupon.")]
     #[serde(skip_serializing)]
-    pub id: String,
+    pub id: GraphqlID,
     #[graphql(description = "percent")]
     pub percent: Option<i32>,
     #[graphql(description = "quantity")]
@@ -77,7 +78,7 @@ pub struct ChangeBaseProductsInCoupon {
 /// Payload for creating coupon
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NewCoupon {
-    pub code: String,
+    pub code: CouponCode,
     pub title: String,
     pub store_id: i32,
     pub scope: CouponScope,
@@ -126,7 +127,7 @@ impl UpdateCouponInput {
 impl From<NewCouponInput> for NewCoupon {
     fn from(input: NewCouponInput) -> Self {
         Self {
-            code: input.code,
+            code: CouponCode(input.code),
             title: input.title,
             store_id: input.store_id,
             scope: input.scope,

@@ -1517,12 +1517,15 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateCoupon(&executor, input: UpdateCouponInput as "Update coupon input") -> FieldResult<Coupon> as "Updates coupon." {
         let context = executor.context();
-        let url = format!(
-            "{}/{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::Coupon.to_url(),
-            &input.id
-        );
+        let identifier = ID::from_str(&*input.id)?;
+        let url = identifier.url(&context.config);
+
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
 
         let body: String = serde_json::to_string(&UpdateCoupon::from(input))?.to_string();
 
@@ -1536,8 +1539,8 @@ graphql_object!(Mutation: Context |&self| {
             "{}/{}/{}/base_products/{}",
             context.config.service_url(Service::Stores),
             Model::Coupon.to_url(),
-            &input.raw_id,
-            &input.raw_base_product_id,
+            input.raw_id,
+            input.raw_base_product_id,
         );
 
         context.request::<CouponScopeBaseProducts>(Method::Post, url, None)
@@ -1551,8 +1554,8 @@ graphql_object!(Mutation: Context |&self| {
             "{}/{}/{}/base_products/{}",
             context.config.service_url(Service::Stores),
             Model::Coupon.to_url(),
-            &input.raw_id,
-            &input.raw_base_product_id,
+            input.raw_id,
+            input.raw_base_product_id,
         );
 
         context.request::<CouponScopeBaseProducts>(Method::Delete, url, None)

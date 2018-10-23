@@ -22,7 +22,7 @@ graphql_object!(Coupon: Context as "Coupon" |&self| {
     }
 
     field code() -> &str as "Coupon id" {
-        &self.code
+        &self.code.0
     }
 
     field title() -> &str as "Title" {
