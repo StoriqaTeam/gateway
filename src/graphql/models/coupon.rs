@@ -63,6 +63,17 @@ pub struct UpdateCouponInput {
     pub is_active: Option<bool>,
 }
 
+#[derive(GraphQLInputObject, Debug, Clone)]
+#[graphql(description = "Change base_product in coupon")]
+pub struct ChangeBaseProductsInCoupon {
+    #[graphql(description = "Client mutation id.")]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of a coupon.")]
+    pub raw_id: i32,
+    #[graphql(description = "Id of a base_product.")]
+    pub raw_base_product_id: i32,
+}
+
 /// Payload for creating coupon
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NewCoupon {

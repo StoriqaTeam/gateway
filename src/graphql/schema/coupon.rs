@@ -1,7 +1,10 @@
 //! File containing Coupon object of graphql schema
 use chrono::prelude::*;
+use futures::Future;
 use graphql::context::Context;
 use graphql::models::*;
+use hyper::Method;
+use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
@@ -60,6 +63,15 @@ graphql_object!(Coupon: Context as "Coupon" |&self| {
     field updated_at() -> String as "Updated at" {
         let datetime: DateTime<Utc> = self.updated_at.into();
         datetime.to_rfc3339()
+    }
+
+    field base_products(&executor) -> FieldResult<Vec<BaseProduct>> as "Base products coupon can be applied to" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/base_products",
+            context.config.service_url(Service::Stores),
+            Model::Coupon.to_url(),
+            self.id);
+        context.request::<Vec<BaseProduct>>(Method::Get, url, None).wait()
     }
 
 });
