@@ -645,6 +645,15 @@ graphql_object!(Store: Context as "Store" |&self| {
             .map(Some)
     }
 
+    field coupons(&executor) -> FieldResult<Vec<Coupon>> {
+        let context = executor.context();
+        let url = format!("{}/{}/stores/{}",
+            context.config.service_url(Service::Stores),
+            Model::Coupon.to_url(),
+            self.id);
+        context.request::<Vec<Coupon>>(Method::Get, url, None).wait()
+    }
+
 });
 
 graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {
