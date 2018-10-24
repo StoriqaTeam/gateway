@@ -313,29 +313,48 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field store(&executor, id: i32 as "Int id of a store.") -> FieldResult<Option<Store>> as "Fetches store by id." {
+    field store(&executor,
+        id: i32 as "Int id of a store.",
+        visibility: Option<Visibility> as "Specifies allowed visibility of the store",
+    ) -> FieldResult<Option<Store>> as "Fetches store by id." {
+
         let context = executor.context();
+        let visibility = visibility.unwrap_or_default();
 
         let url = format!(
-            "{}/{}/{}",
+            "{}/{}/{}?visibility={}",
             &context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            id.to_string()
+            id.to_string(),
+            visibility,
         );
 
         context.request::<Option<Store>>(Method::Get, url, None)
             .wait()
     }
 
-    field base_product(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
+    field base_product(&executor,
+        id: i32 as "Int Id of a base product.",
+        visibility: Option<Visibility> as "Specifies allowed visibility of the base product",
+    ) -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
         let context = executor.context();
+        let visibility = visibility.unwrap_or_default();
 
-        let url = format!(
-            "{}/{}/{}/update_view",
-            &context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
-            id.to_string()
-        );
+        let url = match visibility {
+            Visibility::Published => format!(
+                "{}/{}/{}/update_view",
+                &context.config.service_url(Service::Stores),
+                Model::BaseProduct.to_url(),
+                id.to_string()
+            ),
+            Visibility::Active => format!(
+                "{}/{}/{}?visibility={}",
+                &context.config.service_url(Service::Stores),
+                Model::BaseProduct.to_url(),
+                id.to_string(),
+                visibility,
+            ),
+        };
 
         context.request::<Option<BaseProduct>>(Method::Get, url, None)
             .wait()

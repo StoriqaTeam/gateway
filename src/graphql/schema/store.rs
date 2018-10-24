@@ -146,34 +146,38 @@ graphql_object!(Store: Context as "Store" |&self| {
     field base_products(&executor,
         first = None : Option<i32> as "First edges", 
         after = None : Option<GraphqlID> as "After base_product GraphQL id",
-        skip_base_prod_id = None : Option<i32> as "Skip base prod id" ) 
+        skip_base_prod_id = None : Option<i32> as "Skip base prod id",
+        visibility: Option<Visibility> as "Specifies visibility of the base products") 
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches base products of the store." {
         let context = executor.context();
 
         let offset = after
             .and_then(|val| ID::from_str(&*val).map(|id| id.raw_id + 1).ok())
             .unwrap_or_default();
+        let visibility = visibility.unwrap_or_default();
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
             let url = match skip_base_prod_id {
                 None => format!(
-                        "{}/{}/{}/products?offset={}&count={}",
+                        "{}/{}/{}/products?offset={}&count={}&visibility={}",
                         &context.config.service_url(Service::Stores),
                         Model::Store.to_url(),
                         self.id,
                         offset,
-                        count + 1
+                        count + 1,
+                        visibility,
                     ),
                 Some(id) => format!(
-                        "{}/{}/{}/products?skip_base_product_id={}&offset={}&count={}",
+                        "{}/{}/{}/products?skip_base_product_id={}&offset={}&count={}&visibility={}",
                         &context.config.service_url(Service::Stores),
                         Model::Store.to_url(),
                         self.id,
                         id,
                         offset,
-                        count + 1
+                        count + 1,
+                        visibility,
                     )
             };
 
