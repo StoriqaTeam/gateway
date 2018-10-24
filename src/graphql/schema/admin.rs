@@ -59,10 +59,9 @@ graphql_object!(Admin: Context as "Admin" |&self| {
                 let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
                     .map(|user| Edge::new(
-                                juniper::ID::from(ID::new(Service::Users, Model::User, user.id.0).to_string()),
-                                user.clone()
-                            ))
-                    .collect();
+                        juniper::ID::from(ID::new(Service::Users, Model::User, user.id.0).to_string()),
+                        user.clone()
+                    )).collect();
                 let has_next_page = user_edges.len() as i32 == first + 1;
                 if has_next_page {
                     user_edges.pop();
@@ -177,10 +176,9 @@ graphql_object!(Admin: Context as "Admin" |&self| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
                     .map(|store| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.0).to_string()),
-                                store.clone()
-                            ))
-                    .collect();
+                        juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.0).to_string()),
+                        store.clone()
+                    )).collect();
                 let has_next_page = store_edges.len() as i32 == first + 1;
                 if has_next_page {
                     store_edges.pop();
@@ -252,10 +250,9 @@ graphql_object!(Admin: Context as "Admin" |&self| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
                     .map(|store| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.0).to_string()),
-                                store.clone()
-                            ))
-                    .collect();
+                        juniper::ID::from(ID::new(Service::Stores, Model::Store, store.id.0).to_string()),
+                        store.clone()
+                    )).collect();
                 let page_info = PageInfoSegments {
                     current_page,
                     page_items_count: items_count,
@@ -296,10 +293,9 @@ graphql_object!(Admin: Context as "Admin" |&self| {
                 let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
                     .into_iter()
                     .map(|base_product| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
-                                base_product.clone()
-                            ))
-                    .collect();
+                        juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
+                        base_product.clone()
+                    )).collect();
                 let has_next_page = base_product_edges.len() as i32 == first + 1;
                 if has_next_page {
                     base_product_edges.pop();
@@ -356,10 +352,9 @@ graphql_object!(Admin: Context as "Admin" |&self| {
                 let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
                     .into_iter()
                     .map(|base_product| Edge::new(
-                                juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
-                                base_product.clone()
-                            ))
-                    .collect();
+                        juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
+                        base_product.clone()
+                    )).collect();
                 let page_info = PageInfoSegments {
                     current_page,
                     page_items_count: items_count,

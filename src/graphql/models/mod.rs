@@ -27,6 +27,7 @@ pub mod store;
 pub mod user;
 pub mod user_delivery_address;
 pub mod user_role;
+pub mod visibility;
 pub mod warehouse;
 pub mod wizard_store;
 
@@ -59,6 +60,7 @@ pub use self::store::*;
 pub use self::user::*;
 pub use self::user_delivery_address::*;
 pub use self::user_role::*;
+pub use self::visibility::*;
 pub use self::warehouse::*;
 pub use self::wizard_store::*;
 

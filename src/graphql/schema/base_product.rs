@@ -101,14 +101,19 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             .wait()
     }
 
-    field store(&executor) -> FieldResult<Option<Store>> as "Fetches store by id." {
+    field store(&executor,
+        visibility: Option<Visibility> as "Specifies allowed visibility of the store"
+    ) -> FieldResult<Option<Store>> as "Fetches store by id." {
+
         let context = executor.context();
+        let visibility = visibility.unwrap_or_default();
 
         let url = format!(
-            "{}/{}/{}",
+            "{}/{}/{}?visibility={}",
             &context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            self.store_id.to_string()
+            self.store_id.to_string(),
+            visibility
         );
 
         context.request::<Option<Store>>(Method::Get, url, None)
