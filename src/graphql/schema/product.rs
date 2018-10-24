@@ -76,14 +76,17 @@ graphql_object!(Product: Context as "Product" |&self| {
         &self.customer_price
     }
 
-    field base_product(&executor) -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
+    field base_product(&executor,
+        visibility: Option<Visibility> as "Specifies allowed visibility of the base_product") -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
         let context = executor.context();
+        let visibility = visibility.unwrap_or_default();
 
         let url = format!(
-            "{}/{}/{}",
+            "{}/{}/{}?visibility={}",
             &context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
-            self.base_product_id.to_string()
+            self.base_product_id.to_string(),
+            visibility,
         );
 
         context.request::<Option<BaseProduct>>(Method::Get, url, None)
@@ -118,15 +121,18 @@ graphql_object!(Product: Context as "Product" |&self| {
             .map(Some)
     }
 
-    field stocks(&executor) -> FieldResult<Vec<GraphQLStock>> as "Find product on warehouses." {
+    field stocks(&executor,
+        visibility: Option<Visibility> as "Specifies allowed visibility of the stocks") -> FieldResult<Vec<GraphQLStock>> as "Find product on warehouses." {
 
-        let context = executor.context();
+       let context = executor.context();
+       let visibility = visibility.unwrap_or(Visibility::Active);
 
        let url = format!(
-            "{}/{}/{}",
+            "{}/{}/{}?visibility={}",
             &context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
-            self.base_product_id.to_string()
+            self.base_product_id.to_string(),
+            visibility,
         );
 
         let store_id = context.request::<Option<BaseProduct>>(Method::Get, url, None)
