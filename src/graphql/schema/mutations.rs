@@ -1490,12 +1490,14 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deleteCompanyPackage(&executor, id: i32 as "Raw id of company_package") -> FieldResult<CompaniesPackages>  as "Deletes company_package." {
+    field deleteCompanyPackage(&executor, company_id: i32 as "Raw id of company", package_id: i32 as "Raw id of package") -> FieldResult<CompaniesPackages>  as "Deletes company_package." {
         let context = executor.context();
-        let url = format!("{}/{}/{}",
+        let url = format!("{}/{}/{}/{}/{}",
             context.config.service_url(Service::Delivery),
-            Model::CompanyPackage.to_url(),
-            id);
+            Model::Company.to_url(),
+            company_id,
+            Model::Package.to_url(),
+            package_id);
 
         context.request::<CompaniesPackages>(Method::Delete, url, None)
             .wait()
