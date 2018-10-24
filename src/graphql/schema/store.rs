@@ -144,17 +144,17 @@ graphql_object!(Store: Context as "Store" |&self| {
     }
 
     field base_products(&executor,
-        first = None : Option<i32> as "First edges", 
+        first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID> as "After base_product GraphQL id",
         skip_base_prod_id = None : Option<i32> as "Skip base prod id",
-        visibility: Option<Visibility> as "Specifies visibility of the base products") 
+        visibility: Option<Visibility> as "Specifies visibility of the base products")
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches base products of the store." {
         let context = executor.context();
 
         let offset = after
             .and_then(|val| ID::from_str(&*val).map(|id| id.raw_id + 1).ok())
             .unwrap_or_default();
-        let visibility = visibility.unwrap_or_default();
+        let visibility = visibility.unwrap_or(Visibility::Active);
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
@@ -347,9 +347,9 @@ graphql_object!(Store: Context as "Store" |&self| {
     }
 
     field find_most_viewed_products(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset from begining", 
-        search_term : MostViewedProductsInput as "Most viewed search pattern") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset from begining",
+        search_term : MostViewedProductsInput as "Most viewed search pattern")
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Find most viewed base products each one contains one variant." {
         let context = executor.context();
 
@@ -407,9 +407,9 @@ graphql_object!(Store: Context as "Store" |&self| {
 
 
     field find_most_discount_products(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset from begining", 
-        search_term : MostDiscountProductsInput as "Most discount search pattern") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset from begining",
+        search_term : MostDiscountProductsInput as "Most discount search pattern")
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Find base products each one with most discount variant." {
         let context = executor.context();
 
@@ -466,9 +466,9 @@ graphql_object!(Store: Context as "Store" |&self| {
     }
 
     field find_product(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining", 
-        search_term : SearchProductInput as "Search pattern") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset form begining",
+        search_term : SearchProductInput as "Search pattern")
             -> FieldResult<Option<Connection<BaseProduct, PageInfoProductsSearch>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
@@ -531,9 +531,9 @@ graphql_object!(Store: Context as "Store" |&self| {
     }
 
     field auto_complete_product_name(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining", 
-        name : String as "Name part") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset form begining",
+        name : String as "Name part")
             -> FieldResult<Option<Connection<String, PageInfo>>> as "Finds products full name by part of the name." {
 
         let context = executor.context();
