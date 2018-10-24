@@ -463,4 +463,15 @@ graphql_object!(Query: Context |&self| {
         }
     }
 
+    field generate_coupon_code(&executor) -> FieldResult<String> as "New coupon code" {
+        let context = executor.context();
+
+        let url = format!("{}/{}/generate_code",
+            context.config.service_url(Service::Stores),
+            Model::Coupon.to_url());
+
+        context.request::<String>(Method::Get, url, None)
+            .wait()
+    }
+
 });
