@@ -122,6 +122,19 @@ impl Controller for ControllerImpl {
                     )
                 }
 
+                (&Get, Some(Route::AppleAppSiteAssociation)) => Box::new(future::ok(
+                    json!({
+                        "applinks": {
+                            "apps": [],
+                            "details": {
+                                "HS8AM3WUSX.com.storiqa.mobilewallet": {
+                                    "paths": ["/ioswallet/*"]
+                                }
+                            }
+                        }
+                    }).to_string(),
+                )),
+
                 // Fallback
                 (m, _) => Box::new(future::err(
                     format_err!("Request to non existing endpoint in gateway microservice! {:?} {:?}", m, path)
