@@ -338,7 +338,7 @@ graphql_object!(Query: Context |&self| {
         visibility: Option<Visibility> as "Specifies allowed visibility of the base product",
     ) -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
         let context = executor.context();
-        let visibility = visibility.unwrap_or(Visibility::Active);
+        let visibility = visibility.unwrap_or_default();
 
         let url = match visibility {
             Visibility::Published => format!(
