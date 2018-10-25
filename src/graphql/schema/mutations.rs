@@ -1535,6 +1535,19 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field deleteCoupon(&executor, coupon_id: i32 as "Delete coupon by raw id") -> FieldResult<Coupon> as "Delete exists coupon." {
+        let context = executor.context();
+        let url = format!(
+            "{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Coupon.to_url(),
+            coupon_id
+        );
+
+        context.request::<Coupon>(Method::Delete, url, None)
+            .wait()
+    }
+
     field addBaseProductToCoupon(&executor, input: ChangeBaseProductsInCoupon as "Add base product input") ->  FieldResult<Mock> as "Add base product to coupon." {
         let context = executor.context();
         let url = format!(
