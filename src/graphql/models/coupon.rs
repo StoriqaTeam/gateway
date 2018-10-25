@@ -152,3 +152,19 @@ impl From<UpdateCouponInput> for UpdateCoupon {
 fn into_system_time(datetime: DateTime<Utc>) -> SystemTime {
     SystemTime::UNIX_EPOCH + Duration::new(datetime.timestamp() as u64, 0)
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CouponsSearchCodePayload {
+    pub code: CouponCode,
+    pub store_id: StoreId,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub enum CouponValidate {
+    NotExists,
+    NotActive,
+    HasExpired,
+    NoActivationsAvailable,
+    AlreadyActivated,
+    Valid,
+}

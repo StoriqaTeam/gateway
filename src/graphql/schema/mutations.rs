@@ -659,6 +659,66 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field setCouponInCart(&executor, input: SetCouponInCartInput as "Set coupon in cart input.") -> FieldResult<Option<Cart>> as "Sets coupon in cart." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not set coupon in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        // Validate coupon
+        let url = format!("{}/{}/{}/validate/code",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            Model::Coupon.to_url());
+
+        let search_code = CouponsSearchCodePayload {
+            code: input.coupon_code.into(),
+            store_id: input.store_id.into(),
+        };
+
+        let body = serde_json::to_string(&search_code)?;
+
+        let check_result = context.request::<CouponValidate>(Method::Post, url, Some(body))
+            .wait()?;
+
+        match check_result {
+            CouponValidate::NotActive => {
+
+            },
+            CouponValidate::NotExists => {
+
+            },
+            CouponValidate::AlreadyActivated => {
+
+            },
+            CouponValidate::HasExpired => {
+
+            },
+            CouponValidate::NoActivationsAvailable => {
+
+            },
+            CouponValidate::Valid => {
+
+            },
+        };
+
+        // check coupon scope
+        // get products from stores
+        // check valid products
+        // set coupon in cart
+        // return cart
+
+        None
+    }
+
     field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<Cart>> as "Select product in cart." {
         let context = executor.context();
 
@@ -1551,10 +1611,11 @@ graphql_object!(Mutation: Context |&self| {
     field addBaseProductToCoupon(&executor, input: ChangeBaseProductsInCoupon as "Add base product input") ->  FieldResult<Mock> as "Add base product to coupon." {
         let context = executor.context();
         let url = format!(
-            "{}/{}/{}/base_products/{}",
+            "{}/{}/{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Coupon.to_url(),
             input.raw_id,
+            Model::BaseProduct.to_url(),
             input.raw_base_product_id,
         );
 
@@ -1566,10 +1627,11 @@ graphql_object!(Mutation: Context |&self| {
     field deleteBaseProductFromCoupon(&executor, input: ChangeBaseProductsInCoupon as "Delete base product input") ->  FieldResult<Mock> as "Delete base product from coupon." {
         let context = executor.context();
         let url = format!(
-            "{}/{}/{}/base_products/{}",
+            "{}/{}/{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Coupon.to_url(),
             input.raw_id,
+            Model::BaseProduct.to_url(),
             input.raw_base_product_id,
         );
 

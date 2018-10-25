@@ -45,6 +45,10 @@ graphql_object!(Coupon: Context as "Coupon" |&self| {
         self.quantity
     }
 
+    field used_quantity() -> i32 as "Count activations" {
+        0 // TODO: get from stores
+    }
+
     field expired_at() -> Option<String> as "Expired at" {
         self.expired_at
             .map(DateTime::<Utc>::from)
