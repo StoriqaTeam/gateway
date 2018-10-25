@@ -426,6 +426,7 @@ graphql_object!(User: Context as "User" |&self| {
                 created_to,
                 payment_status: search_term_options.payment_status,
                 state: search_term_options.order_status,
+                ..OrderSearchTerms::default()
             };
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
