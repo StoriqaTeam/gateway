@@ -32,14 +32,19 @@ graphql_object!(WizardStore: Context as "WizardStore" |&self| {
         self.store_id.map(|s| s.0)
     }
 
-    field store(&executor) -> FieldResult<Option<Store>> as "Fetches store." {
+    field store(&executor,
+        visibility: Option<Visibility> as "Specifies allowed visibility of the store"
+    ) -> FieldResult<Option<Store>> as "Fetches store." {
+        let visibility = visibility.unwrap_or(Visibility::Active);
+
         if let Some(ref store_id) = self.store_id {
             let context = executor.context();
             let url = format!(
-                "{}/{}/{}",
+                "{}/{}/{}?visibility={}",
                 &context.config.service_url(Service::Stores),
                 Model::Store.to_url(),
-                store_id.to_string()
+                store_id.to_string(),
+                visibility
             );
             context.request::<Option<Store>>(Method::Get, url, None)
                 .wait()

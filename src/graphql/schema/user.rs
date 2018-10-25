@@ -135,9 +135,12 @@ graphql_object!(User: Context as "User" |&self| {
 
     field stores(&executor,
         first = None : Option<i32> as "First edges",
-        after = None : Option<GraphqlID>  as "Id of a store")
+        after = None : Option<GraphqlID>  as "Id of a store",
+        visibility: Option<Visibility> as "Specifies allowed visibility of the stores",
+    )
             -> FieldResult<Option<Connection<Store, PageInfo>>> as "Fetches stores using relay connection." {
         let context = executor.context();
+        let visibility = visibility.unwrap_or(Visibility::Active);
 
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
@@ -147,11 +150,13 @@ graphql_object!(User: Context as "User" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}?offset={}&count={}",
+        let url = format!("{}/{}?offset={}&count={}&visibility={}",
             context.config.service_url(Service::Stores),
             Model::Store.to_url(),
             raw_id,
-            first + 1);
+            first + 1,
+            visibility
+        );
 
         context.request::<Vec<Store>>(Method::Get, url, None)
             .map (|stores| {
@@ -255,14 +260,19 @@ graphql_object!(User: Context as "User" |&self| {
             .map(Some)
     }
 
-    field base_product(&executor, id: i32 as "Int Id of a base product.") -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
+    field base_product(&executor,
+        id: i32 as "Int Id of a base product.",
+        visibility: Option<Visibility> as "Specifies allowed visibility of the base product",
+    ) -> FieldResult<Option<BaseProduct>> as "Fetches base product by id." {
         let context = executor.context();
+        let visibility = visibility.unwrap_or(Visibility::Active);
 
-       let url = format!(
-            "{}/{}/{}",
+        let url = format!(
+            "{}/{}/{}?visibility={}",
             &context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
-            id.to_string()
+            id.to_string(),
+            visibility
         );
 
         context.request::<Option<BaseProduct>>(Method::Get, url, None)
@@ -271,9 +281,11 @@ graphql_object!(User: Context as "User" |&self| {
 
     field base_products(&executor,
         first = None : Option<i32> as "First edges",
-        after = None : Option<GraphqlID>  as "Base64 Id of base product")
-            -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches base products using relay connection." {
+        after = None : Option<GraphqlID>  as "Base64 Id of base product",
+        visibility: Option<Visibility> as "Specifies allowed visibility of the base products",
+    ) -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Fetches base products using relay connection." {
         let context = executor.context();
+        let visibility = visibility.unwrap_or(Visibility::Active);
 
         let raw_id = match after {
             Some(val) => ID::from_str(&*val)?.raw_id,
@@ -283,11 +295,13 @@ graphql_object!(User: Context as "User" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}?offset={}&count={}",
+        let url = format!("{}/{}?offset={}&count={}&visibility={}",
             context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             raw_id,
-            first + 1);
+            first + 1,
+            visibility
+        );
 
         context.request::<Vec<BaseProduct>>(Method::Get, url, None)
             .map (|base_products| {

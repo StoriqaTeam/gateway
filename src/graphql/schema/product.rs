@@ -77,7 +77,8 @@ graphql_object!(Product: Context as "Product" |&self| {
     }
 
     field base_product(&executor,
-        visibility: Option<Visibility> as "Specifies allowed visibility of the base_product") -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
+        visibility: Option<Visibility> as "Specifies allowed visibility of the base_product"
+    ) -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
         let context = executor.context();
         let visibility = visibility.unwrap_or_default();
 

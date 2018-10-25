@@ -23,10 +23,12 @@ graphql_object!(Search: Context as "Search" |&self| {
     field find_product(&executor,
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Offset form beginning",
-        search_term : SearchProductInput as "Search pattern")
-            -> FieldResult<Option<Connection<BaseProduct, PageInfoProductsSearch>>> as "Find products by name using relay connection." {
+        search_term : SearchProductInput as "Search pattern",
+        visibility: Option<Visibility> as "Specifies allowed visibility of the base product"
+    ) -> FieldResult<Option<Connection<BaseProduct, PageInfoProductsSearch>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
+        let visibility = visibility.unwrap_or_default();
 
         let offset = after
             .and_then(|id|{
@@ -38,12 +40,13 @@ graphql_object!(Search: Context as "Search" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/search?offset={}&count={}",
+        let url = format!("{}/{}/search?offset={}&count={}&visibility={}",
             context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             offset,
-            count + 1
-            );
+            count + 1,
+            visibility
+        );
 
         let options = if let Some(mut options) = search_term.options.clone() {
             options.status = Some(ModerationStatus::Published);
@@ -140,10 +143,12 @@ graphql_object!(Search: Context as "Search" |&self| {
     field find_store(&executor,
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Offset form beginning",
-        search_term : SearchStoreInput as "Search store input")
-            -> FieldResult<Option<Connection<Store, PageInfoStoresSearch>>> as "Finds stores by name using relay connection." {
+        search_term : SearchStoreInput as "Search store input",
+        visibility: Option<Visibility> as "Specifies allowed visibility of the store"
+    ) -> FieldResult<Option<Connection<Store, PageInfoStoresSearch>>> as "Finds stores by name using relay connection." {
 
         let context = executor.context();
+        let visibility = visibility.unwrap_or_default();
 
         let offset = after
             .and_then(|id|{
@@ -158,12 +163,13 @@ graphql_object!(Search: Context as "Search" |&self| {
 
         println!("{}", body);
 
-        let url = format!("{}/{}/search?offset={}&count={}",
+        let url = format!("{}/{}/search?offset={}&count={}&visibility={}",
             context.config.service_url(Service::Stores),
             Model::Store.to_url(),
             offset,
-            count + 1
-            );
+            count + 1,
+            visibility
+        );
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
             .and_then (|stores| {

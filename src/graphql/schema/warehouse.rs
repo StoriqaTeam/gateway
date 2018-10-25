@@ -48,14 +48,18 @@ graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
         &self.0.store_id.0
     }
 
-    field store(&executor) -> FieldResult<Option<Store>> as "Fetches store." {
+    field store(&executor,
+        visibility: Option<Visibility> as "Specifies allowed visibility of the store",
+    ) -> FieldResult<Option<Store>> as "Fetches store." {
         let context = executor.context();
+        let visibility = visibility.unwrap_or(Visibility::Active);
 
         let url = format!(
-            "{}/{}/{}",
+            "{}/{}/{}?visibility={}",
             &context.config.service_url(Service::Stores),
             Model::Store.to_url(),
-            self.0.store_id.to_string()
+            self.0.store_id.to_string(),
+            visibility
         );
 
         context.request::<Option<Store>>(Method::Get, url, None)
@@ -67,22 +71,25 @@ graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
         after = None : Option<GraphqlID>  as "Base64 Id of base product",
         current_page : i32 as "Current page",
         items_count : i32 as "Items count", 
-        search_term : Option<SearchProductInput> as "Search pattern") 
-            -> FieldResult<Option<Connection<GraphQLStock, PageInfoWarehouseProductSearch>>> as "Find products of the warehouse using relay connection." {
+        search_term : Option<SearchProductInput> as "Search pattern",
+        visibility : Option<Visibility> as "Specifies allowed visibility of the base products"
+    ) -> FieldResult<Option<Connection<GraphQLStock, PageInfoWarehouseProductSearch>>> as "Find products of the warehouse using relay connection." {
 
         let context = executor.context();
+        let visibility = visibility.unwrap_or(Visibility::Active);
 
         let offset = items_count * (current_page - 1);
 
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(items_count, records_limit as i32);
 
-        let url = format!("{}/{}/search?offset={}&count={}",
+        let url = format!("{}/{}/search?offset={}&count={}&visibility={}",
             context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             offset,
-            count
-            );
+            count,
+            visibility
+        );
 
         let search_term = if let Some(search_term) = search_term {
             let options = if let Some(mut options) = search_term.options {
