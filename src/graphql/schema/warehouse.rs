@@ -73,8 +73,7 @@ graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
         items_count : i32 as "Items count", 
         search_term : Option<SearchProductInput> as "Search pattern",
         visibility : Option<Visibility> as "Specifies allowed visibility of the base products"
-    ) 
-        -> FieldResult<Option<Connection<GraphQLStock, PageInfoWarehouseProductSearch>>> as "Find products of the warehouse using relay connection." {
+    ) -> FieldResult<Option<Connection<GraphQLStock, PageInfoWarehouseProductSearch>>> as "Find products of the warehouse using relay connection." {
 
         let context = executor.context();
         let visibility = visibility.unwrap_or(Visibility::Active);
