@@ -6,6 +6,7 @@ pub enum Route {
     Root,
     Graphql,
     Healthcheck,
+    AppleAppSiteAssociation,
 }
 
 pub fn create_route_parser() -> RouteParser<Route> {
@@ -13,5 +14,6 @@ pub fn create_route_parser() -> RouteParser<Route> {
     router.add_route(r"^/$", || Route::Root);
     router.add_route(r"^/graphql$", || Route::Graphql);
     router.add_route(r"^/healthcheck$", || Route::Healthcheck);
+    router.add_route(r"^/apple-app-site-association$", || Route::AppleAppSiteAssociation);
     router
 }
