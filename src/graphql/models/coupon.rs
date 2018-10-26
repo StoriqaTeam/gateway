@@ -2,6 +2,7 @@ use std::time::{Duration, SystemTime};
 
 use chrono::prelude::*;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
 
 use stq_types::{BaseProductId, CouponCode, CouponId, StoreId};
 
@@ -19,6 +20,34 @@ pub struct Coupon {
     pub is_active: bool,
     pub created_at: SystemTime,
     pub updated_at: SystemTime,
+}
+
+impl Coupon {
+    pub fn scope_support(&self) -> FieldResult<bool> {
+        match self.scope {
+            CouponScope::Store => Err(FieldError::new(
+                "Error response from microservice",
+                graphql_value!({ "code": 100, "details": {
+                            "status": "400 Bad Request",
+                            "code": "400",
+                            "message":
+                                "{ Using a coupon for a store is not supported }"
+                            ,
+                        }}),
+            )),
+            CouponScope::BaseProducts => Ok(true),
+            CouponScope::Categories => Err(FieldError::new(
+                "Error response from microservice",
+                graphql_value!({ "code": 100, "details": {
+                            "status": "400 Bad Request",
+                            "code": "400",
+                            "message":
+                                "{ Using a coupon for a categories is not supported }"
+                            ,
+                        }}),
+            )),
+        }
+    }
 }
 
 /// Input Object for creating coupon
@@ -161,10 +190,58 @@ pub struct CouponsSearchCodePayload {
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum CouponValidate {
-    NotExists,
     NotActive,
     HasExpired,
     NoActivationsAvailable,
     AlreadyActivated,
     Valid,
+}
+
+impl CouponValidate {
+    pub fn validate(&self) -> FieldResult<()> {
+        match *self {
+            CouponValidate::NotActive => Err(FieldError::new(
+                "Error response from microservice",
+                graphql_value!({ "code": 100, "details": {
+                            "status": "400 Bad Request",
+                            "code": "400",
+                            "message":
+                                "{ Coupon is not active }"
+                            ,
+                        }}),
+            )),
+
+            CouponValidate::AlreadyActivated => Err(FieldError::new(
+                "Error response from microservice",
+                graphql_value!({ "code": 100, "details": {
+                            "status": "400 Bad Request",
+                            "code": "400",
+                            "message":
+                                "{ Coupon is already activated }"
+                            ,
+                        }}),
+            )),
+            CouponValidate::HasExpired => Err(FieldError::new(
+                "Error response from microservice",
+                graphql_value!({ "code": 100, "details": {
+                            "status": "400 Bad Request",
+                            "code": "400",
+                            "message":
+                                "{ Coupon is has expired }"
+                            ,
+                        }}),
+            )),
+            CouponValidate::NoActivationsAvailable => Err(FieldError::new(
+                "Error response from microservice",
+                graphql_value!({ "code": 100, "details": {
+                            "status": "400 Bad Request",
+                            "code": "400",
+                            "message":
+                                "{ No activations available for the coupon }"
+                            ,
+                        }}),
+            )),
+            CouponValidate::Valid => Ok(()),
+        }
+    }
 }

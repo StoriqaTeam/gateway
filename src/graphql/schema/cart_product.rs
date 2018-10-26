@@ -11,6 +11,7 @@ use stq_static_resources::Translation;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::coupon::*;
 
 graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     description: "Cart Product info."
@@ -81,8 +82,18 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         &self.pre_order_days
     }
 
+    field coupon(&executor) -> FieldResult<Option<Coupon>> as "Coupon added user" {
+        let context = executor.context();
+        if let Some(coupon_id) = self.coupon_id {
+            try_get_coupon(context, coupon_id)
+        } else {
+            Ok(None)
+        }
+
+    }
+
     field attributes(&executor) -> FieldResult<Option<Vec<AttrValue>>> as "Variants" {
-       let context = executor.context();
+        let context = executor.context();
         let url = format!("{}/{}/{}/attributes",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),

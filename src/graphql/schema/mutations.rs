@@ -6,6 +6,7 @@ use std::time::SystemTime;
 use futures::Future;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::coupon::*;
 use hyper::Method;
 use juniper::{FieldError, FieldResult};
 use serde_json;
@@ -17,7 +18,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
+use stq_types::{ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 
@@ -673,50 +674,54 @@ graphql_object!(Mutation: Context |&self| {
             ));
         };
 
-        // Validate coupon
-        let url = format!("{}/{}/{}/validate/code",
+        validate_coupon_by_code(context, input.coupon_code.clone(), input.store_id)?;
+        let coupon = get_coupon_by_code(context, input.coupon_code.clone(), input.store_id)?;
+
+        // validate scope coupon
+        let scope_support = coupon.scope_support()?;
+        if !scope_support {
+            return Ok(None);
+        }
+
+        // validate products
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let current_cart = rpc_client.get_cart(customer).wait()?;
+
+        let url = format!("{}/{}/{}/base_products",
             context.config.service_url(Service::Stores),
-            Model::Store.to_url(),
-            Model::Coupon.to_url());
+            Model::Coupon.to_url(),
+            coupon.id);
+        let base_products = context.request::<Vec<BaseProduct>>(Method::Get, url, None).wait()?;
+        let all_support_products = base_products.into_iter().flat_map(|b| {
+            if let Some(variants) = b.variants {
+                variants
+            } else {
+                vec![]
+            }
+            }).map(|p| p.id).collect::<HashSet<ProductId>>();
 
-        let search_code = CouponsSearchCodePayload {
-            code: input.coupon_code.into(),
-            store_id: input.store_id.into(),
-        };
+        let all_cart_products:HashSet<ProductId> = current_cart.iter().map(|c| c.product_id).collect();
 
-        let body = serde_json::to_string(&search_code)?;
+        let products_for_cart:HashSet<ProductId> = all_cart_products.intersection(&all_support_products).cloned().collect();
 
-        let check_result = context.request::<CouponValidate>(Method::Post, url, Some(body))
-            .wait()?;
+        for product_id in products_for_cart {
+            rpc_client.add_coupon(customer, product_id, coupon.id).wait()?;
+        }
 
-        match check_result {
-            CouponValidate::NotActive => {
+        let products: Vec<_> = rpc_client.get_cart(customer).sync()
+            .map_err(into_graphql)?
+            .into_iter().collect();
 
-            },
-            CouponValidate::NotExists => {
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
 
-            },
-            CouponValidate::AlreadyActivated => {
+        let body = serde_json::to_string(&products)?;
 
-            },
-            CouponValidate::HasExpired => {
-
-            },
-            CouponValidate::NoActivationsAvailable => {
-
-            },
-            CouponValidate::Valid => {
-
-            },
-        };
-
-        // check coupon scope
-        // get products from stores
-        // check valid products
-        // set coupon in cart
-        // return cart
-
-        None
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores| convert_to_cart(stores, &products))
+            .map(Some)
+            .wait()
     }
 
     field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<Cart>> as "Select product in cart." {

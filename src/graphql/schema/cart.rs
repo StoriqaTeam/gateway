@@ -32,8 +32,8 @@ graphql_object!(Cart: Context as "Cart" |&self| {
     }
 
     field stores(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset")
             -> Connection<CartStore, PageInfo> as "Fetches stores using relay connection." {
         let context = executor.context();
 
