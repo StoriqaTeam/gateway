@@ -6,6 +6,7 @@ use std::time::SystemTime;
 use futures::Future;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::coupon::*;
 use hyper::Method;
 use juniper::{FieldError, FieldResult};
 use serde_json;
@@ -17,7 +18,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
+use stq_types::{ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 
@@ -644,6 +645,70 @@ graphql_object!(Mutation: Context |&self| {
         let rpc_client = context.get_rest_api_client(Service::Orders);
         let products:Vec<_> = rpc_client.set_quantity(customer, input.product_id.into(), input.value.into())
             .sync()
+            .map_err(into_graphql)?
+            .into_iter().collect();
+
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
+
+        let body = serde_json::to_string(&products)?;
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores| convert_to_cart(stores, &products))
+            .map(Some)
+            .wait()
+    }
+
+    field setCouponInCart(&executor, input: SetCouponInCartInput as "Set coupon in cart input.") -> FieldResult<Option<Cart>> as "Sets coupon in cart." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not set coupon in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        validate_coupon_by_code(context, input.coupon_code.clone(), input.store_id)?;
+        let coupon = get_coupon_by_code(context, input.coupon_code.clone(), input.store_id)?;
+
+        // validate scope coupon
+        let scope_support = coupon.scope_support()?;
+        if !scope_support {
+            return Ok(None);
+        }
+
+        // validate products
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let current_cart = rpc_client.get_cart(customer).wait()?;
+
+        let url = format!("{}/{}/{}/base_products",
+            context.config.service_url(Service::Stores),
+            Model::Coupon.to_url(),
+            coupon.id);
+        let base_products = context.request::<Vec<BaseProduct>>(Method::Get, url, None).wait()?;
+        let all_support_products = base_products.into_iter().flat_map(|b| {
+            if let Some(variants) = b.variants {
+                variants
+            } else {
+                vec![]
+            }
+            }).map(|p| p.id).collect::<HashSet<ProductId>>();
+
+        let all_cart_products:HashSet<ProductId> = current_cart.iter().map(|c| c.product_id).collect();
+
+        let products_for_cart:HashSet<ProductId> = all_cart_products.intersection(&all_support_products).cloned().collect();
+
+        for product_id in products_for_cart {
+            rpc_client.add_coupon(customer, product_id, coupon.id).wait()?;
+        }
+
+        let products: Vec<_> = rpc_client.get_cart(customer).sync()
             .map_err(into_graphql)?
             .into_iter().collect();
 
@@ -1551,10 +1616,11 @@ graphql_object!(Mutation: Context |&self| {
     field addBaseProductToCoupon(&executor, input: ChangeBaseProductsInCoupon as "Add base product input") ->  FieldResult<Mock> as "Add base product to coupon." {
         let context = executor.context();
         let url = format!(
-            "{}/{}/{}/base_products/{}",
+            "{}/{}/{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Coupon.to_url(),
             input.raw_id,
+            Model::BaseProduct.to_url(),
             input.raw_base_product_id,
         );
 
@@ -1566,10 +1632,11 @@ graphql_object!(Mutation: Context |&self| {
     field deleteBaseProductFromCoupon(&executor, input: ChangeBaseProductsInCoupon as "Delete base product input") ->  FieldResult<Mock> as "Delete base product from coupon." {
         let context = executor.context();
         let url = format!(
-            "{}/{}/{}/base_products/{}",
+            "{}/{}/{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Coupon.to_url(),
             input.raw_id,
+            Model::BaseProduct.to_url(),
             input.raw_base_product_id,
         );
 

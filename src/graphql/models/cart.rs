@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
-use stq_types::{CartItem, ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId, UserId};
+use stq_types::{CartItem, CouponId, ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId, UserId};
 
 use super::*;
 
@@ -27,6 +27,7 @@ pub struct CartProduct {
     pub comment: String,
     pub pre_order: bool,
     pub pre_order_days: i32,
+    pub coupon_id: Option<CouponId>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -64,6 +65,18 @@ pub struct SetQuantityInCartInput {
     pub product_id: i32,
     #[graphql(description = "Product quantity.")]
     pub value: i32,
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Set coupon in cart input object")]
+pub struct SetCouponInCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Coupon code.")]
+    pub coupon_code: String,
+    #[graphql(description = "Store raw id for which add coupon.")]
+    pub store_id: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -166,10 +179,10 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                             Some(
                                 v.iter_mut()
                                     .map(|variant| {
-                                        let (quantity, selected, comment) = products
+                                        let (quantity, selected, comment, coupon_id) = products
                                             .iter()
                                             .find(|v| v.product_id == variant.id)
-                                            .map(|v| (v.quantity, v.selected, v.comment.clone()))
+                                            .map(|v| (v.quantity, v.selected, v.comment.clone(), v.coupon_id))
                                             .unwrap_or_default();
 
                                         let price = if let Some(discount) = variant.discount {
@@ -188,6 +201,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                             comment,
                                             pre_order: variant.pre_order,
                                             pre_order_days: variant.pre_order_days,
+                                            coupon_id,
                                         }
                                     }).collect::<Vec<CartProduct>>(),
                             )

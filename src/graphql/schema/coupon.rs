@@ -4,11 +4,14 @@ use futures::Future;
 use graphql::context::Context;
 use graphql::models::*;
 use hyper::Method;
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
+
+use serde_json;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_types::{CouponCode, CouponId, StoreId};
 
 graphql_object!(Coupon: Context as "Coupon" |&self| {
     description: "Coupon info."
@@ -45,6 +48,10 @@ graphql_object!(Coupon: Context as "Coupon" |&self| {
         self.quantity
     }
 
+    field used_quantity() -> i32 as "Count activations" {
+        0 // TODO: get from stores
+    }
+
     field expired_at() -> Option<String> as "Expired at" {
         self.expired_at
             .map(DateTime::<Utc>::from)
@@ -75,3 +82,78 @@ graphql_object!(Coupon: Context as "Coupon" |&self| {
     }
 
 });
+
+pub fn validate_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &Context, coupon_code: C, store_id: S) -> FieldResult<()> {
+    // Validate coupon
+    let url = format!(
+        "{}/{}/validate/code",
+        context.config.service_url(Service::Stores),
+        Model::Coupon.to_url()
+    );
+
+    let search_code = CouponsSearchCodePayload {
+        code: coupon_code.into(),
+        store_id: store_id.into(),
+    };
+
+    let body = serde_json::to_string(&search_code)?;
+
+    let check_result = context
+        .request::<Option<CouponValidate>>(Method::Post, url, Some(body))
+        .wait()?
+        .ok_or_else(|| {
+            FieldError::new(
+                "Coupon not found",
+                graphql_value!({ "code": 400, "details": { "coupon not found" }}),
+            )
+        })?;
+
+    check_result.validate()?;
+
+    Ok(())
+}
+
+pub fn get_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &Context, coupon_code: C, store_id: S) -> FieldResult<Coupon> {
+    let url = format!(
+        "{}/{}/search/code",
+        context.config.service_url(Service::Stores),
+        Model::Coupon.to_url()
+    );
+
+    let search_code = CouponsSearchCodePayload {
+        code: coupon_code.into(),
+        store_id: store_id.into(),
+    };
+
+    let body = serde_json::to_string(&search_code)?;
+
+    context
+        .request::<Option<Coupon>>(Method::Post, url, Some(body))
+        .wait()?
+        .ok_or_else(|| {
+            FieldError::new(
+                "Coupon not found",
+                graphql_value!({ "code": 400, "details": { "coupon not found" }}),
+            )
+        })
+}
+
+pub fn get_coupon(context: &Context, coupon_id: CouponId) -> FieldResult<Coupon> {
+    try_get_coupon(context, coupon_id)?.ok_or_else(|| {
+        FieldError::new(
+            "Coupon not found",
+            graphql_value!({ "code": 400, "details": { "coupon not found" }}),
+        )
+    })
+}
+
+pub fn try_get_coupon(context: &Context, coupon_id: CouponId) -> FieldResult<Option<Coupon>> {
+    let url = format!(
+        "{}/{}/{}",
+        context.config.service_url(Service::Stores),
+        Model::Coupon.to_url(),
+        coupon_id,
+    );
+
+    context.request::<Option<Coupon>>(Method::Get, url, None).wait()
+}
