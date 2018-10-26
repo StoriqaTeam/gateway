@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
-use stq_types::{CartItem, CouponId, ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId, UserId};
+use stq_types::{BaseProductId, CartItem, CouponId, ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId, UserId};
 
 use super::*;
 
@@ -25,6 +25,7 @@ pub struct CartProduct {
     pub selected: bool,
     pub quantity: Quantity,
     pub comment: String,
+    pub base_product_id: BaseProductId,
     pub pre_order: bool,
     pub pre_order_days: i32,
     pub coupon_id: Option<CouponId>,
@@ -194,6 +195,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                         CartProduct {
                                             id: variant.id,
                                             name: base_product.name.clone(),
+                                            base_product_id: base_product.id,
                                             photo_main: variant.photo_main.clone(),
                                             selected,
                                             price: ProductPrice(price),
