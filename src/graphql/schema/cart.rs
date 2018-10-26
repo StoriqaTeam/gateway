@@ -131,16 +131,15 @@ graphql_object!(CartProductStore: Context as "CartProductStore" |&self| {
 });
 
 pub fn calculate_product_price(context: &Context, product: &CartProduct) -> FieldResult<f64> {
+    if product.quantity.0 <= 0 {
+        return Ok(0f64);
+    }
+
     if let Some(coupon_id) = product.coupon_id {
         if let Some(coupon) = try_get_coupon(context, coupon_id)? {
-            // set discount only 1 quantity
+            // set discount only 1 product
             let set_discount = (product.price.0 * 1f64) - ((product.price.0 / 100f64) * f64::from(coupon.percent));
-            let set_quantity = if product.quantity.0 == 1 {
-                1f64
-            } else {
-                f64::from(product.quantity.0) - 1f64
-            };
-            let calc_price = set_discount + (product.price.0 * set_quantity);
+            let calc_price = set_discount + (product.price.0 * (f64::from(product.quantity.0) - 1f64));
 
             return Ok(calc_price);
         }
