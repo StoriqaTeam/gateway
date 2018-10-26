@@ -92,6 +92,28 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
 
     }
 
+    field base_product(&executor,
+        visibility: Option<Visibility> as "Specifies allowed visibility of the base_product"
+    ) -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
+        let context = executor.context();
+        let visibility = visibility.unwrap_or_default();
+
+        let url = format!(
+            "{}/{}/{}?visibility={}",
+            &context.config.service_url(Service::Stores),
+            Model::BaseProduct.to_url(),
+            self.base_product_id.to_string(),
+            visibility,
+        );
+
+        context.request::<Option<BaseProduct>>(Method::Get, url, None)
+            .wait()
+    }
+
+    field base_product_id() -> &i32 as "BaseProductId" {
+        &self.base_product_id.0
+    }
+
     field attributes(&executor) -> FieldResult<Option<Vec<AttrValue>>> as "Variants" {
         let context = executor.context();
         let url = format!("{}/{}/{}/attributes",

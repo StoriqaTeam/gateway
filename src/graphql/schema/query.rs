@@ -493,4 +493,16 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
+    field available_shipping_for_user(&executor, user_country: String as "Alpha3 code country", base_product_id: i32 as "Int Id of a base_product.") -> FieldResult<AvailableShippingForUser> as "Available shipping for user" {
+        let context = executor.context();
+        let url = format!("{}/available_packages_for_user/{}?user_country={}",
+            context.config.service_url(Service::Delivery),
+            base_product_id,
+            user_country
+        );
+
+        context.request::<AvailableShippingForUser>(Method::Get, url, None)
+            .wait()
+    }
+
 });
