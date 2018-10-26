@@ -3,6 +3,7 @@
 use std::cmp;
 use std::str::FromStr;
 
+use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
@@ -12,6 +13,7 @@ use stq_types::UserId;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::coupon::try_get_coupon;
 
 graphql_object!(Cart: Context as "Cart" |&self| {
     description: "Users cart"
@@ -64,33 +66,39 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         Connection::new(store_edges, page_info)
     }
 
-    field products_cost() -> f64 as "Products cost" {
-        self.inner.iter().fold(0.0, |acc, store| {
-            let store_products_cost = store.products.iter().fold(0.0, |acc, product| {
+    field products_cost(&executor) -> FieldResult<f64> as "Products cost" {
+        let context = executor.context();
+
+        let cost = self.inner.iter().try_fold(0.0, |acc, store| {
+            let store_products_cost:FieldResult<f64> = store.products.iter().try_fold(0.0, |acc, product| {
                 if product.selected {
-                    acc + product.price.0 * f64::from(product.quantity.0)
+                    Ok(acc + calculate_product_price(context, &product)?)
                 } else {
-                    acc
+                    Ok(acc)
                 }
             });
-            acc + store_products_cost
-        })
+            Ok(acc + store_products_cost?)
+        });
+
+        cost
     }
 
     field delivery_cost() -> f64 as "Delivery cost" {
         0.0
     }
 
-    field total_cost() -> f64 as "Total cost" {
-        self.inner.iter().fold(0.0, |acc, store| {
-            let store_products_cost = store.products.iter().fold(0.0, |acc, product| {
+    field total_cost(&executor) -> FieldResult<f64> as "Total cost" {
+        let context = executor.context();
+
+        self.inner.iter().try_fold(0.0, |acc, store| {
+            let store_products_cost: FieldResult<f64> = store.products.iter().try_fold(0.0, |acc, product| {
                 if product.selected {
-                    acc + product.price.0 * f64::from(product.quantity.0)
+                    Ok(acc + calculate_product_price(context, &product)?)
                 } else {
-                    acc
+                    Ok(acc)
                 }
             });
-            acc + store_products_cost
+            Ok(acc + store_products_cost?)
         })
     }
 
@@ -121,3 +129,22 @@ graphql_object!(CartProductStore: Context as "CartProductStore" |&self| {
     }
 
 });
+
+pub fn calculate_product_price(context: &Context, product: &CartProduct) -> FieldResult<f64> {
+    if let Some(coupon_id) = product.coupon_id {
+        if let Some(coupon) = try_get_coupon(context, coupon_id)? {
+            // set discount only 1 quantity
+            let set_discount = (product.price.0 * 1f64) - ((product.price.0 / 100f64) * f64::from(coupon.percent));
+            let set_quantity = if product.quantity.0 == 1 {
+                1f64
+            } else {
+                f64::from(product.quantity.0) - 1f64
+            };
+            let calc_price = set_discount + (product.price.0 * set_quantity);
+
+            return Ok(calc_price);
+        }
+    }
+
+    Ok(product.price.0 * f64::from(product.quantity.0))
+}

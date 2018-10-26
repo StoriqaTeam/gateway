@@ -1,6 +1,7 @@
 //! File containing node object of graphql schema
 //! File containing store object of graphql schema
 use juniper;
+use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
@@ -10,6 +11,7 @@ use stq_static_resources::Translation;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::cart::calculate_product_price;
 
 graphql_object!(CartStore: Context as "CartStore" |&self| {
     description: "Cart store's info."
@@ -40,12 +42,14 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
         &self.cover
     }
 
-    field products_cost() -> f64 as "Products cost" {
-        self.products.iter().fold(0.0, |acc, x| {
+    field products_cost(&executor) -> FieldResult<f64> as "Products cost" {
+        let context = executor.context();
+
+        self.products.iter().try_fold(0.0, |acc, x| {
             if x.selected {
-                acc + x.price.0 * f64::from(x.quantity.0)
+                Ok(acc + calculate_product_price(context, &x)?)
             } else {
-                acc
+                Ok(acc)
             }
         })
     }
@@ -54,12 +58,14 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
         0.0
     }
 
-    field total_cost() -> f64 as "Total cost" {
-        self.products.iter().fold(0.0, |acc, x| {
+    field total_cost(&executor) -> FieldResult<f64> as "Total cost" {
+        let context = executor.context();
+
+        self.products.iter().try_fold(0.0, |acc, x| {
             if x.selected {
-                acc + x.price.0 * f64::from(x.quantity.0)
+                Ok(acc + calculate_product_price(context, &x)?)
             } else {
-                acc
+                Ok(acc)
             }
         })
     }

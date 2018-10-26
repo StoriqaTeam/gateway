@@ -7,6 +7,8 @@ use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
+use serde_json;
+
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{CouponCode, CouponId, StoreId};
