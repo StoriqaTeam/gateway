@@ -227,7 +227,7 @@ impl CouponValidate {
                             "status": "400 Bad Request",
                             "code": "400",
                             "message":
-                                "{ Coupon is has expired }"
+                                "{ Coupon has expired }"
                             ,
                         }}),
             )),

@@ -108,9 +108,31 @@ pub fn validate_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &
             )
         })?;
 
-    check_result.validate()?;
+    check_result.validate()
+}
 
-    Ok(())
+pub fn validate_coupon<C: Into<CouponId>>(context: &Context, coupon_id_arg: C) -> FieldResult<()> {
+    let coupon_id = coupon_id_arg.into();
+
+    // Validate coupon
+    let url = format!(
+        "{}/{}/{}/validate",
+        context.config.service_url(Service::Stores),
+        Model::Coupon.to_url(),
+        coupon_id,
+    );
+
+    let check_result = context
+        .request::<Option<CouponValidate>>(Method::Get, url, None)
+        .wait()?
+        .ok_or_else(|| {
+            FieldError::new(
+                "Coupon not found",
+                graphql_value!({ "code": 400, "details": { "coupon not found" }}),
+            )
+        })?;
+
+    check_result.validate()
 }
 
 pub fn get_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &Context, coupon_code: C, store_id: S) -> FieldResult<Coupon> {

@@ -1090,6 +1090,11 @@ graphql_object!(Mutation: Context |&self| {
             .and_then (|hash|
                 hash.into_iter()
                 .map(|p| {
+
+                    if let Some(coupon_id) = p.coupon_id {
+                        validate_coupon(context, coupon_id)?;
+                    }
+
                     let url = format!("{}/{}/{}/seller_price",
                         context.config.service_url(Service::Stores),
                         Model::Product.to_url(),
