@@ -1130,14 +1130,11 @@ graphql_object!(Mutation: Context |&self| {
             }
         }
 
-        let coupons_info = coupons_info.iter()
+        let coupons_info = coupons_info.into_iter()
             .map(|coupon| {
-                (coupon.id, CouponInfo {
-                    coupon_id: coupon.id,
-                    percent: coupon.percent,
-                })
+                (coupon.id, coupon)
             })
-            .collect::<HashMap<CouponId, CouponInfo>>();
+            .collect::<HashMap<CouponId, Coupon>>();
 
         let create_order = CreateOrder {
             customer_id: user.user_id,
