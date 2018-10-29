@@ -7,7 +7,7 @@ use juniper::{FieldError, FieldResult};
 use stq_types::{BaseProductId, CouponCode, CouponId, StoreId};
 
 /// Payload for coupon
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Coupon {
     pub id: CouponId,
     pub code: CouponCode,
@@ -132,7 +132,7 @@ pub struct CouponScopeBaseProducts {
     pub base_product_id: BaseProductId,
 }
 
-#[derive(GraphQLEnum, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(GraphQLEnum, Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 #[graphql(description = "Coupon application scope")]
 pub enum CouponScope {
     Store,
