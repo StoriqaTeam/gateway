@@ -1,4 +1,5 @@
 //! File containing mutations object of graphql schema
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::str::FromStr;
 use std::time::SystemTime;
@@ -12,13 +13,13 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
-use stq_api::orders::{CartClient, Order};
+use stq_api::orders::{CartClient, CouponInfo, Order};
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
+use stq_types::{CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 
@@ -1084,16 +1085,16 @@ graphql_object!(Mutation: Context |&self| {
         )?;
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products_with_prices = rpc_client.get_cart(user.user_id.into())
-            .sync()
-            .map_err(into_graphql)
-            .and_then (|hash|
-                hash.into_iter()
-                .map(|p| {
+        let current_cart = rpc_client.get_cart(user.user_id.into()).sync().map_err(into_graphql)?;
 
-                    if let Some(coupon_id) = p.coupon_id {
-                        validate_coupon(context, coupon_id)?;
-                    }
+        for cart_item in current_cart.iter() {
+            if let Some(coupon_id) = cart_item.coupon_id {
+                validate_coupon(context, coupon_id)?;
+            }
+        }
+
+        let products_with_prices = current_cart.iter()
+                .map(|p| {
 
                     let url = format!("{}/{}/{}/seller_price",
                         context.config.service_url(Service::Stores),
@@ -1111,8 +1112,7 @@ graphql_object!(Mutation: Context |&self| {
                         }
                     })
                 })
-                .collect::<FieldResult<CartProductWithPriceHash>>()
-            )?;
+                .collect::<FieldResult<CartProductWithPriceHash>>()?;
 
         if products_with_prices.len() == 0  {
             return Err(FieldError::new(
@@ -1121,6 +1121,24 @@ graphql_object!(Mutation: Context |&self| {
             ));
         }
 
+        let mut coupons_info = vec![];
+        for cart_item in current_cart.iter() {
+            if let Some(coupon_id) = cart_item.coupon_id {
+                try_get_coupon(context, coupon_id)?.map(|coupon|{
+                    coupons_info.push(coupon);
+                });
+            }
+        }
+
+        let coupons_info = coupons_info.iter()
+            .map(|coupon| {
+                (coupon.id, CouponInfo {
+                    coupon_id: coupon.id,
+                    percent: coupon.percent,
+                })
+            })
+            .collect::<HashMap<CouponId, CouponInfo>>();
+
         let create_order = CreateOrder {
             customer_id: user.user_id,
             address: input.address_full,
@@ -1128,6 +1146,7 @@ graphql_object!(Mutation: Context |&self| {
             receiver_phone: input.receiver_phone,
             prices: products_with_prices,
             currency: input.currency,
+            coupons: coupons_info,
         };
 
         let url = format!("{}/create_order",
