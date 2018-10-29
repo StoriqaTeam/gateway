@@ -685,7 +685,7 @@ graphql_object!(Mutation: Context |&self| {
 
         // validate products
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let current_cart = rpc_client.get_cart(customer).wait()?;
+        let current_cart = rpc_client.get_cart(customer).sync()?;
 
         let url = format!("{}/{}/{}/base_products",
             context.config.service_url(Service::Stores),
@@ -705,7 +705,7 @@ graphql_object!(Mutation: Context |&self| {
         let products_for_cart:HashSet<ProductId> = all_cart_products.intersection(&all_support_products).cloned().collect();
 
         for product_id in products_for_cart {
-            rpc_client.add_coupon(customer, product_id, coupon.id).wait()?;
+            rpc_client.add_coupon(customer, product_id, coupon.id).sync()?;
         }
 
         let products: Vec<_> = rpc_client.get_cart(customer).sync()
