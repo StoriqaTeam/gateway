@@ -108,9 +108,7 @@ pub fn validate_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &
             )
         })?;
 
-    check_result.validate()?;
-
-    Ok(())
+    check_result.validate()
 }
 
 pub fn validate_coupon<C: Into<CouponId>>(context: &Context, coupon_id_arg: C) -> FieldResult<()> {
@@ -134,9 +132,7 @@ pub fn validate_coupon<C: Into<CouponId>>(context: &Context, coupon_id_arg: C) -
             )
         })?;
 
-    check_result.validate()?;
-
-    Ok(())
+    check_result.validate()
 }
 
 pub fn get_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &Context, coupon_code: C, store_id: S) -> FieldResult<Coupon> {
