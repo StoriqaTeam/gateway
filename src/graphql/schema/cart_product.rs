@@ -96,6 +96,12 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         }
     }
 
+    field coupon_discount(&executor) -> FieldResult<f64> as "Coupon discount" {
+        let context = executor.context();
+
+        calculate_coupon_discount(context, &self)
+    }
+
     field base_product(&executor,
         visibility: Option<Visibility> as "Specifies allowed visibility of the base_product"
     ) -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
@@ -148,4 +154,18 @@ pub fn calculate_product_price(context: &Context, product: &CartProduct) -> Fiel
     }
 
     Ok(product.price.0 * f64::from(product.quantity.0))
+}
+
+pub fn calculate_product_price_without_discounts(product: &CartProduct) -> f64 {
+    if product.quantity.0 <= 0 {
+        return 0f64;
+    }
+
+    product.price.0 * f64::from(product.quantity.0)
+}
+
+pub fn calculate_coupon_discount(context: &Context, product: &CartProduct) -> FieldResult<f64> {
+    let price_with_discounts = calculate_product_price(context, product)?;
+
+    Ok(calculate_product_price_without_discounts(product) - price_with_discounts)
 }
