@@ -18,6 +18,7 @@ use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::coupon::try_get_coupon;
 
 graphql_object!(GraphQLOrder: Context as "Order" |&self| {
     description: "Order info."
@@ -91,6 +92,32 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
 
     field subtotal() -> f64 as "Subtotal" {
         self.0.price.0 * f64::from(self.0.quantity.0)
+    }
+
+    field coupon(&executor) -> FieldResult<Option<Coupon>> as "Coupon added user" {
+        let context = executor.context();
+
+        if let Some(coupon_id) = self.0.coupon_id {
+            try_get_coupon(context, coupon_id)
+        } else {
+            Ok(None)
+        }
+    }
+
+    field coupon_percent() -> &Option<i32> as "Coupon percent" {
+        &self.0.coupon_percent
+    }
+
+    field coupon_discount() -> Option<f64> as "Coupon discount" {
+        self.0.coupon_discount.map(|c| c.0)
+    }
+
+    field product_discount() -> Option<f64> as "Product discount" {
+        self.0.product_discount.map(|c| c.0)
+    }
+
+    field total_amount() -> f64 as "Total amount" {
+        self.0.total_amount.0
     }
 
     field slug() -> &i32 as "Slug" {
