@@ -286,6 +286,20 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             .wait()
     }
 
+    field is_shipping_available(&executor)-> FieldResult<bool> as "Is shipping available" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Product.to_url(),
+            self.id,
+        );
+
+        let available_shipping = context.request::<Shipping>(Method::Get, url, None)
+            .wait()?;
+
+        Ok(!available_shipping.items.is_empty())
+    }
+
 });
 
 graphql_object!(Variants: Context as "BaseProductVariants" |&self| {
