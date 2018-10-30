@@ -38,7 +38,12 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         &self.price.0
     }
 
-    field subtotal() -> f64 as "Subtotal" {
+    field subtotal(&executor) -> FieldResult<f64> as "Subtotal with discounts" {
+        let context = executor.context();
+        calculate_product_price(context, &self)
+    }
+
+    field subtotal_without_discounts() -> f64 as "Subtotal without discounts" {
         self.price.0 * f64::from(self.quantity.0)
     }
 
@@ -89,7 +94,6 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         } else {
             Ok(None)
         }
-
     }
 
     field base_product(&executor,
@@ -127,3 +131,21 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
             .map(Some)
     }
 });
+
+pub fn calculate_product_price(context: &Context, product: &CartProduct) -> FieldResult<f64> {
+    if product.quantity.0 <= 0 {
+        return Ok(0f64);
+    }
+
+    if let Some(coupon_id) = product.coupon_id {
+        if let Some(coupon) = try_get_coupon(context, coupon_id)? {
+            // set discount only 1 product
+            let set_discount = (product.price.0 * 1f64) - ((product.price.0 / 100f64) * f64::from(coupon.percent));
+            let calc_price = set_discount + (product.price.0 * (f64::from(product.quantity.0) - 1f64));
+
+            return Ok(calc_price);
+        }
+    }
+
+    Ok(product.price.0 * f64::from(product.quantity.0))
+}

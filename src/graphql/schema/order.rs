@@ -135,7 +135,7 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
 
     field history(&executor,
         first = None : Option<i32> as "First edges",
-        after = None : Option<GraphqlID>  as "Offset form begining")
+        after = None : Option<GraphqlID>  as "Offset form beginning")
             -> FieldResult<Option<Connection<OrderHistoryItem, PageInfo>>> as "History" {
 
         let context = executor.context();

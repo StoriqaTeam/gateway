@@ -13,7 +13,7 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
-use stq_api::orders::{CartClient, CouponInfo, Order};
+use stq_api::orders::{CartClient, Order};
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
