@@ -69,27 +69,19 @@ graphql_object!(Cart: Context as "Cart" |&self| {
     field products_cost(&executor) -> FieldResult<f64> as "Products cost" {
         let context = executor.context();
 
-        let cost = self.inner.iter().try_fold(0.0, |acc, store| {
-            let store_products_cost =
-            calculate_products_price(context, &store.products)?;
-
-            Ok(acc + store_products_cost)
-        });
-
-        cost
+        calculate_cart_price(context, &self.inner)
     }
 
     field products_cost_without_discounts(&executor) -> f64 as "Products without cost" {
         let context = executor.context();
 
-        let cost = self.inner.iter().fold(0.0, |acc, store| {
-            let store_products_cost =
-            calculate_products_price_without_discounts(&store.products);
+        calculate_cart_price_without_discounts(&self.inner)
+    }
 
-            acc + store_products_cost
-        });
+    field coupons_discounts(&executor) -> FieldResult<f64> as "Coupons discounts" {
+        let context = executor.context();
 
-        cost
+        calculate_cart_coupons_discount(context, &self.inner)
     }
 
     field delivery_cost() -> f64 as "Delivery cost" {
@@ -99,23 +91,13 @@ graphql_object!(Cart: Context as "Cart" |&self| {
     field total_cost(&executor) -> FieldResult<f64> as "Total cost" {
         let context = executor.context();
 
-        self.inner.iter().try_fold(0.0, |acc, store| {
-            let store_products_cost =
-            calculate_products_price(context, &store.products)?;
-
-            Ok(acc + store_products_cost)
-        })
+        calculate_cart_price(context, &self.inner)
     }
 
-    field total_cost_without_discounts(&executor) -> FieldResult<f64> as "Total without cost" {
+    field total_cost_without_discounts(&executor) -> f64 as "Total without cost" {
         let context = executor.context();
 
-        self.inner.iter().try_fold(0.0, |acc, store| {
-            let store_products_cost =
-            calculate_products_price_without_discounts(&store.products);
-
-            Ok(acc + store_products_cost)
-        })
+        calculate_cart_price_without_discounts(&self.inner)
     }
 
     field total_count() -> i32 as "Total products count" {
@@ -145,3 +127,29 @@ graphql_object!(CartProductStore: Context as "CartProductStore" |&self| {
     }
 
 });
+
+pub fn calculate_cart_price(context: &Context, stores: &[CartStore]) -> FieldResult<f64> {
+    let cost = stores.iter().try_fold(0.0, |acc, store| {
+        let store_products_cost = calculate_products_price(context, &store.products)?;
+
+        Ok(acc + store_products_cost)
+    });
+
+    cost
+}
+
+pub fn calculate_cart_price_without_discounts(stores: &[CartStore]) -> f64 {
+    let cost = stores.iter().fold(0.0, |acc, store| {
+        let store_products_cost = calculate_products_price_without_discounts(&store.products);
+
+        acc + store_products_cost
+    });
+
+    cost
+}
+
+pub fn calculate_cart_coupons_discount(context: &Context, stores: &[CartStore]) -> FieldResult<f64> {
+    let price_with_discounts = calculate_cart_price(context, stores)?;
+
+    Ok(calculate_cart_price_without_discounts(stores) - price_with_discounts)
+}
