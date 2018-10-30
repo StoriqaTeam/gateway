@@ -250,6 +250,8 @@ pub struct BuyNowInput {
     pub receiver_phone: String,
     #[graphql(description = "Currency that will be paid")]
     pub currency: Currency,
+    #[graphql(description = "Coupon code added user")]
+    pub coupon_code: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
@@ -265,4 +267,5 @@ pub struct BuyNow {
     pub receiver_phone: String,
     pub pre_order: bool,
     pub pre_order_days: i32,
+    pub coupon: Option<Coupon>,
 }
