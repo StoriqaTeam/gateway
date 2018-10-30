@@ -11,7 +11,8 @@ use stq_static_resources::Translation;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use graphql::schema::cart::calculate_product_price;
+use graphql::schema::cart_product::calculate_product_price;
+use graphql::schema::coupon::get_coupon;
 
 graphql_object!(CartStore: Context as "CartStore" |&self| {
     description: "Cart store's info."
@@ -45,12 +46,23 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
     field products_cost(&executor) -> FieldResult<f64> as "Products cost" {
         let context = executor.context();
 
-        self.products.iter().try_fold(0.0, |acc, x| {
-            if x.selected {
-                Ok(acc + calculate_product_price(context, &x)?)
-            } else {
-                Ok(acc)
+        calculate_products_price(context, &self.products)
+    }
+
+    field products_cost_without_discounts() -> f64 as "Products without cost" {
+        calculate_products_price_without_discounts(&self.products)
+    }
+
+    field coupons(&executor) -> FieldResult<Vec<Coupon>> as "Coupons added user" {
+        let context = executor.context();
+
+        self.products.iter().try_fold(vec![], |mut acc, product| {
+            if let Some(coupon_id) = product.coupon_id {
+                let coupon = get_coupon(context, coupon_id)?;
+                acc.push(coupon);
             }
+
+            Ok(acc)
         })
     }
 
@@ -61,13 +73,11 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
     field total_cost(&executor) -> FieldResult<f64> as "Total cost" {
         let context = executor.context();
 
-        self.products.iter().try_fold(0.0, |acc, x| {
-            if x.selected {
-                Ok(acc + calculate_product_price(context, &x)?)
-            } else {
-                Ok(acc)
-            }
-        })
+        calculate_products_price(context, &self.products)
+    }
+
+    field total_cost_without_discounts() -> f64 as "Total without cost" {
+        calculate_products_price_without_discounts(&self.products)
     }
 
     field total_count() -> i32 as "Total products count" {
@@ -109,3 +119,23 @@ graphql_object!(Edge<CartStore>: Context as "CartStoresEdge" |&self| {
         &self.node
     }
 });
+
+pub fn calculate_products_price(context: &Context, products: &[CartProduct]) -> FieldResult<f64> {
+    products.iter().try_fold(0.0, |acc, x| {
+        if x.selected {
+            Ok(acc + calculate_product_price(context, &x)?)
+        } else {
+            Ok(acc)
+        }
+    })
+}
+
+pub fn calculate_products_price_without_discounts(products: &[CartProduct]) -> f64 {
+    products.iter().fold(0.0, |acc, x| {
+        if x.selected {
+            acc + x.price.0 * f64::from(x.quantity.0)
+        } else {
+            acc
+        }
+    })
+}
