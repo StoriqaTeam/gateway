@@ -1171,7 +1171,6 @@ graphql_object!(Mutation: Context |&self| {
                         Model::Product.to_url(),
                         input.product_id);
 
-
         let product_price = context.request::<Option<ProductSellerPrice>>(Method::Get, url, None)
         .wait()
             .and_then(|seller_price|{
@@ -1221,6 +1220,14 @@ graphql_object!(Mutation: Context |&self| {
             }
         })?;
 
+        let coupon = match input.coupon_code {
+            Some(code) => {
+                validate_coupon_by_code(context, code.clone(), store_id)?;
+                Some(get_coupon_by_code(context, code, store_id)?)
+            },
+            None => None,
+        };
+
         let buy_now = BuyNow {
             product_id: input.product_id.into(),
             store_id,
@@ -1233,6 +1240,7 @@ graphql_object!(Mutation: Context |&self| {
             currency: input.currency,
             pre_order: product.pre_order,
             pre_order_days: product.pre_order_days,
+            coupon,
         };
 
         let url = format!("{}/buy_now",
