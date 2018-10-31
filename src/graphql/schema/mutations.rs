@@ -22,8 +22,7 @@ use stq_static_resources::{Currency, Provider};
 use stq_types::{CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
-
-pub struct Mutation;
+use graphql::models::user::get_user_by_id;
 
 graphql_object!(Mutation: Context |&self| {
 
@@ -1302,6 +1301,12 @@ graphql_object!(Mutation: Context |&self| {
             None => None,
         };
 
+        let customer = get_user_by_id(
+            context.config.service_url(Service::Users),
+            context.http_client.clone(),
+            user.user_id
+        )?;
+
         let buy_now = BuyNow {
             product_id: input.product_id.into(),
             store_id,
@@ -1309,6 +1314,7 @@ graphql_object!(Mutation: Context |&self| {
             address: input.address_full,
             receiver_name: input.receiver_name,
             receiver_phone: input.receiver_phone,
+            receiver_email: customer.email,
             price: product_price,
             quantity: input.quantity.into(),
             currency: input.currency,
@@ -1749,3 +1755,5 @@ graphql_object!(Mutation: Context |&self| {
     }
 
 });
+
+pub struct Mutation;

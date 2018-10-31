@@ -265,6 +265,7 @@ pub struct BuyNow {
     pub quantity: Quantity,
     pub currency: Currency,
     pub receiver_phone: String,
+    pub receiver_email: String,
     pub pre_order: bool,
     pub pre_order_days: i32,
     pub coupon: Option<Coupon>,
