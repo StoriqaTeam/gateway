@@ -751,6 +751,38 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field deleteCouponFromCart(
+        &executor, input: DeleteCouponInCartInput as "Delete coupon from cart input."
+    ) -> FieldResult<Mock> as "Delete base product from coupon." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not set coupon in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let coupon_id = match (input.coupon_id, input.coupon_code) {
+            (Some(coupon_id), _) => CouponId(coupon_id),
+            (None, Some(by_code)) => {
+                get_coupon_by_code(context, by_code.coupon_code, by_code.store_id)?.id
+            },
+            (None, None) => return Err(FieldError::new(
+                "Could not delete coupon from cart could not identify coupon.",
+                graphql_value!({ "code": 100, "details": { "Either coupon_code or coupon_id must be present." }}),
+            ))
+        };
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.delete_coupon(customer, coupon_id).sync()?;
+        Ok(Mock{})
+    }
+
     field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<Cart>> as "Select product in cart." {
         let context = executor.context();
 
