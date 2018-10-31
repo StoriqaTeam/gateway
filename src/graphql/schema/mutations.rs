@@ -718,7 +718,11 @@ graphql_object!(Mutation: Context |&self| {
                 vec![]
             }
             })
-            .filter(|p| p.discount.is_none())
+            .filter(|p|
+                match p.discount {
+                    Some(discount) => discount < ZERO_DISCOUNT,
+                    None => true,
+                })
             .map(|p| p.id).collect::<HashSet<ProductId>>();
 
         let all_cart_products:HashSet<ProductId> = current_cart.iter().map(|c| c.product_id).collect();
