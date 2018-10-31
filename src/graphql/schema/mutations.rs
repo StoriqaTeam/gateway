@@ -19,7 +19,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{CouponCode, CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
+use stq_types::{CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 
@@ -753,7 +753,7 @@ graphql_object!(Mutation: Context |&self| {
 
     field deleteCouponFromCart(
         &executor, input: DeleteCouponInCartInput as "Delete coupon from cart input."
-    ) -> FieldResult<Mock> as "Delete base product from coupon." {
+    ) -> FieldResult<Option<Cart>> as "Delete base product from coupon." {
         let context = executor.context();
 
         let customer = if let Some(ref user) = context.user {
@@ -770,7 +770,7 @@ graphql_object!(Mutation: Context |&self| {
         let coupon_id = match (input.coupon_id, input.coupon_code) {
             (Some(coupon_id), _) => CouponId(coupon_id),
             (None, Some(by_code)) => {
-                get_coupon_by_code(context, by_code.coupon_code, by_code.store_id)?.id
+                get_coupon_by_code(context, CouponCode(by_code.coupon_code), StoreId(by_code.store_id))?.id
             },
             (None, None) => return Err(FieldError::new(
                 "Could not delete coupon from cart could not identify coupon.",
@@ -779,8 +779,19 @@ graphql_object!(Mutation: Context |&self| {
         };
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        rpc_client.delete_coupon(customer, coupon_id).sync()?;
-        Ok(Mock{})
+        let products: Vec<CartItem> = rpc_client.delete_coupon(customer, coupon_id).sync()?
+            .into_iter().collect();
+
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
+
+        let body = serde_json::to_string(&products)?;
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores| convert_to_cart(stores, &products))
+            .map(Some)
+            .wait()
     }
 
     field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<Cart>> as "Select product in cart." {
