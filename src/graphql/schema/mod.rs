@@ -3,6 +3,7 @@ pub mod admin;
 pub mod attribute;
 pub mod available_packages;
 pub mod base_product;
+pub mod buy_now;
 pub mod cart;
 pub mod cart_product;
 pub mod cart_store;
