@@ -1,16 +1,9 @@
 use std::time::SystemTime;
 
 use chrono::NaiveDate;
-use failure::Error as FailureError;
-use futures::Future;
-use hyper::header::Authorization;
-use hyper::Headers;
-use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_http::client::ClientHandle as HttpClientHandle;
-use stq_routes::model::Model;
 use stq_static_resources::{Device, Gender, Provider};
 use stq_types::{SagaId, UserId};
 
@@ -177,18 +170,4 @@ pub struct SearchUserInput {
     pub last_name: Option<String>,
     #[graphql(description = "Blocked status of a user.")]
     pub is_blocked: Option<bool>,
-}
-
-pub fn get_user_by_id(users_url: String, client: HttpClientHandle, user_id: UserId) -> Result<User, FieldError> {
-    let url = format!("{}/{}/{}", users_url, Model::User.to_url(), user_id);
-    let mut headers = Headers::new();
-    headers.set(Authorization(user_id.to_string()));
-    client
-        .request::<Option<User>>(Method::Get, url, None, Some(headers))
-        .map_err(FailureError::from)
-        .wait()?
-        .ok_or(FieldError::new(
-            "User is not found in users microservice.",
-            graphql_value!({ "code": 100, "details": { "User with such id does not exist in users microservice." }}),
-        ))
 }
