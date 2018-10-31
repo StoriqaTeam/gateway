@@ -19,7 +19,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
+use stq_types::{CouponCode, CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 
@@ -675,8 +675,10 @@ graphql_object!(Mutation: Context |&self| {
             ));
         };
 
-        validate_coupon_by_code(context, input.coupon_code.clone(), input.store_id)?;
-        let coupon = get_coupon_by_code(context, input.coupon_code.clone(), input.store_id)?;
+        let coupon_code = CouponCode(input.coupon_code.clone());
+        let store_id = StoreId(input.store_id);
+        validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
+        let coupon = get_coupon_by_code(context, coupon_code, store_id)?;
 
         // validate scope coupon
         let scope_support = coupon.scope_support()?;
@@ -684,10 +686,26 @@ graphql_object!(Mutation: Context |&self| {
             return Ok(None);
         }
 
-        // validate products
         let rpc_client = context.get_rest_api_client(Service::Orders);
         let current_cart = rpc_client.get_cart(customer).sync()?;
 
+        // validate used coupon
+        let coupon_apply = current_cart.iter().any(|c| {
+                if let Some(coupon_id) = c.coupon_id {
+                    coupon_id == coupon.id
+                } else {
+                    false
+                }
+        });
+
+        if coupon_apply {
+            return Err(FieldError::new(
+                "Coupon not set",
+                graphql_value!({ "code": 400, "details": { "coupon already applied" }}),
+            ));
+        }
+
+        // validate products
         let url = format!("{}/{}/{}/base_products",
             context.config.service_url(Service::Stores),
             Model::Coupon.to_url(),
@@ -704,8 +722,14 @@ graphql_object!(Mutation: Context |&self| {
             .map(|p| p.id).collect::<HashSet<ProductId>>();
 
         let all_cart_products:HashSet<ProductId> = current_cart.iter().map(|c| c.product_id).collect();
-
         let products_for_cart:HashSet<ProductId> = all_cart_products.intersection(&all_support_products).cloned().collect();
+
+        if products_for_cart.is_empty() {
+            return Err(FieldError::new(
+                "Coupon not set",
+                graphql_value!({ "code": 400, "details": { "no products found for coupon usage" }}),
+            ));
+        }
 
         for product_id in products_for_cart {
             rpc_client.add_coupon(customer, product_id, coupon.id).sync()?;
@@ -1224,8 +1248,9 @@ graphql_object!(Mutation: Context |&self| {
 
         let coupon = match input.coupon_code {
             Some(code) => {
-                validate_coupon_by_code(context, code.clone(), store_id)?;
-                Some(get_coupon_by_code(context, code, store_id)?)
+                let coupon_code = CouponCode(code);
+                validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
+                Some(get_coupon_by_code(context, coupon_code, store_id)?)
             },
             None => None,
         };
