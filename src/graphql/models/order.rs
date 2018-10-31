@@ -52,6 +52,7 @@ pub struct CreateOrder {
     pub prices: CartProductWithPriceHash,
     pub currency: Currency,
     pub receiver_phone: String,
+    pub receiver_email: String,
     pub coupons: HashMap<CouponId, Coupon>,
 }
 
