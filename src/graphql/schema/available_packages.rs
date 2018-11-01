@@ -1,9 +1,13 @@
 //! File containing wizard store object of graphql schema
+use futures::Future;
+use hyper::Method;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
+use stq_types::{BaseProductId, CompanyPackageId};
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -87,3 +91,29 @@ graphql_object!(AvailableShippingForUser: Context as "AvailableShippingForUser" 
     }
 
 });
+
+pub fn get_available_package_for_user(
+    context: &Context,
+    base_product_id: BaseProductId,
+    company_package_id: CompanyPackageId,
+) -> FieldResult<AvailablePackageForUser> {
+    let url = format!(
+        "{}/{}/{}/{}/{}/{}",
+        context.config.service_url(Service::Delivery),
+        Model::AvailablePackageForUser.to_url(),
+        Model::Product.to_url(),
+        base_product_id,
+        Model::CompanyPackage.to_url(),
+        company_package_id,
+    );
+
+    context
+        .request::<Option<AvailablePackageForUser>>(Method::Get, url, None)
+        .wait()?
+        .ok_or_else(|| {
+            FieldError::new(
+                "Could not AvailablePackageForUser.",
+                graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
+            )
+        })
+}

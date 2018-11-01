@@ -11,7 +11,7 @@ use stq_static_resources::Translation;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use graphql::schema::cart_product::calculate_product_price;
+use graphql::schema::cart_product::{calculate_delivery_cost, calculate_product_price};
 use graphql::schema::coupon::get_coupon;
 
 graphql_object!(CartStore: Context as "CartStore" |&self| {
@@ -72,18 +72,22 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
         calculate_coupons_discount(context, &self.products)
     }
 
-    field delivery_cost() -> f64 as "Delivery cost" {
-        0.0
+    field delivery_cost(&executor) -> FieldResult<f64> as "Delivery cost" {
+        let context = executor.context();
+
+        calculate_products_delivery_cost(context, &self.products)
     }
 
     field total_cost(&executor) -> FieldResult<f64> as "Total cost" {
         let context = executor.context();
 
-        calculate_products_price(context, &self.products)
+        Ok(calculate_products_price(context, &self.products)? + calculate_products_delivery_cost(context, &self.products)?)
     }
 
-    field total_cost_without_discounts() -> f64 as "Total without cost" {
-        calculate_products_price_without_discounts(&self.products)
+    field total_cost_without_discounts(&executor) -> FieldResult<f64> as "Total without cost" {
+        let context = executor.context();
+
+        Ok(calculate_products_price_without_discounts(&self.products) + calculate_products_delivery_cost(context, &self.products)?)
     }
 
     field total_count() -> i32 as "Total products count" {
@@ -150,4 +154,14 @@ pub fn calculate_coupons_discount(context: &Context, products: &[CartProduct]) -
     let price_with_discounts = calculate_products_price(context, products)?;
 
     Ok(calculate_products_price_without_discounts(products) - price_with_discounts)
+}
+
+pub fn calculate_products_delivery_cost(context: &Context, products: &[CartProduct]) -> FieldResult<f64> {
+    products.iter().try_fold(0.0, |acc, x| {
+        if x.selected {
+            Ok(acc + calculate_delivery_cost(context, &x)?)
+        } else {
+            Ok(acc)
+        }
+    })
 }

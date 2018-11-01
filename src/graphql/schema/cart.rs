@@ -13,7 +13,7 @@ use stq_types::UserId;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use graphql::schema::cart_store::{calculate_products_price, calculate_products_price_without_discounts};
+use graphql::schema::cart_store::{calculate_products_delivery_cost, calculate_products_price, calculate_products_price_without_discounts};
 
 graphql_object!(Cart: Context as "Cart" |&self| {
     description: "Users cart"
@@ -84,20 +84,22 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         calculate_cart_coupons_discount(context, &self.inner)
     }
 
-    field delivery_cost() -> f64 as "Delivery cost" {
-        0.0
+    field delivery_cost(&executor) -> FieldResult<f64> as "Delivery cost" {
+        let context = executor.context();
+
+        calculate_cart_delivery_cost(context, &self.inner)
     }
 
     field total_cost(&executor) -> FieldResult<f64> as "Total cost" {
         let context = executor.context();
 
-        calculate_cart_price(context, &self.inner)
+        Ok(calculate_cart_price(context, &self.inner)? + calculate_cart_delivery_cost(context, &self.inner)?)
     }
 
-    field total_cost_without_discounts(&executor) -> f64 as "Total without cost" {
+    field total_cost_without_discounts(&executor) -> FieldResult<f64> as "Total without cost" {
         let context = executor.context();
 
-        calculate_cart_price_without_discounts(&self.inner)
+        Ok(calculate_cart_price_without_discounts(&self.inner) + calculate_cart_delivery_cost(context, &self.inner)?)
     }
 
     field total_count() -> i32 as "Total products count" {
@@ -152,4 +154,14 @@ pub fn calculate_cart_coupons_discount(context: &Context, stores: &[CartStore]) 
     let price_with_discounts = calculate_cart_price(context, stores)?;
 
     Ok(calculate_cart_price_without_discounts(stores) - price_with_discounts)
+}
+
+pub fn calculate_cart_delivery_cost(context: &Context, stores: &[CartStore]) -> FieldResult<f64> {
+    let cost = stores.iter().try_fold(0.0, |acc, store| {
+        let store_products_cost = calculate_products_delivery_cost(context, &store.products)?;
+
+        Ok(acc + store_products_cost)
+    });
+
+    cost
 }
