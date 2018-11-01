@@ -83,7 +83,7 @@ graphql_object!(Coupon: Context as "Coupon" |&self| {
 
 });
 
-pub fn validate_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &Context, coupon_code: C, store_id: S) -> FieldResult<()> {
+pub fn validate_coupon_by_code(context: &Context, coupon_code: CouponCode, store_id: StoreId) -> FieldResult<()> {
     // Validate coupon
     let url = format!(
         "{}/{}/validate/code",
@@ -92,8 +92,8 @@ pub fn validate_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &
     );
 
     let search_code = CouponsSearchCodePayload {
-        code: coupon_code.into(),
-        store_id: store_id.into(),
+        code: coupon_code,
+        store_id: store_id,
     };
 
     let body = serde_json::to_string(&search_code)?;
@@ -111,9 +111,7 @@ pub fn validate_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &
     check_result.validate()
 }
 
-pub fn validate_coupon<C: Into<CouponId>>(context: &Context, coupon_id_arg: C) -> FieldResult<()> {
-    let coupon_id = coupon_id_arg.into();
-
+pub fn validate_coupon(context: &Context, coupon_id: CouponId) -> FieldResult<()> {
     // Validate coupon
     let url = format!(
         "{}/{}/{}/validate",
@@ -135,7 +133,7 @@ pub fn validate_coupon<C: Into<CouponId>>(context: &Context, coupon_id_arg: C) -
     check_result.validate()
 }
 
-pub fn get_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &Context, coupon_code: C, store_id: S) -> FieldResult<Coupon> {
+pub fn get_coupon_by_code(context: &Context, coupon_code: CouponCode, store_id: StoreId) -> FieldResult<Coupon> {
     let url = format!(
         "{}/{}/search/code",
         context.config.service_url(Service::Stores),
@@ -143,8 +141,8 @@ pub fn get_coupon_by_code<C: Into<CouponCode>, S: Into<StoreId>>(context: &Conte
     );
 
     let search_code = CouponsSearchCodePayload {
-        code: coupon_code.into(),
-        store_id: store_id.into(),
+        code: coupon_code,
+        store_id: store_id,
     };
 
     let body = serde_json::to_string(&search_code)?;

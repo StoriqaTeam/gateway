@@ -66,6 +66,12 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
         })
     }
 
+    field coupons_discount(&executor) -> FieldResult<f64> as "Coupons discount" {
+        let context = executor.context();
+
+        calculate_coupons_discount(context, &self.products)
+    }
+
     field delivery_cost() -> f64 as "Delivery cost" {
         0.0
     }
@@ -138,4 +144,10 @@ pub fn calculate_products_price_without_discounts(products: &[CartProduct]) -> f
             acc
         }
     })
+}
+
+pub fn calculate_coupons_discount(context: &Context, products: &[CartProduct]) -> FieldResult<f64> {
+    let price_with_discounts = calculate_products_price(context, products)?;
+
+    Ok(calculate_products_price_without_discounts(products) - price_with_discounts)
 }

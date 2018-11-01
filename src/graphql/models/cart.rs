@@ -85,6 +85,27 @@ pub struct SetCouponInCartInput {
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Delete coupon from cart input object")]
+pub struct DeleteCouponInCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Coupon code and store id.")]
+    pub coupon_code: Option<DeleteCouponByCode>,
+    #[graphql(description = "Coupon raw id.")]
+    pub coupon_id: Option<i32>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Delete coupon from cart by code and store id input object")]
+pub struct DeleteCouponByCode {
+    #[graphql(description = "Coupon code.")]
+    pub coupon_code: String,
+    #[graphql(description = "Store raw id.")]
+    pub store_id: i32,
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Set delivery method in cart input object")]
 pub struct SetDeliveryMethodInCartInput {
     #[graphql(description = "Client mutation id.")]

@@ -13,14 +13,19 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
-use errors::into_graphql;
 use stq_api::orders::{CartClient, Order};
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{CompanyPackageId, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
+use stq_types::{
+    CartItem, CompanyPackageId, CouponCode, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId,
+    WarehouseId,
+};
+
+use errors::into_graphql;
+use graphql::schema::user::get_user_by_id;
 
 pub struct Mutation;
 
@@ -674,8 +679,10 @@ graphql_object!(Mutation: Context |&self| {
             ));
         };
 
-        validate_coupon_by_code(context, input.coupon_code.clone(), input.store_id)?;
-        let coupon = get_coupon_by_code(context, input.coupon_code.clone(), input.store_id)?;
+        let coupon_code = CouponCode(input.coupon_code.clone());
+        let store_id = StoreId(input.store_id);
+        validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
+        let coupon = get_coupon_by_code(context, coupon_code, store_id)?;
 
         // validate scope coupon
         let scope_support = coupon.scope_support()?;
@@ -683,10 +690,26 @@ graphql_object!(Mutation: Context |&self| {
             return Ok(None);
         }
 
-        // validate products
         let rpc_client = context.get_rest_api_client(Service::Orders);
         let current_cart = rpc_client.get_cart(customer).sync()?;
 
+        // validate used coupon
+        let coupon_apply = current_cart.iter().any(|c| {
+                if let Some(coupon_id) = c.coupon_id {
+                    coupon_id == coupon.id
+                } else {
+                    false
+                }
+        });
+
+        if coupon_apply {
+            return Err(FieldError::new(
+                "Coupon not set",
+                graphql_value!({ "code": 400, "details": { "coupon already applied" }}),
+            ));
+        }
+
+        // validate products
         let url = format!("{}/{}/{}/base_products",
             context.config.service_url(Service::Stores),
             Model::Coupon.to_url(),
@@ -698,11 +721,23 @@ graphql_object!(Mutation: Context |&self| {
             } else {
                 vec![]
             }
-            }).map(|p| p.id).collect::<HashSet<ProductId>>();
+            })
+            .filter(|p|
+                match p.discount {
+                    Some(discount) => discount < ZERO_DISCOUNT,
+                    None => true,
+                })
+            .map(|p| p.id).collect::<HashSet<ProductId>>();
 
         let all_cart_products:HashSet<ProductId> = current_cart.iter().map(|c| c.product_id).collect();
-
         let products_for_cart:HashSet<ProductId> = all_cart_products.intersection(&all_support_products).cloned().collect();
+
+        if products_for_cart.is_empty() {
+            return Err(FieldError::new(
+                "Coupon not set",
+                graphql_value!({ "code": 400, "details": { "no products found for coupon usage" }}),
+            ));
+        }
 
         for product_id in products_for_cart {
             rpc_client.add_coupon(customer, product_id, coupon.id).sync()?;
@@ -710,6 +745,49 @@ graphql_object!(Mutation: Context |&self| {
 
         let products: Vec<_> = rpc_client.get_cart(customer).sync()
             .map_err(into_graphql)?
+            .into_iter().collect();
+
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
+
+        let body = serde_json::to_string(&products)?;
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores| convert_to_cart(stores, &products))
+            .map(Some)
+            .wait()
+    }
+
+    field deleteCouponFromCart(
+        &executor, input: DeleteCouponInCartInput as "Delete coupon from cart input."
+    ) -> FieldResult<Option<Cart>> as "Delete base product from coupon." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not set coupon in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let coupon_id = match (input.coupon_id, input.coupon_code) {
+            (Some(coupon_id), _) => CouponId(coupon_id),
+            (None, Some(by_code)) => {
+                get_coupon_by_code(context, CouponCode(by_code.coupon_code), StoreId(by_code.store_id))?.id
+            },
+            (None, None) => return Err(FieldError::new(
+                "Could not delete coupon from cart could not identify coupon.",
+                graphql_value!({ "code": 100, "details": { "Either coupon_code or coupon_id must be present." }}),
+            ))
+        };
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products: Vec<CartItem> = rpc_client.delete_coupon(customer, coupon_id).sync()?
             .into_iter().collect();
 
         let url = format!("{}/{}/cart",
@@ -1232,11 +1310,14 @@ graphql_object!(Mutation: Context |&self| {
             })
             .collect::<HashMap<CouponId, Coupon>>();
 
+        let customer = get_user_by_id(context, user.user_id)?;
+
         let create_order = CreateOrder {
             customer_id: user.user_id,
             address: input.address_full,
             receiver_name: input.receiver_name,
             receiver_phone: input.receiver_phone,
+            receiver_email: customer.email,
             prices: products_with_prices,
             currency: input.currency,
             coupons: coupons_info,
@@ -1266,7 +1347,6 @@ graphql_object!(Mutation: Context |&self| {
                         context.config.service_url(Service::Stores),
                         Model::Product.to_url(),
                         input.product_id);
-
 
         let product_price = context.request::<Option<ProductSellerPrice>>(Method::Get, url, None)
         .wait()
@@ -1317,6 +1397,17 @@ graphql_object!(Mutation: Context |&self| {
             }
         })?;
 
+        let coupon = match input.coupon_code {
+            Some(code) => {
+                let coupon_code = CouponCode(code);
+                validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
+                Some(get_coupon_by_code(context, coupon_code, store_id)?)
+            },
+            None => None,
+        };
+
+        let customer = get_user_by_id(context, user.user_id)?;
+
         let buy_now = BuyNow {
             product_id: input.product_id.into(),
             store_id,
@@ -1324,11 +1415,13 @@ graphql_object!(Mutation: Context |&self| {
             address: input.address_full,
             receiver_name: input.receiver_name,
             receiver_phone: input.receiver_phone,
+            receiver_email: customer.email,
             price: product_price,
             quantity: input.quantity.into(),
             currency: input.currency,
             pre_order: product.pre_order,
             pre_order_days: product.pre_order_days,
+            coupon,
         };
 
         let url = format!("{}/buy_now",

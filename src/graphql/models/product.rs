@@ -4,6 +4,8 @@ use juniper::ID as GraphqlID;
 use stq_static_resources::Currency;
 use stq_types::{BaseProductId, ProductId, ProductPrice};
 
+pub const ZERO_DISCOUNT: f64 = 0.0001f64;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Product {
     pub id: ProductId,
