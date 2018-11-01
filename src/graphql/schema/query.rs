@@ -309,15 +309,17 @@ graphql_object!(Query: Context |&self| {
             _ => None,
         };
 
-        let company_package = match company_package_id {
+        let package = match company_package_id {
             Some(company_package_id) => {
-                let url = format!("{}/{}/{}",
+                let url = format!("{}/available_packages_for_user/{}/{}/{}/{}",
                     context.config.service_url(Service::Delivery),
+                    Model::Product.to_url(),
+                    product.base_product_id,
                     Model::CompanyPackage.to_url(),
                     company_package_id,
                 );
 
-                let result = context.request::<Option<CompaniesPackages>>(Method::Get, url, None).wait()?
+                let result = context.request::<Option<AvailablePackageForUser>>(Method::Get, url, None).wait()?
             .ok_or_else(|| FieldError::new(
                 "Could not calculate delivery for buy now values.",
                 graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
@@ -332,7 +334,7 @@ graphql_object!(Query: Context |&self| {
             product,
             quantity: quantity.into(),
             coupon,
-            company_package,
+            package,
         })
     }
 
