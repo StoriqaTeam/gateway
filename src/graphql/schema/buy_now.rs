@@ -30,6 +30,10 @@ graphql_object!(BuyNowCheckout: Context as "BuyNowCheckout" |&self| {
     field total_count() -> &i32 as "Total products count" {
         &self.quantity.0
     }
+
+    field delivery_cost() -> f64 as "Delivery cost" {
+        0.0
+    }
 });
 
 fn calculate_cost(buy_now: &BuyNowCheckout) -> FieldResult<f64> {

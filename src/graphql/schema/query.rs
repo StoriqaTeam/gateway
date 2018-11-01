@@ -259,7 +259,8 @@ graphql_object!(Query: Context |&self| {
 
     field calculate_buy_now(&executor, product_id: i32 as "Product raw id",
                             quantity: i32 as "Quantity",
-                            coupon_code: Option<String> as "Coupon code") -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
+                            coupon_code: Option<String> as "Coupon code",
+                            company_package_id: Option<i32> as "Select available package raw id") -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
 
         let context = executor.context();
 
@@ -305,13 +306,33 @@ graphql_object!(Query: Context |&self| {
                 validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
                 Some(get_coupon_by_code(context, coupon_code, store_id)?)
             },
-            None => None,
+            _ => None,
+        };
+
+        let company_package = match company_package_id {
+            Some(company_package_id) => {
+                let url = format!("{}/{}/{}",
+                    context.config.service_url(Service::Delivery),
+                    Model::CompanyPackage.to_url(),
+                    company_package_id,
+                );
+
+                let result = context.request::<Option<CompaniesPackages>>(Method::Get, url, None).wait()?
+            .ok_or_else(|| FieldError::new(
+                "Could not calculate delivery for buy now values.",
+                graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
+            ))?;
+
+                Some(result)
+            },
+            _ => None,
         };
 
         Ok(BuyNowCheckout {
             product,
             quantity: quantity.into(),
             coupon,
+            company_package,
         })
     }
 
