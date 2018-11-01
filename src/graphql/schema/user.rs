@@ -16,7 +16,7 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Gender, Provider};
 use stq_types::{OrderIdentifier, OrderSlug};
-use stq_types::{WarehouseIdentifier, WarehouseSlug};
+use stq_types::{UserId, WarehouseIdentifier, WarehouseSlug};
 
 use super::*;
 use errors::into_graphql;
@@ -573,3 +573,15 @@ graphql_object!(Edge<CartProduct>: Context as "CartProductEdge" |&self| {
         &self.node
     }
 });
+
+pub fn get_user_by_id(context: &Context, user_id: UserId) -> Result<User, FieldError> {
+    let users_url = context.config.service_url(Service::Users);
+    let url = format!("{}/{}/{}", users_url, Model::User.to_url(), user_id);
+    context
+        .request::<Option<User>>(Method::Get, url, None)
+        .wait()?
+        .ok_or(FieldError::new(
+            "User is not found in users microservice.",
+            graphql_value!({ "code": 100, "details": { "User with such id does not exist in users microservice." }}),
+        ))
+}

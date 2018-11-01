@@ -148,6 +148,10 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         &self.0.receiver_phone
     }
 
+    field receiver_email() -> &str as "Receiver email" {
+        &self.0.receiver_email
+    }
+
     field address_full() -> Address as "Full address" {
         self.0.address.clone().into()
     }

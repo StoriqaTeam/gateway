@@ -22,6 +22,7 @@ use stq_static_resources::{Currency, Provider};
 use stq_types::{CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
+use graphql::schema::user::get_user_by_id;
 
 pub struct Mutation;
 
@@ -1209,11 +1210,14 @@ graphql_object!(Mutation: Context |&self| {
             })
             .collect::<HashMap<CouponId, Coupon>>();
 
+        let customer = get_user_by_id(context, user.user_id)?;
+
         let create_order = CreateOrder {
             customer_id: user.user_id,
             address: input.address_full,
             receiver_name: input.receiver_name,
             receiver_phone: input.receiver_phone,
+            receiver_email: customer.email,
             prices: products_with_prices,
             currency: input.currency,
             coupons: coupons_info,
@@ -1302,6 +1306,8 @@ graphql_object!(Mutation: Context |&self| {
             None => None,
         };
 
+        let customer = get_user_by_id(context, user.user_id)?;
+
         let buy_now = BuyNow {
             product_id: input.product_id.into(),
             store_id,
@@ -1309,6 +1315,7 @@ graphql_object!(Mutation: Context |&self| {
             address: input.address_full,
             receiver_name: input.receiver_name,
             receiver_phone: input.receiver_phone,
+            receiver_email: customer.email,
             price: product_price,
             quantity: input.quantity.into(),
             currency: input.currency,
