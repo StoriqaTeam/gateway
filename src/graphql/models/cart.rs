@@ -1,7 +1,10 @@
 use std::collections::{BTreeMap, HashMap};
 
 use stq_static_resources::Translation;
-use stq_types::{BaseProductId, CartItem, CouponId, ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId, UserId};
+use stq_types::{
+    BaseProductId, CartItem, CompanyPackageId, CouponId, DeliveryMethodId, ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId,
+    UserId,
+};
 
 use super::*;
 
@@ -29,6 +32,7 @@ pub struct CartProduct {
     pub pre_order: bool,
     pub pre_order_days: i32,
     pub coupon_id: Option<CouponId>,
+    pub company_package_id: Option<CompanyPackageId>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -99,6 +103,28 @@ pub struct DeleteCouponByCode {
     pub coupon_code: String,
     #[graphql(description = "Store raw id.")]
     pub store_id: i32,
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Set delivery method in cart input object")]
+pub struct SetDeliveryMethodInCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Product raw id.")]
+    pub product_id: i32,
+    #[graphql(description = "Company package id.")]
+    pub company_package_id: i32,
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Remove delivery method from cart input object")]
+pub struct RemoveDeliveryMethodFromCartInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Product raw id.")]
+    pub product_id: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -201,11 +227,16 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                             Some(
                                 v.iter_mut()
                                     .map(|variant| {
-                                        let (quantity, selected, comment, coupon_id) = products
+                                        let (quantity, selected, comment, coupon_id, company_package_id) = products
                                             .iter()
                                             .find(|v| v.product_id == variant.id)
-                                            .map(|v| (v.quantity, v.selected, v.comment.clone(), v.coupon_id))
-                                            .unwrap_or_default();
+                                            .map(|v| {
+                                                let company_package_id = match v.delivery_method_id {
+                                                    Some(DeliveryMethodId::Package { id }) => Some(id),
+                                                    _ => None,
+                                                };
+                                                (v.quantity, v.selected, v.comment.clone(), v.coupon_id, company_package_id)
+                                            }).unwrap_or_default();
 
                                         let price = if let Some(discount) = variant.discount {
                                             variant.price.0 * (1.0 - discount)
@@ -225,6 +256,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                             pre_order: variant.pre_order,
                                             pre_order_days: variant.pre_order_days,
                                             coupon_id,
+                                            company_package_id,
                                         }
                                     }).collect::<Vec<CartProduct>>(),
                             )

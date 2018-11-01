@@ -150,7 +150,7 @@ pub struct Products {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Pickups {
-    pub id: i32,
+    pub id: PickupId,
     pub base_product_id: BaseProductId,
     pub store_id: StoreId,
     pub pickup: bool,
@@ -180,6 +180,7 @@ pub struct InternationalShippingProducts {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PickupsOutput {
+    pub id: PickupId,
     pub pickup: bool,
     pub price: Option<f64>,
 }
@@ -209,6 +210,7 @@ impl From<Shipping> for ShippingOutput {
         }
 
         let pickup = shipping.pickup.map(|pickups| PickupsOutput {
+            id: pickups.id,
             pickup: pickups.pickup,
             price: pickups.price.map(|price| price.0),
         });
