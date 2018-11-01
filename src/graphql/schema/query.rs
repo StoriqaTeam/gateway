@@ -8,6 +8,7 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
+use graphql::schema::coupon::*;
 use stq_api::orders::{CartClient, OrderClient};
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
@@ -15,7 +16,7 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::Currency;
 use stq_static_resources::{Language, LanguageGraphQl, OrderState, TemplateVariant};
-use stq_types::{OrderId, WarehouseId};
+use stq_types::{CouponCode, OrderId, StoreId, WarehouseId};
 
 use super::*;
 use errors::into_graphql;
@@ -254,6 +255,87 @@ graphql_object!(Query: Context |&self| {
 
         context.request::<Option<Country>>(Method::Get, url, None)
             .wait()
+    }
+
+    field calculate_buy_now(&executor, product_id: i32 as "Product raw id",
+                            quantity: i32 as "Quantity",
+                            coupon_code: Option<String> as "Coupon code",
+                            company_package_id: Option<i32> as "Select available package raw id") -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
+
+        let context = executor.context();
+
+        let url_store_id = format!("{}/{}/store_id?product_id={}",
+                        context.config.service_url(Service::Stores),
+                        Model::Product.to_url(),
+                        product_id);
+
+        let store_id = context.request::<Option<StoreId>>(Method::Get, url_store_id, None)
+        .wait()
+            .and_then(|id|{
+            if let Some(id) = id {
+                Ok(id)
+            } else {
+                Err(FieldError::new(
+                    "Could not find store_id from product id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                    ))
+            }
+        })?;
+
+        let url_product = format!("{}/{}/{}",
+                        context.config.service_url(Service::Stores),
+                        Model::Product.to_url(),
+                        product_id);
+
+        let product = context.request::<Option<Product>>(Method::Get, url_product, None)
+        .wait()
+            .and_then(|value|{
+            if let Some(value) = value {
+                Ok(value)
+            } else {
+                Err(FieldError::new(
+                    "Could not find Product from product id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                    ))
+            }
+        })?;
+
+        let coupon = match coupon_code {
+            Some(code) => {
+                let coupon_code = CouponCode(code);
+                validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
+                Some(get_coupon_by_code(context, coupon_code, store_id)?)
+            },
+            _ => None,
+        };
+
+        let package = match company_package_id {
+            Some(company_package_id) => {
+                let url = format!("{}/available_packages_for_user/{}/{}/{}/{}",
+                    context.config.service_url(Service::Delivery),
+                    Model::Product.to_url(),
+                    product.base_product_id,
+                    Model::CompanyPackage.to_url(),
+                    company_package_id,
+                );
+
+                let result = context.request::<Option<AvailablePackageForUser>>(Method::Get, url, None).wait()?
+            .ok_or_else(|| FieldError::new(
+                "Could not calculate delivery for buy now values.",
+                graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
+            ))?;
+
+                Some(result)
+            },
+            _ => None,
+        };
+
+        Ok(BuyNowCheckout {
+            product,
+            quantity: quantity.into(),
+            coupon,
+            package,
+        })
     }
 
     field currency_exchange(&executor) -> FieldResult<Option<Vec<CurrencyExchange>>> as "Fetches currency exchange." {
