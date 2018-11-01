@@ -148,7 +148,7 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         &self.0.receiver_phone
     }
 
-    field reveiver_email() -> &str as "Receiver email" {
+    field receiver_email() -> &str as "Receiver email" {
         &self.0.receiver_email
     }
 
