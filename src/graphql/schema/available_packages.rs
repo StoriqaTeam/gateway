@@ -53,7 +53,11 @@ graphql_object!(AvailablePackagesOutput: Context as "AvailablePackagesOutput" |&
 graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&self| {
     description: "Available Packages info."
 
-    field company_package_id() -> GraphqlID as "Base64 Unique id"{
+    field id() -> GraphqlID as "Base64 Unique id" {
+        ID::new(Service::Delivery, Model::AvailablePackageForUser, self.shipping_id).to_string().into()
+    }
+
+    field deprecated "use id" company_package_id() -> GraphqlID as "Base64 Unique id for company package"{
         ID::new(Service::Delivery, Model::CompanyPackage, self.id.0).to_string().into()
     }
 
@@ -72,7 +76,6 @@ graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&
     field price() -> Option<f64> as "Package price." {
         self.price.clone().map(|p| p.0)
     }
-
 });
 
 graphql_object!(AvailableShippingForUser: Context as "AvailableShippingForUser" |&self| {
