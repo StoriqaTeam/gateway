@@ -11,6 +11,7 @@ use stq_static_resources::Translation;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::available_packages::*;
 use graphql::schema::coupon::*;
 
 graphql_object!(CartProduct: Context as "CartProduct" |&self| {
@@ -47,8 +48,10 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         self.price.0 * f64::from(self.quantity.0)
     }
 
-    field delivery_cost() -> f64 as "Delivery cost" {
-        0.0
+    field delivery_cost(&executor) -> FieldResult<f64> as "Delivery cost" {
+        let context = executor.context();
+
+        calculate_delivery_cost(context, &self)
     }
 
     field photo_main() -> &Option<String> as "Photo main" {
@@ -184,4 +187,16 @@ pub fn calculate_coupon_discount(context: &Context, product: &CartProduct) -> Fi
     let price_with_discounts = calculate_product_price(context, product)?;
 
     Ok(calculate_product_price_without_discounts(product) - price_with_discounts)
+}
+
+pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> FieldResult<f64> {
+    if let Some(company_package_id) = product.company_package_id {
+        let package = get_available_package_for_user(context, product.base_product_id, company_package_id)?;
+
+        if let Some(price) = package.price {
+            return Ok(price.0);
+        }
+    }
+
+    Ok(0.0f64)
 }

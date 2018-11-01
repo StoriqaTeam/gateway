@@ -16,12 +16,13 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::Currency;
 use stq_static_resources::{Language, LanguageGraphQl, OrderState, TemplateVariant};
-use stq_types::{CouponCode, OrderId, StoreId, WarehouseId};
+use stq_types::{CompanyPackageId, CouponCode, OrderId, StoreId, WarehouseId};
 
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use schema::available_packages::get_available_package_for_user;
 
 pub const QUERY_NODE_ID: i32 = 1;
 
@@ -311,19 +312,7 @@ graphql_object!(Query: Context |&self| {
 
         let package = match company_package_id {
             Some(company_package_id) => {
-                let url = format!("{}/available_packages_for_user/{}/{}/{}/{}",
-                    context.config.service_url(Service::Delivery),
-                    Model::Product.to_url(),
-                    product.base_product_id,
-                    Model::CompanyPackage.to_url(),
-                    company_package_id,
-                );
-
-                let result = context.request::<Option<AvailablePackageForUser>>(Method::Get, url, None).wait()?
-            .ok_or_else(|| FieldError::new(
-                "Could not calculate delivery for buy now values.",
-                graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
-            ))?;
+                let result = get_available_package_for_user(context, product.base_product_id, CompanyPackageId(company_package_id))?;
 
                 Some(result)
             },
