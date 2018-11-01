@@ -13,15 +13,14 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
+use errors::into_graphql;
 use stq_api::orders::{CartClient, Order};
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
-
-use errors::into_graphql;
+use stq_types::{CompanyPackageId, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 pub struct Mutation;
 
@@ -757,7 +756,9 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.") -> FieldResult<Option<Cart>> as "product in cart." {
+    field setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.")
+        -> FieldResult<Option<Cart>> as "Set comment in cart." {
+
         let context = executor.context();
 
         let customer = if let Some(ref user) = context.user {
@@ -786,6 +787,101 @@ graphql_object!(Mutation: Context |&self| {
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
             .map(|stores| convert_to_cart(stores, &products))
             .map(Some)
+            .wait()
+    }
+
+    field setDeliveryMethodInCart(
+        &executor,
+        input: SetDeliveryMethodInCartInput as "Set delivery method in cart input.",
+    ) -> FieldResult<Cart> as "Sets delivery method in the cart." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not set delivery method in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Product.to_url(),
+            input.product_id);
+
+        let _product = context.request::<Option<Product>>(Method::Get, url, None)
+            .wait()?
+            .ok_or_else(|| FieldError::new(
+                "Could not set delivery method in cart.",
+                graphql_value!({ "code": 100, "details": { "Product not found" }}),
+            ))?;
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let delivery_method_id = DeliveryMethodId::Package { id: CompanyPackageId(input.company_package_id) };
+        let products = rpc_client.set_delivery_method(customer, ProductId(input.product_id), delivery_method_id)
+            .sync()
+            .map_err(into_graphql)?
+            .into_iter()
+            .collect::<Vec<_>>();
+
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
+
+        let body = serde_json::to_string(&products)?;
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores| convert_to_cart(stores, &products))
+            .wait()
+    }
+
+    field removeDeliveryMethodFromCart(
+        &executor,
+        input: RemoveDeliveryMethodFromCartInput as "Remove delivery method from cart input.",
+    ) -> FieldResult<Cart> as "Removes delivery method from the cart." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not remove delivery method from cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let url = format!("{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Product.to_url(),
+            input.product_id);
+
+        let _product = context.request::<Option<Product>>(Method::Get, url, None)
+            .wait()?
+            .ok_or_else(|| FieldError::new(
+                "Could not remove delivery method from cart.",
+                graphql_value!({ "code": 100, "details": { "Product not found" }}),
+            ))?;
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products = rpc_client.delete_delivery_method_by_product(customer, ProductId(input.product_id))
+            .sync()
+            .map_err(into_graphql)?
+            .into_iter()
+            .collect::<Vec<_>>();
+
+        let url = format!("{}/{}/cart",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url());
+
+        let body = serde_json::to_string(&products)?;
+
+        context.request::<Vec<Store>>(Method::Post, url, Some(body))
+            .map(|stores| convert_to_cart(stores, &products))
             .wait()
     }
 

@@ -63,5 +63,4 @@ graphql_object!(Company: Context as "Company" |&self| {
         context.request::<Vec<Packages>>(Method::Get, url, None)
             .wait()
     }
-
 });

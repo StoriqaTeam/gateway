@@ -63,7 +63,23 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         &self.selected
     }
 
-    field delivery_operator() -> &str as "Delivery Operator" {
+    field company_package(&executor) -> FieldResult<Option<CompaniesPackages>> as "Company package" {
+        let context = executor.context();
+        match self.company_package_id {
+            Some(company_package_id) => {
+                let url = format!("{}/{}/{}",
+                    context.config.service_url(Service::Delivery),
+                    Model::CompanyPackage.to_url(),
+                    company_package_id,
+                );
+
+                context.request::<Option<CompaniesPackages>>(Method::Get, url, None).wait()
+            },
+            None => Ok(None),
+        }
+    }
+
+    field deprecated "use companyPackage" delivery_operator() -> &str as "Delivery Operator" {
         "Operator"
     }
 
