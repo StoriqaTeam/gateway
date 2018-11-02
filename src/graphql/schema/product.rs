@@ -11,7 +11,7 @@ use stq_api::warehouses::{Stock, Warehouse, WarehouseClient};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
-use stq_types::{Quantity, StockId};
+use stq_types::{ProductId, Quantity, StockId};
 
 use errors::into_graphql;
 
@@ -207,3 +207,26 @@ graphql_object!(Edge<Product>: Context as "ProductsEdge" |&self| {
         &self.node
     }
 });
+
+pub fn get_product(context: &Context, product_id: ProductId) -> FieldResult<Product> {
+    let url_product = format!(
+        "{}/{}/{}",
+        context.config.service_url(Service::Stores),
+        Model::Product.to_url(),
+        product_id
+    );
+
+    context
+        .request::<Option<Product>>(Method::Get, url_product, None)
+        .wait()
+        .and_then(|value| {
+            if let Some(value) = value {
+                Ok(value)
+            } else {
+                Err(FieldError::new(
+                    "Could not find Product from product id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                ))
+            }
+        })
+}
