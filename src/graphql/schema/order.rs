@@ -132,6 +132,14 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         &self.0.delivery_company
     }
 
+    field delivery_price() -> &f64 as "Delivery price" {
+        &self.0.delivery_price
+    }
+
+    field company_package_id() -> Option<i32> as "Selected package raw id" {
+        self.0.company_package_id.map(|v| v.0)
+    }
+
     field track_id() -> &Option<String> as "Delivery Company" {
         &self.0.track_id
     }

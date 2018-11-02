@@ -1,5 +1,8 @@
 //! File containing buy now values object of graphql schema
 
+use stq_api::orders::DeliveryInfo;
+use stq_types::{ProductPrice, Quantity};
+
 use graphql::context::Context;
 use graphql::models::*;
 
@@ -19,11 +22,11 @@ graphql_object!(BuyNowCheckout: Context as "BuyNowCheckout" |&self| {
     }
 
     field total_cost() -> f64 as "Total cost" {
-        calculate_cost(&self) + calculate_delivery_cost(&self)
+        calculate_cost(&self) + calculate_delivery_cost(&self.package, self.quantity)
     }
 
     field total_cost_without_discounts() -> f64 as "Total without cost" {
-        calculate_cost_without_discounts(&self) + calculate_delivery_cost(&self)
+        calculate_cost_without_discounts(&self) + calculate_delivery_cost(&self.package, self.quantity)
     }
 
     field total_count() -> &i32 as "Total products count" {
@@ -43,7 +46,7 @@ graphql_object!(BuyNowCheckout: Context as "BuyNowCheckout" |&self| {
     }
 
     field delivery_cost() -> f64 as "Delivery cost" {
-        calculate_delivery_cost(&self)
+        calculate_delivery_cost(&self.package, self.quantity)
     }
 });
 
@@ -83,12 +86,34 @@ fn calculate_coupon_discount(buy_now: &BuyNowCheckout) -> f64 {
     calculate_cost_without_discounts(buy_now) - cost_with_discounts
 }
 
-fn calculate_delivery_cost(buy_now: &BuyNowCheckout) -> f64 {
-    if let Some(package) = buy_now.package.as_ref() {
+fn calculate_delivery_cost(package: &Option<AvailablePackageForUser>, quantity: Quantity) -> f64 {
+    if let Some(package) = package {
         if let Some(price) = package.price {
-            return price.0;
+            return calculate_delivery(price, quantity);
         }
     }
 
     0.0f64
+}
+
+fn calculate_delivery(price: ProductPrice, quantity: Quantity) -> f64 {
+    if quantity.0 <= 0 {
+        return 0f64;
+    }
+
+    price.0 * f64::from(quantity.0)
+}
+
+pub fn get_delivery_info(package: AvailablePackageForUser) -> DeliveryInfo {
+    let price = match package.price {
+        Some(price) => price.0,
+        _ => 0.0f64,
+    };
+
+    DeliveryInfo {
+        company_package_id: package.id,
+        name: package.name,
+        logo: package.logo,
+        price,
+    }
 }

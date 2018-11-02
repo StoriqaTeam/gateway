@@ -256,7 +256,7 @@ impl From<Vec<AvailablePackages>> for AvailablePackagesOutput {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AvailablePackageForUser {
     pub id: CompanyPackageId,
     pub shipping_id: i32,

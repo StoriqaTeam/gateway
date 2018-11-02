@@ -1,18 +1,23 @@
 //! File containing PageInfo object of graphql schema
+use std::collections::{HashMap, HashSet};
+
 use futures::Future;
 use hyper::Method;
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
 
+use stq_api::orders::DeliveryInfo;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Translation;
+use stq_types::{BaseProductId, CartItem, CompanyPackageId, DeliveryMethodId, ProductId, Quantity};
 
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
 use graphql::schema::available_packages::*;
 use graphql::schema::coupon::*;
+use graphql::schema::product::*;
 
 graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     description: "Cart Product info."
@@ -197,12 +202,63 @@ pub fn calculate_coupon_discount(context: &Context, product: &CartProduct) -> Fi
 
 pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> FieldResult<f64> {
     if let Some(company_package_id) = product.company_package_id {
-        let package = get_available_package_for_user(context, product.base_product_id, company_package_id)?;
-
-        if let Some(price) = package.price {
-            return Ok(price.0);
-        }
+        return calculate_delivery(context, product.base_product_id, company_package_id, product.quantity);
     }
 
     Ok(0.0f64)
+}
+
+pub fn calculate_delivery(
+    context: &Context,
+    base_product_id: BaseProductId,
+    company_package_id: CompanyPackageId,
+    quantity: Quantity,
+) -> FieldResult<f64> {
+    if quantity.0 <= 0 {
+        return Ok(0f64);
+    }
+
+    let package = get_available_package_for_user(context, base_product_id, company_package_id)?;
+
+    if let Some(price) = package.price {
+        return Ok(price.0 * f64::from(quantity.0));
+    }
+
+    Ok(0.0f64)
+}
+
+pub fn get_delivery_info(context: &Context, cart_items: &HashSet<CartItem>) -> FieldResult<HashMap<ProductId, DeliveryInfo>> {
+    let mut delivery_info = vec![];
+
+    for cart_item in cart_items.iter() {
+        if let Some(delivery_method_id) = cart_item.delivery_method_id {
+            match delivery_method_id {
+                DeliveryMethodId::Package { id: company_package_id } => {
+                    let product = get_product(context, cart_item.product_id)?;
+                    let package = get_available_package_for_user(context, product.base_product_id, company_package_id)?;
+                    let price = match package.price {
+                        Some(price) => price.0,
+                        _ => 0.0f64,
+                    };
+
+                    let element = DeliveryInfo {
+                        company_package_id,
+                        name: package.name,
+                        logo: package.logo,
+                        price,
+                    };
+
+                    delivery_info.push((cart_item.product_id, element));
+                }
+                _ => {
+                    return Err(FieldError::new(
+                        "Could not create orders for cart.",
+                        graphql_value!({ "code": 100, "details": { "Delivery method not support." }}),
+                    ));
+                }
+            }
+        }
+    }
+
+    Ok(delivery_info.into_iter().collect::<HashMap<ProductId, DeliveryInfo>>())
 }
