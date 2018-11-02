@@ -157,22 +157,28 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     }
 });
 
-pub fn calculate_product_price(context: &Context, product: &CartProduct) -> FieldResult<f64> {
-    if product.quantity.0 <= 0 {
+pub fn calculate_product_price(context: &Context, cart_product: &CartProduct) -> FieldResult<f64> {
+    if cart_product.quantity.0 <= 0 {
         return Ok(0f64);
     }
 
-    if let Some(coupon_id) = product.coupon_id {
-        if let Some(coupon) = try_get_coupon(context, coupon_id)? {
-            // set discount only 1 product
-            let set_discount = (product.price.0 * 1f64) - ((product.price.0 / 100f64) * f64::from(coupon.percent));
-            let calc_price = set_discount + (product.price.0 * (f64::from(product.quantity.0) - 1f64));
+    if let Some(discount) = cart_product.discount.filter(|discount| *discount < ZERO_DISCOUNT) {
+        let calc_price = (cart_product.price.0 * (f64::from(cart_product.quantity.0))) * (1.0f64 - discount);
 
-            return Ok(calc_price);
+        return Ok(calc_price);
+    } else {
+        if let Some(coupon_id) = cart_product.coupon_id {
+            if let Some(coupon) = try_get_coupon(context, coupon_id)? {
+                // set discount only 1 product
+                let set_discount = (cart_product.price.0 * 1f64) - ((cart_product.price.0 / 100f64) * f64::from(coupon.percent));
+                let calc_price = set_discount + (cart_product.price.0 * (f64::from(cart_product.quantity.0) - 1f64));
+
+                return Ok(calc_price);
+            }
         }
     }
 
-    Ok(product.price.0 * f64::from(product.quantity.0))
+    Ok(cart_product.price.0 * f64::from(cart_product.quantity.0))
 }
 
 pub fn calculate_product_price_without_discounts(product: &CartProduct) -> f64 {

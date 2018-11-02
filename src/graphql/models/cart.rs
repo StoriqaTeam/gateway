@@ -24,6 +24,7 @@ pub struct CartProduct {
     pub id: ProductId,
     pub name: Vec<Translation>,
     pub price: ProductPrice,
+    pub discount: Option<f64>, // product
     pub photo_main: Option<String>,
     pub selected: bool,
     pub quantity: Quantity,
@@ -248,6 +249,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                             id: variant.id,
                                             name: base_product.name.clone(),
                                             base_product_id: base_product.id,
+                                            discount: variant.discount,
                                             photo_main: variant.photo_main.clone(),
                                             selected,
                                             price: ProductPrice(price),
