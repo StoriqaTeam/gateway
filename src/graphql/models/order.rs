@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use chrono::prelude::*;
 
-use stq_api::orders::{Order, OrderDiff};
+use stq_api::orders::{DeliveryInfo, Order, OrderDiff};
 use stq_static_resources::{Currency, OrderState};
 use stq_types::{CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, StoreId, UserId};
 
@@ -54,6 +54,7 @@ pub struct CreateOrder {
     pub receiver_phone: String,
     pub receiver_email: String,
     pub coupons: HashMap<CouponId, Coupon>,
+    pub delivery_info: HashMap<ProductId, DeliveryInfo>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
@@ -253,6 +254,8 @@ pub struct BuyNowInput {
     pub currency: Currency,
     #[graphql(description = "Coupon code added user")]
     pub coupon_code: Option<String>,
+    #[graphql(description = "Select delivery package")]
+    pub company_package_id: Option<i32>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
@@ -270,4 +273,5 @@ pub struct BuyNow {
     pub pre_order: bool,
     pub pre_order_days: i32,
     pub coupon: Option<Coupon>,
+    pub delivery_info: Option<DeliveryInfo>,
 }

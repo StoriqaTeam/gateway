@@ -7,6 +7,7 @@ use std::time::SystemTime;
 use futures::Future;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::available_packages::*;
 use graphql::schema::coupon::*;
 use hyper::Method;
 use juniper::{FieldError, FieldResult};
@@ -25,6 +26,8 @@ use stq_types::{
 };
 
 use errors::into_graphql;
+use graphql::schema::buy_now;
+use graphql::schema::cart_product;
 use graphql::schema::user::get_user_by_id;
 
 pub struct Mutation;
@@ -1312,6 +1315,8 @@ graphql_object!(Mutation: Context |&self| {
 
         let customer = get_user_by_id(context, user.user_id)?;
 
+        let delivery_info = cart_product::get_delivery_info(context, &current_cart)?;
+
         let create_order = CreateOrder {
             customer_id: user.user_id,
             address: input.address_full,
@@ -1321,6 +1326,7 @@ graphql_object!(Mutation: Context |&self| {
             prices: products_with_prices,
             currency: input.currency,
             coupons: coupons_info,
+            delivery_info,
         };
 
         let url = format!("{}/create_order",
@@ -1408,6 +1414,15 @@ graphql_object!(Mutation: Context |&self| {
 
         let customer = get_user_by_id(context, user.user_id)?;
 
+        let delivery_info = match input.company_package_id {
+            Some(company_package_id) => {
+                let package = get_available_package_for_user(context, product.base_product_id, CompanyPackageId(company_package_id))?;
+
+                Some(buy_now::get_delivery_info(package, Quantity(input.quantity)))
+            },
+            _ => None,
+        };
+
         let buy_now = BuyNow {
             product_id: input.product_id.into(),
             store_id,
@@ -1422,6 +1437,7 @@ graphql_object!(Mutation: Context |&self| {
             pre_order: product.pre_order,
             pre_order_days: product.pre_order_days,
             coupon,
+            delivery_info,
         };
 
         let url = format!("{}/buy_now",
