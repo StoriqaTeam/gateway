@@ -236,13 +236,16 @@ pub fn get_delivery_info(context: &Context, cart_items: &HashSet<CartItem>) -> F
                 DeliveryMethodId::Package { id: company_package_id } => {
                     let product = get_product(context, cart_item.product_id)?;
                     let package = get_available_package_for_user(context, product.base_product_id, company_package_id)?;
-                    let calc_price = calculate_delivery(context, product.base_product_id, company_package_id, cart_item.quantity)?;
+                    let price = match package.price {
+                        Some(price) => price.0,
+                        _ => 0.0f64,
+                    };
 
                     let element = DeliveryInfo {
                         company_package_id,
                         name: package.name,
                         logo: package.logo,
-                        price: calc_price,
+                        price,
                     };
 
                     delivery_info.push((cart_item.product_id, element));

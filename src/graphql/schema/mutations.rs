@@ -1418,7 +1418,7 @@ graphql_object!(Mutation: Context |&self| {
             Some(company_package_id) => {
                 let package = get_available_package_for_user(context, product.base_product_id, CompanyPackageId(company_package_id))?;
 
-                Some(buy_now::get_delivery_info(package, Quantity(input.quantity)))
+                Some(buy_now::get_delivery_info(package))
             },
             _ => None,
         };

@@ -104,13 +104,16 @@ fn calculate_delivery(price: ProductPrice, quantity: Quantity) -> f64 {
     price.0 * f64::from(quantity.0)
 }
 
-pub fn get_delivery_info(package: AvailablePackageForUser, quantity: Quantity) -> DeliveryInfo {
-    let calc_cost = calculate_delivery_cost(&Some(package.clone()), quantity);
+pub fn get_delivery_info(package: AvailablePackageForUser) -> DeliveryInfo {
+    let price = match package.price {
+        Some(price) => price.0,
+        _ => 0.0f64,
+    };
 
     DeliveryInfo {
         company_package_id: package.id,
         name: package.name,
         logo: package.logo,
-        price: calc_cost,
+        price,
     }
 }
