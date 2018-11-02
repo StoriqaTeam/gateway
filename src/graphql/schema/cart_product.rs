@@ -167,7 +167,8 @@ pub fn calculate_product_price(context: &Context, cart_product: &CartProduct) ->
         return Ok(0f64);
     }
 
-    if let Some(discount) = cart_product.discount.filter(|discount| *discount < ZERO_DISCOUNT) {
+    if let Some(discount) = cart_product.discount.filter(|discount| *discount > ZERO_DISCOUNT) {
+
         let calc_price = (cart_product.price.0 * (f64::from(cart_product.quantity.0))) * (1.0f64 - discount);
 
         return Ok(calc_price);

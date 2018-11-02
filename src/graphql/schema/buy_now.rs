@@ -55,7 +55,7 @@ fn calculate_cost(buy_now: &BuyNowCheckout) -> f64 {
         return 0f64;
     }
 
-    if let Some(discount) = buy_now.product.discount.filter(|discount| *discount < ZERO_DISCOUNT) {
+    if let Some(discount) = buy_now.product.discount.filter(|discount| *discount > ZERO_DISCOUNT) {
         let calc_cost = (buy_now.product.price.0 * (f64::from(buy_now.quantity.0))) * (1.0f64 - discount);
 
         return calc_cost;
