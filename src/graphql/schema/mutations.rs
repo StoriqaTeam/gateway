@@ -1407,7 +1407,37 @@ graphql_object!(Mutation: Context |&self| {
             Some(code) => {
                 let coupon_code = CouponCode(code);
                 validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
-                Some(get_coupon_by_code(context, coupon_code, store_id)?)
+                let coupon = get_coupon_by_code(context, coupon_code, store_id)?;
+
+                // validate products
+                let url = format!("{}/{}/{}/base_products",
+                    context.config.service_url(Service::Stores),
+                    Model::Coupon.to_url(),
+                    coupon.id);
+                let base_products = context.request::<Vec<BaseProduct>>(Method::Get, url, None).wait()?;
+                let all_support_products = base_products.into_iter().flat_map(|b| {
+                    if let Some(variants) = b.variants {
+                        variants
+                    } else {
+                        vec![]
+                    }
+                    })
+                .filter(|p|
+                    match p.discount {
+                        Some(discount) => discount < ZERO_DISCOUNT,
+                        None => true,
+                    })
+                .filter(|p| p.id == product.id)
+                .collect::<Vec<Product>>();
+
+            if all_support_products.is_empty() {
+                return Err(FieldError::new(
+                    "Coupon not set",
+                    graphql_value!({ "code": 400, "details": { "no products found for coupon usage" }}),
+                ));
+            }
+
+            Some(coupon)
             },
             None => None,
         };
