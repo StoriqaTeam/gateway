@@ -21,8 +21,7 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
 use stq_types::{
-    CartItem, CouponCode, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, ShippingId,
-    StoreId, WarehouseId,
+    CartItem, CouponCode, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, ShippingId, StoreId, WarehouseId,
 };
 
 use errors::into_graphql;
