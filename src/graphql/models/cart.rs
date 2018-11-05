@@ -239,12 +239,6 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                                 (v.quantity, v.selected, v.comment.clone(), v.coupon_id, company_package_id)
                                             }).unwrap_or_default();
 
-                                        let price = if let Some(discount) = variant.discount {
-                                            variant.price.0 * (1.0 - discount)
-                                        } else {
-                                            variant.price.0
-                                        };
-
                                         CartProduct {
                                             id: variant.id,
                                             name: base_product.name.clone(),
@@ -252,7 +246,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                             discount: variant.discount,
                                             photo_main: variant.photo_main.clone(),
                                             selected,
-                                            price: ProductPrice(price),
+                                            price: variant.price,
                                             quantity,
                                             comment,
                                             pre_order: variant.pre_order,
