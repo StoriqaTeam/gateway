@@ -63,7 +63,7 @@ fn calculate_cost(buy_now: &BuyNowCheckout) -> f64 {
         if buy_now.coupon.is_some() {
             // set discount only 1 product
             let product_cost_with_coupon_discount = buy_now.product.price.0 - calculate_coupon_discount(buy_now);
-            let calc_cost = product_cost_with_coupon_discount + (buy_now.product.price.0 * (f64::from(buy_now.quantity.0) - 1f64));
+            let calc_cost = product_cost_with_coupon_discount + (buy_now.product.price.0 * (f64::from(buy_now.quantity.0 - 1)));
 
             return calc_cost;
         }

@@ -175,7 +175,7 @@ pub fn calculate_product_price(context: &Context, cart_product: &CartProduct) ->
         if cart_product.coupon_id.is_some() {
             // set discount only 1 product
             let product_price_with_coupon_discount = cart_product.price.0 - calculate_coupon_discount(context, cart_product)?;
-            let calc_price = product_price_with_coupon_discount + (cart_product.price.0 * (f64::from(cart_product.quantity.0) - 1f64));
+            let calc_price = product_price_with_coupon_discount + (cart_product.price.0 * (f64::from(cart_product.quantity.0 - 1)));
 
             return Ok(calc_price);
         }
