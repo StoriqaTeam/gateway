@@ -137,7 +137,7 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         &self.0.delivery_price
     }
 
-    field deprecated "use" company_package_id() -> Option<i32> as "Selected package raw id" {
+    field deprecated "use select_package" company_package_id() -> Option<i32> as "Selected package raw id" {
         self.0.company_package_id.map(|v| v.0)
     }
 
