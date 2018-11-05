@@ -138,7 +138,7 @@ pub fn get_available_package_for_user_by_id(context: &Context, shipping_id: Ship
         .wait()?
         .ok_or_else(|| {
             FieldError::new(
-                "Could not AvailablePackageForUser.",
+                "Could not find AvailablePackageForUser.",
                 graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
             )
         })
