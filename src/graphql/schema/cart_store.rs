@@ -11,7 +11,7 @@ use stq_static_resources::Translation;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use graphql::schema::cart_product::{calculate_delivery_cost, calculate_product_price};
+use graphql::schema::cart_product::{calculate_coupon_discount, calculate_delivery_cost, calculate_product_price};
 use graphql::schema::coupon::get_coupon;
 
 graphql_object!(CartStore: Context as "CartStore" |&self| {
@@ -151,9 +151,13 @@ pub fn calculate_products_price_without_discounts(products: &[CartProduct]) -> f
 }
 
 pub fn calculate_coupons_discount(context: &Context, products: &[CartProduct]) -> FieldResult<f64> {
-    let price_with_discounts = calculate_products_price(context, products)?;
-
-    Ok(calculate_products_price_without_discounts(products) - price_with_discounts)
+    products.iter().try_fold(0.0, |acc, x| {
+        if x.selected {
+            Ok(acc + calculate_coupon_discount(context, &x)?)
+        } else {
+            Ok(acc)
+        }
+    })
 }
 
 pub fn calculate_products_delivery_cost(context: &Context, products: &[CartProduct]) -> FieldResult<f64> {

@@ -13,7 +13,9 @@ use stq_types::UserId;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use graphql::schema::cart_store::{calculate_products_delivery_cost, calculate_products_price, calculate_products_price_without_discounts};
+use graphql::schema::cart_store::{
+    calculate_coupons_discount, calculate_products_delivery_cost, calculate_products_price, calculate_products_price_without_discounts,
+};
 
 graphql_object!(Cart: Context as "Cart" |&self| {
     description: "Users cart"
@@ -151,9 +153,13 @@ pub fn calculate_cart_price_without_discounts(stores: &[CartStore]) -> f64 {
 }
 
 pub fn calculate_cart_coupons_discount(context: &Context, stores: &[CartStore]) -> FieldResult<f64> {
-    let price_with_discounts = calculate_cart_price(context, stores)?;
+    let cost = stores.iter().try_fold(0.0, |acc, store| {
+        let store_coupons_discount = calculate_coupons_discount(context, &store.products)?;
 
-    Ok(calculate_cart_price_without_discounts(stores) - price_with_discounts)
+        Ok(acc + store_coupons_discount)
+    });
+
+    cost
 }
 
 pub fn calculate_cart_delivery_cost(context: &Context, stores: &[CartStore]) -> FieldResult<f64> {
