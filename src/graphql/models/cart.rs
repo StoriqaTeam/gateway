@@ -33,7 +33,8 @@ pub struct CartProduct {
     pub pre_order: bool,
     pub pre_order_days: i32,
     pub coupon_id: Option<CouponId>,
-    pub company_package_id: Option<CompanyPackageId>,
+    pub company_package_id: Option<CompanyPackageId>, // deprecated
+    pub delivery_method_id: Option<DeliveryMethodId>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -228,7 +229,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                             Some(
                                 v.iter_mut()
                                     .map(|variant| {
-                                        let (quantity, selected, comment, coupon_id, company_package_id) = products
+                                        let (quantity, selected, comment, coupon_id, company_package_id, delivery_method_id) = products
                                             .iter()
                                             .find(|v| v.product_id == variant.id)
                                             .map(|v| {
@@ -236,7 +237,14 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                                     Some(DeliveryMethodId::Package { id }) => Some(id),
                                                     _ => None,
                                                 };
-                                                (v.quantity, v.selected, v.comment.clone(), v.coupon_id, company_package_id)
+                                                (
+                                                    v.quantity,
+                                                    v.selected,
+                                                    v.comment.clone(),
+                                                    v.coupon_id,
+                                                    company_package_id,
+                                                    v.delivery_method_id,
+                                                )
                                             }).unwrap_or_default();
 
                                         CartProduct {
@@ -253,6 +261,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                             pre_order_days: variant.pre_order_days,
                                             coupon_id,
                                             company_package_id,
+                                            delivery_method_id,
                                         }
                                     }).collect::<Vec<CartProduct>>(),
                             )

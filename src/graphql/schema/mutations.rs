@@ -21,8 +21,8 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
 use stq_types::{
-    CartItem, CompanyPackageId, CouponCode, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId,
-    WarehouseId,
+    CartItem, CompanyPackageId, CouponCode, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, ShippingId,
+    StoreId, WarehouseId,
 };
 
 use errors::into_graphql;
@@ -1444,9 +1444,9 @@ graphql_object!(Mutation: Context |&self| {
 
         let customer = get_user_by_id(context, user.user_id)?;
 
-        let delivery_info = match input.company_package_id {
-            Some(company_package_id) => {
-                let package = get_available_package_for_user(context, product.base_product_id, CompanyPackageId(company_package_id))?;
+        let delivery_info = match input.shipping_id {
+            Some(shipping_id) => {
+                let package = get_available_package_for_user_by_id(context, ShippingId(shipping_id))?;
 
                 Some(buy_now::get_delivery_info(package))
             },

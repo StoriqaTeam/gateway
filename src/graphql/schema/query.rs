@@ -16,13 +16,13 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::Currency;
 use stq_static_resources::{Language, LanguageGraphQl, OrderState, TemplateVariant};
-use stq_types::{CompanyPackageId, CouponCode, OrderId, StoreId, WarehouseId};
+use stq_types::{CouponCode, OrderId, ShippingId, StoreId, WarehouseId};
 
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
-use schema::available_packages::get_available_package_for_user;
+use schema::available_packages::*;
 
 pub const QUERY_NODE_ID: i32 = 1;
 
@@ -261,7 +261,8 @@ graphql_object!(Query: Context |&self| {
     field calculate_buy_now(&executor, product_id: i32 as "Product raw id",
                             quantity: i32 as "Quantity",
                             coupon_code: Option<String> as "Coupon code",
-                            company_package_id: Option<i32> as "Select available package raw id") -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
+                            company_package_id: Option<i32> as "Select available package raw id (deprecated)",
+                            shipping_id: Option<i32> as "Select available package shipping raw id") -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
 
         let context = executor.context();
 
@@ -340,9 +341,9 @@ graphql_object!(Query: Context |&self| {
             None => None,
         };
 
-        let package = match company_package_id {
-            Some(company_package_id) => {
-                let result = get_available_package_for_user(context, product.base_product_id, CompanyPackageId(company_package_id))?;
+        let package = match shipping_id {
+            Some(shipping_id) => {
+                let result = get_available_package_for_user_by_id(context, ShippingId(shipping_id))?;
 
                 Some(result)
             },
