@@ -370,16 +370,17 @@ graphql_object!(Store: Context as "Store" |&self| {
             count + 1
             );
 
-        let options = if let Some(mut options) = search_term.options.clone() {
+        let mut options = if let Some(mut options) = search_term.options.clone() {
             options.store_id = Some(self.id.0);
             options
         } else {
             ProductsSearchOptionsInput{
                 store_id : Some(self.id.0),
-                status : Some(ModerationStatus::Published),
                 ..ProductsSearchOptionsInput::default()
             }
         };
+
+        options.status = Some(ModerationStatus::Published);
 
         let mut search_term = search_term;
         search_term.options = Some(options);
@@ -431,16 +432,17 @@ graphql_object!(Store: Context as "Store" |&self| {
             count + 1
             );
 
-        let options = if let Some(mut options) = search_term.options.clone() {
+        let mut options = if let Some(mut options) = search_term.options.clone() {
             options.store_id = Some(self.id.0);
             options
         } else {
             ProductsSearchOptionsInput{
                 store_id : Some(self.id.0),
-                status : Some(ModerationStatus::Published),
                 ..ProductsSearchOptionsInput::default()
             }
         };
+
+        options.status = Some(ModerationStatus::Published);
 
         let mut search_term = search_term;
         search_term.options = Some(options);
@@ -493,17 +495,17 @@ graphql_object!(Store: Context as "Store" |&self| {
             count + 1
             );
 
-        let options = if let Some(mut options) = search_term.options.clone() {
+        let mut options = if let Some(mut options) = search_term.options.clone() {
             options.store_id = Some(self.id.0);
-            options.status = Some(ModerationStatus::Published);
             options
         } else {
             ProductsSearchOptionsInput{
                 store_id : Some(self.id.0),
-                status : Some(ModerationStatus::Published),
                 ..ProductsSearchOptionsInput::default()
             }
         };
+
+        options.status = Some(ModerationStatus::Published);
 
         let mut search_term = search_term;
         search_term.options = Some(options);
