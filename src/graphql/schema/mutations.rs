@@ -21,7 +21,7 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
 use stq_types::{
-    CartItem, CompanyPackageId, CouponCode, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, ShippingId,
+    CartItem, CouponCode, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, ShippingId,
     StoreId, WarehouseId,
 };
 
@@ -901,7 +901,7 @@ graphql_object!(Mutation: Context |&self| {
             ))?;
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let delivery_method_id = DeliveryMethodId::Package { id: CompanyPackageId(input.company_package_id) };
+        let delivery_method_id = DeliveryMethodId::ShippingPackage { id: ShippingId(input.shipping_id) };
         let products = rpc_client.set_delivery_method(customer, ProductId(input.product_id), delivery_method_id)
             .sync()
             .map_err(into_graphql)?

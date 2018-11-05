@@ -115,8 +115,10 @@ pub struct SetDeliveryMethodInCartInput {
     pub client_mutation_id: String,
     #[graphql(description = "Product raw id.")]
     pub product_id: i32,
-    #[graphql(description = "Company package id.")]
-    pub company_package_id: i32,
+    #[graphql(description = "[DEPRECATED] Company package id.")]
+    pub company_package_id: Option<i32>,
+    #[graphql(description = "Shipping id.")]
+    pub shipping_id: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
