@@ -18,6 +18,7 @@ use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::available_packages;
 use graphql::schema::coupon::try_get_coupon;
 
 graphql_object!(GraphQLOrder: Context as "Order" |&self| {
@@ -136,8 +137,17 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         &self.0.delivery_price
     }
 
-    field company_package_id() -> Option<i32> as "Selected package raw id" {
+    field deprecated "use select_package" company_package_id() -> Option<i32> as "Selected package raw id" {
         self.0.company_package_id.map(|v| v.0)
+    }
+
+    field select_package(&executor) -> FieldResult<Option<AvailablePackageForUser>> as "Selected package" {
+       let context = executor.context();
+
+       match self.0.shipping_id {
+           Some(shipping_id) => Ok(Some(available_packages::get_available_package_for_user_by_id(context, shipping_id)?)),
+           _ => Ok(None),
+       }
     }
 
     field track_id() -> &Option<String> as "Delivery Company" {

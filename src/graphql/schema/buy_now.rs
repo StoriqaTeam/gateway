@@ -48,6 +48,10 @@ graphql_object!(BuyNowCheckout: Context as "BuyNowCheckout" |&self| {
     field delivery_cost() -> f64 as "Delivery cost" {
         calculate_delivery_cost(&self.package, self.quantity)
     }
+
+    field package() -> &Option<AvailablePackageForUser> as "Select delivery package" {
+        &self.package
+    }
 });
 
 fn calculate_cost(buy_now: &BuyNowCheckout) -> f64 {
@@ -117,6 +121,7 @@ pub fn get_delivery_info(package: AvailablePackageForUser) -> DeliveryInfo {
 
     DeliveryInfo {
         company_package_id: package.id,
+        shipping_id: package.shipping_id,
         name: package.name,
         logo: package.logo,
         price,

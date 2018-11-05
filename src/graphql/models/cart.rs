@@ -33,7 +33,8 @@ pub struct CartProduct {
     pub pre_order: bool,
     pub pre_order_days: i32,
     pub coupon_id: Option<CouponId>,
-    pub company_package_id: Option<CompanyPackageId>,
+    pub company_package_id: Option<CompanyPackageId>, // deprecated
+    pub delivery_method_id: Option<DeliveryMethodId>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -114,8 +115,10 @@ pub struct SetDeliveryMethodInCartInput {
     pub client_mutation_id: String,
     #[graphql(description = "Product raw id.")]
     pub product_id: i32,
-    #[graphql(description = "Company package id.")]
-    pub company_package_id: i32,
+    #[graphql(description = "[DEPRECATED] Company package id.")]
+    pub company_package_id: Option<i32>,
+    #[graphql(description = "Shipping id.")]
+    pub shipping_id: i32,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -228,7 +231,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                             Some(
                                 v.iter_mut()
                                     .map(|variant| {
-                                        let (quantity, selected, comment, coupon_id, company_package_id) = products
+                                        let (quantity, selected, comment, coupon_id, company_package_id, delivery_method_id) = products
                                             .iter()
                                             .find(|v| v.product_id == variant.id)
                                             .map(|v| {
@@ -236,7 +239,14 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                                     Some(DeliveryMethodId::Package { id }) => Some(id),
                                                     _ => None,
                                                 };
-                                                (v.quantity, v.selected, v.comment.clone(), v.coupon_id, company_package_id)
+                                                (
+                                                    v.quantity,
+                                                    v.selected,
+                                                    v.comment.clone(),
+                                                    v.coupon_id,
+                                                    company_package_id,
+                                                    v.delivery_method_id,
+                                                )
                                             }).unwrap_or_default();
 
                                         CartProduct {
@@ -253,6 +263,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                             pre_order_days: variant.pre_order_days,
                                             coupon_id,
                                             company_package_id,
+                                            delivery_method_id,
                                         }
                                     }).collect::<Vec<CartProduct>>(),
                             )

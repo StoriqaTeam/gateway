@@ -7,7 +7,7 @@ use juniper::{FieldError, FieldResult};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
-use stq_types::{BaseProductId, CompanyPackageId};
+use stq_types::{BaseProductId, CompanyPackageId, ShippingId};
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -58,7 +58,7 @@ graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&
     description: "Available Packages info."
 
     field id() -> GraphqlID as "Base64 Unique id" {
-        ID::new(Service::Delivery, Model::AvailablePackageForUser, self.shipping_id).to_string().into()
+        ID::new(Service::Delivery, Model::AvailablePackageForUser, self.shipping_id.0).to_string().into()
     }
 
     field deprecated "use id" company_package_id() -> GraphqlID as "Base64 Unique id for company package"{
@@ -67,6 +67,10 @@ graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&
 
     field company_package_raw_id() -> &i32 as "Int company package id"{
         &self.id.0
+    }
+
+    field shipping_id() -> &i32 as "Int shipping id" {
+        &self.shipping_id.0
     }
 
     field name() -> &str as "Available package name"{
@@ -116,6 +120,25 @@ pub fn get_available_package_for_user(
         .ok_or_else(|| {
             FieldError::new(
                 "Could not AvailablePackageForUser.",
+                graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
+            )
+        })
+}
+
+pub fn get_available_package_for_user_by_id(context: &Context, shipping_id: ShippingId) -> FieldResult<AvailablePackageForUser> {
+    let url = format!(
+        "{}/{}/by_shipping_id/{}",
+        context.config.service_url(Service::Delivery),
+        Model::AvailablePackageForUser.to_url(),
+        shipping_id,
+    );
+
+    context
+        .request::<Option<AvailablePackageForUser>>(Method::Get, url, None)
+        .wait()?
+        .ok_or_else(|| {
+            FieldError::new(
+                "Could not find AvailablePackageForUser.",
                 graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
             )
         })
