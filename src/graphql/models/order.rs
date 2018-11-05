@@ -254,7 +254,7 @@ pub struct BuyNowInput {
     pub currency: Currency,
     #[graphql(description = "Coupon code added user")]
     pub coupon_code: Option<String>,
-    #[graphql(description = "Select delivery package (deprecated)")]
+    #[graphql(description = "[DEPRECATED] Select delivery package")]
     pub company_package_id: Option<i32>,
     #[graphql(description = "Select delivery package shipping id")]
     pub shipping_id: Option<i32>,

@@ -261,7 +261,7 @@ graphql_object!(Query: Context |&self| {
     field calculate_buy_now(&executor, product_id: i32 as "Product raw id",
                             quantity: i32 as "Quantity",
                             coupon_code: Option<String> as "Coupon code",
-                            company_package_id: Option<i32> as "Select available package raw id (deprecated)",
+                            company_package_id: Option<i32> as "[DEPRECATED] Select available package raw id",
                             shipping_id: Option<i32> as "Select available package shipping raw id") -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
 
         let context = executor.context();
