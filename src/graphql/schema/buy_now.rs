@@ -60,10 +60,10 @@ fn calculate_cost(buy_now: &BuyNowCheckout) -> f64 {
 
         return calc_cost;
     } else {
-        if let Some(coupon) = buy_now.coupon.as_ref() {
+        if buy_now.coupon.is_some() {
             // set discount only 1 product
-            let set_discount = (buy_now.product.price.0 * 1f64) - ((buy_now.product.price.0 / 100f64) * f64::from(coupon.percent));
-            let calc_cost = set_discount + (buy_now.product.price.0 * (f64::from(buy_now.quantity.0) - 1f64));
+            let product_cost_with_coupon_discount = buy_now.product.price.0 - calculate_coupon_discount(buy_now);
+            let calc_cost = product_cost_with_coupon_discount + (buy_now.product.price.0 * (f64::from(buy_now.quantity.0 - 1)));
 
             return calc_cost;
         }
@@ -81,9 +81,14 @@ fn calculate_cost_without_discounts(buy_now: &BuyNowCheckout) -> f64 {
 }
 
 fn calculate_coupon_discount(buy_now: &BuyNowCheckout) -> f64 {
-    let cost_with_discounts = calculate_cost(buy_now);
+    if let Some(coupon) = buy_now.coupon.as_ref() {
+        // set discount only 1 product
+        let discount = (buy_now.product.price.0 / 100f64) * f64::from(coupon.percent);
 
-    calculate_cost_without_discounts(buy_now) - cost_with_discounts
+        return discount;
+    }
+
+    0.0f64
 }
 
 fn calculate_delivery_cost(package: &Option<AvailablePackageForUser>, quantity: Quantity) -> f64 {

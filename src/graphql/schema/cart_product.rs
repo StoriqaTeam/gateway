@@ -172,14 +172,12 @@ pub fn calculate_product_price(context: &Context, cart_product: &CartProduct) ->
 
         return Ok(calc_price);
     } else {
-        if let Some(coupon_id) = cart_product.coupon_id {
-            if let Some(coupon) = try_get_coupon(context, coupon_id)? {
-                // set discount only 1 product
-                let set_discount = (cart_product.price.0 * 1f64) - ((cart_product.price.0 / 100f64) * f64::from(coupon.percent));
-                let calc_price = set_discount + (cart_product.price.0 * (f64::from(cart_product.quantity.0) - 1f64));
+        if cart_product.coupon_id.is_some() {
+            // set discount only 1 product
+            let product_price_with_coupon_discount = cart_product.price.0 - calculate_coupon_discount(context, cart_product)?;
+            let calc_price = product_price_with_coupon_discount + (cart_product.price.0 * (f64::from(cart_product.quantity.0 - 1)));
 
-                return Ok(calc_price);
-            }
+            return Ok(calc_price);
         }
     }
 
@@ -194,10 +192,17 @@ pub fn calculate_product_price_without_discounts(product: &CartProduct) -> f64 {
     product.price.0 * f64::from(product.quantity.0)
 }
 
-pub fn calculate_coupon_discount(context: &Context, product: &CartProduct) -> FieldResult<f64> {
-    let price_with_discounts = calculate_product_price(context, product)?;
+pub fn calculate_coupon_discount(context: &Context, cart_product: &CartProduct) -> FieldResult<f64> {
+    if let Some(coupon_id) = cart_product.coupon_id {
+        if let Some(coupon) = try_get_coupon(context, coupon_id)? {
+            // set discount only 1 product
+            let discount = (cart_product.price.0 / 100f64) * f64::from(coupon.percent);
 
-    Ok(calculate_product_price_without_discounts(product) - price_with_discounts)
+            return Ok(discount);
+        }
+    }
+
+    Ok(0.0f64)
 }
 
 pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> FieldResult<f64> {
