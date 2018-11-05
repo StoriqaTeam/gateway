@@ -76,14 +76,29 @@ impl Context {
             self.http_client
                 .request(method, url.clone(), body, Some(headers))
                 .map_err(Error::into_graphql)
-                .inspect(move |_| {
+                .then(move |r| {
                     let d = Local::now() - dt;
-                    info!(
-                        "Request to microservice : {:?}, elapsed time: {}.{:03}",
-                        url,
-                        d.num_seconds(),
-                        d.num_milliseconds()
-                    )
+                    match r {
+                        Err(e) => {
+                            info!(
+                                "Request to microservice : {:?} failed with error `{}`, elapsed time: {}.{:03}",
+                                e,
+                                url,
+                                d.num_seconds(),
+                                d.num_milliseconds()
+                            );
+                            Err(e)
+                        }
+                        Ok(x) => {
+                            info!(
+                                "Request to microservice : {:?}, elapsed time: {}.{:03}",
+                                url,
+                                d.num_seconds(),
+                                d.num_milliseconds()
+                            );
+                            Ok(x)
+                        }
+                    }
                 }),
         )
     }
