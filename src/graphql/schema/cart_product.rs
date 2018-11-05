@@ -10,7 +10,7 @@ use stq_api::orders::DeliveryInfo;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Translation;
-use stq_types::{CartItem, DeliveryMethodId, ProductId, Quantity};
+use stq_types::{CartItem, DeliveryMethodId, ProductId};
 
 use super::*;
 use graphql::context::Context;
@@ -218,19 +218,9 @@ pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> Fiel
     if let Some(delivery_method_id) = product.delivery_method_id {
         let package = get_select_package(context, delivery_method_id, product.id)?;
 
-        return calculate_delivery(&package, product.quantity);
-    }
-
-    Ok(0.0f64)
-}
-
-pub fn calculate_delivery(package: &AvailablePackageForUser, quantity: Quantity) -> FieldResult<f64> {
-    if quantity.0 <= 0 {
-        return Ok(0f64);
-    }
-
-    if let Some(price) = package.price {
-        return Ok(price.0 * f64::from(quantity.0));
+        if let Some(price) = package.price {
+            return Ok(price.0 * f64::from(product.quantity.0));
+        }
     }
 
     Ok(0.0f64)
