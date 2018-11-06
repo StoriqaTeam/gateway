@@ -11,7 +11,7 @@ use config::Config;
 
 use stq_api::rpc_client::RestApiClient;
 use stq_http::client::{ClientHandle, Error};
-use stq_http::request_util::Currency as CurrencyHeader;
+use stq_http::request_util::{CorrelationToken, Currency as CurrencyHeader};
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
 use stq_types::SessionId;
@@ -37,7 +37,7 @@ impl Context {
         currency: Option<Currency>,
         config: Config,
     ) -> Self {
-        let uuid = Uuid::new_v4().to_string();
+        let uuid = Uuid::new_v4().hyphenated().to_string();
         Context {
             http_client,
             user,
@@ -70,7 +70,10 @@ impl Context {
         };
         headers.set(cookie);
 
+        headers.set(CorrelationToken(self.uuid.clone()));
+
         let dt = Local::now();
+        let correlation_token = self.uuid.clone();
 
         Box::new(
             self.http_client
@@ -81,9 +84,10 @@ impl Context {
                     match r {
                         Err(e) => {
                             info!(
-                                "Request to microservice : {:?} failed with error `{}`, elapsed time: {}.{:03}",
-                                e,
+                                "Request with correlation token: {}, to microservice: {:?} failed with error `{:?}`, elapsed time: {}.{:03}",
+                                correlation_token,
                                 url,
+                                e,
                                 d.num_seconds(),
                                 d.num_milliseconds()
                             );
@@ -91,7 +95,8 @@ impl Context {
                         }
                         Ok(x) => {
                             info!(
-                                "Request to microservice : {:?}, elapsed time: {}.{:03}",
+                                "Request with correlation token: {}, to microservice: {:?}, elapsed time: {}.{:03}",
+                                correlation_token,
                                 url,
                                 d.num_seconds(),
                                 d.num_milliseconds()
