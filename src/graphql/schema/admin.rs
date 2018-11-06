@@ -158,7 +158,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
         let body = serde_json::to_string(&term)?;
 
         let raw_id = match after {
-            Some(val) => ID::from_str(&*val)?.raw_id + 1,
+            Some(val) => ID::from_str(&*val)?.raw_id,
             None => MIN_ID
         };
 
@@ -169,7 +169,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             context.config.service_url(Service::Stores),
             Model::Store.to_url(),
             raw_id,
-            first + 1);
+            first);
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
             .map(|stores| {
@@ -275,7 +275,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
         let body = serde_json::to_string(&search_term)?;
 
         let raw_id = match after {
-            Some(val) => ID::from_str(&*val)?.raw_id + 1,
+            Some(val) => ID::from_str(&*val)?.raw_id,
             None => MIN_ID
         };
 
@@ -286,7 +286,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             raw_id,
-            first + 1);
+            first);
 
         context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
             .map (|base_products| {
