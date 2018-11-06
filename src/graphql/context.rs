@@ -11,7 +11,7 @@ use config::Config;
 
 use stq_api::rpc_client::RestApiClient;
 use stq_http::client::{ClientHandle, Error};
-use stq_http::request_util::{CorrelationToken, Currency as CurrencyHeader};
+use stq_http::request_util::{CorrelationToken, Currency as CurrencyHeader, RequestTimeout};
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
 use stq_types::SessionId;
@@ -71,6 +71,7 @@ impl Context {
         headers.set(cookie);
 
         headers.set(CorrelationToken(self.uuid.clone()));
+        headers.set(RequestTimeout(self.get_request_timeout().to_string()));
 
         let dt = Local::now();
         let correlation_token = self.uuid.clone();
@@ -84,27 +85,31 @@ impl Context {
                     match r {
                         Err(e) => {
                             info!(
-                                "Request with correlation token: {}, to microservice: {:?} failed with error `{:?}`, elapsed time: {}.{:03}",
-                                correlation_token,
+                                "Request to microservice: {:?} failed with error `{:?}`, elapsed time: {}.{:03}, correlation token: {}",
                                 url,
                                 e,
                                 d.num_seconds(),
-                                d.num_milliseconds()
+                                d.num_milliseconds(),
+                                correlation_token,
                             );
                             Err(e)
                         }
                         Ok(x) => {
                             info!(
-                                "Request with correlation token: {}, to microservice: {:?}, elapsed time: {}.{:03}",
-                                correlation_token,
+                                "Request to microservice: {:?}, elapsed time: {}.{:03}, correlation token: {}",
                                 url,
                                 d.num_seconds(),
-                                d.num_milliseconds()
+                                d.num_milliseconds(),
+                                correlation_token,
                             );
                             Ok(x)
                         }
                     }
                 }),
         )
+    }
+
+    fn get_request_timeout(&self) -> u64 {
+        self.config.gateway.http_timeout_ms
     }
 }
