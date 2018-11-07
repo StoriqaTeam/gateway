@@ -158,7 +158,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
         let body = serde_json::to_string(&term)?;
 
         let raw_id = match after {
-            Some(val) => ID::from_str(&*val)?.raw_id + 1,
+            Some(val) => ID::from_str(&*val)?.raw_id,
             None => MIN_ID
         };
 
@@ -169,7 +169,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             context.config.service_url(Service::Stores),
             Model::Store.to_url(),
             raw_id,
-            first + 1);
+            first);
 
         context.request::<Vec<Store>>(Method::Post, url, Some(body))
             .map(|stores| {
@@ -268,101 +268,121 @@ graphql_object!(Admin: Context as "Admin" |&self| {
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Base64 Id of a base_product",
         search_term : SearchModeratorBaseProductInput as "Search pattern"
-        )
-            -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Searching base_products by moderator using relay connection." {
-        let context = executor.context();
-
-        let body = serde_json::to_string(&search_term)?;
-
-        let raw_id = match after {
-            Some(val) => ID::from_str(&*val)?.raw_id + 1,
-            None => MIN_ID
-        };
-
-        let records_limit = context.config.gateway.records_limit;
-        let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
-
-        let url = format!("{}/{}/moderator_search?offset={}&count={}",
-            context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
-            raw_id,
-            first + 1);
-
-        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
-            .map (|base_products| {
-                let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
-                    .into_iter()
-                    .map(|base_product| Edge::new(
-                        juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
-                        base_product.clone()
-                    )).collect();
-                let has_next_page = base_product_edges.len() as i32 == first + 1;
-                if has_next_page {
-                    base_product_edges.pop();
-                };
-                let has_previous_page = true;
-                let start_cursor =  base_product_edges.get(0).map(|e| e.cursor.clone());
-                let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
-                let page_info = PageInfo {
-                    has_next_page,
-                    has_previous_page,
-                    start_cursor,
-                    end_cursor};
-                Connection::new(base_product_edges, page_info)
-            })
-            .wait()
-            .map(Some)
+    ) -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Searching base_products by moderator using relay connection." {
+        base_products_search(executor.context(), first, after, search_term)
     }
 
     field base_products_search_pages(&executor,
         current_page : i32 as "Current page",
         items_count : i32 as "Items count",
         search_term : SearchModeratorBaseProductInput as "Search pattern"
-        )
-            -> FieldResult<Option<Connection<BaseProduct, PageInfoSegments>>> as "Searching base_products by moderator using relay connection." {
-        let context = executor.context();
-
-        let current_page = cmp::max(current_page, 1);
-
-        let records_limit = context.config.gateway.records_limit;
-        let items_count = cmp::max(1, cmp::min(items_count, records_limit as i32));
-
-        let skip = items_count * (current_page - 1);
-
-        let body = serde_json::to_string(&search_term)?;
-
-        let url = format!("{}/{}/moderator_search?skip={}&count={}",
-            context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
-            skip, items_count,
-        );
-
-        let base_product_count_url = format!(
-            "{}/{}/count",
-            context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url());
-        let base_product_count_fut = context.request::<i32>(Method::Get, base_product_count_url, None);
-
-        let body = serde_json::to_string(&search_term)?;
-
-        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
-            .join(base_product_count_fut)
-            .map(|(base_products, total_count)| {
-                let total_pages = total_count / items_count + 1;
-                let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
-                    .into_iter()
-                    .map(|base_product| Edge::new(
-                        juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
-                        base_product.clone()
-                    )).collect();
-                let page_info = PageInfoSegments {
-                    current_page,
-                    page_items_count: items_count,
-                    total_pages,
-                };
-                Connection::new(base_product_edges, page_info)
-            })
-            .wait()
-            .map(Some)
+    ) -> FieldResult<Option<Connection<BaseProduct, PageInfoSegments>>> as "Searching base_products by moderator using relay connection." {
+        base_products_search_pages(executor.context(), current_page, items_count, search_term)
     }
 });
+
+pub fn base_products_search(
+    context: &Context,
+    first: Option<i32>,
+    after: Option<GraphqlID>,
+    search_term: SearchModeratorBaseProductInput,
+) -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> {
+    let body = serde_json::to_string(&search_term)?;
+
+    let raw_id = match after {
+        Some(val) => ID::from_str(&*val)?.raw_id,
+        None => MIN_ID,
+    };
+
+    let records_limit = context.config.gateway.records_limit;
+    let first = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
+
+    let url = format!(
+        "{}/{}/moderator_search?offset={}&count={}",
+        context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url(),
+        raw_id,
+        first
+    );
+
+    context
+        .request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
+        .map(|base_products| {
+            let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
+                .into_iter()
+                .map(|base_product| {
+                    Edge::new(
+                        juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
+                        base_product.clone(),
+                    )
+                }).collect();
+            let has_next_page = base_product_edges.len() as i32 == first + 1;
+            if has_next_page {
+                base_product_edges.pop();
+            };
+            let has_previous_page = true;
+            let start_cursor = base_product_edges.get(0).map(|e| e.cursor.clone());
+            let end_cursor = base_product_edges.iter().last().map(|e| e.cursor.clone());
+            let page_info = PageInfo {
+                has_next_page,
+                has_previous_page,
+                start_cursor,
+                end_cursor,
+            };
+            Connection::new(base_product_edges, page_info)
+        }).wait()
+        .map(Some)
+}
+
+pub fn base_products_search_pages(
+    context: &Context,
+    current_page: i32,
+    items_count: i32,
+    search_term: SearchModeratorBaseProductInput,
+) -> FieldResult<Option<Connection<BaseProduct, PageInfoSegments>>> {
+    let current_page = cmp::max(current_page, 1);
+
+    let records_limit = context.config.gateway.records_limit;
+    let items_count = cmp::max(1, cmp::min(items_count, records_limit as i32));
+
+    let skip = items_count * (current_page - 1);
+
+    let url = format!(
+        "{}/{}/moderator_search?skip={}&count={}",
+        context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url(),
+        skip,
+        items_count,
+    );
+
+    let base_product_count_url = format!(
+        "{}/{}/count",
+        context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url()
+    );
+    let base_product_count_fut = context.request::<i32>(Method::Get, base_product_count_url, None);
+
+    let body = serde_json::to_string(&search_term)?;
+
+    context
+        .request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
+        .join(base_product_count_fut)
+        .map(|(base_products, total_count)| {
+            let total_pages = total_count / items_count + 1;
+            let base_product_edges: Vec<Edge<BaseProduct>> = base_products
+                .into_iter()
+                .map(|base_product| {
+                    Edge::new(
+                        juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
+                        base_product.clone(),
+                    )
+                }).collect();
+            let page_info = PageInfoSegments {
+                current_page,
+                page_items_count: items_count,
+                total_pages,
+            };
+            Connection::new(base_product_edges, page_info)
+        }).wait()
+        .map(Some)
+}
