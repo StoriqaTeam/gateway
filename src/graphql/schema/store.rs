@@ -17,7 +17,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Language, ModerationStatus, Translation};
-use stq_types::{OrderIdentifier, OrderSlug};
+use stq_types::{OrderIdentifier, OrderSlug, ProductId, StoreId};
 
 use super::*;
 use errors::into_graphql;
@@ -720,3 +720,26 @@ graphql_object!(Connection<GraphQLOrder, PageInfoOrdersSearch>: Context as "Orde
         &self.page_info
     }
 });
+
+pub fn get_store_id_by_product(context: &Context, product_id: ProductId) -> FieldResult<StoreId> {
+    let url_store_id = format!(
+        "{}/{}/store_id?product_id={}",
+        context.config.service_url(Service::Stores),
+        Model::Product.to_url(),
+        product_id
+    );
+
+    context
+        .request::<Option<StoreId>>(Method::Get, url_store_id, None)
+        .wait()
+        .and_then(|id| {
+            if let Some(id) = id {
+                Ok(id)
+            } else {
+                Err(FieldError::new(
+                    "Could not find store_id from product id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                ))
+            }
+        })
+}

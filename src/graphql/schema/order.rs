@@ -1,5 +1,6 @@
 //! File containing PageInfo object of graphql schema
 use std::cmp;
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use futures::Future;
@@ -8,18 +9,22 @@ use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 use serde_json;
 
-use stq_api::orders::{CartClient, OrderClient};
-use stq_api::types::ApiFutureExt;
-use stq_routes::model::Model;
-use stq_routes::service::Service;
+use stq_api::{
+    orders::{CartClient, OrderClient},
+    types::ApiFutureExt,
+};
+use stq_routes::{model::Model, service::Service};
 use stq_static_resources::{Currency, OrderState};
+use stq_types::CouponId;
 
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
-use graphql::schema::available_packages;
 use graphql::schema::coupon::try_get_coupon;
+use graphql::schema::coupon::*;
+use graphql::schema::product;
+use graphql::schema::user::get_user_by_id;
 
 graphql_object!(GraphQLOrder: Context as "Order" |&self| {
     description: "Order info."
@@ -340,3 +345,63 @@ graphql_object!(Edge<OrderHistoryItem>: Context as "OrderHistoryItemsEdge" |&sel
         &self.node
     }
 });
+
+pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) -> FieldResult<CreateOrdersOutput> {
+    let user = context.user.clone().ok_or_else(|| {
+        FieldError::new(
+            "Could not create orders for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        )
+    })?;
+
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+    let current_cart = rpc_client.get_cart(user.user_id.into()).sync().map_err(into_graphql)?;
+
+    let mut coupons_info = vec![];
+    for cart_item in current_cart.iter() {
+        if let Some(coupon_id) = cart_item.coupon_id {
+            validate_coupon(context, coupon_id)?;
+            let coupon = get_coupon(context, coupon_id)?;
+            coupons_info.push(coupon);
+        }
+    }
+
+    let products_with_prices = current_cart
+        .iter()
+        .map(|p| product::get_seller_price(context, p.product_id).and_then(|seller_price| Ok((p.product_id, seller_price))))
+        .collect::<FieldResult<CartProductWithPriceHash>>()?;
+
+    if products_with_prices.len() == 0 {
+        return Err(FieldError::new(
+            "Could not create orders for empty cart.",
+            graphql_value!({ "code": 100, "details": { "There is no products, selected in cart." }}),
+        ));
+    }
+
+    let coupons_info = coupons_info
+        .into_iter()
+        .map(|coupon| (coupon.id, coupon))
+        .collect::<HashMap<CouponId, Coupon>>();
+
+    let customer = get_user_by_id(context, user.user_id)?;
+    let delivery_info = cart_product::get_delivery_info(context, &current_cart)?;
+
+    let create_order = CreateOrder {
+        customer_id: user.user_id,
+        address: input.address_full,
+        receiver_name: input.receiver_name,
+        receiver_phone: input.receiver_phone,
+        receiver_email: customer.email,
+        prices: products_with_prices,
+        currency: input.currency,
+        coupons: coupons_info,
+        delivery_info,
+    };
+
+    let url = format!("{}/create_order", context.config.saga_microservice.url.clone());
+    let body: String = serde_json::to_string(&create_order)?.to_string();
+    context
+        .request::<Invoice>(Method::Post, url, Some(body))
+        .wait()
+        .map(CreateOrdersOutput)
+}
