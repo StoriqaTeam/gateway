@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 use futures::prelude::*;
-use hyper::header::{Authorization, Cookie, Header, Headers};
+use hyper::header::{Authorization, Cookie, Headers};
 use juniper;
 use juniper::FieldError;
 use serde::de::DeserializeOwned;
@@ -56,15 +56,11 @@ impl Context {
     }
 
     pub fn get_rest_api_client(&self, s: Service) -> RestApiClient {
+        let header_name = HeaderName::from_static("correlation-token");
+
         let headers = match self.correlation_token.clone() {
-            Some(value) => vec![(
-                HeaderName::from_static(CorrelationToken::header_name()),
-                HeaderValue::from_str(&value.0).unwrap(),
-            )],
-            None => vec![(
-                HeaderName::from_static(CorrelationToken::header_name()),
-                HeaderValue::from_str(&self.uuid).unwrap(),
-            )],
+            Some(value) => vec![(header_name, HeaderValue::from_str(&value.0).unwrap())],
+            None => vec![(header_name, HeaderValue::from_str(&self.uuid).unwrap())],
         }.into_iter()
         .collect::<HeaderMap>();
 
