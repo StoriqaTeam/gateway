@@ -1,7 +1,6 @@
 use chrono::prelude::*;
 use futures::prelude::*;
-use hyper;
-use hyper::header::{Authorization, Cookie, Headers};
+use hyper::header::{Authorization, Cookie, Header, Headers};
 use juniper;
 use juniper::FieldError;
 use serde::de::DeserializeOwned;
@@ -9,6 +8,10 @@ use uuid::Uuid;
 
 use config::Config;
 
+use http::{
+    header::{HeaderName, HeaderValue},
+    HeaderMap,
+};
 use stq_api::rpc_client::RestApiClient;
 use stq_http::client::{ClientHandle, Error};
 use stq_http::request_util::{CorrelationToken, Currency as CurrencyHeader, RequestTimeout};
@@ -53,7 +56,19 @@ impl Context {
     }
 
     pub fn get_rest_api_client(&self, s: Service) -> RestApiClient {
-        RestApiClient::new(&self.config.service_url(s), self.user.clone().map(|u| u.user_id))
+        let headers = match self.correlation_token.clone() {
+            Some(value) => vec![(
+                HeaderName::from_static(CorrelationToken::header_name()),
+                HeaderValue::from_str(&value.0).unwrap(),
+            )],
+            None => vec![(
+                HeaderName::from_static(CorrelationToken::header_name()),
+                HeaderValue::from_str(&self.uuid).unwrap(),
+            )],
+        }.into_iter()
+        .collect::<HeaderMap>();
+
+        RestApiClient::new_with_default_headers(&self.config.service_url(s), self.user.clone().map(|u| u.user_id), Some(headers))
     }
 
     pub fn request<T>(&self, method: hyper::Method, url: String, body: Option<String>) -> Box<Future<Item = T, Error = FieldError> + Send>
