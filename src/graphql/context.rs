@@ -23,6 +23,7 @@ pub struct Context {
     pub user: Option<JWTPayload>,
     pub session_id: Option<SessionId>,
     pub currency: Option<Currency>,
+    pub correlation_token: Option<CorrelationToken>,
     pub uuid: String,
     pub config: Config,
 }
@@ -36,15 +37,18 @@ impl Context {
         session_id: Option<SessionId>,
         currency: Option<Currency>,
         config: Config,
+        correlation_token: Option<CorrelationToken>,
     ) -> Self {
         let uuid = Uuid::new_v4().hyphenated().to_string();
-        Context {
+
+        Self {
             http_client,
             user,
             session_id,
             currency,
             uuid,
             config,
+            correlation_token,
         }
     }
 
@@ -70,7 +74,7 @@ impl Context {
         };
         headers.set(cookie);
 
-        headers.set(CorrelationToken(self.uuid.clone()));
+        self.set_correlation_token(&mut headers);
         headers.set(RequestTimeout(self.get_request_timeout().to_string()));
 
         let dt = Local::now();
@@ -111,5 +115,12 @@ impl Context {
 
     fn get_request_timeout(&self) -> u64 {
         self.config.gateway.http_timeout_ms
+    }
+
+    fn set_correlation_token(&self, headers: &mut hyper::Headers) {
+        match self.correlation_token.as_ref() {
+            Some(value) => headers.set(value.clone()),
+            None => headers.set(CorrelationToken(self.uuid.clone())),
+        }
     }
 }

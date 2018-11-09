@@ -19,6 +19,7 @@ use stq_http::controller::ControllerFuture;
 use stq_http::errors::ErrorMessageWrapper;
 use stq_http::request_util::parse_body;
 use stq_http::request_util::serialize_future;
+use stq_http::request_util::CorrelationToken;
 use stq_http::request_util::Currency as CurrencyHeader;
 use stq_http::request_util::SessionId as SessionIdHeader;
 use stq_router::RouteParser;
@@ -103,6 +104,7 @@ impl Controller for ControllerImpl {
 
                     let session_id_header = headers.get::<SessionIdHeader>().and_then(|sid| sid.parse::<SessionId>().ok());
                     let currency_header = headers.get::<CurrencyHeader>().and_then(|sid| sid.parse::<Currency>().ok());
+                    let correlation_token = headers.get::<CorrelationToken>().map(|token| token.clone());
 
                     serialize_future::<_, FailureError, _>(
                         parse_body::<GraphQLRequest>(req.body())
@@ -113,8 +115,14 @@ impl Controller for ControllerImpl {
                             }).and_then(move |graphql_req| {
                                 cpu_pool
                                     .spawn_fn(move || {
-                                        let graphql_context =
-                                            Context::new(client, token_payload, session_id_header, currency_header, config);
+                                        let graphql_context = Context::new(
+                                            client,
+                                            token_payload,
+                                            session_id_header,
+                                            currency_header,
+                                            config,
+                                            correlation_token,
+                                        );
                                         let resp = graphql_req.execute(&*schema, &graphql_context);
                                         serde_json::to_value(resp)
                                     }).map_err(From::from)
