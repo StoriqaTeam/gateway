@@ -33,6 +33,7 @@ extern crate failure;
 extern crate geo;
 #[macro_use]
 extern crate sentry;
+extern crate http;
 
 pub mod config;
 pub mod controller;

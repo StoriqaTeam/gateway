@@ -40,3 +40,4 @@ tokio-core = "0.1"
 tokio-signal = "0.2.6"
 uuid = { version = "*", features = ["use_std", "v4", "serde"] }
 sentry = "0.12"
+http = "0.1.10"
