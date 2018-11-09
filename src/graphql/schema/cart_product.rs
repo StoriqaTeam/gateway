@@ -268,4 +268,13 @@ fn get_select_package(context: &Context, delivery_method: DeliveryMethodId, prod
     }
 }
 
-//pub fn validate_select_package(cart_product: &CartItem, package: AvailablePackageForUser) {}
+pub fn validate_select_package(cart_product: &CartItem, package: &AvailablePackageForUser) -> FieldResult<()> {
+    if cart_product.store_id != package.store_id {
+        return Err(FieldError::new(
+            "Select package not valid.",
+            graphql_value!({ "code": 100, "details": { "The selected package is not found in the store." }}),
+        ));
+    }
+
+    Ok(())
+}

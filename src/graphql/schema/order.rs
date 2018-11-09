@@ -385,6 +385,12 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) ->
 
     let customer = get_user_by_id(context, user.user_id)?;
     let selected_packages = cart_product::get_selected_packages(context, &current_cart)?;
+
+    // validate packages
+    for (item, package) in selected_packages.iter() {
+        cart_product::validate_select_package(item, package)?;
+    }
+
     let packages = selected_packages
         .into_iter()
         .map(|(item, value)| (item.product_id, value))

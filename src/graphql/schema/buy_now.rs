@@ -143,9 +143,16 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResul
     };
 
     let customer = get_user_by_id(context, user.user_id)?;
+    let package = get_available_package_for_user_by_id(context, ShippingId(input.shipping_id))?;
 
-    let delivery_info = get_available_package_for_user_by_id(context, ShippingId(input.shipping_id))
-        .and_then(|package| Ok(Some(get_delivery_info(package))))?;
+    if store_id != package.store_id {
+        return Err(FieldError::new(
+            "Select package not valid.",
+            graphql_value!({ "code": 100, "details": { "The selected package is not found in the store." }}),
+        ));
+    }
+
+    let delivery_info = get_delivery_info(package);
 
     let buy_now = BuyNow {
         product_id: input.product_id.into(),
@@ -161,7 +168,7 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResul
         pre_order: product.pre_order,
         pre_order_days: product.pre_order_days,
         coupon,
-        delivery_info,
+        delivery_info: Some(delivery_info),
     };
 
     let url = format!("{}/buy_now", context.config.saga_microservice.url.clone());
