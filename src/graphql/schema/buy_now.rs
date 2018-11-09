@@ -5,7 +5,6 @@ use juniper::{FieldError, FieldResult};
 use futures::Future;
 use hyper::Method;
 
-use stq_api::orders::DeliveryInfo;
 use stq_types::*;
 
 use graphql::context::Context;
@@ -121,21 +120,6 @@ fn calculate_delivery(price: ProductPrice, quantity: Quantity) -> f64 {
     }
 
     price.0 * f64::from(quantity.0)
-}
-
-pub fn get_delivery_info(package: AvailablePackageForUser) -> DeliveryInfo {
-    let price = match package.price {
-        Some(price) => price.0,
-        _ => 0.0f64,
-    };
-
-    DeliveryInfo {
-        company_package_id: package.id,
-        shipping_id: package.shipping_id,
-        name: package.name,
-        logo: package.logo,
-        price,
-    }
 }
 
 pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResult<CreateOrdersOutput> {

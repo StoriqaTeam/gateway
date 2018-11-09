@@ -384,7 +384,12 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) ->
         .collect::<HashMap<CouponId, Coupon>>();
 
     let customer = get_user_by_id(context, user.user_id)?;
-    let delivery_info = cart_product::get_delivery_info(context, &current_cart)?;
+    let selected_packages = cart_product::get_selected_packages(context, &current_cart)?;
+    let packages = selected_packages
+        .into_iter()
+        .map(|(item, value)| (item.product_id, value))
+        .collect();
+    let delivery_info = cart_product::get_delivery_info(packages)?;
 
     let create_order = CreateOrder {
         customer_id: user.user_id,

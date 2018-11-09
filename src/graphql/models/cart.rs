@@ -29,6 +29,7 @@ pub struct CartProduct {
     pub selected: bool,
     pub quantity: Quantity,
     pub comment: String,
+    pub store_id: StoreId,
     pub base_product_id: BaseProductId,
     pub pre_order: bool,
     pub pre_order_days: i32,
@@ -231,23 +232,25 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                             Some(
                                 v.iter_mut()
                                     .map(|variant| {
-                                        let (quantity, selected, comment, coupon_id, company_package_id, delivery_method_id) = products
-                                            .iter()
-                                            .find(|v| v.product_id == variant.id)
-                                            .map(|v| {
-                                                let company_package_id = match v.delivery_method_id {
-                                                    Some(DeliveryMethodId::Package { id }) => Some(id),
-                                                    _ => None,
-                                                };
-                                                (
-                                                    v.quantity,
-                                                    v.selected,
-                                                    v.comment.clone(),
-                                                    v.coupon_id,
-                                                    company_package_id,
-                                                    v.delivery_method_id,
-                                                )
-                                            }).unwrap_or_default();
+                                        let (quantity, selected, comment, coupon_id, company_package_id, delivery_method_id, store_id) =
+                                            products
+                                                .iter()
+                                                .find(|v| v.product_id == variant.id)
+                                                .map(|v| {
+                                                    let company_package_id = match v.delivery_method_id {
+                                                        Some(DeliveryMethodId::Package { id }) => Some(id),
+                                                        _ => None,
+                                                    };
+                                                    (
+                                                        v.quantity,
+                                                        v.selected,
+                                                        v.comment.clone(),
+                                                        v.coupon_id,
+                                                        company_package_id,
+                                                        v.delivery_method_id,
+                                                        v.store_id,
+                                                    )
+                                                }).unwrap_or_default();
 
                                         CartProduct {
                                             id: variant.id,
@@ -259,6 +262,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem]) -> Cart {
                                             price: variant.price,
                                             quantity,
                                             comment,
+                                            store_id,
                                             pre_order: variant.pre_order,
                                             pre_order_days: variant.pre_order_days,
                                             coupon_id,
