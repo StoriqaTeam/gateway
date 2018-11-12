@@ -37,6 +37,7 @@ stq_routes = { path = "vendor/libstqbackend/routes" }
 stq_static_resources = { path = "vendor/libstqbackend/static_resources" }
 stq_types = { path = "vendor/libstqbackend/types" }
 tokio-core = "0.1"
+tokio-signal = "0.2.6"
 uuid = { version = "*", features = ["use_std", "v4", "serde"] }
 sentry = "0.12"
 http = "0.1.10"

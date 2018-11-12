@@ -1,10 +1,19 @@
 //! File containing buy now values object of graphql schema
 
-use stq_api::orders::DeliveryInfo;
-use stq_types::{ProductPrice, Quantity};
+use juniper::{FieldError, FieldResult};
+
+use futures::Future;
+use hyper::Method;
+
+use stq_types::*;
 
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::available_packages::*;
+use graphql::schema::coupon;
+use graphql::schema::product as module_product;
+use graphql::schema::store;
+use graphql::schema::user::get_user_by_id;
 
 graphql_object!(BuyNowCheckout: Context as "BuyNowCheckout" |&self| {
     description: "buy now values info."
@@ -113,17 +122,116 @@ fn calculate_delivery(price: ProductPrice, quantity: Quantity) -> f64 {
     price.0 * f64::from(quantity.0)
 }
 
-pub fn get_delivery_info(package: AvailablePackageForUser) -> DeliveryInfo {
-    let price = match package.price {
-        Some(price) => price.0,
-        _ => 0.0f64,
+pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResult<CreateOrdersOutput> {
+    let user = context.user.clone().ok_or_else(|| {
+        FieldError::new(
+            "Could not run for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        )
+    })?;
+
+    let product_price = module_product::get_seller_price(context, ProductId(input.product_id))?;
+    let store_id = store::get_store_id_by_product(context, ProductId(input.product_id))?;
+    let product = module_product::get_product(context, ProductId(input.product_id))?;
+
+    let coupon = match input.coupon_code {
+        Some(code) => {
+            let coupon = validate_coupon(context, CouponCode(code), ProductId(input.product_id), store_id)?;
+            Some(coupon)
+        }
+        None => None,
     };
 
-    DeliveryInfo {
-        company_package_id: package.id,
-        shipping_id: package.shipping_id,
-        name: package.name,
-        logo: package.logo,
-        price,
+    let customer = get_user_by_id(context, user.user_id)?;
+    let package = get_available_package_for_user_by_id(context, ShippingId(input.shipping_id))?;
+
+    if store_id != package.store_id {
+        return Err(FieldError::new(
+            "Select package not valid.",
+            graphql_value!({ "code": 100, "details": { "The selected package is not found in the store." }}),
+        ));
     }
+
+    let delivery_info = get_delivery_info(package);
+
+    let buy_now = BuyNow {
+        product_id: input.product_id.into(),
+        store_id,
+        customer_id: user.user_id,
+        address: input.address_full,
+        receiver_name: input.receiver_name,
+        receiver_phone: input.receiver_phone,
+        receiver_email: customer.email,
+        price: product_price,
+        quantity: input.quantity.into(),
+        currency: input.currency,
+        pre_order: product.pre_order,
+        pre_order_days: product.pre_order_days,
+        coupon,
+        delivery_info: Some(delivery_info),
+    };
+
+    let url = format!("{}/buy_now", context.config.saga_microservice.url.clone());
+    let body: String = serde_json::to_string(&buy_now)?.to_string();
+    context
+        .request::<Invoice>(Method::Post, url, Some(body))
+        .wait()
+        .map(CreateOrdersOutput)
+}
+
+pub fn calculate_buy_now(
+    context: &Context,
+    product_id: i32,
+    quantity: i32,
+    coupon_code: Option<String>,
+    shipping_id: Option<i32>,
+) -> FieldResult<BuyNowCheckout> {
+    let store_id = store::get_store_id_by_product(context, ProductId(product_id))?;
+    let product = module_product::get_product(context, ProductId(product_id))?;
+
+    let coupon = match coupon_code {
+        Some(code) => {
+            let coupon = validate_coupon(context, CouponCode(code), ProductId(product_id), store_id)?;
+            Some(coupon)
+        }
+        None => None,
+    };
+
+    let package = match shipping_id {
+        Some(shipping_id) => {
+            let result = get_available_package_for_user_by_id(context, ShippingId(shipping_id))?;
+
+            Some(result)
+        }
+        _ => None,
+    };
+
+    Ok(BuyNowCheckout {
+        product,
+        quantity: quantity.into(),
+        coupon,
+        package,
+    })
+}
+
+fn validate_coupon(context: &Context, coupon_code: CouponCode, product_id: ProductId, store_id: StoreId) -> FieldResult<Coupon> {
+    coupon::validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
+    let coupon = coupon::get_coupon_by_code(context, coupon_code, store_id)?;
+
+    let all_support_products = coupon::get_products(context, coupon.id)?
+        .into_iter()
+        .filter(|p| match p.discount {
+            Some(discount) => discount < ZERO_DISCOUNT,
+            None => true,
+        }).filter(|p| p.id == product_id)
+        .collect::<Vec<Product>>();
+
+    if all_support_products.is_empty() {
+        return Err(FieldError::new(
+            "Coupon not set",
+            graphql_value!({ "code": 400, "details": { "no products found for coupon usage" }}),
+        ));
+    }
+
+    Ok(coupon)
 }

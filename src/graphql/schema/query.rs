@@ -8,7 +8,6 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 use uuid::Uuid;
 
-use graphql::schema::coupon::*;
 use stq_api::orders::{CartClient, OrderClient};
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
@@ -16,13 +15,13 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::Currency;
 use stq_static_resources::{Language, LanguageGraphQl, OrderState, TemplateVariant};
-use stq_types::{CouponCode, OrderId, ShippingId, StoreId, WarehouseId};
+use stq_types::{OrderId, WarehouseId};
 
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
-use schema::available_packages::*;
+use schema::buy_now;
 
 pub const QUERY_NODE_ID: i32 = 1;
 
@@ -261,101 +260,12 @@ graphql_object!(Query: Context |&self| {
     field calculate_buy_now(&executor, product_id: i32 as "Product raw id",
                             quantity: i32 as "Quantity",
                             coupon_code: Option<String> as "Coupon code",
-                            company_package_id: Option<i32> as "[DEPRECATED] Select available package raw id",
+                            _company_package_id: Option<i32> as "[DEPRECATED] Select available package raw id",
                             shipping_id: Option<i32> as "Select available package shipping raw id") -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
 
         let context = executor.context();
 
-        let url_store_id = format!("{}/{}/store_id?product_id={}",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        product_id);
-
-        let store_id = context.request::<Option<StoreId>>(Method::Get, url_store_id, None)
-        .wait()
-            .and_then(|id|{
-            if let Some(id) = id {
-                Ok(id)
-            } else {
-                Err(FieldError::new(
-                    "Could not find store_id from product id.",
-                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
-                    ))
-            }
-        })?;
-
-        let url_product = format!("{}/{}/{}",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        product_id);
-
-        let product = context.request::<Option<Product>>(Method::Get, url_product, None)
-        .wait()
-            .and_then(|value|{
-            if let Some(value) = value {
-                Ok(value)
-            } else {
-                Err(FieldError::new(
-                    "Could not find Product from product id.",
-                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
-                    ))
-            }
-        })?;
-
-        let coupon = match coupon_code {
-            Some(code) => {
-                let coupon_code = CouponCode(code);
-                validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
-                let coupon = get_coupon_by_code(context, coupon_code, store_id)?;
-
-                // validate products
-                let url = format!("{}/{}/{}/base_products",
-                    context.config.service_url(Service::Stores),
-                    Model::Coupon.to_url(),
-                    coupon.id);
-                let base_products = context.request::<Vec<BaseProduct>>(Method::Get, url, None).wait()?;
-                let all_support_products = base_products.into_iter().flat_map(|b| {
-                    if let Some(variants) = b.variants {
-                        variants
-                    } else {
-                        vec![]
-                    }
-                    })
-                .filter(|p|
-                    match p.discount {
-                        Some(discount) => discount < ZERO_DISCOUNT,
-                        None => true,
-                    })
-                .filter(|p| p.id == product.id)
-                .collect::<Vec<Product>>();
-
-            if all_support_products.is_empty() {
-                return Err(FieldError::new(
-                    "Coupon not set",
-                    graphql_value!({ "code": 400, "details": { "no products found for coupon usage" }}),
-                ));
-            }
-
-            Some(coupon)
-            },
-            None => None,
-        };
-
-        let package = match shipping_id {
-            Some(shipping_id) => {
-                let result = get_available_package_for_user_by_id(context, ShippingId(shipping_id))?;
-
-                Some(result)
-            },
-            _ => None,
-        };
-
-        Ok(BuyNowCheckout {
-            product,
-            quantity: quantity.into(),
-            coupon,
-            package,
-        })
+        buy_now::calculate_buy_now(context, product_id, quantity, coupon_code, shipping_id)
     }
 
     field currency_exchange(&executor) -> FieldResult<Option<Vec<CurrencyExchange>>> as "Fetches currency exchange." {

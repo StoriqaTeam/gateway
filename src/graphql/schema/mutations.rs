@@ -1,5 +1,4 @@
 //! File containing mutations object of graphql schema
-use std::collections::HashMap;
 use std::collections::HashSet;
 use std::str::FromStr;
 use std::time::SystemTime;
@@ -7,7 +6,6 @@ use std::time::SystemTime;
 use futures::Future;
 use graphql::context::Context;
 use graphql::models::*;
-use graphql::schema::available_packages::*;
 use graphql::schema::coupon::*;
 use hyper::Method;
 use juniper::{FieldError, FieldResult};
@@ -26,8 +24,7 @@ use stq_types::{
 
 use errors::into_graphql;
 use graphql::schema::buy_now;
-use graphql::schema::cart_product;
-use graphql::schema::user::get_user_by_id;
+use graphql::schema::order;
 
 pub struct Mutation;
 
@@ -1253,230 +1250,13 @@ graphql_object!(Mutation: Context |&self| {
     field createOrders(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
         let context = executor.context();
 
-        let user = context.user.clone().ok_or_else(||
-            FieldError::new(
-                "Could not create cart for unauthorized user.",
-                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-            )
-        )?;
-
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        let current_cart = rpc_client.get_cart(user.user_id.into()).sync().map_err(into_graphql)?;
-
-        for cart_item in current_cart.iter() {
-            if let Some(coupon_id) = cart_item.coupon_id {
-                validate_coupon(context, coupon_id)?;
-            }
-        }
-
-        let products_with_prices = current_cart.iter()
-                .map(|p| {
-
-                    let url = format!("{}/{}/{}/seller_price",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        p.product_id);
-
-                    context.request::<Option<ProductSellerPrice>>(Method::Get, url, None).wait().and_then(|seller_price|{
-                        if let Some(seller_price) = seller_price {
-                            Ok((p.product_id, seller_price))
-                        } else {
-                            Err(FieldError::new(
-                                "Could not find product seller price from id received from cart.",
-                                graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
-                            ))
-                        }
-                    })
-                })
-                .collect::<FieldResult<CartProductWithPriceHash>>()?;
-
-        if products_with_prices.len() == 0  {
-            return Err(FieldError::new(
-                "Could not create orders for empty cart.",
-                graphql_value!({ "code": 100, "details": { "There is no products, selected in cart." }}),
-            ));
-        }
-
-        let mut coupons_info = vec![];
-        for cart_item in current_cart.iter() {
-            if let Some(coupon_id) = cart_item.coupon_id {
-                try_get_coupon(context, coupon_id)?.map(|coupon|{
-                    coupons_info.push(coupon);
-                });
-            }
-        }
-
-        let coupons_info = coupons_info.into_iter()
-            .map(|coupon| {
-                (coupon.id, coupon)
-            })
-            .collect::<HashMap<CouponId, Coupon>>();
-
-        let customer = get_user_by_id(context, user.user_id)?;
-
-        let delivery_info = cart_product::get_delivery_info(context, &current_cart)?;
-
-        let create_order = CreateOrder {
-            customer_id: user.user_id,
-            address: input.address_full,
-            receiver_name: input.receiver_name,
-            receiver_phone: input.receiver_phone,
-            receiver_email: customer.email,
-            prices: products_with_prices,
-            currency: input.currency,
-            coupons: coupons_info,
-            delivery_info,
-        };
-
-        let url = format!("{}/create_order",
-            context.config.saga_microservice.url.clone());
-
-        let body: String = serde_json::to_string(&create_order)?.to_string();
-
-        context.request::<Invoice>(Method::Post, url, Some(body))
-            .wait()
-            .map(CreateOrdersOutput)
+        order::run_create_orders_mutation(context, input)
     }
 
     field buyNow(&executor, input: BuyNowInput as "Buy now input.") -> FieldResult<CreateOrdersOutput> as "Creates orders." {
         let context = executor.context();
 
-        let user = context.user.clone().ok_or_else(||
-            FieldError::new(
-                "Could not create cart for unauthorized user.",
-                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-            )
-        )?;
-
-        let url = format!("{}/{}/{}/seller_price",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        input.product_id);
-
-        let product_price = context.request::<Option<ProductSellerPrice>>(Method::Get, url, None)
-        .wait()
-            .and_then(|seller_price|{
-            if let Some(seller_price) = seller_price {
-                Ok(seller_price)
-            } else {
-                Err(FieldError::new(
-                    "Could not find product seller price from product id.",
-                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
-                    ))
-            }
-        })?;
-
-        let url_store_id = format!("{}/{}/store_id?product_id={}",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        input.product_id);
-
-        let store_id = context.request::<Option<StoreId>>(Method::Get, url_store_id, None)
-        .wait()
-            .and_then(|id|{
-            if let Some(id) = id {
-                Ok(id)
-            } else {
-                Err(FieldError::new(
-                    "Could not find store_id from product id.",
-                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
-                    ))
-            }
-        })?;
-
-        let url_product = format!("{}/{}/{}",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        input.product_id);
-
-        let product = context.request::<Option<Product>>(Method::Get, url_product, None)
-        .wait()
-            .and_then(|value|{
-            if let Some(value) = value {
-                Ok(value)
-            } else {
-                Err(FieldError::new(
-                    "Could not find Product from product id.",
-                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
-                    ))
-            }
-        })?;
-
-        let coupon = match input.coupon_code {
-            Some(code) => {
-                let coupon_code = CouponCode(code);
-                validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
-                let coupon = get_coupon_by_code(context, coupon_code, store_id)?;
-
-                // validate products
-                let url = format!("{}/{}/{}/base_products",
-                    context.config.service_url(Service::Stores),
-                    Model::Coupon.to_url(),
-                    coupon.id);
-                let base_products = context.request::<Vec<BaseProduct>>(Method::Get, url, None).wait()?;
-                let all_support_products = base_products.into_iter().flat_map(|b| {
-                    if let Some(variants) = b.variants {
-                        variants
-                    } else {
-                        vec![]
-                    }
-                    })
-                .filter(|p|
-                    match p.discount {
-                        Some(discount) => discount < ZERO_DISCOUNT,
-                        None => true,
-                    })
-                .filter(|p| p.id == product.id)
-                .collect::<Vec<Product>>();
-
-            if all_support_products.is_empty() {
-                return Err(FieldError::new(
-                    "Coupon not set",
-                    graphql_value!({ "code": 400, "details": { "no products found for coupon usage" }}),
-                ));
-            }
-
-            Some(coupon)
-            },
-            None => None,
-        };
-
-        let customer = get_user_by_id(context, user.user_id)?;
-
-        let delivery_info = match input.shipping_id {
-            Some(shipping_id) => {
-                let package = get_available_package_for_user_by_id(context, ShippingId(shipping_id))?;
-
-                Some(buy_now::get_delivery_info(package))
-            },
-            _ => None,
-        };
-
-        let buy_now = BuyNow {
-            product_id: input.product_id.into(),
-            store_id,
-            customer_id: user.user_id,
-            address: input.address_full,
-            receiver_name: input.receiver_name,
-            receiver_phone: input.receiver_phone,
-            receiver_email: customer.email,
-            price: product_price,
-            quantity: input.quantity.into(),
-            currency: input.currency,
-            pre_order: product.pre_order,
-            pre_order_days: product.pre_order_days,
-            coupon,
-            delivery_info,
-        };
-
-        let url = format!("{}/buy_now",
-            context.config.saga_microservice.url.clone());
-
-        let body: String = serde_json::to_string(&buy_now)?.to_string();
-
-        context.request::<Invoice>(Method::Post, url, Some(body))
-            .wait()
-            .map(CreateOrdersOutput)
+        buy_now::run_buy_now_mutation(context, input)
     }
 
     field createOrdersFiat(&executor, input: CreateOrderFiatInput as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart with FIAT billing." {

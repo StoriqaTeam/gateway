@@ -177,3 +177,23 @@ pub fn try_get_coupon(context: &Context, coupon_id: CouponId) -> FieldResult<Opt
 
     context.request::<Option<Coupon>>(Method::Get, url, None).wait()
 }
+
+pub fn get_base_products(context: &Context, coupon_id: CouponId) -> FieldResult<Vec<BaseProduct>> {
+    let url = format!(
+        "{}/{}/{}/base_products",
+        context.config.service_url(Service::Stores),
+        Model::Coupon.to_url(),
+        coupon_id
+    );
+
+    context.request::<Vec<BaseProduct>>(Method::Get, url, None).wait()
+}
+
+pub fn get_products(context: &Context, coupon_id: CouponId) -> FieldResult<Vec<Product>> {
+    let products = get_base_products(context, coupon_id)?
+        .into_iter()
+        .flat_map(|b| if let Some(variants) = b.variants { variants } else { vec![] })
+        .collect::<Vec<Product>>();
+
+    Ok(products)
+}

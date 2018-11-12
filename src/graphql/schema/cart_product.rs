@@ -226,30 +226,32 @@ pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> Fiel
     Ok(0.0f64)
 }
 
-pub fn get_delivery_info(context: &Context, cart_items: &HashSet<CartItem>) -> FieldResult<HashMap<ProductId, DeliveryInfo>> {
-    let mut delivery_info = vec![];
+pub fn get_selected_packages<'a>(
+    context: &Context,
+    cart_items: &'a HashSet<CartItem>,
+) -> FieldResult<HashMap<&'a CartItem, AvailablePackageForUser>> {
+    let mut packages = vec![];
 
     for cart_item in cart_items.iter() {
         if let Some(delivery_method_id) = cart_item.delivery_method_id {
             let package = get_select_package(context, delivery_method_id, cart_item.product_id)?;
-            let price = match package.price {
-                Some(price) => price.0,
-                _ => 0.0f64,
-            };
-
-            let element = DeliveryInfo {
-                company_package_id: package.id,
-                shipping_id: package.shipping_id,
-                name: package.name,
-                logo: package.logo,
-                price,
-            };
-
-            delivery_info.push((cart_item.product_id, element));
+            packages.push((cart_item, package));
         }
     }
 
-    Ok(delivery_info.into_iter().collect::<HashMap<ProductId, DeliveryInfo>>())
+    Ok(packages.into_iter().collect())
+}
+
+pub fn get_delivery_info(packages: HashMap<ProductId, AvailablePackageForUser>) -> FieldResult<HashMap<ProductId, DeliveryInfo>> {
+    let delivery_info = packages
+        .into_iter()
+        .map(|(product_id, package)| {
+            let element = available_packages::get_delivery_info(package);
+
+            (product_id, element)
+        }).collect::<HashMap<ProductId, DeliveryInfo>>();
+
+    Ok(delivery_info)
 }
 
 fn get_select_package(context: &Context, delivery_method: DeliveryMethodId, product_id: ProductId) -> FieldResult<AvailablePackageForUser> {
@@ -264,4 +266,15 @@ fn get_select_package(context: &Context, delivery_method: DeliveryMethodId, prod
             graphql_value!({ "code": 100, "details": { "Delivery method not support." }}),
         )),
     }
+}
+
+pub fn validate_select_package(cart_product: &CartItem, package: &AvailablePackageForUser) -> FieldResult<()> {
+    if cart_product.store_id != package.store_id {
+        return Err(FieldError::new(
+            "Select package not valid.",
+            graphql_value!({ "code": 100, "details": { "The selected package is not found in the store." }}),
+        ));
+    }
+
+    Ok(())
 }

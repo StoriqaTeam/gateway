@@ -4,6 +4,7 @@ use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
+use stq_api::orders::DeliveryInfo;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
@@ -142,4 +143,19 @@ pub fn get_available_package_for_user_by_id(context: &Context, shipping_id: Ship
                 graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
             )
         })
+}
+
+pub fn get_delivery_info(package: AvailablePackageForUser) -> DeliveryInfo {
+    let price = match package.price {
+        Some(price) => price.0,
+        _ => 0.0f64,
+    };
+
+    DeliveryInfo {
+        company_package_id: package.id,
+        shipping_id: package.shipping_id,
+        name: package.name,
+        logo: package.logo,
+        price,
+    }
 }

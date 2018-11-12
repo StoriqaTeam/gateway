@@ -26,6 +26,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 extern crate tokio_core;
+extern crate tokio_signal;
 extern crate uuid;
 #[macro_use]
 extern crate failure;
@@ -45,7 +46,6 @@ use std::io::prelude::*;
 use std::process;
 use std::sync::Arc;
 
-use futures::future;
 use futures::prelude::*;
 use futures::stream::Stream;
 use futures_cpupool::CpuPool;
@@ -121,5 +121,9 @@ pub fn start(config: Config) {
     );
 
     //info!("Listening on http://{}, threads: {}", address, thread_count);
-    core.run(future::empty::<(), ()>()).unwrap();
+    let endless_stream = tokio_signal::ctrl_c().flatten_stream().take(1u64).for_each(|()| {
+        info!("Ctrl+C received. Exit");
+        Ok(())
+    });
+    core.run(endless_stream).unwrap();
 }

@@ -11,7 +11,7 @@ use stq_api::warehouses::{Stock, Warehouse, WarehouseClient};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
-use stq_types::{ProductId, Quantity, StockId};
+use stq_types::{ProductId, ProductSellerPrice, Quantity, StockId};
 
 use errors::into_graphql;
 
@@ -225,6 +225,29 @@ pub fn get_product(context: &Context, product_id: ProductId) -> FieldResult<Prod
             } else {
                 Err(FieldError::new(
                     "Could not find Product from product id.",
+                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                ))
+            }
+        })
+}
+
+pub fn get_seller_price(context: &Context, product_id: ProductId) -> FieldResult<ProductSellerPrice> {
+    let url = format!(
+        "{}/{}/{}/seller_price",
+        context.config.service_url(Service::Stores),
+        Model::Product.to_url(),
+        product_id
+    );
+
+    context
+        .request::<Option<ProductSellerPrice>>(Method::Get, url, None)
+        .wait()
+        .and_then(|seller_price| {
+            if let Some(seller_price) = seller_price {
+                Ok(seller_price)
+            } else {
+                Err(FieldError::new(
+                    "Could not find product seller price from product id.",
                     graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
                 ))
             }
