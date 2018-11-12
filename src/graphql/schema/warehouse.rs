@@ -9,10 +9,10 @@ use juniper::ID as GraphqlID;
 use serde_json;
 
 use stq_api::types::ApiFutureExt;
-use stq_api::warehouses::{Stock, WarehouseClient};
+use stq_api::warehouses::{Stock, Warehouse, WarehouseClient};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{ProductId, Quantity, StockId};
+use stq_types::{ProductId, Quantity, StockId, StoreId};
 
 use super::*;
 use errors::into_graphql;
@@ -70,7 +70,7 @@ graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Base64 Id of base product",
         current_page : i32 as "Current page",
-        items_count : i32 as "Items count", 
+        items_count : i32 as "Items count",
         search_term : Option<SearchProductInput> as "Search pattern",
         visibility : Option<Visibility> as "Specifies allowed visibility of the base products"
     ) -> FieldResult<Option<Connection<GraphQLStock, PageInfoWarehouseProductSearch>>> as "Find products of the warehouse using relay connection." {
@@ -179,9 +179,9 @@ graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
     }
 
     field auto_complete_product_name(&executor,
-        first = None : Option<i32> as "First edges", 
-        after = None : Option<GraphqlID>  as "Offset form begining", 
-        name : String as "Name part") 
+        first = None : Option<i32> as "First edges",
+        after = None : Option<GraphqlID>  as "Offset form begining",
+        name : String as "Name part")
             -> FieldResult<Option<Connection<String, PageInfo>>> as "Finds products full name by part of the name." {
 
         let context = executor.context();
@@ -256,3 +256,14 @@ graphql_object!(Edge<GraphQLStock>: Context as "StocksEdge" |&self| {
         &self.node
     }
 });
+
+pub fn get_warehouses_for_store(context: &Context, store_id: StoreId) -> FieldResult<Vec<Warehouse>> {
+    let url = format!(
+        "{}/{}/by-store/{}",
+        context.config.service_url(Service::Warehouses),
+        Model::Warehouse.to_url(),
+        store_id,
+    );
+
+    context.request::<Vec<Warehouse>>(Method::Get, url, None).wait()
+}

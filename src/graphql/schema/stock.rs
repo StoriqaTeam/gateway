@@ -5,10 +5,10 @@ use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_api::types::ApiFutureExt;
-use stq_api::warehouses::WarehouseClient;
+use stq_api::warehouses::{Stock, WarehouseClient};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::WarehouseIdentifier;
+use stq_types::{ProductId, WarehouseId, WarehouseIdentifier};
 
 use errors::into_graphql;
 
@@ -66,3 +66,26 @@ graphql_object!(GraphQLStock: Context as "Stock" |&self| {
     }
 
 });
+
+pub fn try_get_stock_for_warehouse(context: &Context, warehouse_id: WarehouseId, product_id: ProductId) -> FieldResult<Option<Stock>> {
+    let url = format!(
+        "{}/{}/by-id/{}/products/{}",
+        context.config.service_url(Service::Warehouses),
+        Model::Warehouse.to_url(),
+        warehouse_id,
+        product_id,
+    );
+
+    context.request::<Option<Stock>>(Method::Get, url, None).wait()
+}
+
+pub fn get_stocks_for_product(context: &Context, product_id: ProductId) -> FieldResult<Vec<Stock>> {
+    let url = format!(
+        "{}/{}/by-product-id/{}",
+        context.config.service_url(Service::Warehouses),
+        Model::Stock.to_url(),
+        product_id,
+    );
+
+    context.request::<Vec<Stock>>(Method::Get, url, None).wait()
+}
