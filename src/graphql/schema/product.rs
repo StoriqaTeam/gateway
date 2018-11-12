@@ -206,16 +206,12 @@ impl Product {
                 .map(|warehouse| {
                     module_stock::try_get_stock_for_warehouse(context, warehouse.id, self.id)
                         .map(|stock| {
-                            if let Some(stock) = stock {
-                                stock
-                            } else {
-                                Stock {
-                                    id: StockId::new(),
-                                    product_id: self.id,
-                                    warehouse_id: warehouse.id,
-                                    quantity: Quantity::default(),
-                                }
-                            }
+                            stock.unwrap_or(Stock {
+                                id: StockId::new(),
+                                product_id: self.id,
+                                warehouse_id: warehouse.id,
+                                quantity: Quantity::default(),
+                            })
                         }).map(GraphQLStock)
                 }).collect::<FieldResult<Vec<GraphQLStock>>>()
         })
@@ -223,7 +219,7 @@ impl Product {
 
     fn get_quantity(&self, context: &Context) -> FieldResult<Option<i32>> {
         module_stock::get_stocks_for_product(context, self.id)
-            .map(|products| products.iter().fold(0, |acc, p| acc + p.quantity.0))
+            .map(|products| products.iter().map(|p| p.quantity.0).sum())
             .map(Some)
     }
 }

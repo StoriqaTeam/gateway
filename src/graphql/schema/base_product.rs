@@ -381,9 +381,7 @@ pub fn try_get_base_product(context: &Context, base_product_id: BaseProductId, v
 }
 
 pub fn get_base_product(context: &Context, base_product_id: BaseProductId, visibility: Visibility) -> FieldResult<BaseProduct> {
-    let result = try_get_base_product(context, base_product_id, visibility)?;
-
-    result.ok_or_else(|| {
+    try_get_base_product(context, base_product_id, visibility)?.ok_or_else(|| {
         FieldError::new(
             "Base product not found",
             graphql_value!({ "code": 400, "details": { "base product for this product not found" }}),
