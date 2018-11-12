@@ -546,6 +546,21 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field deleteCategory(&executor, input: DeleteCategoryInput as "Category to delete") -> FieldResult<Mock> as "Delete specific category" {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Category.to_url(),
+            input.cat_id,
+        );
+
+        context.request::<()>(Method::Delete, url, None)
+            .wait()?;
+        Ok(Mock{})
+    }
+
     field addAttributeToCategory(&executor, input: AddAttributeToCategoryInput as "Create category input.") -> FieldResult<Mock> as "Creates new category." {
         let context = executor.context();
         let url = format!("{}/{}/attributes",
