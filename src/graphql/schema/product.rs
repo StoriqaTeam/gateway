@@ -6,18 +6,18 @@ use juniper;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_api::types::ApiFutureExt;
-use stq_api::warehouses::{Stock, Warehouse, WarehouseClient};
+use stq_api::warehouses::{Stock, Warehouse};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
 use stq_types::{ProductId, ProductSellerPrice, Quantity, StockId};
 
-use errors::into_graphql;
-
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::base_product as module_base_product;
+use graphql::schema::stock as module_stock;
+use graphql::schema::warehouse as module_warehouse;
 
 graphql_object!(Product: Context as "Product" |&self| {
     description: "Product's info."
@@ -82,16 +82,7 @@ graphql_object!(Product: Context as "Product" |&self| {
         let context = executor.context();
         let visibility = visibility.unwrap_or_default();
 
-        let url = format!(
-            "{}/{}/{}?visibility={}",
-            &context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
-            self.base_product_id.to_string(),
-            visibility,
-        );
-
-        context.request::<Option<BaseProduct>>(Method::Get, url, None)
-            .wait()
+        module_base_product::try_get_base_product(context, self.base_product_id, visibility)
     }
 
     field attributes(&executor) -> FieldResult<Option<Vec<AttrValue>>> as "Variants" {
@@ -110,64 +101,14 @@ graphql_object!(Product: Context as "Product" |&self| {
     field quantity(&executor) -> FieldResult<Option<i32>> as "Fetches product quantity from warehouses." {
         let context = executor.context();
 
-        let rpc_client = context.get_rest_api_client(Service::Warehouses);
-        rpc_client.find_by_product_id(self.id)
-            .sync()
-            .map_err(into_graphql)
-            .map(|products| {
-                products.iter().fold(0, |acc, p| {
-                    acc + p.quantity.0
-                })
-            })
-            .map(Some)
+        self.get_quantity(context)
     }
 
     field stocks(&executor,
         visibility: Option<Visibility> as "Specifies allowed visibility of the stocks") -> FieldResult<Vec<GraphQLStock>> as "Find product on warehouses." {
 
        let context = executor.context();
-       let visibility = visibility.unwrap_or(Visibility::Active);
-
-       let url = format!(
-            "{}/{}/{}?visibility={}",
-            &context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
-            self.base_product_id.to_string(),
-            visibility,
-        );
-
-        let store_id = context.request::<Option<BaseProduct>>(Method::Get, url, None)
-            .wait()?
-            .ok_or_else(|| FieldError::new(
-                        "Base product not found",
-                        graphql_value!({ "code": 400, "details": { "base product for this product not found" }}),
-                    ))
-            .map(|base_product| base_product.store_id)?;
-
-        let rpc_client = context.get_rest_api_client(Service::Warehouses);
-        rpc_client.get_warehouses_for_store(store_id)
-            .sync()
-            .map_err(into_graphql)
-            .and_then (|warehouses: Vec<Warehouse>| {
-                warehouses.into_iter().map(|warehouse| {
-                    rpc_client.get_product_in_warehouse(warehouse.id, self.id)
-                        .sync()
-                        .map_err(into_graphql)
-                        .map (|stock| {
-                            if let Some(stock) = stock {
-                                stock
-                            } else {
-                                Stock {
-                                    id: StockId::new(),
-                                    product_id: self.id,
-                                    warehouse_id: warehouse.id,
-                                    quantity: Quantity::default(),
-                                }
-                            }
-                        })
-                        .map(GraphQLStock)
-                }).collect::<FieldResult<Vec<GraphQLStock>>>()
-            })
+       self.get_stocks(context, visibility)
     }
 
 });
@@ -252,4 +193,33 @@ pub fn get_seller_price(context: &Context, product_id: ProductId) -> FieldResult
                 ))
             }
         })
+}
+
+impl Product {
+    fn get_stocks(&self, context: &Context, visibility: Option<Visibility>) -> FieldResult<Vec<GraphQLStock>> {
+        let visibility = visibility.unwrap_or(Visibility::Active);
+        let store_id = module_base_product::get_base_product(context, self.base_product_id, visibility)?.store_id;
+
+        module_warehouse::get_warehouses_for_store(context, store_id).and_then(|warehouses: Vec<Warehouse>| {
+            warehouses
+                .into_iter()
+                .map(|warehouse| {
+                    module_stock::try_get_stock_for_warehouse(context, warehouse.id, self.id)
+                        .map(|stock| {
+                            stock.unwrap_or(Stock {
+                                id: StockId::new(),
+                                product_id: self.id,
+                                warehouse_id: warehouse.id,
+                                quantity: Quantity::default(),
+                            })
+                        }).map(GraphQLStock)
+                }).collect::<FieldResult<Vec<GraphQLStock>>>()
+        })
+    }
+
+    fn get_quantity(&self, context: &Context) -> FieldResult<Option<i32>> {
+        module_stock::get_stocks_for_product(context, self.id)
+            .map(|products| products.iter().map(|p| p.quantity.0).sum())
+            .map(Some)
+    }
 }
