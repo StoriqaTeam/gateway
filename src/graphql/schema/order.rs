@@ -357,6 +357,13 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) ->
     let rpc_client = context.get_rest_api_client(Service::Orders);
     let current_cart = rpc_client.get_cart(user.user_id.into()).sync().map_err(into_graphql)?;
 
+    if let Some(cart_item) = current_cart.iter().find(|p| p.delivery_method_id.is_none()) {
+        return Err(FieldError::new(
+            "Not select delivery package.",
+            graphql_value!({ "code": 100, "details": { format!("For the product with id: {} in store: {} not set delivery package", cart_item.product_id, cart_item.store_id) }}),
+        ));
+    }
+
     let mut coupons_info = vec![];
     for cart_item in current_cart.iter() {
         if let Some(coupon_id) = cart_item.coupon_id {
@@ -383,7 +390,6 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) ->
         .map(|coupon| (coupon.id, coupon))
         .collect::<HashMap<CouponId, Coupon>>();
 
-    let customer = get_user_by_id(context, user.user_id)?;
     let selected_packages = cart_product::get_selected_packages(context, &current_cart)?;
 
     // validate packages
@@ -396,6 +402,7 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) ->
         .map(|(item, value)| (item.product_id, value))
         .collect();
     let delivery_info = cart_product::get_delivery_info(packages)?;
+    let customer = get_user_by_id(context, user.user_id)?;
 
     let create_order = CreateOrder {
         customer_id: user.user_id,
