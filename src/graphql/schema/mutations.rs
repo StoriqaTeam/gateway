@@ -516,6 +516,62 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field createAttributeValue(&executor, input: CreateAttributeValueInput) -> FieldResult<AttributeValue> as "Creates new attribute value" {
+        let context = executor.context();
+        let url = format!(
+            "{}/{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Attribute.to_url(),
+            input.raw_attribute_id,
+            Model::AttributeValue.to_url(),
+        );
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<AttributeValue>(Method::Post, url, Some(body))
+            .wait()
+    }
+
+    field updateAttributeValue(&executor, input: UpdateAttributeValueInput) -> FieldResult<AttributeValue> as "Updates existing attribute value" {
+        let context = executor.context();
+        if input.is_none() {
+             return Err(FieldError::new(
+                "Nothing to update",
+                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+            ));
+        }
+
+        let url = format!(
+            "{}/{}/{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Attribute.to_url(),
+            input.raw_attribute_id,
+            Model::AttributeValue.to_url(),
+            input.raw_id,
+        );
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<AttributeValue>(Method::Put, url, Some(body)).wait()
+    }
+
+    field deleteAttributeValue(&executor, input: DeleteAttributeValueInput) -> FieldResult<Mock> as "Deletes existing attribute value" {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}/{}/{}",
+            context.config.service_url(Service::Stores),
+            Model::Attribute.to_url(),
+            input.raw_attribute_id,
+            Model::AttributeValue.to_url(),
+            input.raw_id,
+        );
+
+        context.request::<()>(Method::Post, url, None).wait()?;
+
+        Ok(Mock)
+    }
+
     field createCategory(&executor, input: CreateCategoryInput as "Create category input.") -> FieldResult<Category> as "Creates new category." {
         let context = executor.context();
         let url = format!("{}/{}",
