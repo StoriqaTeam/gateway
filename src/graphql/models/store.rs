@@ -220,6 +220,12 @@ impl SearchModeratorStore {
     }
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct StoreSearchResults {
+    pub total_count: u32,
+    pub stores: Vec<Store>,
+}
+
 #[derive(Serialize, Clone, Debug)]
 pub struct StoresSearchFilters {
     pub search_term: SearchStoreInput,

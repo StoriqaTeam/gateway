@@ -171,3 +171,9 @@ pub struct SearchUserInput {
     #[graphql(description = "Blocked status of a user.")]
     pub is_blocked: Option<bool>,
 }
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct UserSearchResults {
+    pub total_count: u32,
+    pub users: Vec<User>,
+}
