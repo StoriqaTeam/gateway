@@ -2,7 +2,7 @@
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 use stq_static_resources::{AttributeType, Translation, TranslationInput};
-use stq_types::{AttributeId, AttributeValue};
+use stq_types::{AttributeId, AttributeValueCode, AttributeValueId};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Attribute {
@@ -14,9 +14,17 @@ pub struct Attribute {
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct AttributeMetaField {
-    pub values: Option<Vec<String>>,
-    pub translated_values: Option<Vec<Vec<Translation>>>,
+    pub values: Option<Vec<String>>,                      //todo deprecated
+    pub translated_values: Option<Vec<Vec<Translation>>>, //todo deprecated
     pub ui_element: UIType,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct AttributeValue {
+    pub id: AttributeValueId,
+    pub attr_id: AttributeId,
+    pub code: AttributeValueCode,
+    pub translations: Option<Vec<Translation>>,
 }
 
 #[derive(GraphQLEnum, Deserialize, Serialize, Clone, Debug, PartialEq)]
@@ -54,6 +62,64 @@ pub struct UpdateAttributeInput {
     pub meta_field: Option<AttributeMetaFieldInput>,
 }
 
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Delete attribute input object")]
+pub struct DeleteAttributeInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of a attribute.")]
+    #[serde(skip_serializing)]
+    pub id: GraphqlID,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Create attribute value input object")]
+pub struct CreateAttributeValueInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Attribute id.")]
+    #[serde(skip_serializing)]
+    pub raw_attribute_id: i32,
+    #[graphql(description = "Attribute value code.")]
+    pub code: String,
+    #[graphql(description = "Attribute value translations.")]
+    pub translations: Option<Vec<TranslationInput>>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Update attribute value input object")]
+pub struct UpdateAttributeValueInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Attribute id.")]
+    #[serde(skip_serializing)]
+    pub raw_attribute_id: i32,
+    #[graphql(description = "Attribute Value id.")]
+    #[serde(skip_serializing)]
+    pub raw_id: i32,
+    #[graphql(description = "Attribute value code.")]
+    pub code: Option<String>,
+    #[graphql(description = "Attribute value translations.")]
+    pub translations: Option<Vec<TranslationInput>>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Update attribute value input object")]
+pub struct DeleteAttributeValueInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Attribute id.")]
+    #[serde(skip_serializing)]
+    pub raw_attribute_id: i32,
+    #[graphql(description = "Attribute Value id.")]
+    #[serde(skip_serializing)]
+    pub raw_id: i32,
+}
+
 impl UpdateAttributeInput {
     pub fn is_none(&self) -> bool {
         Self {
@@ -62,6 +128,18 @@ impl UpdateAttributeInput {
             name: None,
             meta_field: None,
         } == self.clone()
+    }
+}
+
+impl UpdateAttributeValueInput {
+    pub fn is_none(&self) -> bool {
+        &Self {
+            client_mutation_id: self.client_mutation_id.clone(),
+            raw_attribute_id: self.raw_attribute_id.clone(),
+            raw_id: self.raw_id.clone(),
+            code: None,
+            translations: None,
+        } == self
     }
 }
 
@@ -128,7 +206,8 @@ pub struct AttrValueInput {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct AttrValue {
     pub attr_id: AttributeId,
-    pub value: AttributeValue,
+    pub value: AttributeValueCode,
+    pub translations: Option<Vec<Translation>>,
     pub meta_field: Option<String>,
 }
 

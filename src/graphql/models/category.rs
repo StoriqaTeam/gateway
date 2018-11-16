@@ -86,5 +86,16 @@ pub struct DeleteAttributeFromCategory {
     pub attr_id: i32,
 }
 
+/// Payload for deleting category
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Delete category input object")]
+pub struct DeleteCategoryInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of Category.")]
+    pub cat_id: i32,
+}
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct SearchCategory(pub Category);
