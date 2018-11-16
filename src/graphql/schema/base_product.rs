@@ -14,6 +14,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, ModerationStatus, Translation};
+use stq_types::BaseProductId;
 
 use super::*;
 use errors::into_graphql;
@@ -366,3 +367,24 @@ graphql_object!(Connection<BaseProduct, PageInfoProductsSearch>: Context as "Bas
         &self.page_info
     }
 });
+
+pub fn try_get_base_product(context: &Context, base_product_id: BaseProductId, visibility: Visibility) -> FieldResult<Option<BaseProduct>> {
+    let url = format!(
+        "{}/{}/{}?visibility={}",
+        &context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url(),
+        base_product_id.to_string(),
+        visibility,
+    );
+
+    context.request::<Option<BaseProduct>>(Method::Get, url, None).wait()
+}
+
+pub fn get_base_product(context: &Context, base_product_id: BaseProductId, visibility: Visibility) -> FieldResult<BaseProduct> {
+    try_get_base_product(context, base_product_id, visibility)?.ok_or_else(|| {
+        FieldError::new(
+            "Base product not found",
+            graphql_value!({ "code": 400, "details": { "base product for this product not found" }}),
+        )
+    })
+}
