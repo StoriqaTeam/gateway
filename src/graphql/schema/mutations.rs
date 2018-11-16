@@ -521,8 +521,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
-        context.request::<()>(Method::Delete, url, None)
-            .wait()?;
+        context.request::<()>(Method::Delete, url, None).wait()?;
         Ok(Mock)
     }
 
