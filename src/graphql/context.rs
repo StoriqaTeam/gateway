@@ -13,8 +13,8 @@ use http::{
     HeaderMap,
 };
 use stq_api::rpc_client::RestApiClient;
-use stq_http::client::{ClientHandle, Error};
-use stq_http::request_util::{CorrelationToken, Currency as CurrencyHeader, RequestTimeout};
+use stq_http::client::{ClientHandle, Error, HttpClient, TimeLimitedHttpClient};
+use stq_http::request_util::{CorrelationToken, Currency as CurrencyHeader};
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
 use stq_types::SessionId;
@@ -22,7 +22,7 @@ use stq_types::SessionId;
 use graphql::models::jwt::JWTPayload;
 
 pub struct Context {
-    pub http_client: ClientHandle,
+    pub http_client: TimeLimitedHttpClient<ClientHandle>,
     pub user: Option<JWTPayload>,
     pub session_id: Option<SessionId>,
     pub currency: Option<Currency>,
@@ -35,7 +35,7 @@ impl juniper::Context for Context {}
 
 impl Context {
     pub fn new(
-        http_client: ClientHandle,
+        http_client: TimeLimitedHttpClient<ClientHandle>,
         user: Option<JWTPayload>,
         session_id: Option<SessionId>,
         currency: Option<Currency>,
@@ -86,14 +86,13 @@ impl Context {
         headers.set(cookie);
 
         self.set_correlation_token(&mut headers);
-        headers.set(RequestTimeout(self.get_request_timeout().to_string()));
 
         let dt = Local::now();
         let correlation_token = self.uuid.clone();
 
         Box::new(
             self.http_client
-                .request(method, url.clone(), body, Some(headers))
+                .request_json(method, url.clone(), body, Some(headers))
                 .map_err(Error::into_graphql)
                 .then(move |r| {
                     let d = Local::now() - dt;
@@ -122,10 +121,6 @@ impl Context {
                     }
                 }),
         )
-    }
-
-    fn get_request_timeout(&self) -> u64 {
-        self.config.gateway.http_timeout_ms
     }
 
     fn set_correlation_token(&self, headers: &mut hyper::Headers) {
