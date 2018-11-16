@@ -2,7 +2,7 @@
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 use stq_static_resources::{AttributeType, Translation, TranslationInput};
-use stq_types::{AttributeId, AttributeValueId, AttributeValueCode};
+use stq_types::{AttributeId, AttributeValueCode, AttributeValueId};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Attribute {
@@ -14,8 +14,8 @@ pub struct Attribute {
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct AttributeMetaField {
-    pub values: Option<Vec<String>>,//todo deprecated
-    pub translated_values: Option<Vec<Vec<Translation>>>,//todo deprecated
+    pub values: Option<Vec<String>>,                      //todo deprecated
+    pub translated_values: Option<Vec<Vec<Translation>>>, //todo deprecated
     pub ui_element: UIType,
 }
 
@@ -60,6 +60,17 @@ pub struct UpdateAttributeInput {
     pub name: Option<Vec<TranslationInput>>,
     #[graphql(description = "New meta_field of an attribute")]
     pub meta_field: Option<AttributeMetaFieldInput>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Delete attribute input object")]
+pub struct DeleteAttributeInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of a attribute.")]
+    #[serde(skip_serializing)]
+    pub id: GraphqlID,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

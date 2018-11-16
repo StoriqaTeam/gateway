@@ -516,6 +516,18 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field deleteAttribute(&executor, input: DeleteAttributeInput as "Delete attribute input.") -> FieldResult<Mock>  as "Deletes existing attribute."{
+        let context = executor.context();
+        let identifier = ID::from_str(&*input.id)?;
+        let url = identifier.url(&context.config);
+
+        let body: String = serde_json::to_string(&input)?.to_string();
+
+        context.request::<()>(Method::Delete, url, Some(body))
+            .wait()?;
+        Ok(Mock)
+    }
+
     field createAttributeValue(&executor, input: CreateAttributeValueInput) -> FieldResult<AttributeValue> as "Creates new attribute value" {
         let context = executor.context();
         let url = format!(

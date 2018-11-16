@@ -1,7 +1,7 @@
 //! File containing product object of graphql schema
 use futures::Future;
 use hyper::Method;
-use juniper::{FieldResult};
+use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
 use stq_routes::model::Model;
@@ -150,14 +150,16 @@ fn get_attribute_values(context: &Context, attribute_id: AttributeId) -> FieldRe
         Model::AttributeValue.to_url(),
     );
 
-    let res = context
-        .request::<Option<Vec<AttributeValue>>>(Method::Get, url, None)
-        .wait()?;
+    let res = context.request::<Option<Vec<AttributeValue>>>(Method::Get, url, None).wait()?;
 
     Ok(res)
 }
 
-fn get_attribute_meta_field(context: &Context, attribute_id: AttributeId, meta: Option<AttributeMetaField>) -> FieldResult<Option<AttributeMetaField>> {
+fn get_attribute_meta_field(
+    context: &Context,
+    attribute_id: AttributeId,
+    meta: Option<AttributeMetaField>,
+) -> FieldResult<Option<AttributeMetaField>> {
     let attribute_values = get_attribute_values(context, attribute_id)?;
     let (codes, translations) = attribute_values
         .map(|values| {
@@ -168,8 +170,7 @@ fn get_attribute_meta_field(context: &Context, attribute_id: AttributeId, meta: 
                 translations.push(value.translations.unwrap_or_default())
             }
             (Some(codes), Some(translations))
-        })
-        .unwrap_or((None, None));
+        }).unwrap_or((None, None));
     Ok(meta.map(|meta| AttributeMetaField {
         ui_element: meta.ui_element,
         values: codes,
