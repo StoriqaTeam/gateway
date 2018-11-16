@@ -521,9 +521,7 @@ graphql_object!(Mutation: Context |&self| {
         let identifier = ID::from_str(&*input.id)?;
         let url = identifier.url(&context.config);
 
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-        context.request::<()>(Method::Delete, url, Some(body))
+        context.request::<()>(Method::Delete, url, None)
             .wait()?;
         Ok(Mock)
     }
