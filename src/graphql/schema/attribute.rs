@@ -7,7 +7,7 @@ use juniper::ID as GraphqlID;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{AttributeType, Translation};
-use stq_types::{AttributeValueId, AttributeId};
+use stq_types::{AttributeId, AttributeValueId};
 
 use super::*;
 use graphql::context::Context;
@@ -66,7 +66,7 @@ graphql_object!(ProdAttrValue: Context as "ProdAttrValue" |&self| {
             None => Ok(None)
         }
     }
- 
+
     field deprecated "use attribute_value.code" value() -> &str as "Attribute value of product variant" {
         &self.value.0
     }
