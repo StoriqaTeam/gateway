@@ -568,15 +568,14 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
 
         let url = format!(
-            "{}/{}/{}/{}/{}",
+            "{}/{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Attribute.to_url(),
-            input.raw_attribute_id,
             Model::AttributeValue.to_url(),
             input.raw_id,
         );
 
-        context.request::<()>(Method::Post, url, None).wait()?;
+        context.request::<()>(Method::Delete, url, None).wait()?;
 
         Ok(Mock)
     }

@@ -182,9 +182,14 @@ fn get_attribute_meta_field(
             let mut translations = Vec::with_capacity(values.len());
             for value in values {
                 codes.push(value.code.0);
-                translations.push(value.translations.unwrap_or_default())
+                if let Some(value_translations) = value.translations {
+                    translations.push(value_translations);
+                }
             }
-            (Some(codes), Some(translations))
+            (
+                Some(codes).filter(|codes| !codes.is_empty()),
+                Some(translations).filter(|t| !t.is_empty()),
+            )
         }).unwrap_or((None, None));
     Ok(meta.map(|meta| AttributeMetaField {
         ui_element: meta.ui_element,
