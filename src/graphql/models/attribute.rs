@@ -193,8 +193,8 @@ impl CreateAttributeInput {
 }
 
 #[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone, PartialEq)]
-#[graphql(name = "AttrValueInput", description = "Product attributes with values input object")]
-pub struct AttrValueInput {
+#[graphql(name = "ProdAttrValueInput", description = "Product attributes with values input object")]
+pub struct ProdAttrValueInput {
     #[graphql(description = "Int Attribute id")]
     pub attr_id: i32,
     #[graphql(description = "Attribute value")]
@@ -204,8 +204,9 @@ pub struct AttrValueInput {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct AttrValue {
+pub struct ProdAttrValue {
     pub attr_id: AttributeId,
+    pub attr_value_id: Option<AttributeValueId>,
     pub value: AttributeValueCode,
     pub translations: Option<Vec<Translation>>,
     pub meta_field: Option<String>,
