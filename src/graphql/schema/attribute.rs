@@ -43,17 +43,13 @@ graphql_object!(Attribute: Context as "Attribute" |&self| {
     }
 });
 
-graphql_object!(AttrValue: Context as "AttributeValue" |&self| {
+graphql_object!(AttrValue: Context as "AttrValue" |&self| {
     description: "Product variant attributes with values."
 
     field attribute(&executor) -> FieldResult<Option<Attribute>> as "Attribute" {
         let context = executor.context();
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::Attribute.to_url(),
-            self.attr_id.0);
-        context.request::<Option<Attribute>>(Method::Get, url, None)
-            .wait()
+
+        try_get_attribute(context, self.attr_id)
     }
 
     field attr_id() -> &i32 as "Attribute id" {
@@ -78,12 +74,8 @@ graphql_object!(AttributeFilter: Context as "AttributeFilter" |&self| {
 
     field attribute(&executor) -> FieldResult<Option<Attribute>> as "Attribute" {
         let context = executor.context();
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::Attribute.to_url(),
-            self.id);
-        context.request::<Option<Attribute>>(Method::Get, url, None)
-            .wait()
+
+        try_get_attribute(context, AttributeId(self.id))
     }
 
     field equal() -> &Option<EqualFilter> as "Values to be equal" {
@@ -114,6 +106,12 @@ graphql_object!(AttributeMetaField: Context as "AttributeMetaField" |&self| {
 
 graphql_object!(AttributeValue: Context as "AttributeValue" |&self| {
     description: "Attribute Value"
+
+    field attribute(&executor) -> FieldResult<Option<Attribute>> as "Attribute" {
+        let context = executor.context();
+
+        try_get_attribute(context, self.attr_id)
+    }
 
     field raw_id() -> &i32 as "Raw attribute value id" {
         &self.id.0
@@ -150,9 +148,7 @@ fn get_attribute_values(context: &Context, attribute_id: AttributeId) -> FieldRe
         Model::AttributeValue.to_url(),
     );
 
-    let res = context.request::<Option<Vec<AttributeValue>>>(Method::Get, url, None).wait()?;
-
-    Ok(res)
+    context.request::<Option<Vec<AttributeValue>>>(Method::Get, url, None).wait()
 }
 
 fn get_attribute_meta_field(
@@ -176,4 +172,15 @@ fn get_attribute_meta_field(
         values: codes,
         translated_values: translations,
     }))
+}
+
+fn try_get_attribute(context: &Context, attribute_id: AttributeId) -> FieldResult<Option<Attribute>> {
+    let url = format!(
+        "{}/{}/{}",
+        context.config.service_url(Service::Stores),
+        Model::Attribute.to_url(),
+        attribute_id.0
+    );
+
+    context.request::<Option<Attribute>>(Method::Get, url, None).wait()
 }
