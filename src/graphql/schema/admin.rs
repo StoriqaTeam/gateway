@@ -54,8 +54,8 @@ graphql_object!(Admin: Context as "Admin" |&self| {
 
         let body = serde_json::to_string(&search_term)?;
 
-        context.request::<Vec<User>>(Method::Post, url, Some(body))
-            .map (|users| {
+        context.request::<UserSearchResults>(Method::Post, url, Some(body))
+            .map (|UserSearchResults { users, .. }| {
                 let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
                     .map(|user| Edge::new(
@@ -164,8 +164,8 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             raw_id,
             first);
 
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| {
+        context.request::<StoreSearchResults>(Method::Post, url, Some(body))
+            .map(|StoreSearchResults { stores, .. }| {
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
                     .map(|store| Edge::new(
@@ -292,8 +292,8 @@ pub fn base_products_search(
     );
 
     context
-        .request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
-        .map(|base_products| {
+        .request::<BaseProductSearchResults>(Method::Post, url, Some(body))
+        .map(|BaseProductSearchResults { base_products, .. }| {
             let mut base_product_edges: Vec<Edge<BaseProduct>> = base_products
                 .into_iter()
                 .map(|base_product| {
