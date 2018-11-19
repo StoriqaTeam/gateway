@@ -575,7 +575,7 @@ graphql_object!(Mutation: Context |&self| {
             input.raw_id,
         );
 
-        context.request::<()>(Method::Post, url, None).wait()?;
+        context.request::<()>(Method::Delete, url, None).wait()?;
 
         Ok(Mock)
     }
