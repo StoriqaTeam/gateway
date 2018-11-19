@@ -153,3 +153,9 @@ pub struct SearchModeratorBaseProductInput {
     #[graphql(description = "Moderation state of the base product.")]
     pub state: Option<ModerationStatus>,
 }
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct BaseProductSearchResults {
+    pub total_count: u32,
+    pub base_products: Vec<BaseProduct>,
+}

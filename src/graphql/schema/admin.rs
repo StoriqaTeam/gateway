@@ -104,16 +104,9 @@ graphql_object!(Admin: Context as "Admin" |&self| {
 
         let body = serde_json::to_string(&search_term)?;
 
-        let user_count_url = format!(
-            "{}/{}/count",
-            context.config.service_url(Service::Users),
-            Model::User.to_url());
-        let user_count_fut = context.request::<i32>(Method::Get, user_count_url, None);
-
-        context.request::<Vec<User>>(Method::Post, url, Some(body))
-            .join(user_count_fut)
-            .map(|(users, total_count)| {
-                let total_pages = total_count / items_count + 1;
+        context.request::<UserSearchResults>(Method::Post, url, Some(body))
+            .map(|UserSearchResults { total_count, users }| {
+                let total_pages = cmp::max(0, total_count as i32 - 1) / items_count + 1;
                 let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
                     .map(|user| Edge::new(
@@ -237,16 +230,9 @@ graphql_object!(Admin: Context as "Admin" |&self| {
             skip, items_count,
         );
 
-        let store_count_url = format!(
-            "{}/{}/count",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
-        let store_count_fut = context.request::<i32>(Method::Get, store_count_url, None);
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .join(store_count_fut)
-            .map(|(stores, total_count)| {
-                let total_pages = total_count / items_count + 1;
+        context.request::<StoreSearchResults>(Method::Post, url, Some(body))
+            .map(|StoreSearchResults { stores, total_count }| {
+                let total_pages = cmp::max(0, total_count as i32 - 1) / items_count + 1;
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
                     .map(|store| Edge::new(
@@ -355,34 +341,31 @@ pub fn base_products_search_pages(
         items_count,
     );
 
-    let base_product_count_url = format!(
-        "{}/{}/count",
-        context.config.service_url(Service::Stores),
-        Model::BaseProduct.to_url()
-    );
-    let base_product_count_fut = context.request::<i32>(Method::Get, base_product_count_url, None);
-
     let body = serde_json::to_string(&search_term)?;
 
     context
-        .request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
-        .join(base_product_count_fut)
-        .map(|(base_products, total_count)| {
-            let total_pages = total_count / items_count + 1;
-            let base_product_edges: Vec<Edge<BaseProduct>> = base_products
-                .into_iter()
-                .map(|base_product| {
-                    Edge::new(
-                        juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
-                        base_product.clone(),
-                    )
-                }).collect();
-            let page_info = PageInfoSegments {
-                current_page,
-                page_items_count: items_count,
-                total_pages,
-            };
-            Connection::new(base_product_edges, page_info)
-        }).wait()
+        .request::<BaseProductSearchResults>(Method::Post, url, Some(body))
+        .map(
+            |BaseProductSearchResults {
+                 base_products,
+                 total_count,
+             }| {
+                let total_pages = cmp::max(0, total_count as i32 - 1) / items_count + 1;
+                let base_product_edges: Vec<Edge<BaseProduct>> = base_products
+                    .into_iter()
+                    .map(|base_product| {
+                        Edge::new(
+                            juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
+                            base_product.clone(),
+                        )
+                    }).collect();
+                let page_info = PageInfoSegments {
+                    current_page,
+                    page_items_count: items_count,
+                    total_pages,
+                };
+                Connection::new(base_product_edges, page_info)
+            },
+        ).wait()
         .map(Some)
 }
