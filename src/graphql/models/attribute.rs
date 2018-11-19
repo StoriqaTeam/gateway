@@ -112,9 +112,6 @@ pub struct DeleteAttributeValueInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Attribute id.")]
-    #[serde(skip_serializing)]
-    pub raw_attribute_id: i32,
     #[graphql(description = "Attribute Value id.")]
     #[serde(skip_serializing)]
     pub raw_id: i32,
