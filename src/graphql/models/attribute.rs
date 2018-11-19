@@ -211,7 +211,6 @@ pub struct ProdAttrValue {
     pub attr_id: AttributeId,
     pub attr_value_id: Option<AttributeValueId>,
     pub value: AttributeValueCode,
-    pub translations: Option<Vec<Translation>>,
     pub meta_field: Option<String>,
 }
 

@@ -71,10 +71,6 @@ graphql_object!(ProdAttrValue: Context as "ProdAttrValue" |&self| {
         &self.value.0
     }
 
-    field deprecated "use attribute_value.translations" translations() -> &Option<Vec<Translation>> as "Attribute value of product variant" {
-        &self.translations
-    }
-
     field meta_field() -> &Option<String> as "Meta field of product attribute value" {
         &self.meta_field
     }
