@@ -41,7 +41,7 @@ pub struct UpdateProductWithAttributesInput {
     #[graphql(description = "Update Product")]
     pub product: Option<UpdateProduct>,
     #[graphql(description = "Attributes")]
-    pub attributes: Option<Vec<AttrValueInput>>,
+    pub attributes: Option<Vec<ProdAttrValueInput>>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -100,7 +100,7 @@ pub struct CreateProductWithAttributesInput {
     #[graphql(description = "New Product")]
     pub product: NewProduct,
     #[graphql(description = "Attributes")]
-    pub attributes: Vec<AttrValueInput>,
+    pub attributes: Vec<ProdAttrValueInput>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

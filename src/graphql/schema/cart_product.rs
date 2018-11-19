@@ -157,14 +157,14 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         &self.base_product_id.0
     }
 
-    field attributes(&executor) -> FieldResult<Option<Vec<AttrValue>>> as "Variants" {
+    field attributes(&executor) -> FieldResult<Option<Vec<ProdAttrValue>>> as "Variants" {
         let context = executor.context();
         let url = format!("{}/{}/{}/attributes",
             context.config.service_url(Service::Stores),
             Model::Product.to_url(),
             self.id);
 
-        context.request::<Vec<AttrValue>>(Method::Get, url, None)
+        context.request::<Vec<ProdAttrValue>>(Method::Get, url, None)
             .wait()
             .or_else(|_| Ok(vec![]))
             .map(Some)
