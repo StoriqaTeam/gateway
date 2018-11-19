@@ -106,7 +106,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
 
         context.request::<UserSearchResults>(Method::Post, url, Some(body))
             .map(|UserSearchResults { total_count, users }| {
-                let total_pages = total_count as i32 / items_count + 1;
+                let total_pages = cmp::max(0, total_count as i32 - 1) / items_count + 1;
                 let mut user_edges: Vec<Edge<User>> = users
                     .into_iter()
                     .map(|user| Edge::new(
@@ -232,7 +232,7 @@ graphql_object!(Admin: Context as "Admin" |&self| {
 
         context.request::<StoreSearchResults>(Method::Post, url, Some(body))
             .map(|StoreSearchResults { stores, total_count }| {
-                let total_pages = total_count as i32 / items_count + 1;
+                let total_pages = cmp::max(0, total_count as i32 - 1) / items_count + 1;
                 let mut store_edges: Vec<Edge<Store>> = stores
                     .into_iter()
                     .map(|store| Edge::new(
@@ -350,7 +350,7 @@ pub fn base_products_search_pages(
                  base_products,
                  total_count,
              }| {
-                let total_pages = total_count as i32 / items_count + 1;
+                let total_pages = cmp::max(0, total_count as i32 - 1) / items_count + 1;
                 let base_product_edges: Vec<Edge<BaseProduct>> = base_products
                     .into_iter()
                     .map(|base_product| {
