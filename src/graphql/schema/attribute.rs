@@ -132,11 +132,9 @@ graphql_object!(AttributeValue: Context as "AttributeValue" |&self| {
         &self.code.0
     }
 
-    field translation() -> TranslatedValue as "Possible translations of value" {
-        let vals = self.translations.clone().unwrap_or_default();
-        TranslatedValue {translations: vals}
+    field translation() -> Vec<Translation> as "Possible translations of value" {
+        self.translations.clone().unwrap_or_default()
     }
-
 });
 
 #[derive(GraphQLObject, Deserialize, Clone, Debug, PartialEq)]
