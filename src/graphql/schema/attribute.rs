@@ -132,8 +132,8 @@ graphql_object!(AttributeValue: Context as "AttributeValue" |&self| {
         &self.code.0
     }
 
-    field translation() -> Vec<Translation> as "Possible translations of value" {
-        self.translations.clone().unwrap_or_default()
+    field translations() -> Option<Vec<Translation>> as "Possible translations of value" {
+        self.translations.clone()
     }
 });
 
