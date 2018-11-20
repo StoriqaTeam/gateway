@@ -1,6 +1,5 @@
 //! EAV model attributes
 use juniper::ID as GraphqlID;
-use juniper::{FieldError, FieldResult};
 use stq_static_resources::{AttributeType, Translation, TranslationInput};
 use stq_types::{AttributeId, AttributeValueCode, AttributeValueId};
 
@@ -165,41 +164,6 @@ pub struct CreateAttributeInput {
     pub meta_field: Option<AttributeMetaFieldInput>,
     #[graphql(description = "Attribute values.")]
     pub values: Option<Vec<CreateAttributeValueWithAttributeInput>>,
-}
-
-impl CreateAttributeInput {
-    pub fn validate(&self) -> FieldResult<()> {
-        if self.value_type == AttributeType::Str {
-            if let Some(meta) = self.meta_field.clone() {
-                if let Some(vals) = meta.values.clone() {
-                    if vals.is_empty() {
-                        return Err(FieldError::new(
-                            "Parsing attributes meta_field error",
-                            graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field values." }}),
-                        ));
-                    }
-                } else if let Some(tr_vals) = meta.translated_values.clone() {
-                    if tr_vals.is_empty() {
-                        return Err(FieldError::new(
-                            "Parsing attributes meta_field error",
-                            graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field translated values." }}),
-                        ));
-                    }
-                } else {
-                    return Err(FieldError::new(
-                        "Parsing attributes meta_field error",
-                        graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field." }}),
-                    ));
-                }
-            } else {
-                return Err(FieldError::new(
-                    "Parsing attributes meta_field error",
-                    graphql_value!({ "code": 300, "details": { "There must be values variants in attribute meta_field." }}),
-                ));
-            }
-        }
-        Ok(())
-    }
 }
 
 #[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone, PartialEq)]
