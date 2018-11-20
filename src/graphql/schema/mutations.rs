@@ -74,6 +74,7 @@ graphql_object!(Mutation: Context |&self| {
             identity: new_ident,
             user: Some(new_user),
             device: input.device,
+            project: input.project,
         };
 
         let body: String = serde_json::to_string(&saga_profile)?.to_string();

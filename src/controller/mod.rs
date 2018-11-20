@@ -14,7 +14,7 @@ use jsonwebtoken::{decode, Algorithm, Validation};
 use juniper::http::GraphQLRequest;
 use serde_json;
 
-use stq_http::client::{ClientHandle, TimeLimitedHttpClient};
+use stq_http::client::{ClientHandle, HttpClient, TimeLimitedHttpClient};
 use stq_http::controller::Controller;
 use stq_http::controller::ControllerFuture;
 use stq_http::errors::ErrorMessageWrapper;
@@ -85,6 +85,7 @@ impl Controller for ControllerImpl {
 
         let request_timeout = Duration::from_millis(self.config.gateway.http_timeout_ms);
         let client = TimeLimitedHttpClient::new(self.http_client.clone(), request_timeout);
+        let saga_addr = self.config.saga_microservice.url.clone();
 
         Box::new(
             match (&req.method().clone(), self.route_parser.test(req.path())) {
@@ -133,17 +134,180 @@ impl Controller for ControllerImpl {
                     )
                 }
 
-                (&Get, Some(Route::AppleAppSiteAssociation)) => Box::new(future::ok(
-                    json!({
-                        "applinks": {
-                            "apps": [],
-                            "details": {
-                                "HS8AM3WUSX.com.storiqa.mobilewallet": {
-                                    "paths": ["/ioswallet/*"]
+                (&Get, Some(Route::VerifyEmailApply(token))) => {
+                    let body = json!({ "token": token }).to_string();
+                    let url = format!("{}/email_verify_apply", saga_addr);
+                    Box::new(
+                        client
+                            .request_json::<String>(Post, url.clone(), Some(body), None)
+                            .map_err(From::from)
+                            .then(move |r| {
+                                match r {
+                                    Err(e) => Err(e),
+                                    Ok(_) => {
+                                        Ok(r##"
+                                            <!DOCTYPE html>
+                                            <html lang="en">
+                                            <head>
+                                                <meta charset="UTF-8" />
+                                                <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+                                                <title>Storiqa: email verification</title>
+                                                <style>
+                                                html {
+                                                    height: 100%;
+                                                    margin: 0px;
+                                                }
+                                                body {
+                                                    background-color: #fafafa;
+                                                    color: #03a9ff;
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    margin: 0px;
+                                                }
+                                                .wrapper {
+                                                    height: 100%;
+                                                    width: 100%;
+                                                    display: flex;
+                                                    flex: 1;
+                                                    justify-content: center;
+                                                    align-items: center;
+                                                    font-family: Arial, Helvetica, sans-serif;
+                                                    position: relative;
+                                                }
+                                                span {
+                                                    font-size: 100px;
+                                                    text-align: center;
+                                                }
+                                                img {
+                                                    height: 25px;
+                                                    width: 192px;
+                                                    left: 20px;
+                                                    top: 20px;
+                                                    position: absolute;
+                                                }
+                                                </style>
+                                            </head>
+                                            <body>
+                                                <img
+                                                src="https://s3.eu-central-1.amazonaws.com/dumpster.stq/img/storiqa-logo.png"
+                                                alt="logo"
+                                                />
+                                                <div class="wrapper"><span>Successfully verified email</span></div>
+                                            </body>
+                                            </html>
+                                            "##.to_string())
+                                    }
                                 }
+                            }),
+                    )
+                }
+
+                (&Get, Some(Route::ResetPasswordApply(_))) => Box::new(future::ok(
+                    r##"
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8" />
+                            <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+                            <title>Storiqa: reset password</title>
+                            <style>
+                            html {
+                                height: 100%;
+                                margin: 0px;
                             }
-                        }
-                    }).to_string(),
+                            body {
+                                background-color: #fafafa;
+                                color: #03a9ff;
+                                width: 100%;
+                                height: 100%;
+                                margin: 0px;
+                            }
+                            .wrapper {
+                                height: 100%;
+                                width: 100%;
+                                display: flex;
+                                flex: 1;
+                                justify-content: center;
+                                align-items: center;
+                                font-family: Arial, Helvetica, sans-serif;
+                                position: relative;
+                            }
+                            span {
+                                font-size: 100px;
+                                text-align: center;
+                            }
+                            img {
+                                height: 25px;
+                                width: 192px;
+                                left: 20px;
+                                top: 20px;
+                                position: absolute;
+                            }
+                            </style>
+                        </head>
+                        <body>
+                            <img
+                            src="https://s3.eu-central-1.amazonaws.com/dumpster.stq/img/storiqa-logo.png"
+                            alt="logo"
+                            />
+                            <div class="wrapper"><span>Please open this link on device.</span></div>
+                        </body>
+                        </html>
+                        "##.to_string(),
+                )),
+
+                (&Get, Some(Route::AddDeviceApply(_))) => Box::new(future::ok(
+                    r##"
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8" />
+                            <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+                            <title>Storiqa: add device</title>
+                            <style>
+                            html {
+                                height: 100%;
+                                margin: 0px;
+                            }
+                            body {
+                                background-color: #fafafa;
+                                color: #03a9ff;
+                                width: 100%;
+                                height: 100%;
+                                margin: 0px;
+                            }
+                            .wrapper {
+                                height: 100%;
+                                width: 100%;
+                                display: flex;
+                                flex: 1;
+                                justify-content: center;
+                                align-items: center;
+                                font-family: Arial, Helvetica, sans-serif;
+                                position: relative;
+                            }
+                            span {
+                                font-size: 100px;
+                                text-align: center;
+                            }
+                            img {
+                                height: 25px;
+                                width: 192px;
+                                left: 20px;
+                                top: 20px;
+                                position: absolute;
+                            }
+                            </style>
+                        </head>
+                        <body>
+                            <img
+                            src="https://s3.eu-central-1.amazonaws.com/dumpster.stq/img/storiqa-logo.png"
+                            alt="logo"
+                            />
+                            <div class="wrapper"><span>Please open this link on device.</span></div>
+                        </body>
+                        </html>
+                        "##.to_string(),
                 )),
 
                 // Fallback

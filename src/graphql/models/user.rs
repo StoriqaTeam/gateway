@@ -4,7 +4,7 @@ use chrono::NaiveDate;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_static_resources::{Device, Gender, Provider};
+use stq_static_resources::{Device, Gender, Project, Provider};
 use stq_types::{SagaId, UserId};
 
 #[derive(Deserialize, Debug, Clone)]
@@ -101,8 +101,10 @@ pub struct CreateUserInput {
     pub first_name: String,
     #[graphql(description = "Last name of a user")]
     pub last_name: String,
-    #[graphql(description = "Device creation")]
+    #[graphql(description = "Device")]
     pub device: Option<Device>,
+    #[graphql(description = "Project")]
+    pub project: Option<Project>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -145,6 +147,7 @@ pub struct SagaCreateProfile {
     pub identity: NewIdentity,
     pub user: Option<NewUser>,
     pub device: Option<Device>,
+    pub project: Option<Project>,
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]
