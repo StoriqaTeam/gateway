@@ -743,3 +743,85 @@ pub fn get_store_id_by_product(context: &Context, product_id: ProductId) -> Fiel
             }
         })
 }
+
+pub fn try_get_store(context: &Context, store_id: StoreId) -> FieldResult<Option<Store>> {
+    let url_store = format!(
+        "{}/{}/{}",
+        context.config.service_url(Service::Stores),
+        Model::Store.to_url(),
+        store_id
+    );
+
+    context.request::<Option<Store>>(Method::Get, url_store, None).wait()
+}
+
+pub fn get_store(context: &Context, store_id: StoreId) -> FieldResult<Store> {
+    try_get_store(context, store_id).and_then(|store| {
+        if let Some(store) = store {
+            Ok(store)
+        } else {
+            Err(FieldError::new(
+                "Could not find store from store id.",
+                graphql_value!({ "code": 100, "details": { "Store with such id does not exist in stores microservice." }}),
+            ))
+        }
+    })
+}
+
+pub fn run_send_to_moderation_store(context: &Context, store_id: StoreId) -> FieldResult<Store> {
+    let store = get_store(context, store_id)?;
+
+    match store.status {
+        ModerationStatus::Draft => send_to_moderation(context, store.id),
+        _ => {
+            return Err(FieldError::new(
+                "Could not change store status.",
+                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} can not be send to moderation.", store.status) }}),
+            ))
+        }
+    }
+}
+
+fn send_to_moderation(context: &Context, store_id: StoreId) -> FieldResult<Store> {
+    let url = format!(
+        "{}/{}/{}/moderation",
+        context.config.saga_microservice.url.clone(),
+        Model::Store.to_url(),
+        store_id
+    );
+
+    context.request::<Store>(Method::Post, url, None).wait()
+}
+
+pub fn run_store_moderate(context: &Context, input: StoreModerateInput) -> FieldResult<Store> {
+    let identifier = ID::from_str(&*input.id)?;
+    let store_id = StoreId(identifier.raw_id);
+    let store = get_store(context, store_id)?;
+
+    let payload = StoreModerate {
+        store_id,
+        status: input.status,
+    };
+
+    match store.status {
+        ModerationStatus::Draft => send_to_moderate(context, payload),
+        _ => {
+            return Err(FieldError::new(
+                "Could not change store status.",
+                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} can not be change status.", store.status) }}),
+            ))
+        }
+    }
+}
+
+fn send_to_moderate(context: &Context, payload: StoreModerate) -> FieldResult<Store> {
+    let url = format!(
+        "{}/{}/moderate",
+        context.config.saga_microservice.url.clone(),
+        Model::Store.to_url()
+    );
+
+    let body: String = serde_json::to_string(&payload)?.to_string();
+
+    context.request::<Store>(Method::Post, url, Some(body)).wait()
+}

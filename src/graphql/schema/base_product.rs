@@ -388,3 +388,30 @@ pub fn get_base_product(context: &Context, base_product_id: BaseProductId, visib
         )
     })
 }
+
+pub fn run_send_to_moderation_base_product(context: &Context, base_product_id: BaseProductId) -> FieldResult<BaseProduct> {
+    let base_product = get_base_product(context, base_product_id, Visibility::Active)?;
+
+    match base_product.status {
+        ModerationStatus::Draft => send_to_moderation(context, base_product.id),
+        _ => {
+            return Err(FieldError::new(
+                "Could not change base product status.",
+                graphql_value!({ "code": 100, "details": { format!("BaseProduct with status: {:?} can not be send to moderation.", base_product.status) }}),
+            ))
+        }
+    }
+}
+
+fn send_to_moderation(context: &Context, base_product_id: BaseProductId) -> FieldResult<BaseProduct> {
+    let url = format!(
+        "{}/{}/{}/moderation",
+        context.config.saga_microservice.url.clone(),
+        Model::BaseProduct.to_url(),
+        base_product_id
+    );
+
+    let _ = context.request::<()>(Method::Post, url, None).wait()?;
+
+    get_base_product(context, base_product_id, Visibility::Active)
+}

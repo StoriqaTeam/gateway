@@ -236,3 +236,17 @@ impl StoresSearchFilters {
         Self { search_term }
     }
 }
+
+#[derive(GraphQLInputObject, Clone, Debug)]
+pub struct StoreModerateInput {
+    #[graphql(description = "Id of a store.")]
+    pub id: GraphqlID,
+    #[graphql(description = "Moderation state of the store.")]
+    pub status: ModerationStatus,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StoreModerate {
+    pub store_id: StoreId,
+    pub status: ModerationStatus,
+}
