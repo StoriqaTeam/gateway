@@ -40,8 +40,10 @@ pub enum UIType {
 #[graphql(description = "Attribute meta field input object")]
 pub struct AttributeMetaFieldInput {
     #[graphql(description = "Possible values of attribute")]
+    #[graphql(deprecation = "Use parent's \"value\" field")]
     pub values: Option<Vec<String>>,
     #[graphql(description = "Possible values of attribute with translation")]
+    #[graphql(deprecation = "Use parent's \"value\" field")]
     pub translated_values: Option<Vec<Vec<TranslationInput>>>,
     #[graphql(description = "UI element type ")]
     pub ui_element: UIType,
@@ -82,6 +84,15 @@ pub struct CreateAttributeValueInput {
     #[graphql(description = "Attribute id.")]
     #[serde(skip_serializing)]
     pub raw_attribute_id: i32,
+    #[graphql(description = "Attribute value code.")]
+    pub code: String,
+    #[graphql(description = "Attribute value translations.")]
+    pub translations: Option<Vec<TranslationInput>>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Create attribute value input object")]
+pub struct CreateAttributeValueWithAttributeInput {
     #[graphql(description = "Attribute value code.")]
     pub code: String,
     #[graphql(description = "Attribute value translations.")]
@@ -152,6 +163,8 @@ pub struct CreateAttributeInput {
     pub value_type: AttributeType,
     #[graphql(description = "Meta field of an attribute.")]
     pub meta_field: Option<AttributeMetaFieldInput>,
+    #[graphql(description = "Attribute values.")]
+    pub values: Option<Vec<CreateAttributeValueWithAttributeInput>>,
 }
 
 impl CreateAttributeInput {
