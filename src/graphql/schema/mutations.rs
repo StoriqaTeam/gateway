@@ -551,10 +551,9 @@ graphql_object!(Mutation: Context |&self| {
         }
 
         let url = format!(
-            "{}/{}/{}/{}/{}",
+            "{}/{}/{}/{}",
             context.config.service_url(Service::Stores),
             Model::Attribute.to_url(),
-            input.raw_attribute_id,
             Model::AttributeValue.to_url(),
             input.raw_id,
         );
@@ -575,7 +574,7 @@ graphql_object!(Mutation: Context |&self| {
             input.raw_id,
         );
 
-        context.request::<()>(Method::Delete, url, None).wait()?;
+        context.request::<AttributeValue>(Method::Delete, url, None).wait()?;
 
         Ok(Mock)
     }
