@@ -1,6 +1,7 @@
 use std::time::SystemTime;
 
 use juniper::ID as GraphqlID;
+use uuid::Uuid;
 
 use stq_static_resources::{Language, ModerationStatus, Translation, TranslationInput};
 use stq_types::{Alpha3, StoreId, UserId};
@@ -130,6 +131,8 @@ pub struct CreateStoreInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
+    #[graphql(description = "Uuid - unique mutation Id.")]
+    pub uuid: Option<String>,
     #[graphql(description = "New name of a store.")]
     pub name: Vec<TranslationInput>,
     #[graphql(description = "User id.")]
@@ -161,6 +164,16 @@ pub struct CreateStoreInput {
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,
+}
+
+impl CreateStoreInput {
+    pub fn fill_uuid(mut self) -> Self {
+        self.uuid = match self.uuid {
+            Some(uuid) => Some(uuid),
+            None => Some(Uuid::new_v4().hyphenated().to_string()),
+        };
+        self
+    }
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]

@@ -254,7 +254,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}",
             saga_addr,
             "create_store");
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body: String = serde_json::to_string(&input.fill_uuid())?.to_string();
 
         context.request::<Store>(Method::Post, url, Some(body))
             .wait()
@@ -314,7 +314,8 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
             Model::Product.to_url());
-
+        let mut input = input;
+        input.product = input.product.fill_uuid();
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.request::<Product>(Method::Post, url, Some(body))
@@ -354,8 +355,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url());
-
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body: String = serde_json::to_string(&input.fill_uuid())?.to_string();
 
         context.request::<BaseProduct>(Method::Post, url, Some(body))
             .wait()
@@ -367,7 +367,7 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url());
 
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body: String = serde_json::to_string(&input.fill_uuid())?.to_string();
 
         context.request::<BaseProduct>(Method::Post, url, Some(body))
             .wait()
@@ -490,7 +490,7 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::Attribute.to_url());
 
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body: String = serde_json::to_string(&input.fill_uuid())?.to_string();
 
         context.request::<Attribute>(Method::Post, url, Some(body))
             .wait()
@@ -583,7 +583,7 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
             Model::Category.to_url());
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body: String = serde_json::to_string(&input.fill_uuid())?.to_string();
 
         context.request::<Category>(Method::Post, url, Some(body))
             .wait()
