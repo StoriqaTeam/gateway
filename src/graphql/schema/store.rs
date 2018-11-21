@@ -744,19 +744,20 @@ pub fn get_store_id_by_product(context: &Context, product_id: ProductId) -> Fiel
         })
 }
 
-pub fn try_get_store(context: &Context, store_id: StoreId) -> FieldResult<Option<Store>> {
+pub fn try_get_store(context: &Context, store_id: StoreId, visibility: Visibility) -> FieldResult<Option<Store>> {
     let url_store = format!(
-        "{}/{}/{}",
+        "{}/{}/{}?&visibility={}",
         context.config.service_url(Service::Stores),
         Model::Store.to_url(),
-        store_id
+        store_id,
+        visibility
     );
 
     context.request::<Option<Store>>(Method::Get, url_store, None).wait()
 }
 
-pub fn get_store(context: &Context, store_id: StoreId) -> FieldResult<Store> {
-    try_get_store(context, store_id).and_then(|store| {
+pub fn get_store(context: &Context, store_id: StoreId, visibility: Visibility) -> FieldResult<Store> {
+    try_get_store(context, store_id, visibility).and_then(|store| {
         if let Some(store) = store {
             Ok(store)
         } else {
@@ -769,7 +770,7 @@ pub fn get_store(context: &Context, store_id: StoreId) -> FieldResult<Store> {
 }
 
 pub fn run_send_to_moderation_store(context: &Context, store_id: StoreId) -> FieldResult<Store> {
-    let store = get_store(context, store_id)?;
+    let store = get_store(context, store_id, Visibility::Active)?;
 
     match store.status {
         ModerationStatus::Draft => send_to_moderation(context, store.id),
@@ -793,10 +794,10 @@ fn send_to_moderation(context: &Context, store_id: StoreId) -> FieldResult<Store
     context.request::<Store>(Method::Post, url, None).wait()
 }
 
-pub fn run_store_moderate(context: &Context, input: StoreModerateInput) -> FieldResult<Store> {
+pub fn run_moderation_status_store(context: &Context, input: StoreModerateInput) -> FieldResult<Store> {
     let identifier = ID::from_str(&*input.id)?;
     let store_id = StoreId(identifier.raw_id);
-    let store = get_store(context, store_id)?;
+    let store = get_store(context, store_id, Visibility::Active)?;
 
     let payload = StoreModerate {
         store_id,
@@ -804,13 +805,13 @@ pub fn run_store_moderate(context: &Context, input: StoreModerateInput) -> Field
     };
 
     match store.status {
-        ModerationStatus::Draft => send_to_moderate(context, payload),
-        _ => {
+        ModerationStatus::Draft => {
             return Err(FieldError::new(
                 "Could not change store status.",
-                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} can not be change status.", store.status) }}),
+                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} can not be change.", store.status) }}),
             ))
         }
+        _ => send_to_moderate(context, payload),
     }
 }
 

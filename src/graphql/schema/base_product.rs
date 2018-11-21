@@ -415,3 +415,37 @@ fn send_to_moderation(context: &Context, base_product_id: BaseProductId) -> Fiel
 
     get_base_product(context, base_product_id, Visibility::Active)
 }
+
+pub fn run_moderation_status_base_product(context: &Context, input: BaseProductModerateInput) -> FieldResult<BaseProduct> {
+    let identifier = ID::from_str(&*input.id)?;
+    let base_product_id = BaseProductId(identifier.raw_id);
+    let base_product = get_base_product(context, base_product_id, Visibility::Active)?;
+
+    let payload = BaseProductModerate {
+        base_product_id,
+        status: input.status,
+    };
+
+    match base_product.status {
+        ModerationStatus::Draft => {
+            return Err(FieldError::new(
+                "Could not change base product status.",
+                graphql_value!({ "code": 100, "details": { format!("Base product with status: {:?} can not be change.", base_product.status) }}),
+            ))
+        }
+        _ => send_to_moderate(context, payload),
+    }
+}
+
+fn send_to_moderate(context: &Context, payload: BaseProductModerate) -> FieldResult<BaseProduct> {
+    let url = format!(
+        "{}/{}/moderate",
+        context.config.saga_microservice.url.clone(),
+        Model::BaseProduct.to_url()
+    );
+
+    let body: String = serde_json::to_string(&payload)?.to_string();
+    let _ = context.request::<()>(Method::Post, url, Some(body)).wait()?;
+
+    get_base_product(context, payload.base_product_id, Visibility::Active)
+}

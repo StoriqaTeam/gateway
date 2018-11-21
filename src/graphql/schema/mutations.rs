@@ -290,7 +290,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deprecated "use" publishStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Publish store." {
+    field deprecated "use setModerationStatusStore" publishStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Publish store." {
         let context = executor.context();
         let url = format!("{}/{}/{}/publish",
             context.config.service_url(Service::Stores),
@@ -301,7 +301,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deprecated "use" draftStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Draft store." {
+    field deprecated "use setModerationStatusStore" draftStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Draft store." {
         let context = executor.context();
         let url = format!("{}/{}/{}/draft",
             context.config.service_url(Service::Stores),
@@ -312,16 +312,16 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field sendStoreToModeration(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Send store on moderation." {
+    field sendStoreToModeration(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Send store on moderation for store manager." {
         let context = executor.context();
 
         store::run_send_to_moderation_store(context, StoreId(id))
     }
 
-    field StoreModerate(&executor, input: StoreModerateInput as "Change store moderation status input.") -> FieldResult<Store>  as "Change store moderation status." {
+    field setModerationStatusStore(&executor, input: StoreModerateInput as "Change store moderation status input.") -> FieldResult<Store>  as "Change store moderation status for moderator." {
         let context = executor.context();
 
-        store::run_store_moderate(context, input)
+        store::run_moderation_status_store(context, input)
     }
 
     field createProduct(&executor, input: CreateProductWithAttributesInput as "Create product with attributes input.") -> FieldResult<Product> as "Creates new product." {
@@ -416,7 +416,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deprecated "use" publishBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Published base_products." {
+    field deprecated "use setModerationStatusBaseProduct" publishBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Published base_products." {
         let context = executor.context();
         let url = format!("{}/{}/publish",
             context.config.service_url(Service::Stores),
@@ -428,7 +428,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deprecated "use" draftBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Draft base_products." {
+    field deprecated "use setModerationStatusBaseProduct" draftBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Draft base_products." {
         let context = executor.context();
         let url = format!("{}/{}/draft",
             context.config.service_url(Service::Stores),
@@ -440,10 +440,16 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field sendBaseProductToModeration(&executor, id: i32 as "BaseProduct raw id.") -> FieldResult<BaseProduct>  as "Send base product on moderation." {
+    field sendBaseProductToModeration(&executor, id: i32 as "BaseProduct raw id.") -> FieldResult<BaseProduct>  as "Send base product on moderation for store manager." {
         let context = executor.context();
 
         base_product::run_send_to_moderation_base_product(context, BaseProductId(id))
+    }
+
+    field setModerationStatusBaseProduct(&executor, input: BaseProductModerateInput as "Change base product moderation status input.") -> FieldResult<BaseProduct>  as "Change base product moderation status for moderator." {
+        let context = executor.context();
+
+        base_product::run_moderation_status_base_product(context, input)
     }
 
     field createCustomAttribute(&executor, input: NewCustomAttributeInput as "Create custom attribute input.") -> FieldResult<CustomAttribute> as "Creates new custom attribute" {
