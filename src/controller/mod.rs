@@ -134,7 +134,7 @@ impl Controller for ControllerImpl {
                     )
                 }
 
-                (&Get, Some(Route::VerifyEmailApply(token))) => {
+                (&Get, Some(Route::VerifyEmail(token))) => {
                     let body = json!({ "token": token }).to_string();
                     let url = format!("{}/email_verify_apply", saga_addr);
                     Box::new(
@@ -202,7 +202,7 @@ impl Controller for ControllerImpl {
                     )
                 }
 
-                (&Get, Some(Route::ResetPasswordApply(_))) => Box::new(future::ok(
+                (&Get, Some(Route::ResetPassword)) => Box::new(future::ok(
                     r##"
                         <!DOCTYPE html>
                         <html lang="en">
@@ -256,7 +256,7 @@ impl Controller for ControllerImpl {
                         "##.to_string(),
                 )),
 
-                (&Get, Some(Route::AddDeviceApply(_))) => Box::new(future::ok(
+                (&Get, Some(Route::RegisterDevice)) => Box::new(future::ok(
                     r##"
                         <!DOCTYPE html>
                         <html lang="en">
