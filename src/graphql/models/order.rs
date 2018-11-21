@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use chrono::prelude::*;
+use uuid::Uuid;
 
 use stq_api::orders::{DeliveryInfo, Order, OrderDiff};
 use stq_static_resources::{Currency, OrderState};
@@ -17,6 +18,8 @@ pub struct CreateOrderInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
+    #[graphql(description = "Uuid - unique mutation Id.")]
+    pub uuid: Option<String>,
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,
@@ -26,6 +29,16 @@ pub struct CreateOrderInput {
     pub receiver_phone: String,
     #[graphql(description = "Currency that will be paid")]
     pub currency: Currency,
+}
+
+impl CreateOrderInput {
+    pub fn fill_uuid(mut self) -> Self {
+        self.uuid = match self.uuid {
+            Some(uuid) => Some(uuid),
+            None => Some(Uuid::new_v4().hyphenated().to_string()),
+        };
+        self
+    }
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -55,6 +68,7 @@ pub struct CreateOrder {
     pub receiver_email: String,
     pub coupons: HashMap<CouponId, Coupon>,
     pub delivery_info: HashMap<ProductId, DeliveryInfo>,
+    pub uuid: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
@@ -239,6 +253,8 @@ pub struct BuyNowInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
+    #[graphql(description = "Uuid - unique mutation Id.")]
+    pub uuid: Option<String>,
     #[graphql(description = "Product id")]
     pub product_id: i32,
     #[graphql(description = "Quantity")]
@@ -258,6 +274,16 @@ pub struct BuyNowInput {
     pub shipping_id: i32,
 }
 
+impl BuyNowInput {
+    pub fn fill_uuid(mut self) -> Self {
+        self.uuid = match self.uuid {
+            Some(uuid) => Some(uuid),
+            None => Some(Uuid::new_v4().hyphenated().to_string()),
+        };
+        self
+    }
+}
+
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct BuyNow {
     pub product_id: ProductId,
@@ -274,4 +300,5 @@ pub struct BuyNow {
     pub pre_order_days: i32,
     pub coupon: Option<Coupon>,
     pub delivery_info: Option<DeliveryInfo>,
+    pub uuid: Option<String>,
 }
