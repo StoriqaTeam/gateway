@@ -770,16 +770,18 @@ pub fn get_store(context: &Context, store_id: StoreId, visibility: Visibility) -
 }
 
 pub fn run_send_to_moderation_store(context: &Context, store_id: StoreId) -> FieldResult<Store> {
-    let store = get_store(context, store_id, Visibility::Active)?;
+    let payload = StoreModerate {
+        store_id,
+        status: ModerationStatus::Moderation,
+    };
 
-    match store.status {
-        ModerationStatus::Draft => send_to_moderation(context, store.id),
-        _ => {
-            return Err(FieldError::new(
-                "Could not change store status.",
-                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} cannot be send to moderation.", store.status) }}),
-            ))
-        }
+    if validate_change_moderation_status(context, &payload)? {
+        send_to_moderation(context, store_id)
+    } else {
+        Err(FieldError::new(
+            "Could not change store status.",
+            graphql_value!({ "code": 100, "details": { "Store cannot be sent to moderation." }}),
+        ))
     }
 }
 
@@ -797,22 +799,32 @@ fn send_to_moderation(context: &Context, store_id: StoreId) -> FieldResult<Store
 pub fn run_moderation_status_store(context: &Context, input: StoreModerateInput) -> FieldResult<Store> {
     let identifier = ID::from_str(&*input.id)?;
     let store_id = StoreId(identifier.raw_id);
-    let store = get_store(context, store_id, Visibility::Active)?;
 
     let payload = StoreModerate {
         store_id,
         status: input.status,
     };
 
-    match store.status {
-        ModerationStatus::Draft => {
-            return Err(FieldError::new(
-                "Could not change store status.",
-                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} cannot be changed.", store.status) }}),
-            ))
-        }
-        _ => send_to_moderate(context, payload),
+    if validate_change_moderation_status(context, &payload)? {
+        send_to_moderate(context, payload)
+    } else {
+        Err(FieldError::new(
+            "Could not change store status.",
+            graphql_value!({ "code": 100, "details": { "Store status cannot be changed." }}),
+        ))
     }
+}
+
+fn validate_change_moderation_status(context: &Context, payload: &StoreModerate) -> FieldResult<bool> {
+    let url = format!(
+        "{}/{}/validate_change_moderation_status",
+        context.config.service_url(Service::Stores),
+        Model::Store.to_url()
+    );
+
+    let body: String = serde_json::to_string(&payload)?.to_string();
+
+    context.request::<bool>(Method::Post, url, Some(body)).wait()
 }
 
 fn send_to_moderate(context: &Context, payload: StoreModerate) -> FieldResult<Store> {
@@ -825,4 +837,15 @@ fn send_to_moderate(context: &Context, payload: StoreModerate) -> FieldResult<St
     let body: String = serde_json::to_string(&payload)?.to_string();
 
     context.request::<Store>(Method::Post, url, Some(body)).wait()
+}
+
+pub fn run_send_to_draft_store_mutation(context: &Context, store_id: StoreId) -> FieldResult<Store> {
+    let url = format!(
+        "{}/{}/{}/draft",
+        context.config.service_url(Service::Stores),
+        Model::Store.to_url(),
+        store_id
+    );
+
+    context.request::<Store>(Method::Post, url, None).wait()
 }
