@@ -301,21 +301,10 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deprecated "use setModerationStatusStore" draftStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Draft store." {
-        let context = executor.context();
-        let url = format!("{}/{}/{}/draft",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url(),
-            id);
-
-        context.request::<Store>(Method::Post, url, None)
-            .wait()
-    }
-
-    field hideStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Hide the store from users." {
+    field draftStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Hide the store from users." {
         let context = executor.context();
 
-        store::run_hide_store_mutation(context, StoreId(id))
+        store::run_send_to_draft_store_mutation(context, StoreId(id))
     }
 
     field sendStoreToModeration(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Send store on moderation for store manager." {
@@ -434,22 +423,10 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field deprecated "use setModerationStatusBaseProduct" draftBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Draft base_products." {
-        let context = executor.context();
-        let url = format!("{}/{}/draft",
-            context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url());
-
-        let body: String = serde_json::to_string(&ids)?.to_string();
-
-        context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
-            .wait()
-    }
-
-    field hideBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Hide base_products from users." {
+    field draftBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Hide base_products from users." {
         let context = executor.context();
 
-        base_product::run_hide_base_products_mutation(context, ids)
+        base_product::run_draft_base_products_mutation(context, ids)
     }
 
     field sendBaseProductToModeration(&executor, id: i32 as "BaseProduct raw id.") -> FieldResult<BaseProduct>  as "Send base product on moderation for store manager." {

@@ -390,16 +390,18 @@ pub fn get_base_product(context: &Context, base_product_id: BaseProductId, visib
 }
 
 pub fn run_send_to_moderation_base_product(context: &Context, base_product_id: BaseProductId) -> FieldResult<BaseProduct> {
-    let base_product = get_base_product(context, base_product_id, Visibility::Active)?;
+    let payload = BaseProductModerate {
+        base_product_id,
+        status: ModerationStatus::Moderation,
+    };
 
-    match base_product.status {
-        ModerationStatus::Draft => send_to_moderation(context, base_product.id),
-        _ => {
-            return Err(FieldError::new(
-                "Could not change base product status.",
-                graphql_value!({ "code": 100, "details": { format!("BaseProduct with status: {:?} cannot be send to moderation.", base_product.status) }}),
-            ))
-        }
+    if validate_change_moderation_status(context, &payload)? {
+        send_to_moderation(context, base_product_id)
+    } else {
+        Err(FieldError::new(
+            "Could not change base product status.",
+            graphql_value!({ "code": 100, "details": { "BaseProduct cannot be sent to moderation." }}),
+        ))
     }
 }
 
@@ -419,21 +421,19 @@ fn send_to_moderation(context: &Context, base_product_id: BaseProductId) -> Fiel
 pub fn run_moderation_status_base_product(context: &Context, input: BaseProductModerateInput) -> FieldResult<BaseProduct> {
     let identifier = ID::from_str(&*input.id)?;
     let base_product_id = BaseProductId(identifier.raw_id);
-    let base_product = get_base_product(context, base_product_id, Visibility::Active)?;
 
     let payload = BaseProductModerate {
         base_product_id,
         status: input.status,
     };
 
-    match base_product.status {
-        ModerationStatus::Draft => {
-            return Err(FieldError::new(
-                "Could not change base product status.",
-                graphql_value!({ "code": 100, "details": { format!("Base product with status: {:?} cannot be changed.", base_product.status) }}),
-            ))
-        }
-        _ => send_to_moderate(context, payload),
+    if validate_change_moderation_status(context, &payload)? {
+        send_to_moderate(context, payload)
+    } else {
+        Err(FieldError::new(
+            "Could not change base product status.",
+            graphql_value!({ "code": 100, "details": { "Base product cannot be changed." }}),
+        ))
     }
 }
 
@@ -450,20 +450,32 @@ fn send_to_moderate(context: &Context, payload: BaseProductModerate) -> FieldRes
     get_base_product(context, payload.base_product_id, Visibility::Active)
 }
 
-pub fn run_hide_base_products_mutation(context: &Context, ids: Vec<i32>) -> FieldResult<Vec<BaseProduct>> {
+pub fn run_draft_base_products_mutation(context: &Context, ids: Vec<i32>) -> FieldResult<Vec<BaseProduct>> {
     ids.into_iter()
         .map(BaseProductId)
-        .map(|base_product_id| hide_base_product(context, base_product_id))
+        .map(|base_product_id| send_to_draft_base_product(context, base_product_id))
         .collect::<FieldResult<Vec<BaseProduct>>>()
 }
 
-fn hide_base_product(context: &Context, base_product_id: BaseProductId) -> FieldResult<BaseProduct> {
+fn send_to_draft_base_product(context: &Context, base_product_id: BaseProductId) -> FieldResult<BaseProduct> {
     let url = format!(
-        "{}/{}/{}/hide",
+        "{}/{}/{}/draft",
         context.config.service_url(Service::Stores),
         Model::BaseProduct.to_url(),
         base_product_id
     );
 
     context.request::<BaseProduct>(Method::Post, url, None).wait()
+}
+
+fn validate_change_moderation_status(context: &Context, payload: &BaseProductModerate) -> FieldResult<bool> {
+    let url = format!(
+        "{}/{}/validate_change_moderation_status",
+        context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url()
+    );
+
+    let body: String = serde_json::to_string(&payload)?.to_string();
+
+    context.request::<bool>(Method::Post, url, Some(body)).wait()
 }
