@@ -154,6 +154,8 @@ graphql_object!(Mutation: Context |&self| {
         let saga_addr = context.config.saga_microservice.url.clone();
         let url = format!("{}/reset_password",
             saga_addr);
+
+        let input = input.fill_uuid();
         let body = serde_json::to_string(&input)?;
         context.request::<()>(Method::Post, url, Some(body))
             .wait()?;
