@@ -397,7 +397,7 @@ pub fn run_send_to_moderation_base_product(context: &Context, base_product_id: B
         _ => {
             return Err(FieldError::new(
                 "Could not change base product status.",
-                graphql_value!({ "code": 100, "details": { format!("BaseProduct with status: {:?} can not be send to moderation.", base_product.status) }}),
+                graphql_value!({ "code": 100, "details": { format!("BaseProduct with status: {:?} cannot be send to moderation.", base_product.status) }}),
             ))
         }
     }
@@ -430,7 +430,7 @@ pub fn run_moderation_status_base_product(context: &Context, input: BaseProductM
         ModerationStatus::Draft => {
             return Err(FieldError::new(
                 "Could not change base product status.",
-                graphql_value!({ "code": 100, "details": { format!("Base product with status: {:?} can not be change.", base_product.status) }}),
+                graphql_value!({ "code": 100, "details": { format!("Base product with status: {:?} cannot be changed.", base_product.status) }}),
             ))
         }
         _ => send_to_moderate(context, payload),

@@ -746,7 +746,7 @@ pub fn get_store_id_by_product(context: &Context, product_id: ProductId) -> Fiel
 
 pub fn try_get_store(context: &Context, store_id: StoreId, visibility: Visibility) -> FieldResult<Option<Store>> {
     let url_store = format!(
-        "{}/{}/{}?&visibility={}",
+        "{}/{}/{}?visibility={}",
         context.config.service_url(Service::Stores),
         Model::Store.to_url(),
         store_id,
@@ -777,7 +777,7 @@ pub fn run_send_to_moderation_store(context: &Context, store_id: StoreId) -> Fie
         _ => {
             return Err(FieldError::new(
                 "Could not change store status.",
-                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} can not be send to moderation.", store.status) }}),
+                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} cannot be send to moderation.", store.status) }}),
             ))
         }
     }
@@ -808,7 +808,7 @@ pub fn run_moderation_status_store(context: &Context, input: StoreModerateInput)
         ModerationStatus::Draft => {
             return Err(FieldError::new(
                 "Could not change store status.",
-                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} can not be change.", store.status) }}),
+                graphql_value!({ "code": 100, "details": { format!("Store with status: {:?} cannot be changed.", store.status) }}),
             ))
         }
         _ => send_to_moderate(context, payload),
