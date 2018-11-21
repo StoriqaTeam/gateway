@@ -449,3 +449,21 @@ fn send_to_moderate(context: &Context, payload: BaseProductModerate) -> FieldRes
 
     get_base_product(context, payload.base_product_id, Visibility::Active)
 }
+
+pub fn run_hide_base_products_mutation(context: &Context, ids: Vec<i32>) -> FieldResult<Vec<BaseProduct>> {
+    ids.into_iter()
+        .map(BaseProductId)
+        .map(|base_product_id| hide_base_product(context, base_product_id))
+        .collect::<FieldResult<Vec<BaseProduct>>>()
+}
+
+fn hide_base_product(context: &Context, base_product_id: BaseProductId) -> FieldResult<BaseProduct> {
+    let url = format!(
+        "{}/{}/{}/hide",
+        context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url(),
+        base_product_id
+    );
+
+    context.request::<BaseProduct>(Method::Post, url, None).wait()
+}

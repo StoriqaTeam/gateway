@@ -312,6 +312,12 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
+    field hideStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Hide the store from users." {
+        let context = executor.context();
+
+        store::run_hide_store_mutation(context, StoreId(id))
+    }
+
     field sendStoreToModeration(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Send store on moderation for store manager." {
         let context = executor.context();
 
@@ -438,6 +444,12 @@ graphql_object!(Mutation: Context |&self| {
 
         context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body))
             .wait()
+    }
+
+    field hideBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Hide base_products from users." {
+        let context = executor.context();
+
+        base_product::run_hide_base_products_mutation(context, ids)
     }
 
     field sendBaseProductToModeration(&executor, id: i32 as "BaseProduct raw id.") -> FieldResult<BaseProduct>  as "Send base product on moderation for store manager." {

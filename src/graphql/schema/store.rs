@@ -826,3 +826,14 @@ fn send_to_moderate(context: &Context, payload: StoreModerate) -> FieldResult<St
 
     context.request::<Store>(Method::Post, url, Some(body)).wait()
 }
+
+pub fn run_hide_store_mutation(context: &Context, store_id: StoreId) -> FieldResult<Store> {
+    let url = format!(
+        "{}/{}/{}/hide",
+        context.config.service_url(Service::Stores),
+        Model::Store.to_url(),
+        store_id
+    );
+
+    context.request::<Store>(Method::Post, url, None).wait()
+}
