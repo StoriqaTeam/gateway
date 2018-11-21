@@ -388,3 +388,64 @@ pub fn get_base_product(context: &Context, base_product_id: BaseProductId, visib
         )
     })
 }
+
+pub fn run_send_to_moderation_base_product(context: &Context, base_product_id: BaseProductId) -> FieldResult<BaseProduct> {
+    let base_product = get_base_product(context, base_product_id, Visibility::Active)?;
+
+    match base_product.status {
+        ModerationStatus::Draft => send_to_moderation(context, base_product.id),
+        _ => {
+            return Err(FieldError::new(
+                "Could not change base product status.",
+                graphql_value!({ "code": 100, "details": { format!("BaseProduct with status: {:?} cannot be send to moderation.", base_product.status) }}),
+            ))
+        }
+    }
+}
+
+fn send_to_moderation(context: &Context, base_product_id: BaseProductId) -> FieldResult<BaseProduct> {
+    let url = format!(
+        "{}/{}/{}/moderation",
+        context.config.saga_microservice.url.clone(),
+        Model::BaseProduct.to_url(),
+        base_product_id
+    );
+
+    let _ = context.request::<()>(Method::Post, url, None).wait()?;
+
+    get_base_product(context, base_product_id, Visibility::Active)
+}
+
+pub fn run_moderation_status_base_product(context: &Context, input: BaseProductModerateInput) -> FieldResult<BaseProduct> {
+    let identifier = ID::from_str(&*input.id)?;
+    let base_product_id = BaseProductId(identifier.raw_id);
+    let base_product = get_base_product(context, base_product_id, Visibility::Active)?;
+
+    let payload = BaseProductModerate {
+        base_product_id,
+        status: input.status,
+    };
+
+    match base_product.status {
+        ModerationStatus::Draft => {
+            return Err(FieldError::new(
+                "Could not change base product status.",
+                graphql_value!({ "code": 100, "details": { format!("Base product with status: {:?} cannot be changed.", base_product.status) }}),
+            ))
+        }
+        _ => send_to_moderate(context, payload),
+    }
+}
+
+fn send_to_moderate(context: &Context, payload: BaseProductModerate) -> FieldResult<BaseProduct> {
+    let url = format!(
+        "{}/{}/moderate",
+        context.config.saga_microservice.url.clone(),
+        Model::BaseProduct.to_url()
+    );
+
+    let body: String = serde_json::to_string(&payload)?.to_string();
+    let _ = context.request::<()>(Method::Post, url, Some(body)).wait()?;
+
+    get_base_product(context, payload.base_product_id, Visibility::Active)
+}

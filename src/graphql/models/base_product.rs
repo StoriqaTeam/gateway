@@ -159,3 +159,18 @@ pub struct BaseProductSearchResults {
     pub total_count: u32,
     pub base_products: Vec<BaseProduct>,
 }
+
+#[derive(GraphQLInputObject, Clone, Debug)]
+#[graphql(description = "Management base product moderation status input object")]
+pub struct BaseProductModerateInput {
+    #[graphql(description = "Id of a base product.")]
+    pub id: GraphqlID,
+    #[graphql(description = "Moderation state of the base product.")]
+    pub status: ModerationStatus,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BaseProductModerate {
+    pub base_product_id: BaseProductId,
+    pub status: ModerationStatus,
+}
