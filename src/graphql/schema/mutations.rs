@@ -317,7 +317,7 @@ graphql_object!(Mutation: Context |&self| {
             context.config.service_url(Service::Stores),
             Model::Product.to_url());
         let mut input = input;
-        input.product = input.product.fill_uuid();
+        input.product = input.product.fill_uuid(input.client_mutation_id.clone());
         let body: String = serde_json::to_string(&input)?.to_string();
 
         context.request::<Product>(Method::Post, url, Some(body))

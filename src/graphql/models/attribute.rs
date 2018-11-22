@@ -158,7 +158,7 @@ pub struct CreateAttributeInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Uuid - unique mutation Id.")]
+    #[serde(skip_deserializing)]
     pub uuid: Option<String>,
     #[graphql(description = "Name of an attribute.")]
     pub name: Vec<TranslationInput>,
@@ -172,10 +172,13 @@ pub struct CreateAttributeInput {
 
 impl CreateAttributeInput {
     pub fn fill_uuid(mut self) -> Self {
-        self.uuid = match self.uuid {
-            Some(uuid) => Some(uuid),
-            None => Some(Uuid::new_v4().hyphenated().to_string()),
-        };
+        self.uuid = self
+            .uuid
+            .clone()
+            .or_else(|| Some(self.client_mutation_id.clone()))
+            .filter(|id| !id.is_empty())
+            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
+
         self
     }
 }

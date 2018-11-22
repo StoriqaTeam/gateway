@@ -18,7 +18,7 @@ pub struct CreateOrderInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Uuid - unique mutation Id.")]
+    #[serde(skip_deserializing)]
     pub uuid: Option<String>,
     #[graphql(description = "Address")]
     #[serde(flatten)]
@@ -33,10 +33,13 @@ pub struct CreateOrderInput {
 
 impl CreateOrderInput {
     pub fn fill_uuid(mut self) -> Self {
-        self.uuid = match self.uuid {
-            Some(uuid) => Some(uuid),
-            None => Some(Uuid::new_v4().hyphenated().to_string()),
-        };
+        self.uuid = self
+            .uuid
+            .clone()
+            .or_else(|| Some(self.client_mutation_id.clone()))
+            .filter(|id| !id.is_empty())
+            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
+
         self
     }
 }
@@ -68,7 +71,7 @@ pub struct CreateOrder {
     pub receiver_email: String,
     pub coupons: HashMap<CouponId, Coupon>,
     pub delivery_info: HashMap<ProductId, DeliveryInfo>,
-    pub uuid: Option<String>,
+    pub uuid: String,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
@@ -253,7 +256,7 @@ pub struct BuyNowInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Uuid - unique mutation Id.")]
+    #[serde(skip_deserializing)]
     pub uuid: Option<String>,
     #[graphql(description = "Product id")]
     pub product_id: i32,
@@ -276,10 +279,13 @@ pub struct BuyNowInput {
 
 impl BuyNowInput {
     pub fn fill_uuid(mut self) -> Self {
-        self.uuid = match self.uuid {
-            Some(uuid) => Some(uuid),
-            None => Some(Uuid::new_v4().hyphenated().to_string()),
-        };
+        self.uuid = self
+            .uuid
+            .clone()
+            .or_else(|| Some(self.client_mutation_id.clone()))
+            .filter(|id| !id.is_empty())
+            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
+
         self
     }
 }
@@ -300,5 +306,5 @@ pub struct BuyNow {
     pub pre_order_days: i32,
     pub coupon: Option<Coupon>,
     pub delivery_info: Option<DeliveryInfo>,
-    pub uuid: Option<String>,
+    pub uuid: String,
 }

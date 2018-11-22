@@ -107,7 +107,7 @@ pub struct CreateProductWithAttributesInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "New Product")]
 pub struct NewProduct {
-    #[graphql(description = "Uuid - unique mutation Id.")]
+    #[serde(skip_deserializing)]
     pub uuid: Option<String>,
     #[graphql(description = "Int Base product id variant belonging to.")]
     pub base_product_id: Option<i32>,
@@ -130,11 +130,11 @@ pub struct NewProduct {
 }
 
 impl NewProduct {
-    pub fn fill_uuid(mut self) -> Self {
-        self.uuid = match self.uuid {
-            Some(uuid) => Some(uuid),
-            None => Some(Uuid::new_v4().hyphenated().to_string()),
-        };
+    pub fn fill_uuid(mut self, client_mutation_id: String) -> Self {
+        self.uuid = Some(client_mutation_id)
+            .filter(|id| !id.is_empty())
+            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
+
         self
     }
 }

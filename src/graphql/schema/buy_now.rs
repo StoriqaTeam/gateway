@@ -170,7 +170,7 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResul
         pre_order_days: product.pre_order_days,
         coupon,
         delivery_info: Some(delivery_info),
-        uuid: input.uuid,
+        uuid: input.client_mutation_id,
     };
 
     let url = format!("{}/buy_now", context.config.saga_microservice.url.clone());
