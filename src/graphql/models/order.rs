@@ -15,11 +15,8 @@ pub struct GraphQLOrder(pub Order);
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Create order input object")]
 pub struct CreateOrderInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
-    #[serde(skip_deserializing)]
-    pub uuid: Option<String>,
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,
@@ -33,13 +30,9 @@ pub struct CreateOrderInput {
 
 impl CreateOrderInput {
     pub fn fill_uuid(mut self) -> Self {
-        self.uuid = self
-            .uuid
-            .clone()
-            .or_else(|| Some(self.client_mutation_id.clone()))
+        self.uuid = Some(self.uuid)
             .filter(|id| !id.is_empty())
-            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
-
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
         self
     }
 }
@@ -253,11 +246,8 @@ pub struct CreateOrdersOutput(pub Invoice);
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Buy now input object")]
 pub struct BuyNowInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
-    #[serde(skip_deserializing)]
-    pub uuid: Option<String>,
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
     #[graphql(description = "Product id")]
     pub product_id: i32,
     #[graphql(description = "Quantity")]
@@ -279,13 +269,9 @@ pub struct BuyNowInput {
 
 impl BuyNowInput {
     pub fn fill_uuid(mut self) -> Self {
-        self.uuid = self
-            .uuid
-            .clone()
-            .or_else(|| Some(self.client_mutation_id.clone()))
+        self.uuid = Some(self.uuid)
             .filter(|id| !id.is_empty())
-            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
-
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
         self
     }
 }

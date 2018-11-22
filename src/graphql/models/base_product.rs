@@ -82,11 +82,8 @@ impl UpdateBaseProductInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create base_product with attributes input object")]
 pub struct CreateBaseProductInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
-    #[serde(skip_deserializing)]
-    pub uuid: Option<String>,
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
     #[graphql(description = "Name of new base_product.")]
     pub name: Vec<TranslationInput>,
     #[graphql(description = "Int Store id base_product belonging to.")]
@@ -109,12 +106,9 @@ pub struct CreateBaseProductInput {
 
 impl CreateBaseProductInput {
     pub fn fill_uuid(mut self) -> Self {
-        self.uuid = self
-            .uuid
-            .or(Some(self.client_mutation_id.clone()))
+        self.uuid = Some(self.uuid)
             .filter(|id| !id.is_empty())
-            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
-
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
         self
     }
 }
@@ -122,11 +116,8 @@ impl CreateBaseProductInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create base product with variant input object")]
 pub struct NewBaseProductWithVariantsInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
-    #[serde(skip_deserializing)]
-    pub uuid: Option<String>,
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
     #[graphql(description = "Name of new base_product.")]
     pub name: Vec<TranslationInput>,
     #[graphql(description = "Int Store id base_product belonging to.")]
@@ -153,13 +144,9 @@ pub struct NewBaseProductWithVariantsInput {
 
 impl NewBaseProductWithVariantsInput {
     pub fn fill_uuid(mut self) -> Self {
-        self.uuid = self
-            .uuid
-            .clone()
-            .or_else(|| Some(self.client_mutation_id.clone()))
+        self.uuid = Some(self.uuid)
             .filter(|id| !id.is_empty())
-            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
-
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
         self
     }
 }

@@ -107,7 +107,7 @@ pub struct CreateProductWithAttributesInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "New Product")]
 pub struct NewProduct {
-    #[serde(skip_deserializing)]
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
     pub uuid: Option<String>,
     #[graphql(description = "Int Base product id variant belonging to.")]
     pub base_product_id: Option<i32>,

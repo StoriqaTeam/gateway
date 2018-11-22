@@ -415,7 +415,7 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) ->
         currency: input.currency,
         coupons: coupons_info,
         delivery_info,
-        uuid: input.client_mutation_id,
+        uuid: input.uuid,
     };
 
     let url = format!("{}/create_order", context.config.saga_microservice.url.clone());

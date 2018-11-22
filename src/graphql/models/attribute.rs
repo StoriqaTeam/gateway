@@ -155,11 +155,8 @@ impl UpdateAttributeValueInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create attribute input object")]
 pub struct CreateAttributeInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
-    #[serde(skip_deserializing)]
-    pub uuid: Option<String>,
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
     #[graphql(description = "Name of an attribute.")]
     pub name: Vec<TranslationInput>,
     #[graphql(description = "Attribute type")]
@@ -172,13 +169,9 @@ pub struct CreateAttributeInput {
 
 impl CreateAttributeInput {
     pub fn fill_uuid(mut self) -> Self {
-        self.uuid = self
-            .uuid
-            .clone()
-            .or_else(|| Some(self.client_mutation_id.clone()))
+        self.uuid = Some(self.uuid)
             .filter(|id| !id.is_empty())
-            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
-
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
         self
     }
 }
