@@ -1,5 +1,7 @@
 //! EAV model attributes
 use juniper::ID as GraphqlID;
+use uuid::Uuid;
+
 use stq_static_resources::{AttributeType, Translation, TranslationInput};
 use stq_types::{AttributeId, AttributeValueCode, AttributeValueId};
 
@@ -153,9 +155,8 @@ impl UpdateAttributeValueInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create attribute input object")]
 pub struct CreateAttributeInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
     #[graphql(description = "Name of an attribute.")]
     pub name: Vec<TranslationInput>,
     #[graphql(description = "Attribute type")]
@@ -164,6 +165,15 @@ pub struct CreateAttributeInput {
     pub meta_field: Option<AttributeMetaFieldInput>,
     #[graphql(description = "Attribute values.")]
     pub values: Option<Vec<CreateAttributeValueWithAttributeInput>>,
+}
+
+impl CreateAttributeInput {
+    pub fn fill_uuid(mut self) -> Self {
+        self.uuid = Some(self.uuid)
+            .filter(|id| !id.is_empty())
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
+        self
+    }
 }
 
 #[derive(GraphQLInputObject, Deserialize, Serialize, Debug, Clone, PartialEq)]

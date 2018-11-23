@@ -1,6 +1,7 @@
 use std::time::SystemTime;
 
 use juniper::ID as GraphqlID;
+use uuid::Uuid;
 
 use stq_static_resources::{Currency, ModerationStatus, Translation, TranslationInput};
 use stq_types::{BaseProductId, CategoryId, StoreId};
@@ -81,9 +82,8 @@ impl UpdateBaseProductInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create base_product with attributes input object")]
 pub struct CreateBaseProductInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
     #[graphql(description = "Name of new base_product.")]
     pub name: Vec<TranslationInput>,
     #[graphql(description = "Int Store id base_product belonging to.")]
@@ -104,12 +104,20 @@ pub struct CreateBaseProductInput {
     pub slug: Option<String>,
 }
 
+impl CreateBaseProductInput {
+    pub fn fill_uuid(mut self) -> Self {
+        self.uuid = Some(self.uuid)
+            .filter(|id| !id.is_empty())
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
+        self
+    }
+}
+
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create base product with variant input object")]
 pub struct NewBaseProductWithVariantsInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
     #[graphql(description = "Name of new base_product.")]
     pub name: Vec<TranslationInput>,
     #[graphql(description = "Int Store id base_product belonging to.")]
@@ -132,6 +140,15 @@ pub struct NewBaseProductWithVariantsInput {
     pub variants: Vec<CreateProductWithAttributesInput>,
     #[graphql(description = "Selected raw id attributes.")]
     pub selected_attributes: Vec<i32>,
+}
+
+impl NewBaseProductWithVariantsInput {
+    pub fn fill_uuid(mut self) -> Self {
+        self.uuid = Some(self.uuid)
+            .filter(|id| !id.is_empty())
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
+        self
+    }
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]

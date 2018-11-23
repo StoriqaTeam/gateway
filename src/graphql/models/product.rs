@@ -1,5 +1,6 @@
 use super::*;
 use juniper::ID as GraphqlID;
+use uuid::Uuid;
 
 use stq_static_resources::Currency;
 use stq_types::{BaseProductId, ProductId, ProductPrice};
@@ -106,6 +107,8 @@ pub struct CreateProductWithAttributesInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "New Product")]
 pub struct NewProduct {
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: Option<String>,
     #[graphql(description = "Int Base product id variant belonging to.")]
     pub base_product_id: Option<i32>,
     #[graphql(description = "Discount.")]
@@ -124,6 +127,16 @@ pub struct NewProduct {
     pub pre_order: Option<bool>,
     #[graphql(description = "Pre-order days.")]
     pub pre_order_days: Option<i32>,
+}
+
+impl NewProduct {
+    pub fn fill_uuid(mut self, client_mutation_id: String) -> Self {
+        self.uuid = Some(client_mutation_id)
+            .filter(|id| !id.is_empty())
+            .or_else(|| Some(Uuid::new_v4().hyphenated().to_string()));
+
+        self
+    }
 }
 
 #[derive(GraphQLInputObject, Debug, Clone)]

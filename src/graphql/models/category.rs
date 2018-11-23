@@ -1,5 +1,7 @@
-use super::Attribute;
 use juniper::ID as GraphqlID;
+use uuid::Uuid;
+
+use super::Attribute;
 use stq_static_resources::{Translation, TranslationInput};
 use stq_types::CategoryId;
 
@@ -49,15 +51,23 @@ impl UpdateCategoryInput {
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Create Category input object")]
 pub struct CreateCategoryInput {
-    #[graphql(description = "Client mutation id.")]
-    #[serde(skip_serializing)]
-    pub client_mutation_id: String,
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
     #[graphql(description = "Name of a Category.")]
     pub name: Vec<TranslationInput>,
     #[graphql(description = "Meta field of a category.")]
     pub meta_field: Option<String>,
     #[graphql(description = "Parent category id.")]
     pub parent_id: i32,
+}
+
+impl CreateCategoryInput {
+    pub fn fill_uuid(mut self) -> Self {
+        self.uuid = Some(self.uuid)
+            .filter(|id| !id.is_empty())
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
+        self
+    }
 }
 
 /// Payload for adding category attributes

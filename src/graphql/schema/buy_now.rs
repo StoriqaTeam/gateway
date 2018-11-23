@@ -123,6 +123,7 @@ fn calculate_delivery(price: ProductPrice, quantity: Quantity) -> f64 {
 }
 
 pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResult<CreateOrdersOutput> {
+    let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
             "Could not run for unauthorized user.",
@@ -169,6 +170,7 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResul
         pre_order_days: product.pre_order_days,
         coupon,
         delivery_info: Some(delivery_info),
+        uuid: input.uuid,
     };
 
     let url = format!("{}/buy_now", context.config.saga_microservice.url.clone());

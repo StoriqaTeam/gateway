@@ -347,6 +347,7 @@ graphql_object!(Edge<OrderHistoryItem>: Context as "OrderHistoryItemsEdge" |&sel
 });
 
 pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) -> FieldResult<CreateOrdersOutput> {
+    let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
             "Could not create orders for unauthorized user.",
@@ -414,6 +415,7 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) ->
         currency: input.currency,
         coupons: coupons_info,
         delivery_info,
+        uuid: input.uuid,
     };
 
     let url = format!("{}/create_order", context.config.saga_microservice.url.clone());
