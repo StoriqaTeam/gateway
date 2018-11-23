@@ -378,7 +378,13 @@ graphql_object!(Mutation: Context |&self| {
         let url = format!("{}/{}/with_variants",
             context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url());
-
+        let mut input = input;
+        input.variants = input.variants.into_iter()
+            .map(|mut variant| {
+                variant.product = variant.product.fill_uuid(variant.client_mutation_id.clone());
+                variant
+            })
+            .collect();
         let body: String = serde_json::to_string(&input.fill_uuid())?.to_string();
 
         context.request::<BaseProduct>(Method::Post, url, Some(body))
