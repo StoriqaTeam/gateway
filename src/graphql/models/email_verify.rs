@@ -22,6 +22,8 @@ pub struct VerifyEmailApply {
     pub client_mutation_id: String,
     #[graphql(description = "Email verification token.")]
     pub token: String,
+    #[graphql(description = "Project")]
+    pub project: Option<Project>,
 }
 
 #[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]

@@ -24,6 +24,8 @@ pub struct ResetApply {
     pub token: String,
     #[graphql(description = "Password of a user.")]
     pub password: String,
+    #[graphql(description = "Project")]
+    pub project: Option<Project>,
 }
 
 #[derive(GraphQLObject, Serialize, Deserialize, Debug, Clone)]
