@@ -345,6 +345,26 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
+    field store_by_slug(
+        &executor,
+        slug: String as "String slug of a store.", 
+        visibility: Option<Visibility> as "Specifies allowed visibility of the store",
+    ) -> FieldResult<Option<Store>> as "Fetches store by slug." {
+        let context = executor.context();
+        let visibility = visibility.unwrap_or_default();
+
+        let url = format!(
+            "{}/{}/by-slug/{}?visibility={}",
+            &context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            slug,
+            visibility,
+        );
+
+        context.request::<Option<Store>>(Method::Get, url, None)
+            .wait()
+    }
+
     field base_product(&executor,
         id: i32 as "Int Id of a base product.",
         visibility: Option<Visibility> as "Specifies allowed visibility of the base product",
@@ -364,6 +384,39 @@ graphql_object!(Query: Context |&self| {
                 &context.config.service_url(Service::Stores),
                 Model::BaseProduct.to_url(),
                 id.to_string(),
+                visibility,
+            ),
+        };
+
+        context.request::<Option<BaseProduct>>(Method::Get, url, None)
+            .wait()
+    }
+
+    field base_product_by_slug(
+        &executor,
+        store_slug: String as "String slug of a store.",
+        base_product_slug: String as "String slug of a base product.", 
+        visibility: Option<Visibility> as "Specifies allowed visibility of the base product",
+    ) -> FieldResult<Option<BaseProduct>> as "Fetches base product by slug." {
+        let context = executor.context();
+        let visibility = visibility.unwrap_or_default();
+
+        let url = match visibility {
+            Visibility::Published => format!(
+                "{}/{}/by-slug/{}/{}/by-slug/{}/update_view",
+                &context.config.service_url(Service::Stores),
+                Model::Store.to_url(),
+                store_slug,
+                Model::BaseProduct.to_url(),
+                base_product_slug
+            ),
+            Visibility::Active => format!(
+                "{}/{}/by-slug/{}/{}/by-slug/{}?visibility={}",
+                &context.config.service_url(Service::Stores),
+                Model::Store.to_url(),
+                store_slug,
+                Model::BaseProduct.to_url(),
+                base_product_slug,
                 visibility,
             ),
         };
