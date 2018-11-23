@@ -88,7 +88,7 @@ impl Context {
         self.set_correlation_token(&mut headers);
 
         let dt = Local::now();
-        let correlation_token = self.uuid.clone();
+        let correlation_token = self.correlation_token.clone().map(|token| token.0).unwrap_or(self.uuid.clone());
 
         Box::new(
             self.http_client
