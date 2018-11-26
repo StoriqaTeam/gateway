@@ -197,14 +197,14 @@ pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMeth
     let shipping_id = ShippingId(input.shipping_id);
     let product_id = ProductId(input.product_id);
 
-    let _product = product::try_get_product(context, ProductId(input.product_id))?.ok_or_else(|| {
+    let _product: Product = product::try_get_product(context, ProductId(input.product_id))?.ok_or_else(|| {
         FieldError::new(
             "Could not set delivery method in cart.",
             graphql_value!({ "code": 100, "details": { "Product not found" }}),
         )
-    });
+    })?;
 
-    let _select_package = available_packages::get_available_package_for_user_by_id(context, shipping_id)?;
+    let _select_package: AvailablePackageForUser = available_packages::get_available_package_for_user_by_id(context, shipping_id)?;
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
     let delivery_method_id = DeliveryMethodId::ShippingPackage { id: shipping_id };
