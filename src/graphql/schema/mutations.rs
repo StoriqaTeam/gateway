@@ -18,14 +18,12 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{
-    BaseProductId, CartItem, CouponCode, CouponId, DeliveryMethodId, ProductId, ProductSellerPrice, Quantity, SagaId, ShippingId, StoreId,
-    WarehouseId,
-};
+use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 use graphql::schema::base_product;
 use graphql::schema::buy_now;
+use graphql::schema::cart as cart_module;
 use graphql::schema::order;
 use graphql::schema::store;
 
@@ -720,16 +718,7 @@ graphql_object!(Mutation: Context |&self| {
             })?
             .into_iter().collect();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
-
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .map(Some)
-            .wait()
+        cart_module::convert_products_to_cart(context, &products).map(Some)
 
     }
 
@@ -753,16 +742,8 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+        cart_module::convert_products_to_cart(context, &products).map(Some)
 
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .map(Some)
-            .wait()
     }
 
     field setCouponInCart(&executor, input: SetCouponInCartInput as "Set coupon in cart input.") -> FieldResult<Option<Cart>> as "Sets coupon in cart." {
@@ -847,16 +828,8 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+        cart_module::convert_products_to_cart(context, &products).map(Some)
 
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .map(Some)
-            .wait()
     }
 
     field deleteCouponFromCart(
@@ -890,16 +863,8 @@ graphql_object!(Mutation: Context |&self| {
         let products: Vec<CartItem> = rpc_client.delete_coupon(customer, coupon_id).sync()?
             .into_iter().collect();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+        cart_module::convert_products_to_cart(context, &products).map(Some)
 
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .map(Some)
-            .wait()
     }
 
     field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<Cart>> as "Select product in cart." {
@@ -922,16 +887,8 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+        cart_module::convert_products_to_cart(context, &products).map(Some)
 
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .map(Some)
-            .wait()
     }
 
     field setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.")
@@ -956,16 +913,8 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+        cart_module::convert_products_to_cart(context, &products).map(Some)
 
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .map(Some)
-            .wait()
     }
 
     field setDeliveryMethodInCart(
@@ -974,46 +923,7 @@ graphql_object!(Mutation: Context |&self| {
     ) -> FieldResult<Cart> as "Sets delivery method in the cart." {
         let context = executor.context();
 
-        let customer = if let Some(ref user) = context.user {
-            user.user_id.into()
-        } else if let Some(session_id) = context.session_id {
-            session_id.into()
-        }  else {
-            return Err(FieldError::new(
-                "Could not set delivery method in cart for unauthorized user.",
-                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-            ));
-        };
-
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
-            input.product_id);
-
-        let _product = context.request::<Option<Product>>(Method::Get, url, None)
-            .wait()?
-            .ok_or_else(|| FieldError::new(
-                "Could not set delivery method in cart.",
-                graphql_value!({ "code": 100, "details": { "Product not found" }}),
-            ))?;
-
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        let delivery_method_id = DeliveryMethodId::ShippingPackage { id: ShippingId(input.shipping_id) };
-        let products = rpc_client.set_delivery_method(customer, ProductId(input.product_id), delivery_method_id)
-            .sync()
-            .map_err(into_graphql)?
-            .into_iter()
-            .collect::<Vec<_>>();
-
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
-
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .wait()
+        cart_module::run_set_delivery_method_in_cart(context, input)
     }
 
     field removeDeliveryMethodFromCart(
@@ -1052,15 +962,8 @@ graphql_object!(Mutation: Context |&self| {
             .into_iter()
             .collect::<Vec<_>>();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+        cart_module::convert_products_to_cart(context, &products)
 
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .wait()
     }
 
     field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Cart> as "Deletes products from cart." {
@@ -1083,15 +986,8 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+        cart_module::convert_products_to_cart(context, &products)
 
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .wait()
     }
 
     field clearCart(&executor) -> FieldResult<Cart> as "Clears cart." {

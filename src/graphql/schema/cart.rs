@@ -3,12 +3,18 @@
 use std::cmp;
 use std::str::FromStr;
 
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
+
+use futures::Future;
+use hyper::Method;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::UserId;
+use stq_types::{CartItem, DeliveryMethodId, ProductId, ShippingId, UserId};
+
+use stq_api::orders::CartClient;
+use stq_api::types::ApiFutureExt;
 
 use super::*;
 use graphql::context::Context;
@@ -16,6 +22,10 @@ use graphql::models::*;
 use graphql::schema::cart_store::{
     calculate_coupons_discount, calculate_products_delivery_cost, calculate_products_price, calculate_products_price_without_discounts,
 };
+
+use errors::into_graphql;
+use graphql::schema::available_packages;
+use graphql::schema::product;
 
 graphql_object!(Cart: Context as "Cart" |&self| {
     description: "Users cart"
@@ -170,4 +180,51 @@ pub fn calculate_cart_delivery_cost(context: &Context, stores: &[CartStore]) -> 
     });
 
     cost
+}
+
+pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMethodInCartInput) -> FieldResult<Cart> {
+    let customer = if let Some(ref user) = context.user {
+        user.user_id.into()
+    } else if let Some(session_id) = context.session_id {
+        session_id.into()
+    } else {
+        return Err(FieldError::new(
+            "Could not set delivery method in cart for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        ));
+    };
+
+    let shipping_id = ShippingId(input.shipping_id);
+    let product_id = ProductId(input.product_id);
+
+    let _product: Product = product::try_get_product(context, ProductId(input.product_id))?.ok_or_else(|| {
+        FieldError::new(
+            "Could not set delivery method in cart.",
+            graphql_value!({ "code": 100, "details": { "Product not found" }}),
+        )
+    })?;
+
+    let _select_package: AvailablePackageForUser = available_packages::get_available_package_for_user_by_id(context, shipping_id)?;
+
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+    let delivery_method_id = DeliveryMethodId::ShippingPackage { id: shipping_id };
+
+    let products = rpc_client
+        .set_delivery_method(customer, product_id, delivery_method_id)
+        .sync()
+        .map_err(into_graphql)?
+        .into_iter()
+        .collect::<Vec<_>>();
+
+    convert_products_to_cart(context, &products)
+}
+
+pub fn convert_products_to_cart(context: &Context, products: &[CartItem]) -> FieldResult<Cart> {
+    let url = format!("{}/{}/cart", context.config.service_url(Service::Stores), Model::Store.to_url());
+    let body = serde_json::to_string(&products)?;
+
+    context
+        .request::<Vec<Store>>(Method::Post, url, Some(body))
+        .map(|stores| convert_to_cart(stores, &products))
+        .wait()
 }
