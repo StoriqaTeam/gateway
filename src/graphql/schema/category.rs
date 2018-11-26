@@ -64,6 +64,10 @@ graphql_object!(Category: Context as "Category" |&self| {
     field get_attributes(&executor) -> &[Attribute] as "Fetches category attributes." {
         &self.attributes
     }
+
+    field slug() -> &str {
+        &self.slug
+    }
 });
 
 graphql_object!(SearchCategory: Context as "SearchCategory" |&self| {
