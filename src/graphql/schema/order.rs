@@ -21,6 +21,7 @@ use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::cart as cart_module;
 use graphql::schema::coupon::try_get_coupon;
 use graphql::schema::coupon::*;
 use graphql::schema::product;
@@ -284,16 +285,7 @@ graphql_object!(CreateOrdersOutput: Context as "CreateOrdersOutput" |&self| {
             .sync()
             .map_err(into_graphql)?.into_iter().collect();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
-
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .map(Some)
-            .wait()
+        cart_module::convert_products_to_cart(context, &products).map(Some)
     }
 
 });

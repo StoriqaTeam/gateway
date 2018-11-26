@@ -5,7 +5,6 @@ use futures::Future;
 use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
-use serde_json;
 use uuid::Uuid;
 
 use stq_api::orders::{CartClient, OrderClient};
@@ -21,6 +20,7 @@ use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::cart as cart_module;
 use schema::buy_now;
 
 pub const QUERY_NODE_ID: i32 = 1;
@@ -358,7 +358,7 @@ graphql_object!(Query: Context |&self| {
 
     field store_by_slug(
         &executor,
-        slug: String as "String slug of a store.", 
+        slug: String as "String slug of a store.",
         visibility: Option<Visibility> as "Specifies allowed visibility of the store",
     ) -> FieldResult<Option<Store>> as "Fetches store by slug." {
         let context = executor.context();
@@ -406,7 +406,7 @@ graphql_object!(Query: Context |&self| {
     field base_product_by_slug(
         &executor,
         store_slug: String as "String slug of a store.",
-        base_product_slug: String as "String slug of a base product.", 
+        base_product_slug: String as "String slug of a base product.",
         visibility: Option<Visibility> as "Specifies allowed visibility of the base product",
     ) -> FieldResult<Option<BaseProduct>> as "Fetches base product by slug." {
         let context = executor.context();
@@ -514,16 +514,8 @@ graphql_object!(Query: Context |&self| {
             .sync()
             .map_err(into_graphql)?.into_iter().collect();
 
-        let url = format!("{}/{}/cart",
-            context.config.service_url(Service::Stores),
-            Model::Store.to_url());
+        cart_module::convert_products_to_cart(context, &products).map(Some)
 
-        let body = serde_json::to_string(&products)?;
-
-        context.request::<Vec<Store>>(Method::Post, url, Some(body))
-            .map(|stores| convert_to_cart(stores, &products))
-            .map(Some)
-            .wait()
     }
 
     field store_slug_exists(&executor, slug: String as "Stores slug") -> FieldResult<bool> as "Checks store slug" {

@@ -149,7 +149,7 @@ graphql_object!(Edge<Product>: Context as "ProductsEdge" |&self| {
     }
 });
 
-pub fn get_product(context: &Context, product_id: ProductId) -> FieldResult<Product> {
+pub fn try_get_product(context: &Context, product_id: ProductId) -> FieldResult<Option<Product>> {
     let url_product = format!(
         "{}/{}/{}",
         context.config.service_url(Service::Stores),
@@ -157,19 +157,20 @@ pub fn get_product(context: &Context, product_id: ProductId) -> FieldResult<Prod
         product_id
     );
 
-    context
-        .request::<Option<Product>>(Method::Get, url_product, None)
-        .wait()
-        .and_then(|value| {
-            if let Some(value) = value {
-                Ok(value)
-            } else {
-                Err(FieldError::new(
-                    "Could not find Product from product id.",
-                    graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
-                ))
-            }
-        })
+    context.request::<Option<Product>>(Method::Get, url_product, None).wait()
+}
+
+pub fn get_product(context: &Context, product_id: ProductId) -> FieldResult<Product> {
+    try_get_product(context, product_id).and_then(|value| {
+        if let Some(value) = value {
+            Ok(value)
+        } else {
+            Err(FieldError::new(
+                "Could not find Product from product id.",
+                graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+            ))
+        }
+    })
 }
 
 pub fn get_seller_price(context: &Context, product_id: ProductId) -> FieldResult<ProductSellerPrice> {
