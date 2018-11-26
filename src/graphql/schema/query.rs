@@ -236,6 +236,17 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
+    field category_by_slug(&executor, category_slug: String) -> FieldResult<Option<Category>> as "Find category by slug" {
+        let context = executor.context();
+        let url = format!("{}/{}/by-slug/{}",
+            context.config.service_url(Service::Stores),
+            Model::Category.to_url(),
+            category_slug);
+
+        context.request::<Option<Category>>(Method::Get, url, None)
+            .wait()
+    }
+
     field countries(&executor) -> FieldResult<Country> as "Fetches country tree." {
         let context = executor.context();
         let url = format!("{}/{}",

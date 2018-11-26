@@ -8,6 +8,7 @@ use stq_types::CategoryId;
 #[derive(Deserialize, Debug, Clone)]
 pub struct Category {
     pub id: CategoryId,
+    pub slug: String,
     pub name: Vec<Translation>,
     pub meta_field: Option<String>,
     pub children: Vec<Category>,
@@ -33,6 +34,8 @@ pub struct UpdateCategoryInput {
     pub parent_id: Option<i32>,
     #[graphql(description = "Category level.")]
     pub level: Option<i32>,
+    #[graphql(description = "Category slug.")]
+    pub slug: Option<String>,
 }
 
 impl UpdateCategoryInput {
@@ -44,6 +47,7 @@ impl UpdateCategoryInput {
             meta_field: None,
             parent_id: None,
             level: None,
+            slug: None,
         } == self.clone()
     }
 }
@@ -59,6 +63,8 @@ pub struct CreateCategoryInput {
     pub meta_field: Option<String>,
     #[graphql(description = "Parent category id.")]
     pub parent_id: i32,
+    #[graphql(description = "Category slug.")]
+    pub slug: Option<String>,
 }
 
 impl CreateCategoryInput {
