@@ -14,7 +14,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, ModerationStatus, Translation};
-use stq_types::BaseProductId;
+use stq_types::{BaseProductId, ProductId};
 
 use super::*;
 use errors::into_graphql;
@@ -378,6 +378,26 @@ pub fn try_get_base_product(context: &Context, base_product_id: BaseProductId, v
     );
 
     context.request::<Option<BaseProduct>>(Method::Get, url, None).wait()
+}
+
+pub fn try_get_base_product_by_product(context: &Context, product_id: ProductId) -> FieldResult<Option<BaseProduct>> {
+    let url = format!(
+        "{}/{}/by_product/{}",
+        context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url(),
+        product_id
+    );
+
+    context.request::<Option<BaseProduct>>(Method::Get, url, None).wait()
+}
+
+pub fn get_base_product_by_product(context: &Context, product_id: ProductId) -> FieldResult<BaseProduct> {
+    try_get_base_product_by_product(context, product_id)?.ok_or_else(|| {
+        FieldError::new(
+            "Could not find base product for product id.",
+            graphql_value!({ "code": 100, "details": { "Base product does not exist in stores microservice." }}),
+        )
+    })
 }
 
 pub fn get_base_product(context: &Context, base_product_id: BaseProductId, visibility: Visibility) -> FieldResult<BaseProduct> {

@@ -18,7 +18,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, Quantity, SagaId, StoreId, WarehouseId};
+use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
 
 use errors::into_graphql;
 use graphql::schema::base_product;
@@ -672,53 +672,14 @@ graphql_object!(Mutation: Context |&self| {
     field incrementInCart(&executor, input: IncrementInCartInput as "Increment in cart input.") -> FieldResult<Option<Cart>> as "Increment in cart." {
         let context = executor.context();
 
-        let customer = if let Some(ref user) = context.user {
-            user.user_id.into()
-        } else if let Some(session_id) = context.session_id {
-            session_id.into()
-        }  else {
-            return Err(FieldError::new(
-                "Could not increment cart for unauthorized user.",
-                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-            ));
-        };
+        cart_module::run_increment_in_cart(context, input)
 
-        let url = format!("{}/{}/by_product/{}",
-            context.config.service_url(Service::Stores),
-            Model::BaseProduct.to_url(),
-            input.product_id);
-        let base_product = context.request::<Option<BaseProduct>>(Method::Get, url, None)
-            .wait()?
-            .ok_or_else(||
-                FieldError::new(
-                    "Could not find base product for product id.",
-                    graphql_value!({ "code": 100, "details": { "Base product does not exist in stores microservice." }}),
-            ))?;
-        let product = base_product.variants.and_then(|v| v.get(0).cloned()).ok_or_else(||
-                FieldError::new(
-                    "Could not find product in base product variants.",
-                    graphql_value!({ "code": 100, "details": { "Product does not exist in variants." }}),
-            ))?;
+    }
 
-        let rpc_client = context.get_rest_api_client(Service::Orders);
+    field AddInCart(&executor, input: AddInCartInput as "Add product quantity, plus delivery method in cart input.") -> FieldResult<Option<Cart>> as "Add in cart." {
+        let context = executor.context();
 
-        let products: Vec<_> = rpc_client.increment_item(customer, input.product_id.into(), base_product.store_id, product.pre_order, product.pre_order_days)
-            .sync()
-            .map_err(into_graphql)
-            .and_then(|p| {
-                if let Some(value) = input.value {
-                    let quantity = Quantity(value);
-
-                    rpc_client.set_quantity(customer, input.product_id.into(), quantity)
-                    .sync()
-                    .map_err(into_graphql)
-                } else {
-                    Ok(p)
-                }
-            })?
-            .into_iter().collect();
-
-        cart_module::convert_products_to_cart(context, &products).map(Some)
+        cart_module::run_add_in_cart(context, input)
 
     }
 
@@ -932,37 +893,7 @@ graphql_object!(Mutation: Context |&self| {
     ) -> FieldResult<Cart> as "Removes delivery method from the cart." {
         let context = executor.context();
 
-        let customer = if let Some(ref user) = context.user {
-            user.user_id.into()
-        } else if let Some(session_id) = context.session_id {
-            session_id.into()
-        }  else {
-            return Err(FieldError::new(
-                "Could not remove delivery method from cart for unauthorized user.",
-                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-            ));
-        };
-
-        let url = format!("{}/{}/{}",
-            context.config.service_url(Service::Stores),
-            Model::Product.to_url(),
-            input.product_id);
-
-        let _product = context.request::<Option<Product>>(Method::Get, url, None)
-            .wait()?
-            .ok_or_else(|| FieldError::new(
-                "Could not remove delivery method from cart.",
-                graphql_value!({ "code": 100, "details": { "Product not found" }}),
-            ))?;
-
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products = rpc_client.delete_delivery_method_by_product(customer, ProductId(input.product_id))
-            .sync()
-            .map_err(into_graphql)?
-            .into_iter()
-            .collect::<Vec<_>>();
-
-        cart_module::convert_products_to_cart(context, &products)
+        cart_module::run_remove_delivery_method_from_cart(context, input)
 
     }
 
