@@ -11,7 +11,7 @@ use hyper::Method;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{CartItem, DeliveryMethodId, ProductId, ShippingId, UserId};
+use stq_types::{CartCustomer, CartItem, DeliveryMethodId, ProductId, Quantity, ShippingId, UserId};
 
 use stq_api::orders::CartClient;
 use stq_api::types::ApiFutureExt;
@@ -25,7 +25,8 @@ use graphql::schema::cart_store::{
 
 use errors::into_graphql;
 use graphql::schema::available_packages;
-use graphql::schema::product;
+use graphql::schema::base_product as base_product_module;
+use graphql::schema::product as product_module;
 
 graphql_object!(Cart: Context as "Cart" |&self| {
     description: "Users cart"
@@ -183,21 +184,17 @@ pub fn calculate_cart_delivery_cost(context: &Context, stores: &[CartStore]) -> 
 }
 
 pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMethodInCartInput) -> FieldResult<Cart> {
-    let customer = if let Some(ref user) = context.user {
-        user.user_id.into()
-    } else if let Some(session_id) = context.session_id {
-        session_id.into()
-    } else {
-        return Err(FieldError::new(
+    let customer: CartCustomer = get_customer(context).ok_or_else(|| {
+        FieldError::new(
             "Could not set delivery method in cart for unauthorized user.",
             graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-        ));
-    };
+        )
+    })?;
 
     let shipping_id = ShippingId(input.shipping_id);
     let product_id = ProductId(input.product_id);
 
-    let _product: Product = product::try_get_product(context, ProductId(input.product_id))?.ok_or_else(|| {
+    let _product: Product = product_module::try_get_product(context, product_id)?.ok_or_else(|| {
         FieldError::new(
             "Could not set delivery method in cart.",
             graphql_value!({ "code": 100, "details": { "Product not found" }}),
@@ -219,6 +216,104 @@ pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMeth
     convert_products_to_cart(context, &products)
 }
 
+pub fn run_remove_delivery_method_from_cart(context: &Context, input: RemoveDeliveryMethodFromCartInput) -> FieldResult<Cart> {
+    let customer: CartCustomer = get_customer(context).ok_or_else(|| {
+        FieldError::new(
+            "Could not remove delivery method from cart for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        )
+    })?;
+
+    let product_id = ProductId(input.product_id);
+
+    let _product: Product = product_module::try_get_product(context, product_id)?.ok_or_else(|| {
+        FieldError::new(
+            "Could not remove delivery method from cart.",
+            graphql_value!({ "code": 100, "details": { "Product not found" }}),
+        )
+    })?;
+
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+    let products = rpc_client
+        .delete_delivery_method_by_product(customer, ProductId(input.product_id))
+        .sync()
+        .map_err(into_graphql)?
+        .into_iter()
+        .collect::<Vec<_>>();
+
+    convert_products_to_cart(context, &products)
+}
+
+pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInput) -> FieldResult<Option<Cart>> {
+    let customer: CartCustomer = get_customer(context).ok_or_else(|| {
+        FieldError::new(
+            "Could not increment cart for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        )
+    })?;
+
+    let product_id = ProductId(input.product_id);
+
+    let base_product = base_product_module::get_base_product_by_product(context, product_id)?;
+
+    let product = base_product.variants.and_then(|v| v.get(0).cloned()).ok_or_else(|| {
+        FieldError::new(
+            "Could not find product in base product variants.",
+            graphql_value!({ "code": 100, "details": { "Product does not exist in variants." }}),
+        )
+    })?;
+
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+
+    let products: Vec<_> = rpc_client
+        .increment_item(
+            customer,
+            input.product_id.into(),
+            base_product.store_id,
+            product.pre_order,
+            product.pre_order_days,
+        ).sync()
+        .map_err(into_graphql)
+        .and_then(|p| {
+            if let Some(value) = input.value {
+                let quantity = Quantity(value);
+
+                rpc_client
+                    .set_quantity(customer, input.product_id.into(), quantity)
+                    .sync()
+                    .map_err(into_graphql)
+            } else {
+                Ok(p)
+            }
+        })?.into_iter()
+        .collect();
+
+    convert_products_to_cart(context, &products).map(Some)
+}
+
+pub fn run_add_in_cart(context: &Context, input: AddInCartInput) -> FieldResult<Option<Cart>> {
+    let input_increment = IncrementInCartInput {
+        client_mutation_id: input.client_mutation_id.clone(),
+        product_id: input.product_id,
+        value: input.value,
+    };
+
+    run_increment_in_cart(context, input_increment).and_then(|inc_cart| {
+        if let Some(shipping_id) = input.shipping_id {
+            let input_delivery_method = SetDeliveryMethodInCartInput {
+                client_mutation_id: input.client_mutation_id,
+                product_id: input.product_id,
+                company_package_id: None,
+                shipping_id,
+            };
+
+            run_set_delivery_method_in_cart(context, input_delivery_method).map(Some)
+        } else {
+            Ok(inc_cart)
+        }
+    })
+}
+
 pub fn convert_products_to_cart(context: &Context, products: &[CartItem]) -> FieldResult<Cart> {
     let url = format!("{}/{}/cart", context.config.service_url(Service::Stores), Model::Store.to_url());
     let body = serde_json::to_string(&products)?;
@@ -227,4 +322,14 @@ pub fn convert_products_to_cart(context: &Context, products: &[CartItem]) -> Fie
         .request::<Vec<Store>>(Method::Post, url, Some(body))
         .map(|stores| convert_to_cart(stores, &products))
         .wait()
+}
+
+pub fn get_customer(context: &Context) -> Option<CartCustomer> {
+    if let Some(ref user) = context.user {
+        Some(user.user_id.into())
+    } else if let Some(session_id) = context.session_id {
+        Some(session_id.into())
+    } else {
+        None
+    }
 }
