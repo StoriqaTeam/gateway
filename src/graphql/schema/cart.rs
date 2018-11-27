@@ -184,11 +184,11 @@ pub fn calculate_cart_delivery_cost(context: &Context, stores: &[CartStore]) -> 
 }
 
 pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMethodInCartInput) -> FieldResult<Cart> {
-    let customer: CartCustomer = get_customer(context).or_else(|_| {
-        Err(FieldError::new(
+    let customer: CartCustomer = get_customer(context).ok_or_else(|| {
+        FieldError::new(
             "Could not set delivery method in cart for unauthorized user.",
             graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-        ))
+        )
     })?;
 
     let shipping_id = ShippingId(input.shipping_id);
@@ -217,11 +217,11 @@ pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMeth
 }
 
 pub fn run_remove_delivery_method_from_cart(context: &Context, input: RemoveDeliveryMethodFromCartInput) -> FieldResult<Cart> {
-    let customer: CartCustomer = get_customer(context).or_else(|_| {
-        Err(FieldError::new(
+    let customer: CartCustomer = get_customer(context).ok_or_else(|| {
+        FieldError::new(
             "Could not remove delivery method from cart for unauthorized user.",
             graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-        ))
+        )
     })?;
 
     let product_id = ProductId(input.product_id);
@@ -245,11 +245,11 @@ pub fn run_remove_delivery_method_from_cart(context: &Context, input: RemoveDeli
 }
 
 pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInput) -> FieldResult<Option<Cart>> {
-    let customer: CartCustomer = get_customer(context).or_else(|_| {
-        Err(FieldError::new(
+    let customer: CartCustomer = get_customer(context).ok_or_else(|| {
+        FieldError::new(
             "Could not increment cart for unauthorized user.",
             graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-        ))
+        )
     })?;
 
     let product_id = ProductId(input.product_id);
@@ -324,15 +324,12 @@ pub fn convert_products_to_cart(context: &Context, products: &[CartItem]) -> Fie
         .wait()
 }
 
-pub fn get_customer(context: &Context) -> FieldResult<CartCustomer> {
+pub fn get_customer(context: &Context) -> Option<CartCustomer> {
     if let Some(ref user) = context.user {
-        Ok(user.user_id.into())
+        Some(user.user_id.into())
     } else if let Some(session_id) = context.session_id {
-        Ok(session_id.into())
+        Some(session_id.into())
     } else {
-        Err(FieldError::new(
-            "Could not get customer for unauthorized user.",
-            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-        ))
+        None
     }
 }
