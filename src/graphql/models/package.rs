@@ -7,10 +7,10 @@ use juniper::ID as GraphqlID;
 pub struct Packages {
     pub id: PackageId,
     pub name: String,
-    pub max_size: f64,
-    pub min_size: f64,
-    pub max_weight: f64,
-    pub min_weight: f64,
+    pub max_size: i32,
+    pub min_size: i32,
+    pub max_weight: i32,
+    pub min_weight: i32,
     pub deliveries_to: Vec<Country>,
 }
 
@@ -22,14 +22,14 @@ pub struct NewPackagesInput {
     pub client_mutation_id: String,
     #[graphql(description = "name")]
     pub name: String,
-    #[graphql(description = "max_size")]
-    pub max_size: f64,
-    #[graphql(description = "min_size")]
-    pub min_size: f64,
-    #[graphql(description = "max_weight")]
-    pub max_weight: f64,
-    #[graphql(description = "min_weight")]
-    pub min_weight: f64,
+    #[graphql(description = "max volume (cm^3)")]
+    pub max_size: i32,
+    #[graphql(description = "min volume (cm^3)")]
+    pub min_size: i32,
+    #[graphql(description = "max weight (g)")]
+    pub max_weight: i32,
+    #[graphql(description = "min weight (g)")]
+    pub min_weight: i32,
     #[graphql(description = "deliveries_to")]
     pub deliveries_to: Vec<String>,
 }
@@ -45,14 +45,14 @@ pub struct UpdatePackagesInput {
     pub id: GraphqlID,
     #[graphql(description = "name")]
     pub name: Option<String>,
-    #[graphql(description = "max_size")]
-    pub max_size: Option<f64>,
-    #[graphql(description = "min_size")]
-    pub min_size: Option<f64>,
-    #[graphql(description = "max_weight")]
-    pub max_weight: Option<f64>,
-    #[graphql(description = "min_weight")]
-    pub min_weight: Option<f64>,
+    #[graphql(description = "max volume (cm^3)")]
+    pub max_size: Option<i32>,
+    #[graphql(description = "min volume (cm^3)")]
+    pub min_size: Option<i32>,
+    #[graphql(description = "max weight (g)")]
+    pub max_weight: Option<i32>,
+    #[graphql(description = "min weight (g)")]
+    pub min_weight: Option<i32>,
     #[graphql(description = "deliveries_to")]
     pub deliveries_to: Option<Vec<String>>,
 }
