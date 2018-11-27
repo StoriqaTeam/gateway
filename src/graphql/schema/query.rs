@@ -550,7 +550,7 @@ graphql_object!(Query: Context |&self| {
         } else {
             Err(FieldError::new(
                 "Country code is empty",
-                graphql_value!({ "code": 300, "details": { "Country code needs have length > 0." }}),
+                graphql_value!({ "code": 300, "details": { "Country code needs to have length > 0." }}),
             ))
         }
     }
