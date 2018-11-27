@@ -28,19 +28,19 @@ graphql_object!(Packages: Context as "Packages" |&self| {
         &self.name
     }
 
-    field max_size() -> &f64 as "max_size"{
+    field max_size() -> &i32 as "max volume (cm^3)"{
         &self.max_size
     }
 
-    field min_size() -> &f64 as "min_size"{
+    field min_size() -> &i32 as "min volume (cm^3)"{
         &self.min_size
     }
 
-    field max_weight() -> &f64 as "max_weight"{
+    field max_weight() -> &i32 as "max weight (g)"{
         &self.max_weight
     }
 
-    field min_weight() -> &f64 as "min_weight"{
+    field min_weight() -> &i32 as "min weight (g)"{
         &self.min_weight
     }
 

@@ -528,7 +528,12 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field available_packages(&executor, country_code: String as "Alpha3 code country", size: f64 as "Size product", weight: f64 as "Weight product") -> FieldResult<AvailablePackagesOutput> as "Available Packages" {
+    field available_packages(
+        &executor,
+        country_code: String as "Alpha3 code country",
+        size: i32 as "Volume of the product (cm^3)",
+        weight: i32 as "Weight of the product (g)"
+    ) -> FieldResult<AvailablePackagesOutput> as "Available Packages" {
         let context = executor.context();
 
         if !country_code.is_empty() {
@@ -544,8 +549,8 @@ graphql_object!(Query: Context |&self| {
                 .wait()
         } else {
             Err(FieldError::new(
-                "There is country code is empty",
-                graphql_value!({ "code": 300, "details": { "Country code need length > 0." }}),
+                "Country code is empty",
+                graphql_value!({ "code": 300, "details": { "Country code needs to have length > 0." }}),
             ))
         }
     }
