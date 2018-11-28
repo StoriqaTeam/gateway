@@ -1,3 +1,4 @@
+use graphql::models::User;
 use stq_static_resources::{Device, Project};
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -35,5 +36,13 @@ pub struct VerifyEmailResendOutput {
 pub struct VerifyEmailApplyOutput {
     pub success: bool,
     #[graphql(description = "Email verification token.")]
+    pub token: String,
+    #[graphql(description = "User email.")]
+    pub email: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct EmailVerifyApplyToken {
+    pub user: User,
     pub token: String,
 }

@@ -27,6 +27,7 @@ use graphql::schema::cart as cart_module;
 use graphql::schema::category as category_module;
 use graphql::schema::order;
 use graphql::schema::store;
+use graphql::schema::user as user_module;
 
 pub struct Mutation;
 
@@ -199,17 +200,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field verifyEmail(&executor, input: VerifyEmailApply as "Email verify apply input.") -> FieldResult<VerifyEmailApplyOutput>  as "Applies email verification." {
         let context = executor.context();
-        let saga_addr = context.config.saga_microservice.url.clone();
-        let url = format!("{}/email_verify_apply",
-            saga_addr);
-        let body = serde_json::to_string(&input)?;
-        let token = context.request::<String>(Method::Post, url, Some(body))
-            .wait()?;
 
-        Ok(VerifyEmailApplyOutput {
-            success: true,
-            token,
-        })
+        user_module::run_verify_email(context, input)
     }
 
     field addRoleToUserOnUsersMicroservice(&executor, input: NewUsersRoleInput as "New Users  Role Input.") -> FieldResult<NewRole<UserMicroserviceRole>>  as "Adds users  role to user." {
