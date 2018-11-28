@@ -585,3 +585,16 @@ pub fn get_user_by_id(context: &Context, user_id: UserId) -> Result<User, FieldE
             graphql_value!({ "code": 100, "details": { "User with such id does not exist in users microservice." }}),
         ))
 }
+
+pub fn run_verify_email(context: &Context, input: VerifyEmailApply) -> FieldResult<VerifyEmailApplyOutput> {
+    let saga_addr = context.config.saga_microservice.url.clone();
+    let url = format!("{}/email_verify_apply", saga_addr);
+    let body = serde_json::to_string(&input)?;
+    let result = context.request::<EmailVerifyApplyToken>(Method::Post, url, Some(body)).wait()?;
+
+    Ok(VerifyEmailApplyOutput {
+        success: true,
+        token: result.token,
+        email: result.user.email,
+    })
+}
