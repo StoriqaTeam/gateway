@@ -115,3 +115,19 @@ pub struct DeleteCategoryInput {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct SearchCategory(pub Category);
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[graphql(description = "Change base_product in coupon")]
+pub struct CategoryReplaceInput {
+    #[graphql(description = "Client mutation id.")]
+    pub client_mutation_id: String,
+    #[graphql(description = "Id of a old category.")]
+    pub current_category: i32,
+    #[graphql(description = "Id of a new category.")]
+    pub new_category: i32,
+    #[graphql(
+        description = "Ids of a base products.
+        When `base_product_ids` equal `null` category will replacing all entries in base products."
+    )]
+    pub base_product_ids: Option<Vec<i32>>,
+}

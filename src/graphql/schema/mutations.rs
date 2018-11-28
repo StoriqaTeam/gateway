@@ -24,6 +24,7 @@ use errors::into_graphql;
 use graphql::schema::base_product;
 use graphql::schema::buy_now;
 use graphql::schema::cart as cart_module;
+use graphql::schema::category as category_module;
 use graphql::schema::order;
 use graphql::schema::store;
 
@@ -1606,6 +1607,12 @@ graphql_object!(Mutation: Context |&self| {
         context.request::<CouponScopeBaseProducts>(Method::Delete, url, None)
             .wait()?;
         Ok(Mock{})
+    }
+
+    field replaceCategory(&executor, input: CategoryReplaceInput as "Category replace in base products input") ->  FieldResult<Vec<BaseProduct>> as "Category replace in base products." {
+        let context = executor.context();
+
+        category_module::run_replace_category(context, input)
     }
 
 });
