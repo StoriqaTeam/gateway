@@ -104,3 +104,15 @@ graphql_object!(SearchCategory: Context as "SearchCategory" |&self| {
     }
 
 });
+
+pub fn run_replace_category(context: &Context, payload: CategoryReplaceInput) -> FieldResult<Vec<BaseProduct>> {
+    let url = format!(
+        "{}/{}/replace_category",
+        context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url(),
+    );
+
+    let body: String = serde_json::to_string(&payload)?.to_string();
+
+    context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body)).wait()
+}
