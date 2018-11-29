@@ -17,7 +17,6 @@ use graphql::context::Context;
 use graphql::models::*;
 use graphql::schema::available_packages::*;
 use graphql::schema::coupon::*;
-use graphql::schema::product::*;
 
 graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     description: "Cart Product info."
@@ -91,7 +90,7 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         let context = executor.context();
 
         match self.delivery_method_id {
-            Some(delivery_method_id) =>  Ok(Some(get_select_package(context, delivery_method_id, self.id)?)),
+            Some(delivery_method_id) =>  Ok(Some(get_select_package(context, delivery_method_id)?)),
             _ => Ok(None),
         }
     }
@@ -216,7 +215,7 @@ pub fn calculate_coupon_discount(context: &Context, cart_product: &CartProduct) 
 
 pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> FieldResult<f64> {
     if let Some(delivery_method_id) = product.delivery_method_id {
-        let package = get_select_package(context, delivery_method_id, product.id)?;
+        let package = get_select_package(context, delivery_method_id)?;
 
         if let Some(price) = package.price {
             return Ok(price.0 * f64::from(product.quantity.0));
@@ -234,7 +233,7 @@ pub fn get_selected_packages<'a>(
 
     for cart_item in cart_items.iter() {
         if let Some(delivery_method_id) = cart_item.delivery_method_id {
-            let package = get_select_package(context, delivery_method_id, cart_item.product_id)?;
+            let package = get_select_package(context, delivery_method_id)?;
             packages.push((cart_item, package));
         }
     }
@@ -254,16 +253,16 @@ pub fn get_delivery_info(packages: HashMap<ProductId, AvailablePackageForUser>) 
     Ok(delivery_info)
 }
 
-fn get_select_package(context: &Context, delivery_method: DeliveryMethodId, product_id: ProductId) -> FieldResult<AvailablePackageForUser> {
+fn get_select_package(context: &Context, delivery_method: DeliveryMethodId) -> FieldResult<AvailablePackageForUser> {
     match delivery_method {
-        DeliveryMethodId::Package { id: company_package_id } => {
-            let product = get_product(context, product_id)?;
-            get_available_package_for_user(context, product.base_product_id, company_package_id)
-        }
+        DeliveryMethodId::Package { .. } => Err(FieldError::new(
+            "Could not get select package.",
+            graphql_value!({ "code": 100, "details": { "Invalid order. Please create a new order." }}),
+        )),
         DeliveryMethodId::ShippingPackage { id: shipping_id } => get_available_package_for_user_by_id(context, shipping_id),
         _ => Err(FieldError::new(
             "Could not get select package.",
-            graphql_value!({ "code": 100, "details": { "Delivery method not support." }}),
+            graphql_value!({ "code": 100, "details": { "Delivery method is not supported." }}),
         )),
     }
 }
