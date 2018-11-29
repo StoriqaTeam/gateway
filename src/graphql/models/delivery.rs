@@ -263,7 +263,6 @@ pub struct AvailablePackageForUser {
     pub name: String,
     pub logo: String,
     pub price: Option<ProductPrice>,
-    pub deliveries_to: Vec<Country>,
     pub base_product_id: BaseProductId,
     pub store_id: StoreId,
 }
