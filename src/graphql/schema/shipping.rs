@@ -31,9 +31,14 @@ graphql_object!(LocalShippingProducts: Context as "LocalShippingProducts" |&self
         ID::new(Service::Delivery, Model::CompanyPackage, self.company_package_id.0).to_string().into()
     }
 
-    field price() -> &Option<f64> as "price"{
+    field price() -> &Option<f64> as "price" {
         &self.price
     }
+
+    field is_fixed_price() -> bool as "is fixed price" {
+        self.price.is_some()
+    }
+
 
     field deliveries_to() -> &[Country] as "deliveries to" {
         &self.deliveries_to

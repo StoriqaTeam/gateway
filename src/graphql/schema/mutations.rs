@@ -1346,7 +1346,7 @@ graphql_object!(Mutation: Context |&self| {
             .sync()
             .map_err(into_graphql)?;
 
-        let deliveries_to = warehouses.into_iter().nth(0)
+        let delivery_from = warehouses.into_iter().nth(0)
             .map(|warehouse|
                 warehouse.country_code
                 .ok_or_else(||
@@ -1361,16 +1361,29 @@ graphql_object!(Mutation: Context |&self| {
                     "Could not find warehouse for store.",
                     graphql_value!({ "code": 100, "details": { "Warehouses do not exist in stores microservice." }}),
                 )
-            )?;
+            )??;
+
+        let local_delivery_to = delivery_from.clone();
+
+        // TODO: Use measurements from product/base_product
+        let measurements = Measurements {
+            volume_cubic_cm: 1,
+            weight_g: 1,
+        };
 
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Delivery),
             Model::Product.to_url(),
             input.base_product_id);
 
-        let input : NewShipping = (input, deliveries_to?).into();
+        let payload = NewShipping::from(NewShippingEnrichedInput {
+            shipping: input,
+            delivery_from,
+            local_delivery_to,
+            measurements,
+        });
 
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body = serde_json::to_string(&payload)?;
 
         context.request::<Shipping>(Method::Post, url, Some(body))
             .map(From::from)

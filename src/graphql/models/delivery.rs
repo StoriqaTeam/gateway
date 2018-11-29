@@ -62,12 +62,20 @@ pub enum ShippingVariant {
     International,
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct Measurements {
+    pub volume_cubic_cm: u32,
+    pub weight_g: u32,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NewProducts {
     pub base_product_id: BaseProductId,
     pub store_id: StoreId,
     pub company_package_id: CompanyPackageId,
     pub price: Option<ProductPrice>,
+    pub measurements: Measurements,
+    pub delivery_from: Alpha3,
     pub deliveries_to: Vec<Alpha3>,
     pub shipping: ShippingVariant,
 }
@@ -80,10 +88,23 @@ pub struct NewPickups {
     pub price: Option<ProductPrice>,
 }
 
-impl From<(NewShippingInput, Alpha3)> for NewShipping {
-    fn from(shipping: (NewShippingInput, Alpha3)) -> NewShipping {
-        let local_deliveries_to = shipping.1;
-        let shipping = shipping.0;
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct NewShippingEnrichedInput {
+    pub shipping: NewShippingInput,
+    pub delivery_from: Alpha3,
+    pub local_delivery_to: Alpha3,
+    pub measurements: Measurements,
+}
+
+impl From<NewShippingEnrichedInput> for NewShipping {
+    fn from(shipping: NewShippingEnrichedInput) -> NewShipping {
+        let NewShippingEnrichedInput {
+            shipping,
+            delivery_from,
+            local_delivery_to,
+            measurements,
+        } = shipping;
+
         let base_product_id = shipping.base_product_id.into();
         let store_id = shipping.store_id.into();
         let mut local_shippings = shipping
@@ -94,7 +115,9 @@ impl From<(NewShippingInput, Alpha3)> for NewShipping {
                 store_id,
                 company_package_id: local.company_package_id.into(),
                 price: local.price.map(|price| price.into()),
-                deliveries_to: vec![local_deliveries_to.clone()],
+                measurements,
+                delivery_from: delivery_from.clone(),
+                deliveries_to: vec![local_delivery_to.clone()],
                 shipping: ShippingVariant::Local,
             }).collect();
 
@@ -106,6 +129,8 @@ impl From<(NewShippingInput, Alpha3)> for NewShipping {
                 store_id,
                 company_package_id: international.company_package_id.into(),
                 price: international.price.map(|price| price.into()),
+                measurements,
+                delivery_from: delivery_from.clone(),
                 deliveries_to: international.deliveries_to.into_iter().map(|v| Alpha3(v)).collect(),
                 shipping: ShippingVariant::International,
             }).collect();
