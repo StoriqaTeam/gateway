@@ -78,6 +78,10 @@ graphql_object!(User: Context as "User" |&self| {
         &self.is_blocked
     }
 
+    field emarsys_id() -> &Option<String> as "User Emarsys id" {
+        &self.emarsys_id
+    }
+
     field created_at() -> String as "Created at" {
         let datetime: DateTime<Utc> = self.created_at.into();
         datetime.to_rfc3339()
