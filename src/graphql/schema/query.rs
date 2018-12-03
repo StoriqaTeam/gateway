@@ -7,9 +7,8 @@ use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 use uuid::Uuid;
 
-use stq_api::orders::{CartClient, OrderClient};
+use stq_api::orders::CartClient;
 use stq_api::types::ApiFutureExt;
-use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::Currency;
@@ -22,7 +21,9 @@ use graphql::context::Context;
 use graphql::models::*;
 use graphql::schema::base_product as base_product_module;
 use graphql::schema::cart as cart_module;
-use schema::buy_now;
+use graphql::schema::warehouse as warehouse_module;
+use schema::buy_now as buy_now_module;
+use schema::order as order_module;
 
 pub const QUERY_NODE_ID: i32 = 1;
 
@@ -142,11 +143,8 @@ graphql_object!(Query: Context |&self| {
                             )
                         )
                         .and_then(|id|{
-                            let rpc_client = context.get_rest_api_client(Service::Orders);
-                            rpc_client.get_order(OrderId(id).into())
-                                .sync()
-                                .map_err(into_graphql)
-                                .map(|res| res.map(GraphQLOrder).map(Box::new).map(Node::Order))
+                            order_module::try_get_order(context, OrderId(id).into())
+                            .map(|res| res.map(Box::new).map(Node::Order))
                         })
                 },
                 (Service::Orders, _) => {
@@ -164,11 +162,8 @@ graphql_object!(Query: Context |&self| {
                             )
                         )
                         .and_then(|id|{
-                            let rpc_client = context.get_rest_api_client(Service::Warehouses);
-                            rpc_client.get_warehouse(WarehouseId(id).into())
-                                .sync()
-                                .map_err(into_graphql)
-                                .map(|res| res.map(GraphQLWarehouse).map(Box::new).map(Node::Warehouse))
+                            warehouse_module::try_get_warehouse(context, WarehouseId(id).into())
+                            .map(|res| res.map(Box::new).map(Node::Warehouse))
                         })
                 },
                 (&Service::Warehouses, _) => {
@@ -279,12 +274,12 @@ graphql_object!(Query: Context |&self| {
         shipping_id: Option<i32> as "Select available package shipping raw id",
     ) -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
         let context = executor.context();
-        buy_now::calculate_buy_now_v1(context, product_id, quantity, coupon_code, shipping_id)
+        buy_now_module::calculate_buy_now_v1(context, product_id, quantity, coupon_code, shipping_id)
     }
 
     field calculate_buy_now_v2(&executor, input: CalculateBuyNowInput) -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
         let context = executor.context();
-        buy_now::calculate_buy_now(
+        buy_now_module::calculate_buy_now(
             context,
             input.product_id,
             input.quantity,
@@ -623,10 +618,7 @@ graphql_object!(Query: Context |&self| {
         let volume: u32 = 1;
         let weight: u32 = 1;
 
-        let rpc_client = context.get_rest_api_client(Service::Warehouses);
-        let warehouse = rpc_client.get_warehouses_for_store(base_product.store_id)
-            .sync()
-            .map_err(into_graphql)?
+        let warehouse = warehouse_module::get_warehouses_for_store(context, base_product.store_id)?
             .into_iter()
             .next()
             .ok_or(FieldError::new(

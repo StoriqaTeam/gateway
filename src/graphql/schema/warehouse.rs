@@ -4,15 +4,15 @@ use std::str::FromStr;
 
 use futures::Future;
 use hyper::Method;
-use juniper::FieldResult;
 use juniper::ID as GraphqlID;
+use juniper::{FieldError, FieldResult};
 use serde_json;
 
 use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::{Stock, Warehouse, WarehouseClient};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{ProductId, Quantity, StockId, StoreId};
+use stq_types::{ProductId, Quantity, StockId, StoreId, WarehouseIdentifier};
 
 use super::*;
 use errors::into_graphql;
@@ -180,7 +180,7 @@ graphql_object!(GraphQLWarehouse: Context as "Warehouse" |&self| {
 
     field auto_complete_product_name(&executor,
         first = None : Option<i32> as "First edges",
-        after = None : Option<GraphqlID>  as "Offset form begining",
+        after = None : Option<GraphqlID>  as "Offset form beginning",
         name : String as "Name part")
             -> FieldResult<Option<Connection<String, PageInfo>>> as "Finds products full name by part of the name." {
 
@@ -266,4 +266,37 @@ pub fn get_warehouses_for_store(context: &Context, store_id: StoreId) -> FieldRe
     );
 
     context.request::<Vec<Warehouse>>(Method::Get, url, None).wait()
+}
+
+pub fn try_get_warehouse(context: &Context, warehouse_id: WarehouseIdentifier) -> FieldResult<Option<GraphQLWarehouse>> {
+    let warehouse_route = match warehouse_id {
+        WarehouseIdentifier::Id(id) => format!("by-id/{}", id),
+        WarehouseIdentifier::Slug(slug) => format!("by-slug/{}", slug),
+    };
+
+    let url = format!(
+        "{}/{}/{}",
+        context.config.service_url(Service::Warehouses),
+        Model::Warehouse.to_url(),
+        warehouse_route
+    );
+
+    context
+        .request::<Option<Warehouse>>(Method::Get, url, None)
+        .wait()
+        .map(|res| res.map(GraphQLWarehouse))
+}
+
+pub fn get_warehouse(context: &Context, warehouse_id: WarehouseIdentifier) -> FieldResult<GraphQLWarehouse> {
+    try_get_warehouse(context, warehouse_id.clone())?.ok_or_else(move || {
+        let message = match warehouse_id {
+            WarehouseIdentifier::Id(id) => format!("by id: {}", id),
+            WarehouseIdentifier::Slug(slug) => format!("by slug: {}", slug),
+        };
+
+        FieldError::new(
+            "Warehouse not found",
+            graphql_value!({ "code": 400, "details": { format!("warehouse {} not found", message) }}),
+        )
+    })
 }

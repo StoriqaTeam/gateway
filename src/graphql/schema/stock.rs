@@ -4,17 +4,15 @@ use hyper::Method;
 use juniper::FieldResult;
 use juniper::ID as GraphqlID;
 
-use stq_api::types::ApiFutureExt;
-use stq_api::warehouses::{Stock, WarehouseClient};
+use stq_api::warehouses::Stock;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{ProductId, WarehouseId, WarehouseIdentifier};
 
-use errors::into_graphql;
-
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::warehouse as warehouse_module;
 
 graphql_object!(GraphQLStock: Context as "Stock" |&self| {
     description: "Warehouse Product info."
@@ -54,11 +52,7 @@ graphql_object!(GraphQLStock: Context as "Stock" |&self| {
     field warehouse(&executor) -> FieldResult<Option<GraphQLWarehouse>> as "Fetches warehouse." {
         let context = executor.context();
 
-        let rpc_client = context.get_rest_api_client(Service::Warehouses);
-        rpc_client.get_warehouse(WarehouseIdentifier::Id(self.0.warehouse_id))
-            .sync()
-            .map_err(into_graphql)
-            .map(|res| res.map(GraphQLWarehouse))
+        warehouse_module::try_get_warehouse(context, WarehouseIdentifier::Id(self.0.warehouse_id))
     }
 
     field quantity() -> &i32 as "Quantity"{

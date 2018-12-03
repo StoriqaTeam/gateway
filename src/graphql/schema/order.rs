@@ -10,12 +10,12 @@ use juniper::{FieldError, FieldResult};
 use serde_json;
 
 use stq_api::{
-    orders::{CartClient, OrderClient},
+    orders::{CartClient, Order, OrderClient},
     types::ApiFutureExt,
 };
 use stq_routes::{model::Model, service::Service};
 use stq_static_resources::{Currency, OrderState};
-use stq_types::CouponId;
+use stq_types::{CouponId, OrderIdentifier};
 
 use super::*;
 use errors::into_graphql;
@@ -522,4 +522,37 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) 
         .request::<Invoice>(Method::Post, url, Some(body))
         .wait()
         .map(CreateOrdersOutput)
+}
+
+pub fn try_get_order(context: &Context, order_id: OrderIdentifier) -> FieldResult<Option<GraphQLOrder>> {
+    let order_route = match order_id {
+        OrderIdentifier::Id(id) => format!("by-id/{}", id),
+        OrderIdentifier::Slug(slug) => format!("by-slug/{}", slug),
+    };
+
+    let url = format!(
+        "{}/{}/{}",
+        context.config.service_url(Service::Orders),
+        Model::Order.to_url(),
+        order_route
+    );
+
+    context
+        .request::<Option<Order>>(Method::Get, url, None)
+        .wait()
+        .map(|res| res.map(GraphQLOrder))
+}
+
+pub fn get_order(context: &Context, order_id: OrderIdentifier) -> FieldResult<GraphQLOrder> {
+    try_get_order(context, order_id)?.ok_or_else(move || {
+        let message = match order_id {
+            OrderIdentifier::Id(id) => format!("by id: {}", id),
+            OrderIdentifier::Slug(slug) => format!("by slug: {}", slug),
+        };
+
+        FieldError::new(
+            "Order not found",
+            graphql_value!({ "code": 400, "details": { format!("order {} not found", message) }}),
+        )
+    })
 }

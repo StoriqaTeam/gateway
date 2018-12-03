@@ -13,7 +13,6 @@ use serde_json;
 
 use stq_api::orders::{OrderClient, OrderSearchTerms};
 use stq_api::types::ApiFutureExt;
-use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Language, ModerationStatus, Translation};
@@ -23,7 +22,9 @@ use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::warehouse as warehouse_module;
 use schema::admin::{base_products_search, base_products_search_pages};
+use schema::order as order_module;
 
 graphql_object!(Store: Context as "Store" |&self| {
     description: "Store's info."
@@ -239,11 +240,7 @@ graphql_object!(Store: Context as "Store" |&self| {
     field warehouses(&executor) -> FieldResult<Vec<GraphQLWarehouse>> as "Fetches store warehouses." {
         let context = executor.context();
 
-        let rpc_client = context.get_rest_api_client(Service::Warehouses);
-        rpc_client.get_warehouses_for_store(self.id)
-            .sync()
-            .map_err(into_graphql)
-            .map(|res| res.into_iter().map(GraphQLWarehouse).collect())
+        warehouse_module::get_warehouses_for_store(context, self.id).map(|res| res.into_iter().map(GraphQLWarehouse).collect())
     }
 
     field orders(&executor,
@@ -339,16 +336,12 @@ graphql_object!(Store: Context as "Store" |&self| {
     field order(&executor, slug: i32 as "Order slug" ) -> FieldResult<Option<GraphQLOrder>> as "Fetches order." {
         let context = executor.context();
 
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        rpc_client.get_order(OrderIdentifier::Slug(OrderSlug(slug)))
-            .sync()
-            .map_err(into_graphql)
-            .map(|res| res.map(GraphQLOrder))
+        order_module::try_get_order(context, OrderIdentifier::Slug(OrderSlug(slug)))
     }
 
     field find_most_viewed_products(&executor,
         first = None : Option<i32> as "First edges",
-        after = None : Option<GraphqlID>  as "Offset from begining",
+        after = None : Option<GraphqlID>  as "Offset from beginning",
         search_term : MostViewedProductsInput as "Most viewed search pattern")
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Find most viewed base products each one contains one variant." {
         let context = executor.context();
@@ -410,7 +403,7 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     field find_most_discount_products(&executor,
         first = None : Option<i32> as "First edges",
-        after = None : Option<GraphqlID>  as "Offset from begining",
+        after = None : Option<GraphqlID>  as "Offset from beginning",
         search_term : MostDiscountProductsInput as "Most discount search pattern")
             -> FieldResult<Option<Connection<BaseProduct, PageInfo>>> as "Find base products each one with most discount variant." {
         let context = executor.context();
@@ -471,7 +464,7 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     field find_product(&executor,
         first = None : Option<i32> as "First edges",
-        after = None : Option<GraphqlID>  as "Offset form begining",
+        after = None : Option<GraphqlID>  as "Offset form beginning",
         search_term : SearchProductInput as "Search pattern")
             -> FieldResult<Option<Connection<BaseProduct, PageInfoProductsSearch>>> as "Find products by name using relay connection." {
 
@@ -536,7 +529,7 @@ graphql_object!(Store: Context as "Store" |&self| {
 
     field auto_complete_product_name(&executor,
         first = None : Option<i32> as "First edges",
-        after = None : Option<GraphqlID>  as "Offset form begining",
+        after = None : Option<GraphqlID>  as "Offset form beginning",
         name : String as "Name part")
             -> FieldResult<Option<Connection<String, PageInfo>>> as "Finds products full name by part of the name." {
 
