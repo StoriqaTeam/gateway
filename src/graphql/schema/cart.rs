@@ -127,7 +127,6 @@ graphql_object!(Cart: Context as "Cart" |&self| {
             acc + store_products_cost
         })
     }
-
 });
 
 graphql_object!(CartProductStore: Context as "CartProductStore" |&self| {
@@ -183,7 +182,46 @@ pub fn calculate_cart_delivery_cost(context: &Context, stores: &[CartStore]) -> 
     cost
 }
 
-pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMethodInCartInput) -> FieldResult<Cart> {
+pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMethodInCartInputV2) -> FieldResult<Cart> {
+    let customer: CartCustomer = get_customer(context).ok_or_else(|| {
+        FieldError::new(
+            "Could not set delivery method in cart for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        )
+    })?;
+
+    let shipping_id = ShippingId(input.shipping_id);
+    let product_id = ProductId(input.product_id);
+
+    let product = product_module::try_get_product(context, product_id)?.ok_or_else(|| {
+        FieldError::new(
+            "Could not set delivery method in cart.",
+            graphql_value!({ "code": 100, "details": { "Product not found" }}),
+        )
+    })?;
+
+    available_packages::get_available_package_for_user_with_price(
+        context,
+        product.base_product_id,
+        shipping_id,
+        input.user_country_code.as_str(),
+        "Could not set delivery method in cart.",
+    )?;
+
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+    let delivery_method_id = DeliveryMethodId::ShippingPackage { id: shipping_id };
+
+    let products = rpc_client
+        .set_delivery_method(customer, product_id, delivery_method_id)
+        .sync()
+        .map_err(into_graphql)?
+        .into_iter()
+        .collect::<Vec<_>>();
+
+    convert_products_to_cart(context, &products, Some(input.user_country_code))
+}
+
+pub fn run_set_delivery_method_in_cart_v1(context: &Context, input: SetDeliveryMethodInCartInput) -> FieldResult<Cart> {
     let customer: CartCustomer = get_customer(context).ok_or_else(|| {
         FieldError::new(
             "Could not set delivery method in cart for unauthorized user.",
@@ -201,7 +239,7 @@ pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMeth
         )
     })?;
 
-    let _select_package: AvailablePackageForUser = available_packages::get_available_package_for_user_by_id(context, shipping_id)?;
+    let _select_package: AvailablePackageForUser = available_packages::get_available_package_for_user_by_id_v1(context, shipping_id)?;
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
     let delivery_method_id = DeliveryMethodId::ShippingPackage { id: shipping_id };
@@ -213,10 +251,10 @@ pub fn run_set_delivery_method_in_cart(context: &Context, input: SetDeliveryMeth
         .into_iter()
         .collect::<Vec<_>>();
 
-    convert_products_to_cart(context, &products)
+    convert_products_to_cart(context, &products, None)
 }
 
-pub fn run_remove_delivery_method_from_cart(context: &Context, input: RemoveDeliveryMethodFromCartInput) -> FieldResult<Cart> {
+pub fn run_remove_delivery_method_from_cart_v1(context: &Context, input: RemoveDeliveryMethodFromCartInput) -> FieldResult<Cart> {
     let customer: CartCustomer = get_customer(context).ok_or_else(|| {
         FieldError::new(
             "Could not remove delivery method from cart for unauthorized user.",
@@ -241,10 +279,38 @@ pub fn run_remove_delivery_method_from_cart(context: &Context, input: RemoveDeli
         .into_iter()
         .collect::<Vec<_>>();
 
-    convert_products_to_cart(context, &products)
+    convert_products_to_cart(context, &products, None)
 }
 
-pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInput) -> FieldResult<Option<Cart>> {
+pub fn run_remove_delivery_method_from_cart(context: &Context, input: RemoveDeliveryMethodFromCartInputV2) -> FieldResult<Cart> {
+    let customer: CartCustomer = get_customer(context).ok_or_else(|| {
+        FieldError::new(
+            "Could not remove delivery method from cart for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        )
+    })?;
+
+    let product_id = ProductId(input.product_id);
+
+    let _product: Product = product_module::try_get_product(context, product_id)?.ok_or_else(|| {
+        FieldError::new(
+            "Could not remove delivery method from cart.",
+            graphql_value!({ "code": 100, "details": { "Product not found" }}),
+        )
+    })?;
+
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+    let products = rpc_client
+        .delete_delivery_method_by_product(customer, ProductId(input.product_id))
+        .sync()
+        .map_err(into_graphql)?
+        .into_iter()
+        .collect::<Vec<_>>();
+
+    convert_products_to_cart(context, &products, Some(input.user_country_code))
+}
+
+pub fn run_increment_in_cart_v1(context: &Context, input: IncrementInCartInput) -> FieldResult<Option<Cart>> {
     let customer: CartCustomer = get_customer(context).ok_or_else(|| {
         FieldError::new(
             "Could not increment cart for unauthorized user.",
@@ -288,23 +354,94 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInput) -> 
         })?.into_iter()
         .collect();
 
-    convert_products_to_cart(context, &products).map(Some)
+    convert_products_to_cart(context, &products, None).map(Some)
 }
 
-pub fn run_add_in_cart(context: &Context, input: AddInCartInput) -> FieldResult<Option<Cart>> {
+pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -> FieldResult<Option<Cart>> {
+    let customer: CartCustomer = get_customer(context).ok_or_else(|| {
+        FieldError::new(
+            "Could not increment cart for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        )
+    })?;
+
+    let product_id = ProductId(input.product_id);
+
+    let base_product = base_product_module::get_base_product_by_product(context, product_id)?;
+
+    let product = base_product.variants.and_then(|v| v.get(0).cloned()).ok_or_else(|| {
+        FieldError::new(
+            "Could not find product in base product variants.",
+            graphql_value!({ "code": 100, "details": { "Product does not exist in variants." }}),
+        )
+    })?;
+
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+
+    let products: Vec<_> = rpc_client
+        .increment_item(
+            customer,
+            input.product_id.into(),
+            base_product.store_id,
+            product.pre_order,
+            product.pre_order_days,
+        ).sync()
+        .map_err(into_graphql)
+        .and_then(|p| {
+            if let Some(value) = input.value {
+                let quantity = Quantity(value);
+
+                rpc_client
+                    .set_quantity(customer, input.product_id.into(), quantity)
+                    .sync()
+                    .map_err(into_graphql)
+            } else {
+                Ok(p)
+            }
+        })?.into_iter()
+        .collect();
+
+    convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)
+}
+
+pub fn run_add_in_cart_v1(context: &Context, input: AddInCartInput) -> FieldResult<Option<Cart>> {
     let input_increment = IncrementInCartInput {
         client_mutation_id: input.client_mutation_id.clone(),
         product_id: input.product_id,
         value: input.value,
     };
 
-    run_increment_in_cart(context, input_increment).and_then(|inc_cart| {
+    run_increment_in_cart_v1(context, input_increment).and_then(|inc_cart| {
         if let Some(shipping_id) = input.shipping_id {
             let input_delivery_method = SetDeliveryMethodInCartInput {
                 client_mutation_id: input.client_mutation_id,
                 product_id: input.product_id,
                 company_package_id: None,
                 shipping_id,
+            };
+
+            run_set_delivery_method_in_cart_v1(context, input_delivery_method).map(Some)
+        } else {
+            Ok(inc_cart)
+        }
+    })
+}
+
+pub fn run_add_in_cart(context: &Context, input: AddInCartInputV2) -> FieldResult<Option<Cart>> {
+    let input_increment = IncrementInCartInputV2 {
+        client_mutation_id: input.client_mutation_id.clone(),
+        product_id: input.product_id,
+        value: input.value,
+        user_country_code: input.user_country_code.clone(),
+    };
+
+    run_increment_in_cart(context, input_increment).and_then(|inc_cart| {
+        if let Some(shipping_id) = input.shipping_id {
+            let input_delivery_method = SetDeliveryMethodInCartInputV2 {
+                client_mutation_id: input.client_mutation_id,
+                product_id: input.product_id,
+                shipping_id,
+                user_country_code: input.user_country_code,
             };
 
             run_set_delivery_method_in_cart(context, input_delivery_method).map(Some)
@@ -314,13 +451,13 @@ pub fn run_add_in_cart(context: &Context, input: AddInCartInput) -> FieldResult<
     })
 }
 
-pub fn convert_products_to_cart(context: &Context, products: &[CartItem]) -> FieldResult<Cart> {
+pub fn convert_products_to_cart(context: &Context, products: &[CartItem], user_country_code: Option<String>) -> FieldResult<Cart> {
     let url = format!("{}/{}/cart", context.config.service_url(Service::Stores), Model::Store.to_url());
     let body = serde_json::to_string(&products)?;
 
     context
         .request::<Vec<Store>>(Method::Post, url, Some(body))
-        .map(|stores| convert_to_cart(stores, &products))
+        .map(|stores| convert_to_cart(stores, &products, user_country_code))
         .wait()
 }
 

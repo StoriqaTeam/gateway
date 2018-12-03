@@ -287,7 +287,7 @@ pub struct AvailablePackageForUser {
     pub shipping_id: ShippingId,
     pub name: String,
     pub logo: String,
-    pub price: Option<ProductPrice>,
+    pub price: ProductPrice,
     pub base_product_id: BaseProductId,
     pub store_id: StoreId,
 }
