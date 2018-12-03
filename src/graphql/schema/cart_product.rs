@@ -10,13 +10,14 @@ use stq_api::orders::DeliveryInfo;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Translation;
-use stq_types::{CartItem, DeliveryMethodId, ProductId};
+use stq_types::{BaseProductId, CartItem, DeliveryMethodId, ProductId};
 
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
 use graphql::schema::available_packages::*;
 use graphql::schema::coupon::*;
+use graphql::schema::product as product_module;
 
 graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     description: "Cart Product info."
@@ -70,7 +71,7 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
         &self.selected
     }
 
-    field deprecated "use select_package" company_package(&executor) -> FieldResult<Option<CompaniesPackages>> as "Company package" {
+    field deprecated "use selectPackage" company_package(&executor) -> FieldResult<Option<CompaniesPackages>> as "Company package" {
         let context = executor.context();
         match self.company_package_id {
             Some(company_package_id) => {
@@ -89,10 +90,14 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     field select_package(&executor) -> FieldResult<Option<AvailablePackageForUser>> as "Select package" {
         let context = executor.context();
 
-        match self.delivery_method_id {
-            Some(delivery_method_id) =>  Ok(Some(get_select_package(context, delivery_method_id)?)),
-            _ => Ok(None),
-        }
+
+        Ok(match self.delivery_method_id {
+            Some(delivery_method_id) => match self.user_country_code.clone() {
+                Some(user_country_code) => Some(get_select_package(context, self.base_product_id, user_country_code, delivery_method_id)?),
+                None => Some(get_select_package_v1(context, delivery_method_id)?),
+            },
+            _ => None,
+        })
     }
 
     field deprecated "use companyPackage" delivery_operator() -> &str as "Delivery Operator" {
@@ -214,26 +219,33 @@ pub fn calculate_coupon_discount(context: &Context, cart_product: &CartProduct) 
 }
 
 pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> FieldResult<f64> {
-    if let Some(delivery_method_id) = product.delivery_method_id {
-        let package = get_select_package(context, delivery_method_id)?;
-
-        if let Some(price) = package.price {
-            return Ok(price.0 * f64::from(product.quantity.0));
+    match product.delivery_method_id {
+        None => Ok(0.0f64),
+        Some(delivery_method_id) => {
+            let package = match product.user_country_code.clone() {
+                None => get_select_package_v1(context, delivery_method_id)?,
+                Some(user_country_code) => get_select_package(context, product.base_product_id, user_country_code, delivery_method_id)?,
+            };
+            Ok(package.price.0 * f64::from(product.quantity.0))
         }
     }
-
-    Ok(0.0f64)
 }
 
 pub fn get_selected_packages<'a>(
     context: &Context,
     cart_items: &'a HashSet<CartItem>,
+    user_country_code: Option<String>,
 ) -> FieldResult<HashMap<&'a CartItem, AvailablePackageForUser>> {
     let mut packages = vec![];
 
     for cart_item in cart_items.iter() {
         if let Some(delivery_method_id) = cart_item.delivery_method_id {
-            let package = get_select_package(context, delivery_method_id)?;
+            let package = match user_country_code.clone() {
+                None => get_select_package_v1(context, delivery_method_id)?,
+                Some(user_country_code) => {
+                    get_selected_package_by_product(context, cart_item.product_id, user_country_code, delivery_method_id)?
+                }
+            };
             packages.push((cart_item, package));
         }
     }
@@ -253,24 +265,66 @@ pub fn get_delivery_info(packages: HashMap<ProductId, AvailablePackageForUser>) 
     Ok(delivery_info)
 }
 
-fn get_select_package(context: &Context, delivery_method: DeliveryMethodId) -> FieldResult<AvailablePackageForUser> {
+fn get_select_package_v1(context: &Context, delivery_method: DeliveryMethodId) -> FieldResult<AvailablePackageForUser> {
     match delivery_method {
         DeliveryMethodId::Package { .. } => Err(FieldError::new(
-            "Could not get select package.",
+            "Could not get selected package.",
             graphql_value!({ "code": 100, "details": { "Invalid order. Please create a new order." }}),
         )),
-        DeliveryMethodId::ShippingPackage { id: shipping_id } => get_available_package_for_user_by_id(context, shipping_id),
+        DeliveryMethodId::ShippingPackage { id: shipping_id } => get_available_package_for_user_by_id_v1(context, shipping_id),
         _ => Err(FieldError::new(
-            "Could not get select package.",
+            "Could not get selected package.",
             graphql_value!({ "code": 100, "details": { "Delivery method is not supported." }}),
         )),
     }
 }
 
+fn get_selected_package_by_product(
+    context: &Context,
+    product_id: ProductId,
+    user_country_code: String,
+    delivery_method: DeliveryMethodId,
+) -> FieldResult<AvailablePackageForUser> {
+    let product = product_module::try_get_product(context, product_id)?.ok_or(FieldError::new(
+        "Could not get selected package.",
+        graphql_value!({ "code": 100, "details": { "Product not found." }}),
+    ))?;
+    get_select_package(context, product.base_product_id, user_country_code, delivery_method)
+}
+
+fn get_select_package(
+    context: &Context,
+    base_product_id: BaseProductId,
+    user_country_code: String,
+    delivery_method: DeliveryMethodId,
+) -> FieldResult<AvailablePackageForUser> {
+    let shipping_id = match delivery_method {
+        DeliveryMethodId::Package { .. } => Err(FieldError::new(
+            "Could not get selected package.",
+            graphql_value!({ "code": 100, "details": { "Invalid order. Please create a new order." }}),
+        ))?,
+        DeliveryMethodId::ShippingPackage { id: shipping_id } => shipping_id,
+        _ => Err(FieldError::new(
+            "Could not get selected package.",
+            graphql_value!({ "code": 100, "details": { "Delivery method is not supported." }}),
+        ))?,
+    };
+
+    let (_, package) = get_available_package_for_user_with_price(
+        context,
+        base_product_id,
+        shipping_id,
+        user_country_code.as_str(),
+        "Could not get selected package.",
+    )?;
+
+    Ok(package)
+}
+
 pub fn validate_select_package(cart_product: &CartItem, package: &AvailablePackageForUser) -> FieldResult<()> {
     if cart_product.store_id != package.store_id {
         return Err(FieldError::new(
-            "Select package not valid.",
+            "Selected package is not valid.",
             graphql_value!({ "code": 100, "details": { "The selected package is not found in the store." }}),
         ));
     }

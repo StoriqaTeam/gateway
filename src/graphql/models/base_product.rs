@@ -188,3 +188,12 @@ pub struct BaseProductModerate {
     pub base_product_id: BaseProductId,
     pub status: ModerationStatus,
 }
+
+#[derive(Clone, Debug)]
+pub struct BaseProductShippingDetails {
+    pub store_id: StoreId,
+    pub base_product_id: BaseProductId,
+    pub volume: u32,
+    pub weight: u32,
+    pub delivery_from: String,
+}

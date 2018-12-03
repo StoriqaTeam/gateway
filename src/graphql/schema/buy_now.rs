@@ -11,7 +11,7 @@ use graphql::context::Context;
 use graphql::models::*;
 use graphql::schema::available_packages::*;
 use graphql::schema::coupon;
-use graphql::schema::product as module_product;
+use graphql::schema::product as product_module;
 use graphql::schema::store;
 use graphql::schema::user::get_user_by_id;
 
@@ -106,9 +106,7 @@ fn calculate_coupon_discount(buy_now: &BuyNowCheckout) -> f64 {
 
 fn calculate_delivery_cost(package: &Option<AvailablePackageForUser>, quantity: Quantity) -> f64 {
     if let Some(package) = package {
-        if let Some(price) = package.price {
-            return calculate_delivery(price, quantity);
-        }
+        return calculate_delivery(package.price, quantity);
     }
 
     0.0f64
@@ -122,7 +120,7 @@ fn calculate_delivery(price: ProductPrice, quantity: Quantity) -> f64 {
     price.0 * f64::from(quantity.0)
 }
 
-pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResult<CreateOrdersOutput> {
+pub fn run_buy_now_mutation(context: &Context, input: BuyNowInputV2) -> FieldResult<CreateOrdersOutput> {
     let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
@@ -131,9 +129,17 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResul
         )
     })?;
 
-    let product_price = module_product::get_seller_price(context, ProductId(input.product_id))?;
+    let product_price = product_module::get_seller_price(context, ProductId(input.product_id))?;
     let store_id = store::get_store_id_by_product(context, ProductId(input.product_id))?;
-    let product = module_product::get_product(context, ProductId(input.product_id))?;
+    let product = product_module::get_product(context, ProductId(input.product_id))?;
+
+    let (shipping_details, package) = get_available_package_for_user_with_price(
+        context,
+        product.base_product_id,
+        ShippingId(input.shipping_id),
+        input.user_country_code.as_str(),
+        "Buy Now failed.",
+    )?;
 
     let coupon = match input.coupon_code {
         Some(code) => {
@@ -144,7 +150,58 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResul
     };
 
     let customer = get_user_by_id(context, user.user_id)?;
-    let package = get_available_package_for_user_by_id(context, ShippingId(input.shipping_id))?;
+    let delivery_info = get_delivery_info(package);
+
+    let buy_now = BuyNow {
+        product_id: input.product_id.into(),
+        store_id: shipping_details.store_id,
+        customer_id: user.user_id,
+        address: input.address_full.into(),
+        receiver_name: input.receiver_name,
+        receiver_phone: input.receiver_phone,
+        receiver_email: customer.email,
+        price: product_price,
+        quantity: input.quantity.into(),
+        currency: input.currency,
+        pre_order: product.pre_order,
+        pre_order_days: product.pre_order_days,
+        coupon,
+        delivery_info: Some(delivery_info),
+        uuid: input.uuid,
+    };
+
+    let url = format!("{}/buy_now", context.config.saga_microservice.url.clone());
+    let body: String = serde_json::to_string(&buy_now)?.to_string();
+    context
+        .request::<Invoice>(Method::Post, url, Some(body))
+        .wait()
+        .map(CreateOrdersOutput)
+}
+
+/// DEPRECATED
+pub fn run_buy_now_mutation_v1(context: &Context, input: BuyNowInput) -> FieldResult<CreateOrdersOutput> {
+    let input = input.fill_uuid();
+    let user = context.user.clone().ok_or_else(|| {
+        FieldError::new(
+            "Could not run for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        )
+    })?;
+
+    let product_price = product_module::get_seller_price(context, ProductId(input.product_id))?;
+    let store_id = store::get_store_id_by_product(context, ProductId(input.product_id))?;
+    let product = product_module::get_product(context, ProductId(input.product_id))?;
+
+    let coupon = match input.coupon_code {
+        Some(code) => {
+            let coupon = validate_coupon(context, CouponCode(code), ProductId(input.product_id), store_id)?;
+            Some(coupon)
+        }
+        None => None,
+    };
+
+    let customer = get_user_by_id(context, user.user_id)?;
+    let package = get_available_package_for_user_by_id_v1(context, ShippingId(input.shipping_id))?;
 
     if store_id != package.store_id {
         return Err(FieldError::new(
@@ -181,7 +238,7 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInput) -> FieldResul
         .map(CreateOrdersOutput)
 }
 
-pub fn calculate_buy_now(
+pub fn calculate_buy_now_v1(
     context: &Context,
     product_id: i32,
     quantity: i32,
@@ -189,7 +246,7 @@ pub fn calculate_buy_now(
     shipping_id: Option<i32>,
 ) -> FieldResult<BuyNowCheckout> {
     let store_id = store::get_store_id_by_product(context, ProductId(product_id))?;
-    let product = module_product::get_product(context, ProductId(product_id))?;
+    let product = product_module::get_product(context, ProductId(product_id))?;
 
     let coupon = match coupon_code {
         Some(code) => {
@@ -201,7 +258,7 @@ pub fn calculate_buy_now(
 
     let package = match shipping_id {
         Some(shipping_id) => {
-            let result = get_available_package_for_user_by_id(context, ShippingId(shipping_id))?;
+            let result = get_available_package_for_user_by_id_v1(context, ShippingId(shipping_id))?;
 
             Some(result)
         }
@@ -209,6 +266,41 @@ pub fn calculate_buy_now(
     };
 
     Ok(BuyNowCheckout {
+        user_country_code: None,
+        product,
+        quantity: quantity.into(),
+        coupon,
+        package,
+    })
+}
+
+pub fn calculate_buy_now(
+    context: &Context,
+    product_id: i32,
+    quantity: i32,
+    user_country_code: &str,
+    coupon_code: Option<String>,
+    shipping_id: i32,
+) -> FieldResult<BuyNowCheckout> {
+    let product = product_module::get_product(context, ProductId(product_id))?;
+    let (shipping_details, package) = try_get_available_package_for_user_with_price(
+        context,
+        product.base_product_id,
+        ShippingId(shipping_id),
+        user_country_code,
+        "Could not calculate buy now.",
+    )?;
+
+    let coupon = match coupon_code {
+        Some(code) => {
+            let coupon = validate_coupon(context, CouponCode(code), ProductId(product_id), shipping_details.store_id)?;
+            Some(coupon)
+        }
+        None => None,
+    };
+
+    Ok(BuyNowCheckout {
+        user_country_code: Some(user_country_code.to_string()),
         product,
         quantity: quantity.into(),
         coupon,

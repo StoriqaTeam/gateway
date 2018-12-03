@@ -143,17 +143,18 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         &self.0.delivery_price
     }
 
-    field deprecated "use select_package" company_package_id() -> Option<i32> as "Selected package raw id" {
+    field deprecated "use deliveryCompany and deliveryPrice" company_package_id() -> Option<i32> as "Selected package raw id" {
         self.0.company_package_id.map(|v| v.0)
     }
 
-    field select_package(&executor) -> FieldResult<Option<AvailablePackageForUser>> as "Selected package" {
-       let context = executor.context();
+    field deprecated "use deliveryCompany and deliveryPrice"
+    select_package(&executor) -> FieldResult<Option<AvailablePackageForUser>> as "Selected package" {
+        let context = executor.context();
 
-       match self.0.shipping_id {
-           Some(shipping_id) => Ok(Some(available_packages::get_available_package_for_user_by_id(context, shipping_id)?)),
-           _ => Ok(None),
-       }
+        match self.0.shipping_id {
+            Some(shipping_id) => Ok(Some(available_packages::get_available_package_for_user_by_id_v1(context, shipping_id)?)),
+            _ => Ok(None),
+        }
     }
 
     field track_id() -> &Option<String> as "Delivery Company" {
@@ -262,7 +263,7 @@ graphql_object!(CreateOrdersOutput: Context as "CreateOrdersOutput" |&self| {
         &self.0
     }
 
-    field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+    field deprecated "use cartV2" cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
@@ -285,9 +286,34 @@ graphql_object!(CreateOrdersOutput: Context as "CreateOrdersOutput" |&self| {
             .sync()
             .map_err(into_graphql)?.into_iter().collect();
 
-        cart_module::convert_products_to_cart(context, &products).map(Some)
+        cart_module::convert_products_to_cart(context, &products, None).map(Some)
     }
 
+    field cart_v2(&executor, user_country_code: String) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+        let context = executor.context();
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let fut = if let Some(session_id) = context.session_id {
+            if let Some(ref user) = context.user {
+                rpc_client.merge(session_id.into(), user.user_id.into())
+            } else {
+                rpc_client.get_cart(session_id.into())
+            }
+        } else if let Some(ref user) = context.user {
+            rpc_client.get_cart(user.user_id.into())
+        }  else {
+            return Err(FieldError::new(
+                "Could not get users cart.",
+                graphql_value!({ "code": 100, "details": { "No user id or session id in request header." }}),
+            ));
+        };
+
+        let products: Vec<_> = fut
+            .sync()
+            .map_err(into_graphql)?.into_iter().collect();
+
+        cart_module::convert_products_to_cart(context, &products, Some(user_country_code)).map(Some)
+    }
 });
 
 graphql_object!(Connection<GraphQLOrder, PageInfo>: Context as "OrdersConnection" |&self| {
@@ -338,7 +364,7 @@ graphql_object!(Edge<OrderHistoryItem>: Context as "OrderHistoryItemsEdge" |&sel
     }
 });
 
-pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) -> FieldResult<CreateOrdersOutput> {
+pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput) -> FieldResult<CreateOrdersOutput> {
     let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
@@ -383,7 +409,87 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInput) ->
         .map(|coupon| (coupon.id, coupon))
         .collect::<HashMap<CouponId, Coupon>>();
 
-    let selected_packages = cart_product::get_selected_packages(context, &current_cart)?;
+    let selected_packages = cart_product::get_selected_packages(context, &current_cart, None)?;
+
+    // validate packages
+    for (item, package) in selected_packages.iter() {
+        cart_product::validate_select_package(item, package)?;
+    }
+
+    let packages = selected_packages
+        .into_iter()
+        .map(|(item, value)| (item.product_id, value))
+        .collect();
+    let delivery_info = cart_product::get_delivery_info(packages)?;
+    let customer = get_user_by_id(context, user.user_id)?;
+
+    let create_order = CreateOrder {
+        customer_id: user.user_id,
+        address: input.address_full,
+        receiver_name: input.receiver_name,
+        receiver_phone: input.receiver_phone,
+        receiver_email: customer.email,
+        prices: products_with_prices,
+        currency: input.currency,
+        coupons: coupons_info,
+        delivery_info,
+        uuid: input.uuid,
+    };
+
+    let url = format!("{}/create_order", context.config.saga_microservice.url.clone());
+    let body: String = serde_json::to_string(&create_order)?.to_string();
+    context
+        .request::<Invoice>(Method::Post, url, Some(body))
+        .wait()
+        .map(CreateOrdersOutput)
+}
+
+pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) -> FieldResult<CreateOrdersOutput> {
+    let input = input.fill_uuid();
+    let user = context.user.clone().ok_or_else(|| {
+        FieldError::new(
+            "Could not create orders for unauthorized user.",
+            graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+        )
+    })?;
+
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+    let current_cart = rpc_client.get_cart(user.user_id.into()).sync().map_err(into_graphql)?;
+
+    if let Some(cart_item) = current_cart.iter().find(|p| p.delivery_method_id.is_none()) {
+        return Err(FieldError::new(
+            "Not select delivery package.",
+            graphql_value!({ "code": 100, "details": { format!("For the product with id: {} in store: {} not set delivery package", cart_item.product_id, cart_item.store_id) }}),
+        ));
+    }
+
+    let mut coupons_info = vec![];
+    for cart_item in current_cart.iter() {
+        if let Some(coupon_id) = cart_item.coupon_id {
+            validate_coupon(context, coupon_id)?;
+            let coupon = get_coupon(context, coupon_id)?;
+            coupons_info.push(coupon);
+        }
+    }
+
+    let products_with_prices = current_cart
+        .iter()
+        .map(|p| product::get_seller_price(context, p.product_id).and_then(|seller_price| Ok((p.product_id, seller_price))))
+        .collect::<FieldResult<CartProductWithPriceHash>>()?;
+
+    if products_with_prices.len() == 0 {
+        return Err(FieldError::new(
+            "Could not create orders for empty cart.",
+            graphql_value!({ "code": 100, "details": { "There is no products, selected in cart." }}),
+        ));
+    }
+
+    let coupons_info = coupons_info
+        .into_iter()
+        .map(|coupon| (coupon.id, coupon))
+        .collect::<HashMap<CouponId, Coupon>>();
+
+    let selected_packages = cart_product::get_selected_packages(context, &current_cart, Some(input.user_country_code))?;
 
     // validate packages
     for (item, package) in selected_packages.iter() {
