@@ -1075,7 +1075,7 @@ graphql_object!(Mutation: Context |&self| {
         cart_module::convert_products_to_cart(context, &products, None).map(Some)
     }
 
-    field setCommentInCart(&executor, input: SetCommentInCartInputV2 as "Set comment in cart input.")
+    field setCommentInCartV2(&executor, input: SetCommentInCartInputV2 as "Set comment in cart input.")
         -> FieldResult<Option<Cart>> as "Set comment in cart." {
 
         let context = executor.context();
@@ -1128,7 +1128,7 @@ graphql_object!(Mutation: Context |&self| {
 
     }
 
-    field removeDeliveryMethodFromCart(
+    field removeDeliveryMethodFromCartV2(
         &executor,
         input: RemoveDeliveryMethodFromCartInputV2 as "Remove delivery method from cart input.",
     ) -> FieldResult<Cart> as "Removes delivery method from the cart." {
