@@ -201,17 +201,6 @@ pub struct DeleteCouponByCode {
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[graphql(description = "Delete coupon from cart by code and store id input object")]
-pub struct DeleteCouponByCodeV2 {
-    #[graphql(description = "Coupon code.")]
-    pub coupon_code: String,
-    #[graphql(description = "Store raw id.")]
-    pub store_id: i32,
-    #[graphql(description = "User country code.")]
-    pub user_country_code: String,
-}
-
-#[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Set delivery method in cart input object")]
 pub struct SetDeliveryMethodInCartInput {
     #[graphql(description = "Client mutation id.")]

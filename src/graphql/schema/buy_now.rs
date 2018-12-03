@@ -280,20 +280,28 @@ pub fn calculate_buy_now(
     quantity: i32,
     user_country_code: &str,
     coupon_code: Option<String>,
-    shipping_id: i32,
+    shipping_id: Option<i32>,
 ) -> FieldResult<BuyNowCheckout> {
+    let store_id = store::get_store_id_by_product(context, ProductId(product_id))?;
     let product = product_module::get_product(context, ProductId(product_id))?;
-    let (shipping_details, package) = try_get_available_package_for_user_with_price(
-        context,
-        product.base_product_id,
-        ShippingId(shipping_id),
-        user_country_code,
-        "Could not calculate buy now.",
-    )?;
+
+    let package = match shipping_id {
+        None => None,
+        Some(shipping_id) => {
+            let (_shipping_details, package) = get_available_package_for_user_with_price(
+                context,
+                product.base_product_id,
+                ShippingId(shipping_id),
+                user_country_code,
+                "Could not calculate buy now.",
+            )?;
+            Some(package)
+        }
+    };
 
     let coupon = match coupon_code {
         Some(code) => {
-            let coupon = validate_coupon(context, CouponCode(code), ProductId(product_id), shipping_details.store_id)?;
+            let coupon = validate_coupon(context, CouponCode(code), ProductId(product_id), store_id)?;
             Some(coupon)
         }
         None => None,

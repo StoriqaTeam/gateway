@@ -4,7 +4,7 @@ use stq_types::Quantity;
 #[derive(GraphQLInputObject, Debug, Clone)]
 #[graphql(description = "Calculate buy now input object")]
 pub struct CalculateBuyNowInput {
-    #[graphql(description = "Product raw ids")]
+    #[graphql(description = "Product raw id")]
     pub product_id: i32,
     #[graphql(description = "Quantity")]
     pub quantity: i32,
@@ -13,7 +13,7 @@ pub struct CalculateBuyNowInput {
     #[graphql(description = "Coupon code")]
     pub coupon_code: Option<String>,
     #[graphql(description = "Raw shipping id")]
-    pub shipping_id: i32,
+    pub shipping_id: Option<i32>,
 }
 
 #[derive(Deserialize, Debug)]
