@@ -253,8 +253,8 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
                 let url = format!("{}/available_packages?country={}&weight={}&size={}",
                     context.config.service_url(Service::Delivery),
                     country_code.to_string(),
-                    0, // TODO: replace with real weight
-                    0  // TODO: replace with real size
+                    1, // TODO: replace with real weight
+                    1, // TODO: replace with real size
                     );
 
                 context.request::<Vec<AvailablePackages>>(Method::Get, url, None)
@@ -498,4 +498,44 @@ fn validate_change_moderation_status(context: &Context, payload: &BaseProductMod
     let body: String = serde_json::to_string(&payload)?.to_string();
 
     context.request::<bool>(Method::Post, url, Some(body)).wait()
+}
+
+pub fn get_base_product_shipping_details(
+    context: &Context,
+    base_product_id: BaseProductId,
+    context_err_msg: &str,
+) -> FieldResult<BaseProductShippingDetails> {
+    let base_product = try_get_base_product(context, base_product_id, Visibility::Published)?.ok_or(FieldError::new(
+        context_err_msg,
+        graphql_value!({ "code": 300, "details": { "Base product not found." }}),
+    ))?;
+
+    // TODO: Use measurements from base product
+    let volume: u32 = 1;
+    let weight: u32 = 1;
+
+    let rpc_client = context.get_rest_api_client(Service::Warehouses);
+    let warehouse = rpc_client
+        .get_warehouses_for_store(base_product.store_id)
+        .sync()
+        .map_err(into_graphql)?
+        .into_iter()
+        .next()
+        .ok_or(FieldError::new(
+            context_err_msg,
+            graphql_value!({ "code": 300, "details": { "There are no warehouses belonging to this store." }}),
+        ))?;
+
+    let delivery_from = warehouse.country_code.ok_or(FieldError::new(
+        context_err_msg,
+        graphql_value!({ "code": 300, "details": { "There is no country in warehouse address belonging to this store." }}),
+    ))?;
+
+    Ok(BaseProductShippingDetails {
+        store_id: base_product.store_id,
+        base_product_id: base_product.id,
+        delivery_from: delivery_from.0,
+        volume,
+        weight,
+    })
 }

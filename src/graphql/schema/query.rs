@@ -13,12 +13,13 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::Currency;
 use stq_static_resources::{Language, LanguageGraphQl, OrderState, TemplateVariant};
-use stq_types::{OrderId, WarehouseId};
+use stq_types::{BaseProductId, OrderId, WarehouseId};
 
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::base_product as base_product_module;
 use graphql::schema::cart as cart_module;
 use graphql::schema::warehouse as warehouse_module;
 use schema::buy_now as buy_now_module;
@@ -263,15 +264,29 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field calculate_buy_now(&executor, product_id: i32 as "Product raw id",
-                            quantity: i32 as "Quantity",
-                            coupon_code: Option<String> as "Coupon code",
-                            _company_package_id: Option<i32> as "[DEPRECATED] Select available package raw id",
-                            shipping_id: Option<i32> as "Select available package shipping raw id") -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
-
+    field deprecated "use calculateBuyNowV2. This endpoint will return incorrect delivery price if it is not set to 'fixed price' by the store owner"
+    calculate_buy_now(
+        &executor,
+        product_id: i32 as "Product raw id",
+        quantity: i32 as "Quantity",
+        coupon_code: Option<String> as "Coupon code",
+        _company_package_id: Option<i32> as "[DEPRECATED] Select available package raw id",
+        shipping_id: Option<i32> as "Select available package shipping raw id",
+    ) -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
         let context = executor.context();
+        buy_now_module::calculate_buy_now_v1(context, product_id, quantity, coupon_code, shipping_id)
+    }
 
-        buy_now_module::calculate_buy_now(context, product_id, quantity, coupon_code, shipping_id)
+    field calculate_buy_now_v2(&executor, input: CalculateBuyNowInput) -> FieldResult<BuyNowCheckout> as "Calculate values for buy now." {
+        let context = executor.context();
+        buy_now_module::calculate_buy_now(
+            context,
+            input.product_id,
+            input.quantity,
+            input.user_country_code.as_str(),
+            input.coupon_code,
+            input.shipping_id,
+        )
     }
 
     field currency_exchange(&executor) -> FieldResult<Option<Vec<CurrencyExchange>>> as "Fetches currency exchange." {
@@ -486,7 +501,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+    field deprecated "use cartV2" cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
@@ -509,8 +524,33 @@ graphql_object!(Query: Context |&self| {
             .sync()
             .map_err(into_graphql)?.into_iter().collect();
 
-        cart_module::convert_products_to_cart(context, &products).map(Some)
+        cart_module::convert_products_to_cart(context, &products, None).map(Some)
+    }
 
+    field cart_v2(&executor, user_country_code: String as "User country code.") -> FieldResult<Option<Cart>> as "Fetches cart with country." {
+        let context = executor.context();
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let fut = if let Some(session_id) = context.session_id {
+            if let Some(ref user) = context.user {
+                rpc_client.merge(session_id.into(), user.user_id.into())
+            } else {
+                rpc_client.get_cart(session_id.into())
+            }
+        } else if let Some(ref user) = context.user {
+            rpc_client.get_cart(user.user_id.into())
+        }  else {
+            return Err(FieldError::new(
+                "Could not get users cart.",
+                graphql_value!({ "code": 100, "details": { "No user id or session id in request header." }}),
+            ));
+        };
+
+        let products: Vec<_> = fut
+            .sync()
+            .map_err(into_graphql)?.into_iter().collect();
+
+        cart_module::convert_products_to_cart(context, &products, Some(user_country_code)).map(Some)
     }
 
     field store_slug_exists(&executor, slug: String as "Stores slug") -> FieldResult<bool> as "Checks store slug" {
@@ -561,16 +601,45 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field available_shipping_for_user(&executor, user_country: String as "Alpha3 code country", base_product_id: i32 as "Int Id of a base_product.") -> FieldResult<AvailableShippingForUser> as "Available shipping for user" {
+    field available_shipping_for_user(
+        &executor,
+        user_country: String as "Alpha3 code country",
+        base_product_id: i32 as "Int Id of a base_product.",
+    ) -> FieldResult<AvailableShippingForUser> as "Available shipping for user" {
         let context = executor.context();
-        let url = format!("{}/available_packages_for_user/{}?user_country={}",
+
+        let base_product = base_product_module::try_get_base_product(context, BaseProductId(base_product_id), Visibility::Published)?
+            .ok_or(FieldError::new(
+                "Could not get available shipping for user.",
+                graphql_value!({ "code": 300, "details": { "Base product not found." }}),
+            ))?;
+
+        // TODO: Use measurements from base product
+        let volume: u32 = 1;
+        let weight: u32 = 1;
+
+        let warehouse = warehouse_module::get_warehouses_for_store(context, base_product.store_id)?
+            .into_iter()
+            .next()
+            .ok_or(FieldError::new(
+                "Could not get available shipping for user.",
+                graphql_value!({ "code": 300, "details": { "There are no warehouses belonging to this store." }}),
+            ))?;
+
+        let delivery_from = warehouse.country_code.ok_or(FieldError::new(
+            "Could not get available shipping for user.",
+            graphql_value!({ "code": 300, "details": { "There is no country in warehouse address belonging to this store." }}),
+        ))?;
+
+        let url = format!("{}/v2/available_packages_for_user/{}?delivery_from={}&delivery_to={}&volume={}&weight={}",
             context.config.service_url(Service::Delivery),
             base_product_id,
-            user_country
+            delivery_from,
+            user_country,
+            volume,
+            weight,
         );
 
-        context.request::<AvailableShippingForUser>(Method::Get, url, None)
-            .wait()
+        context.request::<AvailableShippingForUser>(Method::Get, url, None).wait()
     }
-
 });

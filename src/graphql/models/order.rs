@@ -38,6 +38,33 @@ impl CreateOrderInput {
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Create order input object")]
+pub struct CreateOrderInputV2 {
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
+    #[graphql(description = "Address")]
+    #[serde(flatten)]
+    pub address_full: AddressInput,
+    #[graphql(description = "Receiver name")]
+    pub receiver_name: String,
+    #[graphql(description = "Receiver phone")]
+    pub receiver_phone: String,
+    #[graphql(description = "Currency that will be paid")]
+    pub currency: Currency,
+    #[graphql(description = "User country code")]
+    pub user_country_code: String,
+}
+
+impl CreateOrderInputV2 {
+    pub fn fill_uuid(mut self) -> Self {
+        self.uuid = Some(self.uuid)
+            .filter(|id| !id.is_empty())
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
+        self
+    }
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Create order paying with FIAT input object")]
 pub struct CreateOrderFiatInput {
     #[graphql(description = "Client mutation id.")]
@@ -268,6 +295,41 @@ pub struct BuyNowInput {
 }
 
 impl BuyNowInput {
+    pub fn fill_uuid(mut self) -> Self {
+        self.uuid = Some(self.uuid)
+            .filter(|id| !id.is_empty())
+            .unwrap_or_else(|| Uuid::new_v4().hyphenated().to_string());
+        self
+    }
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Buy now input object")]
+pub struct BuyNowInputV2 {
+    #[graphql(name = "clientMutationId", description = "Client mutation id.")]
+    pub uuid: String,
+    #[graphql(description = "Product id")]
+    pub product_id: i32,
+    #[graphql(description = "Quantity")]
+    pub quantity: i32,
+    #[graphql(description = "Address")]
+    #[serde(flatten)]
+    pub address_full: AddressInput,
+    #[graphql(description = "Country code of the user")]
+    pub user_country_code: String,
+    #[graphql(description = "Receiver name")]
+    pub receiver_name: String,
+    #[graphql(description = "Receiver phone")]
+    pub receiver_phone: String,
+    #[graphql(description = "Currency that will be paid")]
+    pub currency: Currency,
+    #[graphql(description = "Coupon code added user")]
+    pub coupon_code: Option<String>,
+    #[graphql(description = "Select delivery package shipping id")]
+    pub shipping_id: i32,
+}
+
+impl BuyNowInputV2 {
     pub fn fill_uuid(mut self) -> Self {
         self.uuid = Some(self.uuid)
             .filter(|id| !id.is_empty())

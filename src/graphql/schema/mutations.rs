@@ -662,21 +662,44 @@ graphql_object!(Mutation: Context |&self| {
         Ok(Mock{})
     }
 
-    field incrementInCart(&executor, input: IncrementInCartInput as "Increment in cart input.") -> FieldResult<Option<Cart>> as "Increment in cart." {
+    field deprecated "use incrementInCartV2" incrementInCart(
+        &executor,
+        input: IncrementInCartInput as "Increment in cart input.",
+    ) -> FieldResult<Option<Cart>> as "Increment in cart." {
+        let context = executor.context();
+
+        cart_module::run_increment_in_cart_v1(context, input)
+    }
+
+    field incrementInCartV2(
+        &executor,
+        input: IncrementInCartInputV2 as "Increment in cart input.",
+    ) -> FieldResult<Option<Cart>> as "Increment in cart." {
         let context = executor.context();
 
         cart_module::run_increment_in_cart(context, input)
+    }
+
+    field deprecated "use addInCartV2" addInCart(
+        &executor,
+        input: AddInCartInput as "Add product quantity, plus delivery method in cart input.",
+    ) -> FieldResult<Option<Cart>> as "Add in cart." {
+        let context = executor.context();
+
+        cart_module::run_add_in_cart_v1(context, input)
 
     }
 
-    field AddInCart(&executor, input: AddInCartInput as "Add product quantity, plus delivery method in cart input.") -> FieldResult<Option<Cart>> as "Add in cart." {
+    field addInCartV2(
+        &executor,
+        input: AddInCartInputV2 as "Add product quantity, plus delivery method in cart input.",
+    ) -> FieldResult<Option<Cart>> as "Add in cart." {
         let context = executor.context();
 
         cart_module::run_add_in_cart(context, input)
-
     }
 
-    field setQuantityInCart(&executor, input: SetQuantityInCartInput as "Set product quantity in cart input.") -> FieldResult<Option<Cart>> as "Sets product quantity in cart." {
+    field deprecated "use setQuantityInCartV2" setQuantityInCart(&executor, input: SetQuantityInCartInput as "Set product quantity in cart input.") -> FieldResult<Option<Cart>> as "Sets product quantity in cart." {
         let context = executor.context();
 
         let customer = if let Some(ref user) = context.user {
@@ -696,11 +719,41 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        cart_module::convert_products_to_cart(context, &products).map(Some)
+        cart_module::convert_products_to_cart(context, &products, None).map(Some)
 
     }
 
-    field setCouponInCart(&executor, input: SetCouponInCartInput as "Set coupon in cart input.") -> FieldResult<Option<Cart>> as "Sets coupon in cart." {
+    field setQuantityInCartV2(
+        &executor,
+        input: SetQuantityInCartInputV2 as "Set product quantity in cart input."
+    ) -> FieldResult<Option<Cart>> as "Sets product quantity in cart." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not set item quantity in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products:Vec<_> = rpc_client.set_quantity(customer, input.product_id.into(), input.value.into())
+            .sync()
+            .map_err(into_graphql)?
+            .into_iter().collect();
+
+        cart_module::convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)
+
+    }
+
+    field deprecated "use setCouponInCartV2" setCouponInCart(
+        &executor,
+        input: SetCouponInCartInput as "Set coupon in cart input.",
+    ) -> FieldResult<Option<Cart>> as "Sets coupon in cart." {
         let context = executor.context();
 
         let customer = if let Some(ref user) = context.user {
@@ -782,12 +835,101 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        cart_module::convert_products_to_cart(context, &products).map(Some)
+        cart_module::convert_products_to_cart(context, &products, None).map(Some)
 
     }
 
-    field deleteCouponFromCart(
-        &executor, input: DeleteCouponInCartInput as "Delete coupon from cart input."
+    field setCouponInCartV2(
+        &executor,
+        input: SetCouponInCartInputV2 as "Set coupon in cart input.",
+    ) -> FieldResult<Option<Cart>> as "Sets coupon in cart." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not set coupon in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let coupon_code = CouponCode(input.coupon_code.clone());
+        let store_id = StoreId(input.store_id);
+        validate_coupon_by_code(context, coupon_code.clone(), store_id)?;
+        let coupon = get_coupon_by_code(context, coupon_code, store_id)?;
+
+        // validate scope coupon
+        let scope_support = coupon.scope_support()?;
+        if !scope_support {
+            return Ok(None);
+        }
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let current_cart = rpc_client.get_cart(customer).sync()?;
+
+        // validate used coupon
+        let coupon_apply = current_cart.iter().any(|c| {
+                if let Some(coupon_id) = c.coupon_id {
+                    coupon_id == coupon.id
+                } else {
+                    false
+                }
+        });
+
+        if coupon_apply {
+            return Err(FieldError::new(
+                "Coupon not set",
+                graphql_value!({ "code": 400, "details": { "coupon already applied" }}),
+            ));
+        }
+
+        // validate products
+        let url = format!("{}/{}/{}/base_products",
+            context.config.service_url(Service::Stores),
+            Model::Coupon.to_url(),
+            coupon.id);
+        let base_products = context.request::<Vec<BaseProduct>>(Method::Get, url, None).wait()?;
+        let all_support_products = base_products.into_iter().flat_map(|b| {
+            if let Some(variants) = b.variants {
+                variants
+            } else {
+                vec![]
+            }
+            })
+            .filter(|p|
+                match p.discount {
+                    Some(discount) => discount < ZERO_DISCOUNT,
+                    None => true,
+                })
+            .map(|p| p.id).collect::<HashSet<ProductId>>();
+
+        let all_cart_products:HashSet<ProductId> = current_cart.iter().map(|c| c.product_id).collect();
+        let products_for_cart:HashSet<ProductId> = all_cart_products.intersection(&all_support_products).cloned().collect();
+
+        if products_for_cart.is_empty() {
+            return Err(FieldError::new(
+                "Coupon not set",
+                graphql_value!({ "code": 400, "details": { "no products found for coupon usage" }}),
+            ));
+        }
+
+        for product_id in products_for_cart {
+            rpc_client.add_coupon(customer, product_id, coupon.id).sync()?;
+        }
+
+        let products: Vec<_> = rpc_client.get_cart(customer).sync()
+            .map_err(into_graphql)?
+            .into_iter().collect();
+
+        cart_module::convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)
+    }
+
+    field deprecated "use deleteCouponFromCartV2" deleteCouponFromCart(
+        &executor,
+        input: DeleteCouponInCartInput as "Delete coupon from cart input.",
     ) -> FieldResult<Option<Cart>> as "Delete base product from coupon." {
         let context = executor.context();
 
@@ -817,11 +959,48 @@ graphql_object!(Mutation: Context |&self| {
         let products: Vec<CartItem> = rpc_client.delete_coupon(customer, coupon_id).sync()?
             .into_iter().collect();
 
-        cart_module::convert_products_to_cart(context, &products).map(Some)
-
+        cart_module::convert_products_to_cart(context, &products, None).map(Some)
     }
 
-    field setSelectionInCart(&executor, input: SetSelectionInCartInput as "Select product in cart input.") -> FieldResult<Option<Cart>> as "Select product in cart." {
+    field deleteCouponFromCartV2(
+        &executor,
+        input: DeleteCouponInCartInputV2 as "Delete coupon from cart input.",
+    ) -> FieldResult<Option<Cart>> as "Delete base product from coupon." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not set coupon in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let coupon_id = match (input.coupon_id, input.coupon_code) {
+            (Some(coupon_id), _) => CouponId(coupon_id),
+            (None, Some(by_code)) => {
+                get_coupon_by_code(context, CouponCode(by_code.coupon_code), StoreId(by_code.store_id))?.id
+            },
+            (None, None) => return Err(FieldError::new(
+                "Could not delete coupon from cart could not identify coupon.",
+                graphql_value!({ "code": 100, "details": { "Either coupon_code or coupon_id must be present." }}),
+            ))
+        };
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products: Vec<CartItem> = rpc_client.delete_coupon(customer, coupon_id).sync()?
+            .into_iter().collect();
+
+        cart_module::convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)
+    }
+
+    field deprecated "use setSelectionInCartV2" setSelectionInCart(
+        &executor,
+        input: SetSelectionInCartInput as "Select product in cart input."
+    ) -> FieldResult<Option<Cart>> as "Select product in cart." {
         let context = executor.context();
 
         let customer = if let Some(ref user) = context.user {
@@ -841,11 +1020,37 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        cart_module::convert_products_to_cart(context, &products).map(Some)
+        cart_module::convert_products_to_cart(context, &products, None).map(Some)
+    }
+
+    field setSelectionInCartV2(
+        &executor,
+        input: SetSelectionInCartInputV2 as "Select product in cart input.",
+    ) -> FieldResult<Option<Cart>> as "Select product in cart." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not select item in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products: Vec<_> = rpc_client.set_selection(customer, input.product_id.into(), input.value)
+            .sync()
+            .map_err(into_graphql)?
+            .into_iter().collect();
+
+        cart_module::convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)
 
     }
 
-    field setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.")
+    field deprecated "use setCommentInCartV2" setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.")
         -> FieldResult<Option<Cart>> as "Set comment in cart." {
 
         let context = executor.context();
@@ -867,22 +1072,65 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        cart_module::convert_products_to_cart(context, &products).map(Some)
-
+        cart_module::convert_products_to_cart(context, &products, None).map(Some)
     }
 
-    field setDeliveryMethodInCart(
+    field setCommentInCart(&executor, input: SetCommentInCartInputV2 as "Set comment in cart input.")
+        -> FieldResult<Option<Cart>> as "Set comment in cart." {
+
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not comment item in cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products:Vec<_> = rpc_client.set_comment(customer, input.product_id.into(), input.value)
+            .sync()
+            .map_err(into_graphql)?
+            .into_iter().collect();
+
+        cart_module::convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)
+    }
+
+    field deprecated "use setDeliveryMethodInCartV2" setDeliveryMethodInCart(
         &executor,
         input: SetDeliveryMethodInCartInput as "Set delivery method in cart input.",
+    ) -> FieldResult<Cart> as "Sets delivery method in the cart." {
+        let context = executor.context();
+
+        cart_module::run_set_delivery_method_in_cart_v1(context, input)
+    }
+
+    field setDeliveryMethodInCartV2(
+        &executor,
+        input: SetDeliveryMethodInCartInputV2 as "Set delivery method in cart input.",
     ) -> FieldResult<Cart> as "Sets delivery method in the cart." {
         let context = executor.context();
 
         cart_module::run_set_delivery_method_in_cart(context, input)
     }
 
-    field removeDeliveryMethodFromCart(
+    field deprecated "use removeDeliveryMethodFromCartV2" removeDeliveryMethodFromCart(
         &executor,
         input: RemoveDeliveryMethodFromCartInput as "Remove delivery method from cart input.",
+    ) -> FieldResult<Cart> as "Removes delivery method from the cart." {
+        let context = executor.context();
+
+        cart_module::run_remove_delivery_method_from_cart_v1(context, input)
+
+    }
+
+    field removeDeliveryMethodFromCart(
+        &executor,
+        input: RemoveDeliveryMethodFromCartInputV2 as "Remove delivery method from cart input.",
     ) -> FieldResult<Cart> as "Removes delivery method from the cart." {
         let context = executor.context();
 
@@ -890,7 +1138,10 @@ graphql_object!(Mutation: Context |&self| {
 
     }
 
-    field deleteFromCart(&executor, input: DeleteFromCartInput as "Delete items from cart input.") -> FieldResult<Cart> as "Deletes products from cart." {
+    field deprecated "use deleteFromCartV2" deleteFromCart(
+        &executor,
+        input: DeleteFromCartInput as "Delete items from cart input.",
+    ) -> FieldResult<Cart> as "Deletes products from cart." {
         let context = executor.context();
 
         let customer = if let Some(ref user) = context.user {
@@ -910,11 +1161,36 @@ graphql_object!(Mutation: Context |&self| {
             .map_err(into_graphql)?
             .into_iter().collect();
 
-        cart_module::convert_products_to_cart(context, &products)
-
+        cart_module::convert_products_to_cart(context, &products, None)
     }
 
-    field clearCart(&executor) -> FieldResult<Cart> as "Clears cart." {
+    field deleteFromCartV2(
+        &executor,
+        input: DeleteFromCartInputV2 as "Delete items from cart input.",
+    ) -> FieldResult<Cart> as "Deletes products from cart." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not delete item from cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let products:Vec<_> = rpc_client.delete_item(customer, input.product_id.into())
+            .sync()
+            .map_err(into_graphql)?
+            .into_iter().collect();
+
+        cart_module::convert_products_to_cart(context, &products, Some(input.user_country_code))
+    }
+
+    field deprecated "use clearCartV2" clearCart(&executor) -> FieldResult<Cart> as "Clears cart." {
         let context = executor.context();
 
         let customer = if let Some(ref user) = context.user {
@@ -932,7 +1208,28 @@ graphql_object!(Mutation: Context |&self| {
         rpc_client.clear_cart(customer)
             .sync()
             .map_err(into_graphql)
-            .map(|_| convert_to_cart(vec![], &[]))
+            .map(|_| convert_to_cart(vec![], &[], None))
+    }
+
+    field clearCartV2(&executor, user_country_code: String as "User country code") -> FieldResult<Cart> as "Clears cart." {
+        let context = executor.context();
+
+        let customer = if let Some(ref user) = context.user {
+            user.user_id.into()
+        } else if let Some(session_id) = context.session_id {
+            session_id.into()
+        }  else {
+            return Err(FieldError::new(
+                "Could not clear cart for unauthorized user.",
+                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
+            ));
+        };
+
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        rpc_client.clear_cart(customer)
+            .sync()
+            .map_err(into_graphql)
+            .map(|_| convert_to_cart(vec![], &[], Some(user_country_code)))
     }
 
     field createWizardStore(&executor) -> FieldResult<WizardStore> as "Creates new wizard store." {
@@ -1171,10 +1468,23 @@ graphql_object!(Mutation: Context |&self| {
     field createOrders(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
         let context = executor.context();
 
+        order::run_create_orders_mutation_v1(context, input)
+    }
+
+    field createOrdersV2(&executor, input: CreateOrderInputV2 as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
+        let context = executor.context();
+
         order::run_create_orders_mutation(context, input)
     }
 
-    field buyNow(&executor, input: BuyNowInput as "Buy now input.") -> FieldResult<CreateOrdersOutput> as "Creates orders." {
+    field deprecated "use buyNowV2. This endpoint will return incorrect delivery price if it is not set to 'fixed price' by the store owner"
+    buyNow(&executor, input: BuyNowInput as "Buy now input.") -> FieldResult<CreateOrdersOutput> as "Creates orders." {
+        let context = executor.context();
+
+        buy_now::run_buy_now_mutation_v1(context, input)
+    }
+
+    field buyNowV2(&executor, input: BuyNowInputV2 as "Buy now input.") -> FieldResult<CreateOrdersOutput> as "Creates orders." {
         let context = executor.context();
 
         buy_now::run_buy_now_mutation(context, input)

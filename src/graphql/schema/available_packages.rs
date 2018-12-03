@@ -8,10 +8,11 @@ use stq_api::orders::DeliveryInfo;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
-use stq_types::{BaseProductId, CompanyPackageId, ShippingId};
+use stq_types::{BaseProductId, ShippingId};
 
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::base_product as base_product_module;
 
 graphql_object!(AvailablePackages: Context as "AvailablePackages" |&self| {
     description: "Available Packages info."
@@ -82,8 +83,8 @@ graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&
         &self.logo
     }
 
-    field price() -> Option<f64> as "Package price." {
-        self.price.clone().map(|p| p.0)
+    field price() -> f64 as "Package price." {
+        self.price.0
     }
 });
 
@@ -100,33 +101,7 @@ graphql_object!(AvailableShippingForUser: Context as "AvailableShippingForUser" 
 
 });
 
-pub fn get_available_package_for_user(
-    context: &Context,
-    base_product_id: BaseProductId,
-    company_package_id: CompanyPackageId,
-) -> FieldResult<AvailablePackageForUser> {
-    let url = format!(
-        "{}/{}/{}/{}/{}/{}",
-        context.config.service_url(Service::Delivery),
-        Model::AvailablePackageForUser.to_url(),
-        Model::Product.to_url(),
-        base_product_id,
-        Model::CompanyPackage.to_url(),
-        company_package_id,
-    );
-
-    context
-        .request::<Option<AvailablePackageForUser>>(Method::Get, url, None)
-        .wait()?
-        .ok_or_else(|| {
-            FieldError::new(
-                "Could not AvailablePackageForUser.",
-                graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
-            )
-        })
-}
-
-pub fn get_available_package_for_user_by_id(context: &Context, shipping_id: ShippingId) -> FieldResult<AvailablePackageForUser> {
+pub fn get_available_package_for_user_by_id_v1(context: &Context, shipping_id: ShippingId) -> FieldResult<AvailablePackageForUser> {
     let url = format!(
         "{}/{}/by_shipping_id/{}",
         context.config.service_url(Service::Delivery),
@@ -145,17 +120,99 @@ pub fn get_available_package_for_user_by_id(context: &Context, shipping_id: Ship
         })
 }
 
-pub fn get_delivery_info(package: AvailablePackageForUser) -> DeliveryInfo {
-    let price = match package.price {
-        Some(price) => price.0,
-        _ => 0.0f64,
-    };
+pub fn try_get_available_package_for_user_by_id(
+    context: &Context,
+    shipping_id: ShippingId,
+    delivery_from: &str,
+    delivery_to: &str,
+    volume: u32,
+    weight: u32,
+) -> FieldResult<Option<AvailablePackageForUser>> {
+    let url = format!(
+        "{}/v2/{}/by_shipping_id/{}?delivery_from={}&delivery_to={}&volume={}&weight={}",
+        context.config.service_url(Service::Delivery),
+        Model::AvailablePackageForUser.to_url(),
+        shipping_id,
+        delivery_from,
+        delivery_to,
+        volume,
+        weight,
+    );
 
+    context.request::<Option<AvailablePackageForUser>>(Method::Get, url, None).wait()
+}
+
+pub fn get_available_package_for_user_by_id(
+    context: &Context,
+    shipping_id: ShippingId,
+    delivery_from: &str,
+    delivery_to: &str,
+    volume: u32,
+    weight: u32,
+    context_err_msg: &str,
+) -> FieldResult<AvailablePackageForUser> {
+    try_get_available_package_for_user_by_id(context, shipping_id, delivery_from, delivery_to, volume, weight)?.ok_or_else(|| {
+        FieldError::new(
+            context_err_msg,
+            graphql_value!({ "code": 100, "details": { "Select available package not found" }}),
+        )
+    })
+}
+
+pub fn get_delivery_info(package: AvailablePackageForUser) -> DeliveryInfo {
     DeliveryInfo {
         company_package_id: package.id,
         shipping_id: package.shipping_id,
         name: package.name,
         logo: package.logo,
-        price,
+        price: package.price.0,
+    }
+}
+
+pub fn try_get_available_package_for_user_with_price(
+    context: &Context,
+    base_product_id: BaseProductId,
+    shipping_id: ShippingId,
+    user_country_code: &str,
+    context_err_msg: &str,
+) -> FieldResult<(BaseProductShippingDetails, Option<AvailablePackageForUser>)> {
+    let shipping_details = base_product_module::get_base_product_shipping_details(context, base_product_id, context_err_msg)?;
+    let package = try_get_available_package_for_user_by_id(
+        context,
+        shipping_id,
+        shipping_details.delivery_from.as_str(),
+        user_country_code,
+        shipping_details.volume,
+        shipping_details.weight,
+    )?;
+
+    if let Some(ref package) = package {
+        if shipping_details.store_id != package.store_id {
+            Err(FieldError::new(
+                context_err_msg,
+                graphql_value!({ "code": 100, "details": { "The selected package is not found in the store." }}),
+            ))?;
+        }
+    };
+
+    Ok((shipping_details, package))
+}
+
+pub fn get_available_package_for_user_with_price(
+    context: &Context,
+    base_product_id: BaseProductId,
+    shipping_id: ShippingId,
+    user_country_code: &str,
+    context_err_msg: &str,
+) -> FieldResult<(BaseProductShippingDetails, AvailablePackageForUser)> {
+    let (shipping_details, package) =
+        try_get_available_package_for_user_with_price(context, base_product_id, shipping_id, user_country_code, context_err_msg)?;
+
+    match package {
+        None => Err(FieldError::new(
+            context_err_msg,
+            graphql_value!({ "code": 100, "details": { "Available package for user not found." }}),
+        )),
+        Some(package) => Ok((shipping_details, package)),
     }
 }
