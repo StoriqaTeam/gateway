@@ -5,15 +5,13 @@ use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_api::orders::OrderClient;
-use stq_api::types::ApiFutureExt;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, OrderState};
 use stq_types::{OrderId, OrderIdentifier};
 
-use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::order as order_module;
 
 graphql_object!(Invoice: Context as "Invoice" |&self| {
     description: "Invoice info"
@@ -25,32 +23,7 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
     field orders(&executor) -> FieldResult<Vec<GraphQLOrder>> as "Fetches Orders." {
         let context = executor.context();
 
-        let url = format!(
-            "{}/invoices/by-id/{}/order_ids",
-            &context.config.service_url(Service::Billing),
-            self.invoice_id.to_string()
-        );
-
-        context.request::<Vec<OrderId>>(Method::Get, url, None)
-            .wait()
-            .and_then (|ids| {
-                ids.into_iter().map(|id| {
-                    let rpc_client = context.get_rest_api_client(Service::Orders);
-                    rpc_client.get_order(OrderIdentifier::Id(id))
-                        .sync()
-                        .map_err(into_graphql)
-                        .and_then(|order|{
-                            if let Some(order) = order {
-                                Ok(GraphQLOrder(order))
-                            } else {
-                                Err(FieldError::new(
-                                    "Could not find order id received from invoice in orders.",
-                                    graphql_value!({ "code": 100, "details": { "Order id does not exist in orders microservice." }}),
-                                ))
-                            }
-                        })
-                }).collect()
-            })
+        self.get_orders(context)
     }
 
     field amount() -> &f64 as "amount"{
@@ -95,3 +68,28 @@ graphql_object!(Transaction: Context as "Transaction" |&self| {
     }
 
 });
+
+impl Invoice {
+    fn get_orders(&self, context: &Context) -> FieldResult<Vec<GraphQLOrder>> {
+        let url = format!(
+            "{}/invoices/by-id/{}/order_ids",
+            &context.config.service_url(Service::Billing),
+            self.invoice_id.to_string()
+        );
+
+        context.request::<Vec<OrderId>>(Method::Get, url, None).wait().and_then(|ids| {
+            ids.into_iter()
+                .map(|id| {
+                    order_module::try_get_order(context, OrderIdentifier::Id(id))
+                    .and_then(|order| {
+                        order.ok_or_else(|| {
+                            FieldError::new(
+                                "Could not find order id received from invoice in orders.",
+                                graphql_value!({ "code": 100, "details": { format!("Order with id: {} does not exist in orders microservice.", id) }}),
+                            )
+                        })
+                    })
+                }).collect()
+        })
+    }
+}

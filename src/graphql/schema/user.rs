@@ -11,7 +11,6 @@ use juniper::{FieldError, FieldResult};
 
 use stq_api::orders::{OrderClient, OrderSearchTerms};
 use stq_api::types::ApiFutureExt;
-use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Gender, Provider};
@@ -22,6 +21,8 @@ use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::warehouse as warehouse_module;
+use schema::order as order_module;
 
 const MIN_ID: i32 = 0;
 
@@ -62,7 +63,7 @@ graphql_object!(User: Context as "User" |&self| {
         &self.gender
     }
 
-    field birthdate() -> &Option<String> as "Birthdate" {
+    field birthdate() -> &Option<String> as "Birth date" {
         &self.birthdate
     }
 
@@ -465,22 +466,14 @@ graphql_object!(User: Context as "User" |&self| {
     field order(&executor, slug: i32 as "Order slug" ) -> FieldResult<Option<GraphQLOrder>> as "Fetches order." {
         let context = executor.context();
 
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        rpc_client.get_order(OrderIdentifier::Slug(OrderSlug(slug)))
-            .sync()
-            .map_err(into_graphql)
-            .map(|res| res.map(GraphQLOrder))
+        order_module::try_get_order(context, OrderIdentifier::Slug(OrderSlug(slug)))
     }
 
 
     field warehouse(&executor, slug: String as "Slug of a warehouse.") -> FieldResult<Option<GraphQLWarehouse>> as "Fetches warehouse by slug." {
         let context = executor.context();
 
-        let rpc_client = context.get_rest_api_client(Service::Warehouses);
-        rpc_client.get_warehouse(WarehouseIdentifier::Slug(WarehouseSlug(slug)))
-            .sync()
-            .map_err(into_graphql)
-            .map(|res| res.map(GraphQLWarehouse))
+        warehouse_module::try_get_warehouse(context, WarehouseIdentifier::Slug(WarehouseSlug(slug)))
     }
 
     field invoice(&executor, id: String as "Invoice id") -> FieldResult<Option<Invoice>> as "Invoice" {
