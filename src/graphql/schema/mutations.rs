@@ -1661,36 +1661,38 @@ graphql_object!(Mutation: Context |&self| {
                 warehouse.country_code
                 .ok_or_else(||
                     FieldError::new(
-                        "Could not find country for warehouse.",
-                        graphql_value!({ "code": 100, "details": { "Country does not set in warehouse." }}),
+                        "Failed to update shipping options.",
+                        graphql_value!({ "code": 100, "details": { "Country is not set in warehouse." }}),
                     )
                 )
             )
             .ok_or_else(||
                 FieldError::new(
-                    "Could not find warehouse for store.",
+                    "Failed to update shipping options.",
                     graphql_value!({ "code": 100, "details": { "Warehouses do not exist in stores microservice." }}),
                 )
             )??;
 
         let local_delivery_to = delivery_from.clone();
 
-        // TODO: Use measurements from product/base_product
-        let measurements = Measurements {
-            volume_cubic_cm: 1,
-            weight_g: 1,
-        };
+        let base_product = base_product::try_get_base_product(context, BaseProductId(input.base_product_id), Visibility::Published)?
+            .ok_or(FieldError::new(
+                "Failed to update shipping options.",
+                graphql_value!({ "code": 300, "details": { "Base product not found." }}),
+            ))?;
 
-        let url = format!("{}/{}/{}",
+        let url = format!(
+            "{}/{}/{}",
             context.config.service_url(Service::Delivery),
             Model::Product.to_url(),
-            input.base_product_id);
+            base_product.id,
+        );
 
         let payload = NewShipping::from(NewShippingEnrichedInput {
             shipping: input,
             delivery_from,
             local_delivery_to,
-            measurements,
+            measurements: base_product.get_measurements(),
         });
 
         let body = serde_json::to_string(&payload)?;

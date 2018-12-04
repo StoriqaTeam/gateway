@@ -88,6 +88,26 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         datetime.to_rfc3339()
     }
 
+    field length_cm() -> Option<i32> as "Length (cm)" {
+        self.length_cm
+    }
+
+    field width_cm() -> Option<i32> as "Width (cm)" {
+        self.width_cm
+    }
+
+    field height_cm() -> Option<i32> as "Height (cm)" {
+        self.height_cm
+    }
+
+    field volume_cubic_cm() -> Option<i32> as "Volume (cm^3)" {
+        self.volume_cubic_cm
+    }
+
+    field weight_g() -> Option<i32> as "Weight (g)" {
+        self.weight_g
+    }
+
     field moderator_comment(&executor) -> FieldResult<Option<ModeratorProductComments>> as "Fetches moderator comment by id." {
         let context = executor.context();
 
@@ -248,14 +268,17 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
             .sync()
             .map_err(into_graphql)?;
 
+        let Measurements { volume_cubic_cm, weight_g } = self.get_measurements();
+
         if let Some(warehouse) = warehouses.into_iter().nth(0) {
             if let Some(country_code) = warehouse.country_code {
-                let url = format!("{}/available_packages?country={}&weight={}&size={}",
+                let url = format!(
+                    "{}/available_packages?country={}&weight={}&size={}",
                     context.config.service_url(Service::Delivery),
                     country_code.to_string(),
-                    1, // TODO: replace with real weight
-                    1, // TODO: replace with real size
-                    );
+                    weight_g,
+                    volume_cubic_cm,
+                );
 
                 context.request::<Vec<AvailablePackages>>(Method::Get, url, None)
                     .map(From::from)
@@ -510,10 +533,6 @@ pub fn get_base_product_shipping_details(
         graphql_value!({ "code": 300, "details": { "Base product not found." }}),
     ))?;
 
-    // TODO: Use measurements from base product
-    let volume: u32 = 1;
-    let weight: u32 = 1;
-
     let rpc_client = context.get_rest_api_client(Service::Warehouses);
     let warehouse = rpc_client
         .get_warehouses_for_store(base_product.store_id)
@@ -535,7 +554,6 @@ pub fn get_base_product_shipping_details(
         store_id: base_product.store_id,
         base_product_id: base_product.id,
         delivery_from: delivery_from.0,
-        volume,
-        weight,
+        measurements: base_product.get_measurements(),
     })
 }
