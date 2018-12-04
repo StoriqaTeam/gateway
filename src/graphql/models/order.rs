@@ -6,7 +6,8 @@ use uuid::Uuid;
 use stq_api::orders::{Order, OrderDiff};
 use stq_static_resources::{Currency, OrderState};
 use stq_types::{
-    BaseProductId, CompanyPackageId, CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId, StoreId, UserId, CashbackPercent,
+    BaseProductId, CashbackPercent, CompanyPackageId, CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId, StoreId,
+    UserId,
 };
 
 use super::*;
