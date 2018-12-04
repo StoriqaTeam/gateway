@@ -182,8 +182,8 @@ pub fn try_get_available_package_for_user_with_price(
         shipping_id,
         shipping_details.delivery_from.as_str(),
         user_country_code,
-        shipping_details.volume,
-        shipping_details.weight,
+        shipping_details.measurements.volume_cubic_cm,
+        shipping_details.measurements.weight_g,
     )?;
 
     if let Some(ref package) = package {

@@ -27,6 +27,37 @@ pub struct BaseProduct {
     pub variants: Option<Vec<Product>>,
     pub created_at: SystemTime,
     pub updated_at: SystemTime,
+    pub length_cm: Option<i32>,
+    pub width_cm: Option<i32>,
+    pub height_cm: Option<i32>,
+    pub volume_cubic_cm: Option<i32>,
+    pub weight_g: Option<i32>,
+}
+
+impl BaseProduct {
+    // TODO: remove fallback calculations when measurements become required
+    const FALLBACK_DIMENSIONAL_FACTOR: u32 = 5; // cm^3/g
+
+    pub fn get_measurements(&self) -> Measurements {
+        match (self.volume_cubic_cm, self.weight_g) {
+            (Some(volume_cubic_cm), Some(weight_g)) => Measurements {
+                volume_cubic_cm: volume_cubic_cm as u32,
+                weight_g: weight_g as u32,
+            },
+            (Some(volume_cubic_cm), None) => Measurements {
+                volume_cubic_cm: volume_cubic_cm as u32,
+                weight_g: volume_cubic_cm as u32 / BaseProduct::FALLBACK_DIMENSIONAL_FACTOR,
+            },
+            (None, Some(weight_g)) => Measurements {
+                volume_cubic_cm: weight_g as u32 * BaseProduct::FALLBACK_DIMENSIONAL_FACTOR,
+                weight_g: weight_g as u32,
+            },
+            (None, None) => Measurements {
+                volume_cubic_cm: 10000,
+                weight_g: 1000,
+            },
+        }
+    }
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -56,6 +87,14 @@ pub struct UpdateBaseProductInput {
     pub rating: Option<f64>,
     #[graphql(description = "Slug.")]
     pub slug: Option<String>,
+    #[graphql(description = "Length (cm)")]
+    pub length_cm: Option<i32>,
+    #[graphql(description = "Width (cm)")]
+    pub width_cm: Option<i32>,
+    #[graphql(description = "Height (cm)")]
+    pub height_cm: Option<i32>,
+    #[graphql(description = "Weight (g)")]
+    pub weight_g: Option<i32>,
 }
 
 impl UpdateBaseProductInput {
@@ -72,6 +111,10 @@ impl UpdateBaseProductInput {
             category_id: None,
             rating: None,
             slug: None,
+            length_cm: None,
+            width_cm: None,
+            height_cm: None,
+            weight_g: None,
         } == self.clone()
     }
 }
@@ -99,6 +142,14 @@ pub struct CreateBaseProductInput {
     pub category_id: i32,
     #[graphql(description = "Slug.")]
     pub slug: Option<String>,
+    #[graphql(description = "Length (cm)")]
+    pub length_cm: Option<i32>,
+    #[graphql(description = "Width (cm)")]
+    pub width_cm: Option<i32>,
+    #[graphql(description = "Height (cm)")]
+    pub height_cm: Option<i32>,
+    #[graphql(description = "Weight (g)")]
+    pub weight_g: Option<i32>,
 }
 
 impl CreateBaseProductInput {
@@ -137,6 +188,14 @@ pub struct NewBaseProductWithVariantsInput {
     pub variants: Vec<CreateProductWithAttributesInput>,
     #[graphql(description = "Selected raw id attributes.")]
     pub selected_attributes: Vec<i32>,
+    #[graphql(description = "Length (cm)")]
+    pub length_cm: Option<i32>,
+    #[graphql(description = "Width (cm)")]
+    pub width_cm: Option<i32>,
+    #[graphql(description = "Height (cm)")]
+    pub height_cm: Option<i32>,
+    #[graphql(description = "Weight (g)")]
+    pub weight_g: Option<i32>,
 }
 
 impl NewBaseProductWithVariantsInput {
@@ -193,7 +252,6 @@ pub struct BaseProductModerate {
 pub struct BaseProductShippingDetails {
     pub store_id: StoreId,
     pub base_product_id: BaseProductId,
-    pub volume: u32,
-    pub weight: u32,
     pub delivery_from: String,
+    pub measurements: Measurements,
 }

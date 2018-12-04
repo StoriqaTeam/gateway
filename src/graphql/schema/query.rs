@@ -614,9 +614,7 @@ graphql_object!(Query: Context |&self| {
                 graphql_value!({ "code": 300, "details": { "Base product not found." }}),
             ))?;
 
-        // TODO: Use measurements from base product
-        let volume: u32 = 1;
-        let weight: u32 = 1;
+        let Measurements { volume_cubic_cm, weight_g } = base_product.get_measurements();
 
         let warehouse = warehouse_module::get_warehouses_for_store(context, base_product.store_id)?
             .into_iter()
@@ -636,8 +634,8 @@ graphql_object!(Query: Context |&self| {
             base_product_id,
             delivery_from,
             user_country,
-            volume,
-            weight,
+            volume_cubic_cm,
+            weight_g,
         );
 
         context.request::<AvailableShippingForUser>(Method::Get, url, None).wait()
