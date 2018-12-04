@@ -18,7 +18,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
+use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, SagaId, StoreId, UserId, WarehouseId};
 
 use errors::into_graphql;
 use graphql::schema::base_product;
@@ -62,6 +62,9 @@ graphql_object!(Mutation: Context |&self| {
             password: input.password.clone(),
             saga_id: SagaId::new(),
         };
+
+        let additional_data: NewUserAdditionalData = input.additional_data.unwrap_or_default().into();
+
         let new_user = NewUser {
             email: input.email.clone(),
             phone: None,
@@ -72,6 +75,10 @@ graphql_object!(Mutation: Context |&self| {
             birthdate: None,
             last_login_at: SystemTime::now(),
             saga_id: SagaId::new(),
+            referal: additional_data.referal.map(UserId),
+            utm_marks: additional_data.utm_marks,
+            country: additional_data.country,
+            referer: additional_data.referer,
         };
         let saga_profile = SagaCreateProfile {
             identity: new_ident,
@@ -482,7 +489,9 @@ graphql_object!(Mutation: Context |&self| {
             Model::JWT.to_url(),
             input.provider);
 
-        let oauth = ProviderOauth { token: input.token };
+        let additional_data = input.additional_data.map(|data| data.into());
+
+        let oauth = ProviderOauth { token: input.token, additional_data };
         let body: String = serde_json::to_string(&oauth)?;
 
         context.request::<JWT>(Method::Post, url, Some(body))

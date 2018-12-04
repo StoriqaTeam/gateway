@@ -3,6 +3,7 @@ use std::fmt::Display;
 
 use juniper::Value;
 
+use graphql::models::{NewUserAdditionalData, NewUserAdditionalDataInput};
 use stq_static_resources::Provider;
 use stq_types::UserId;
 
@@ -38,6 +39,7 @@ pub enum UserStatus {
 #[derive(Serialize, Deserialize)]
 pub struct ProviderOauth {
     pub token: String,
+    pub additional_data: Option<NewUserAdditionalData>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Deserialize, Debug, Clone)]
@@ -61,6 +63,8 @@ pub struct CreateJWTProviderInput {
     pub provider: Provider,
     #[graphql(description = "Token recevied from provider.")]
     pub token: String,
+    #[graphql(description = "Additional data containing referal, referer, country, utm_marks, etc... .")]
+    pub additional_data: Option<NewUserAdditionalDataInput>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
