@@ -78,7 +78,7 @@ graphql_object!(User: Context as "User" |&self| {
         &self.is_blocked
     }
 
-    field emarsys_id() -> &Option<String> as "User Emarsys id" {
+    field emarsys_id() -> &Option<i32> as "User Emarsys id" {
         &self.emarsys_id
     }
 
