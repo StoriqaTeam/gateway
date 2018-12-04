@@ -167,7 +167,7 @@ pub fn get_product(context: &Context, product_id: ProductId) -> FieldResult<Prod
         } else {
             Err(FieldError::new(
                 "Could not find Product from product id.",
-                graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
+                graphql_value!({ "code": 100, "details": { format!("Product with such id: {} does not exist in stores microservice.", product_id) }}),
             ))
         }
     })
