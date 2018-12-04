@@ -6,7 +6,7 @@ use uuid::Uuid;
 use stq_api::orders::{Order, OrderDiff};
 use stq_static_resources::{Currency, OrderState};
 use stq_types::{
-    BaseProductId, CompanyPackageId, CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId, StoreId, UserId,
+    BaseProductId, CompanyPackageId, CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId, StoreId, UserId, CashbackPercent,
 };
 
 use super::*;
@@ -93,7 +93,7 @@ pub struct DeliveryInfo {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ProductInfo {
     pub base_product_id: BaseProductId,
-    pub cashback: Option<f64>,
+    pub cashback: Option<CashbackPercent>,
     pub pre_order: bool,
     pub pre_order_days: i32,
 }
@@ -102,7 +102,7 @@ impl From<Product> for ProductInfo {
     fn from(other: Product) -> Self {
         Self {
             base_product_id: other.base_product_id,
-            cashback: other.cashback,
+            cashback: other.cashback.map(CashbackPercent),
             pre_order: other.pre_order,
             pre_order_days: other.pre_order_days,
         }
