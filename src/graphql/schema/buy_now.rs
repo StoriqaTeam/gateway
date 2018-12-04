@@ -151,6 +151,7 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInputV2) -> FieldRes
 
     let customer = get_user_by_id(context, user.user_id)?;
     let delivery_info = get_delivery_info(package);
+    let product_info = ProductInfo::from(product.clone());
 
     let buy_now = BuyNow {
         product_id: input.product_id.into(),
@@ -167,6 +168,7 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInputV2) -> FieldRes
         pre_order_days: product.pre_order_days,
         coupon,
         delivery_info: Some(delivery_info),
+        product_info,
         uuid: input.uuid,
     };
 
@@ -211,6 +213,7 @@ pub fn run_buy_now_mutation_v1(context: &Context, input: BuyNowInput) -> FieldRe
     }
 
     let delivery_info = get_delivery_info(package);
+    let product_info = ProductInfo::from(product.clone());
 
     let buy_now = BuyNow {
         product_id: input.product_id.into(),
@@ -227,6 +230,7 @@ pub fn run_buy_now_mutation_v1(context: &Context, input: BuyNowInput) -> FieldRe
         pre_order_days: product.pre_order_days,
         coupon,
         delivery_info: Some(delivery_info),
+        product_info,
         uuid: input.uuid,
     };
 

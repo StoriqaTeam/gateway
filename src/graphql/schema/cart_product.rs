@@ -6,7 +6,6 @@ use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
-use stq_api::orders::DeliveryInfo;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Translation;
@@ -253,16 +252,26 @@ pub fn get_selected_packages<'a>(
     Ok(packages.into_iter().collect())
 }
 
-pub fn get_delivery_info(packages: HashMap<ProductId, AvailablePackageForUser>) -> FieldResult<HashMap<ProductId, DeliveryInfo>> {
-    let delivery_info = packages
+pub fn get_delivery_info(packages: HashMap<ProductId, AvailablePackageForUser>) -> HashMap<ProductId, DeliveryInfo> {
+    packages
         .into_iter()
         .map(|(product_id, package)| {
             let element = available_packages::get_delivery_info(package);
 
             (product_id, element)
-        }).collect::<HashMap<ProductId, DeliveryInfo>>();
+        }).collect::<HashMap<ProductId, DeliveryInfo>>()
+}
 
-    Ok(delivery_info)
+pub fn get_product_info<'a>(context: &Context, cart_items: &'a HashSet<CartItem>) -> FieldResult<HashMap<ProductId, ProductInfo>> {
+    cart_items
+        .iter()
+        .map(|cart_item| {
+            product_module::get_product(context, cart_item.product_id).and_then(|product| {
+                let product_info = ProductInfo::from(product);
+
+                Ok((cart_item.product_id, product_info))
+            })
+        }).collect()
 }
 
 fn get_select_package_v1(context: &Context, delivery_method: DeliveryMethodId) -> FieldResult<AvailablePackageForUser> {
