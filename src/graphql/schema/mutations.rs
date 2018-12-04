@@ -1675,10 +1675,10 @@ graphql_object!(Mutation: Context |&self| {
 
         let local_delivery_to = delivery_from.clone();
 
-        let base_product = base_product::try_get_base_product(context, BaseProductId(input.base_product_id), Visibility::Published)?
+        let base_product = base_product::try_get_base_product(context, BaseProductId(input.base_product_id), Visibility::Active)?
             .ok_or(FieldError::new(
                 "Failed to update shipping options.",
-                graphql_value!({ "code": 300, "details": { "Base product not found." }}),
+                graphql_value!({ "code": 300, "details": { format!("Base product with id: {} not found.", input.base_product_id) }}),
             ))?;
 
         let url = format!(
