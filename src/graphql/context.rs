@@ -92,7 +92,7 @@ impl Context {
                         return Box::new(future::err(err));
                     }
                 }
-                Err(_) => panic!("SystemTime before UNIX EPOCH!"),
+                Err(_) => unreachable!(),
             };
             headers.set(Authorization(token_payload.to_string()));
         };
@@ -224,7 +224,7 @@ pub fn check_jwt_not_revoked(
                     ))
                 }
             }
-            Err(_) => panic!("SystemTime before UNIX EPOCH!"),
+            Err(_) => unreachable!(),
         }
     } else {
         Err(FieldError::new(
