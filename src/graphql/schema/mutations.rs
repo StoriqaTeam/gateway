@@ -1983,4 +1983,43 @@ graphql_object!(Mutation: Context |&self| {
 
         context.request::<Vec<ShippingRates>>(Method::Post, url, Some(body)).wait()
     }
+    field refreshJWT(&executor) -> FieldResult<String> as "Refresh JWT Token." {
+        let context = executor.context();
+        let url = format!("{}/{}/refresh",
+            context.config.service_url(Service::Users),
+            Model::JWT.to_url());
+
+        if let Some(ref payload) = context.user {
+            let body: String = serde_json::to_string(payload)?.to_string();
+
+            context.request_without_auth::<String>(Method::Post, url, Some(body))
+                .wait()
+        } else {
+             return Err(FieldError::new(
+                "No jwt token in request header",
+                graphql_value!({ "code": 300, "details": { "Nothing to refresh." }}),
+            ));
+        }
+
+    }
+
+    field revokeJWT(&executor) -> FieldResult<String> as "Revoke JWT Tokens." {
+        let context = executor.context();
+        let url = format!("{}/{}/revoke",
+            context.config.service_url(Service::Users),
+            Model::JWT.to_url());
+
+        if let Some(ref payload) = context.user {
+            let body: String = serde_json::to_string(payload)?.to_string();
+
+            context.request::<String>(Method::Post, url, Some(body))
+                .wait()
+        } else {
+             return Err(FieldError::new(
+                "No jwt token in request header",
+                graphql_value!({ "code": 300, "details": { "Can not revoke tokens for user, because no token in request header." }}),
+            ));
+        }
+    }
+
 });
