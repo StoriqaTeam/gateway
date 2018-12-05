@@ -87,7 +87,7 @@ impl Context {
                     if token_payload.exp < n.as_secs() as i64 {
                         let err = FieldError::new(
                             "JWT has been expired.",
-                            graphql_value!({ "code": 100, "details": { "Current JWT in request header has been expired." }}),
+                            graphql_value!({ "code": 111, "details": { "Current JWT in request header has been expired." }}),
                         );
                         return Box::new(future::err(err));
                     }
@@ -220,7 +220,7 @@ pub fn check_jwt_not_revoked(
                 } else {
                     Err(FieldError::new(
                         "JWT has been revoked.",
-                        graphql_value!({ "code": 100, "details": { "Current JWT can not be used anymore." }}),
+                        graphql_value!({ "code": 112, "details": { "Current JWT can not be used anymore." }}),
                     ))
                 }
             }

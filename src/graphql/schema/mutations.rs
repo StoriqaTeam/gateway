@@ -156,17 +156,19 @@ graphql_object!(Mutation: Context |&self| {
     }
 
     field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
+    field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetApplyActionOutput>  as "Changes user password." {
         let context = executor.context();
         let url = format!("{}/{}/password_change",
             context.config.service_url(Service::Users),
             Model::User.to_url());
         let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<bool>(Method::Post, url, Some(body))
+        let token = context.request::<String>(Method::Post, url, Some(body))
             .wait()?;
 
-        Ok(ResetActionOutput {
+        Ok(ResetApplyActionOutput {
             success: true,
+            token
         })
     }
 
