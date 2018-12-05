@@ -842,3 +842,40 @@ pub fn run_send_to_draft_store_mutation(context: &Context, store_id: StoreId) ->
 
     context.request::<Store>(Method::Post, url, None).wait()
 }
+
+pub fn run_update_store_mutation(context: &Context, input: UpdateStoreInput) -> FieldResult<Store> {
+    let identifier = ID::from_str(&*input.id)?;
+    let store_id = StoreId(identifier.raw_id);
+
+    let url = identifier.url(&context.config);
+
+    if input.is_none() {
+        return Err(FieldError::new(
+            "Nothing to update",
+            graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+        ));
+    }
+
+    if validate_update_store(context, store_id)? {
+        let body: String = serde_json::to_string(&input)?.to_string();
+        context.request::<Store>(Method::Put, url, Some(body)).wait()
+    } else {
+        let current_store = get_store(context, store_id, Visibility::Active)?;
+
+        Err(FieldError::new(
+            "Could not update store.",
+            graphql_value!({ "code": 100, "details": { format!("Store with id: {} in status: {} cannot be changed.", current_store.id, current_store.status) }}),
+        ))
+    }
+}
+
+pub fn validate_update_store(context: &Context, store_id: StoreId) -> FieldResult<bool> {
+    let url = format!(
+        "{}/{}/{}/validate_update",
+        context.config.service_url(Service::Stores),
+        Model::Store.to_url(),
+        store_id
+    );
+
+    context.request::<bool>(Method::Get, url, None).wait()
+}

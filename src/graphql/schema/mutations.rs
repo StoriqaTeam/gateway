@@ -26,7 +26,7 @@ use graphql::schema::buy_now;
 use graphql::schema::cart as cart_module;
 use graphql::schema::category as category_module;
 use graphql::schema::order;
-use graphql::schema::store;
+use graphql::schema::store as store_module;
 use graphql::schema::user as user_module;
 
 pub struct Mutation;
@@ -258,20 +258,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateStore(&executor, input: UpdateStoreInput as "Update store input.") -> FieldResult<Store>  as "Updates existing store."{
         let context = executor.context();
-        let identifier = ID::from_str(&*input.id)?;
-        let url = identifier.url(&context.config);
 
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-        context.request::<Store>(Method::Put, url, Some(body))
-            .wait()
+        store_module::run_update_store_mutation(context, input)
     }
 
     field deactivateStore(&executor, input: DeactivateStoreInput as "Deactivate store input.") -> FieldResult<Store>  as "Deactivates existing store." {
@@ -297,19 +285,19 @@ graphql_object!(Mutation: Context |&self| {
     field draftStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Hide the store from users." {
         let context = executor.context();
 
-        store::run_send_to_draft_store_mutation(context, StoreId(id))
+        store_module::run_send_to_draft_store_mutation(context, StoreId(id))
     }
 
     field sendStoreToModeration(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Send store on moderation for store manager." {
         let context = executor.context();
 
-        store::run_send_to_moderation_store(context, StoreId(id))
+        store_module::run_send_to_moderation_store(context, StoreId(id))
     }
 
     field setModerationStatusStore(&executor, input: StoreModerateInput as "Change store moderation status input.") -> FieldResult<Store>  as "Change store moderation status for moderator." {
         let context = executor.context();
 
-        store::run_moderation_status_store(context, input)
+        store_module::run_moderation_status_store(context, input)
     }
 
     field createProduct(&executor, input: CreateProductWithAttributesInput as "Create product with attributes input.") -> FieldResult<Product> as "Creates new product." {
