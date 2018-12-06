@@ -1932,4 +1932,21 @@ graphql_object!(Mutation: Context |&self| {
         category_module::run_replace_category(context, input)
     }
 
+    field replaceShippingRates(
+        &executor,
+        input: ReplaceShippingRatesInput as "Replace shipping rates input",
+    ) -> FieldResult<Vec<ShippingRates>> as "Replace shipping rates for a single 'from' country for a particular company-package" {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}/rates",
+            &context.config.service_url(Service::Delivery),
+            Model::CompanyPackage.to_url(),
+            input.company_package_id,
+        );
+
+        let body = serde_json::to_string(&ReplaceShippingRatesPayload::from(input))?;
+
+        context.request::<Vec<ShippingRates>>(Method::Post, url, Some(body)).wait()
+    }
 });
