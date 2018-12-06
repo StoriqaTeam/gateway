@@ -17,6 +17,47 @@ pub struct NewCompaniesPackagesInput {
     pub company_id: i32,
     #[graphql(description = "package_id")]
     pub package_id: i32,
+    #[graphql(description = "dimensional factor")]
+    pub dimensional_factor: Option<i32>,
+    #[graphql(description = "uses static rates")]
+    pub uses_static_rates: Option<bool>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum ShippingRateSource {
+    NotAvailable,
+    Static { dimensional_factor: Option<i32> },
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct NewCompaniesPackagesPayload {
+    pub company_id: i32,
+    pub package_id: i32,
+    pub shipping_rate_source: Option<ShippingRateSource>,
+}
+
+impl From<NewCompaniesPackagesInput> for NewCompaniesPackagesPayload {
+    fn from(input: NewCompaniesPackagesInput) -> Self {
+        let NewCompaniesPackagesInput {
+            company_id,
+            package_id,
+            dimensional_factor,
+            uses_static_rates,
+            ..
+        } = input;
+
+        let shipping_rate_source = match uses_static_rates {
+            None => None,
+            Some(false) => Some(ShippingRateSource::NotAvailable),
+            Some(true) => Some(ShippingRateSource::Static { dimensional_factor }),
+        };
+
+        NewCompaniesPackagesPayload {
+            company_id,
+            package_id,
+            shipping_rate_source,
+        }
+    }
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
