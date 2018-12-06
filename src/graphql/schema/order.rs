@@ -420,8 +420,10 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
         .into_iter()
         .map(|(item, value)| (item.product_id, value))
         .collect();
-    let delivery_info = cart_product::get_delivery_info(packages)?;
+    let delivery_info = cart_product::get_delivery_info(packages);
     let customer = get_user_by_id(context, user.user_id)?;
+
+    let product_info = cart_product::get_product_info(context, &current_cart)?;
 
     let create_order = CreateOrder {
         customer_id: user.user_id,
@@ -433,6 +435,7 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
         currency: input.currency,
         coupons: coupons_info,
         delivery_info,
+        product_info,
         uuid: input.uuid,
     };
 
@@ -500,8 +503,10 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) 
         .into_iter()
         .map(|(item, value)| (item.product_id, value))
         .collect();
-    let delivery_info = cart_product::get_delivery_info(packages)?;
+    let delivery_info = cart_product::get_delivery_info(packages);
     let customer = get_user_by_id(context, user.user_id)?;
+
+    let product_info = cart_product::get_product_info(context, &current_cart)?;
 
     let create_order = CreateOrder {
         customer_id: user.user_id,
@@ -513,6 +518,7 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) 
         currency: input.currency,
         coupons: coupons_info,
         delivery_info,
+        product_info,
         uuid: input.uuid,
     };
 

@@ -3,9 +3,12 @@ use std::collections::HashMap;
 use chrono::prelude::*;
 use uuid::Uuid;
 
-use stq_api::orders::{DeliveryInfo, Order, OrderDiff};
+use stq_api::orders::{Order, OrderDiff};
 use stq_static_resources::{Currency, OrderState};
-use stq_types::{CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, StoreId, UserId};
+use stq_types::{
+    BaseProductId, CashbackPercent, CompanyPackageId, CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId, StoreId,
+    UserId,
+};
 
 use super::*;
 
@@ -79,18 +82,47 @@ pub struct CreateOrderFiatInput {
     pub receiver_phone: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct DeliveryInfo {
+    pub company_package_id: CompanyPackageId, // TODO: drop this field
+    pub shipping_id: ShippingId,
+    pub name: String,
+    pub logo: String,
+    pub price: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct ProductInfo {
+    pub base_product_id: BaseProductId,
+    pub cashback: Option<CashbackPercent>,
+    pub pre_order: bool,
+    pub pre_order_days: i32,
+}
+
+impl From<Product> for ProductInfo {
+    fn from(other: Product) -> Self {
+        Self {
+            base_product_id: other.base_product_id,
+            cashback: other.cashback.map(CashbackPercent),
+            pre_order: other.pre_order,
+            pre_order_days: other.pre_order_days,
+        }
+    }
+}
+
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct CreateOrder {
     pub customer_id: UserId,
     #[serde(flatten)]
     pub address: AddressInput,
-    pub receiver_name: String,
+    pub receiver_name: String, // TODO: move in customer_info
     pub prices: CartProductWithPriceHash,
     pub currency: Currency,
-    pub receiver_phone: String,
-    pub receiver_email: String,
+    pub receiver_phone: String, // TODO: move in customer_info
+    pub receiver_email: String, // TODO: move in customer_info
     pub coupons: HashMap<CouponId, Coupon>,
     pub delivery_info: HashMap<ProductId, DeliveryInfo>,
+    pub product_info: HashMap<ProductId, ProductInfo>,
     pub uuid: String,
 }
 
@@ -353,6 +385,7 @@ pub struct BuyNow {
     pub pre_order: bool,
     pub pre_order_days: i32,
     pub coupon: Option<Coupon>,
-    pub delivery_info: Option<DeliveryInfo>,
+    pub delivery_info: Option<DeliveryInfo>, // TODO: drop Option<T>
+    pub product_info: ProductInfo,
     pub uuid: String,
 }

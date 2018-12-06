@@ -1684,10 +1684,10 @@ graphql_object!(Mutation: Context |&self| {
 
         let local_delivery_to = delivery_from.clone();
 
-        let base_product = base_product::try_get_base_product(context, BaseProductId(input.base_product_id), Visibility::Published)?
+        let base_product = base_product::try_get_base_product(context, BaseProductId(input.base_product_id), Visibility::Active)?
             .ok_or(FieldError::new(
                 "Failed to update shipping options.",
-                graphql_value!({ "code": 300, "details": { "Base product not found." }}),
+                graphql_value!({ "code": 300, "details": { format!("Base product with id: {} not found.", input.base_product_id) }}),
             ))?;
 
         let url = format!(
@@ -1833,13 +1833,16 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field addPackageToCompany(&executor, input: NewCompaniesPackagesInput as "Create company_package input.") -> FieldResult<CompaniesPackages> as "Creates new company_package." {
+    field addPackageToCompany(
+        &executor,
+        input: NewCompaniesPackagesInput as "Create company_package input.",
+    ) -> FieldResult<CompaniesPackages> as "Creates new company_package." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
             Model::CompanyPackage.to_url());
 
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body: String = serde_json::to_string(&NewCompaniesPackagesPayload::from(input))?.to_string();
 
         context.request::<CompaniesPackages>(Method::Post, url, Some(body))
             .wait()
@@ -1941,4 +1944,21 @@ graphql_object!(Mutation: Context |&self| {
         category_module::run_replace_category(context, input)
     }
 
+    field replaceShippingRates(
+        &executor,
+        input: ReplaceShippingRatesInput as "Replace shipping rates input",
+    ) -> FieldResult<Vec<ShippingRates>> as "Replace shipping rates for a single 'from' country for a particular company-package" {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}/rates",
+            &context.config.service_url(Service::Delivery),
+            Model::CompanyPackage.to_url(),
+            input.company_package_id,
+        );
+
+        let body = serde_json::to_string(&ReplaceShippingRatesPayload::from(input))?;
+
+        context.request::<Vec<ShippingRates>>(Method::Post, url, Some(body)).wait()
+    }
 });

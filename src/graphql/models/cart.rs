@@ -31,10 +31,10 @@ pub struct CartProduct {
     pub comment: String,
     pub store_id: StoreId,
     pub base_product_id: BaseProductId,
-    pub pre_order: bool,
-    pub pre_order_days: i32,
+    pub pre_order: bool,     // TODO: move ProductInfo
+    pub pre_order_days: i32, // TODO: move ProductInfo
     pub coupon_id: Option<CouponId>,
-    pub company_package_id: Option<CompanyPackageId>, // deprecated
+    pub company_package_id: Option<CompanyPackageId>, // TODO: drop this field
     pub delivery_method_id: Option<DeliveryMethodId>,
     pub user_country_code: Option<String>,
 }
