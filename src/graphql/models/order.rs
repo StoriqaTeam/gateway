@@ -4,7 +4,7 @@ use chrono::prelude::*;
 use uuid::Uuid;
 
 use stq_api::orders::{Order, OrderDiff};
-use stq_static_resources::{Currency, OrderState};
+use stq_static_resources::{CommitterRole, Currency, OrderState};
 use stq_types::{
     BaseProductId, CashbackPercent, CompanyPackageId, CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId, StoreId,
     UserId,
@@ -162,6 +162,7 @@ pub struct OrderStatusDelivery {
     pub state: OrderState,
     pub track_id: Option<String>,
     pub comment: Option<String>,
+    pub committer_role: CommitterRole,
 }
 
 impl From<OrderStatusDeliveryInput> for OrderStatusDelivery {
@@ -170,6 +171,7 @@ impl From<OrderStatusDeliveryInput> for OrderStatusDelivery {
             state: OrderState::Sent,
             track_id: order.track_id,
             comment: order.comment,
+            committer_role: CommitterRole::Seller,
         }
     }
 }
@@ -185,12 +187,15 @@ pub struct OrderStatusCanceledInput {
     pub order_slug: i32,
     #[graphql(description = "Comment")]
     pub comment: Option<String>,
+    #[graphql(description = "Committer Role, by default - System.")]
+    pub committer_role: Option<CommitterRole>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct OrderStatusCanceled {
     pub state: OrderState,
     pub comment: Option<String>,
+    pub committer_role: CommitterRole,
 }
 
 impl From<OrderStatusCanceledInput> for OrderStatusCanceled {
@@ -198,6 +203,7 @@ impl From<OrderStatusCanceledInput> for OrderStatusCanceled {
         Self {
             state: OrderState::Cancelled,
             comment: order.comment,
+            committer_role: order.committer_role.unwrap_or_else(|| CommitterRole::System),
         }
     }
 }
@@ -213,12 +219,15 @@ pub struct OrderStatusCompleteInput {
     pub order_slug: i32,
     #[graphql(description = "Comment")]
     pub comment: Option<String>,
+    #[graphql(description = "Committer Role, by default - System.")]
+    pub committer_role: Option<CommitterRole>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct OrderStatusComplete {
     pub state: OrderState,
     pub comment: Option<String>,
+    pub committer_role: CommitterRole,
 }
 
 impl From<OrderStatusCompleteInput> for OrderStatusComplete {
@@ -226,6 +235,7 @@ impl From<OrderStatusCompleteInput> for OrderStatusComplete {
         Self {
             state: OrderState::Complete,
             comment: order.comment,
+            committer_role: order.committer_role.unwrap_or_else(|| CommitterRole::System),
         }
     }
 }
