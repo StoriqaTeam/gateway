@@ -116,7 +116,8 @@ impl Controller for ControllerImpl {
                                 e.context("Parsing body // POST /graphql in GraphQLRequest failed!")
                                     .context(Error::Parse)
                                     .into()
-                            }).and_then(move |graphql_req| {
+                            })
+                            .and_then(move |graphql_req| {
                                 cpu_pool
                                     .spawn_fn(move || {
                                         let graphql_context = Context::new(
@@ -129,7 +130,8 @@ impl Controller for ControllerImpl {
                                         );
                                         let resp = graphql_req.execute(&*schema, &graphql_context);
                                         serde_json::to_value(resp)
-                                    }).map_err(From::from)
+                                    })
+                                    .map_err(From::from)
                             }),
                     )
                 }
@@ -141,11 +143,9 @@ impl Controller for ControllerImpl {
                         client
                             .request_json::<String>(Post, url.clone(), Some(body), None)
                             .map_err(From::from)
-                            .then(move |r| {
-                                match r {
-                                    Err(e) => Err(e),
-                                    Ok(_) => {
-                                        Ok(r##"
+                            .then(move |r| match r {
+                                Err(e) => Err(e),
+                                Ok(_) => Ok(r##"
                                             <!DOCTYPE html>
                                             <html lang="en">
                                             <head>
@@ -195,9 +195,8 @@ impl Controller for ControllerImpl {
                                                 <div class="wrapper"><span>Successfully verified email</span></div>
                                             </body>
                                             </html>
-                                            "##.to_string())
-                                    }
-                                }
+                                            "##
+                                .to_string()),
                             }),
                     )
                 }
@@ -253,7 +252,8 @@ impl Controller for ControllerImpl {
                             <div class="wrapper"><span>Please open this link on device.</span></div>
                         </body>
                         </html>
-                        "##.to_string(),
+                        "##
+                    .to_string(),
                 )),
 
                 (&Get, Some(Route::RegisterDevice)) => Box::new(future::ok(
@@ -307,7 +307,8 @@ impl Controller for ControllerImpl {
                             <div class="wrapper"><span>Please open this link on device.</span></div>
                         </body>
                         </html>
-                        "##.to_string(),
+                        "##
+                    .to_string(),
                 )),
 
                 // Fallback
@@ -316,7 +317,8 @@ impl Controller for ControllerImpl {
                         .context(Error::NotFound)
                         .into(),
                 )),
-            }.then(move |res| {
+            }
+            .then(move |res| {
                 let d = Local::now() - dt;
                 let message = match res {
                     Ok(_) => format!(

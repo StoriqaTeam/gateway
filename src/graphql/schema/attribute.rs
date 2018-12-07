@@ -188,7 +188,8 @@ fn get_attribute_meta_field(
                 Some(codes).filter(|codes| !codes.is_empty()),
                 Some(translations).filter(|t| !t.is_empty()),
             )
-        }).unwrap_or((None, None));
+        })
+        .unwrap_or((None, None));
     Ok(meta.map(|meta| AttributeMetaField {
         ui_element: meta.ui_element,
         values: codes,
