@@ -133,7 +133,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field unblockUser(&executor, id: i32 as "Users raw id.") -> FieldResult<User>  as "Unblock existing user." {
+    field unblockUser(&executor, id: i32 as "User raw id.") -> FieldResult<User>  as "Unblock existing user." {
         let context = executor.context();
         let url = format!("{}/{}/{}/unblock",
             context.config.service_url(Service::Users),
@@ -142,6 +142,17 @@ graphql_object!(Mutation: Context |&self| {
 
         context.request::<User>(Method::Post, url, None)
             .wait()
+    }
+
+    field deleteUser(&executor, id: i32 as "User raw id.") -> FieldResult<Mock> as "Delete user from DB" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/delete",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            id);
+
+        context.request::<()>(Method::Delete, url, None)
+            .wait().map(|_| Mock)
     }
 
     field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
@@ -279,6 +290,17 @@ graphql_object!(Mutation: Context |&self| {
 
         context.request::<Store>(Method::Put, url, Some(body))
             .wait()
+    }
+
+    field deleteStore(&executor, id: i32 as "Delete store raw id.") -> FieldResult<Mock> as "Deletes existing store from DB." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/delete",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            id);
+
+        context.request::<()>(Method::Delete, url, None)
+            .wait().map(|_| Mock)
     }
 
     field deactivateStore(&executor, input: DeactivateStoreInput as "Deactivate store input.") -> FieldResult<Store>  as "Deactivates existing store." {
