@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::time::SystemTime;
 
 use chrono::NaiveDate;
@@ -106,6 +107,8 @@ pub struct CreateUserInput {
     pub device: Option<Device>,
     #[graphql(description = "Project")]
     pub project: Option<Project>,
+    #[graphql(description = "Additional data containing referal, referer, country, utm_marks, etc... .")]
+    pub additional_data: Option<NewUserAdditionalDataInput>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -119,6 +122,51 @@ pub struct NewUser {
     pub birthdate: Option<NaiveDate>,
     pub last_login_at: SystemTime,
     pub saga_id: SagaId,
+    pub referal: Option<UserId>,
+    pub utm_marks: Option<HashMap<String, String>>,
+    pub country: Option<String>,
+    pub referer: Option<String>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, Default)]
+#[graphql(description = "Additional for user creation input object")]
+pub struct NewUserAdditionalDataInput {
+    #[graphql(description = "Raw user id who advertised the project.")]
+    pub referal: Option<i32>,
+    #[graphql(description = "Collection of marketing utm marks.")]
+    pub utm_marks: Option<Vec<UtmMark>>,
+    #[graphql(description = "Country of a user.")]
+    pub country: Option<String>,
+    #[graphql(description = "Referer application domain.")]
+    pub referer: Option<String>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, Default)]
+#[graphql(description = "Single utm key-value pair")]
+pub struct UtmMark {
+    pub key: String,
+    pub value: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NewUserAdditionalData {
+    pub referal: Option<i32>,
+    pub utm_marks: Option<HashMap<String, String>>,
+    pub country: Option<String>,
+    pub referer: Option<String>,
+}
+
+impl Into<NewUserAdditionalData> for NewUserAdditionalDataInput {
+    fn into(self) -> NewUserAdditionalData {
+        let utm_marks: HashMap<String, String> = self.utm_marks.into_iter().flatten().map(|mark| (mark.key, mark.value)).collect();
+        let utm_marks = Some(utm_marks).filter(|m| !m.is_empty());
+        NewUserAdditionalData {
+            referal: self.referal,
+            utm_marks,
+            country: self.country,
+            referer: self.referer,
+        }
+    }
 }
 
 /// Payload for creating identity
