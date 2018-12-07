@@ -133,14 +133,19 @@ pub struct NewUser {
 pub struct NewUserAdditionalDataInput {
     #[graphql(description = "Raw user id who advertised the project.")]
     pub referal: Option<i32>,
-    #[graphql(description = "Collection of marketing utm marks keys.")]
-    pub utm_marks_keys: Option<Vec<String>>,
-    #[graphql(description = "Collection of marketing utm marks values.")]
-    pub utm_marks_values: Option<Vec<String>>,
+    #[graphql(description = "Collection of marketing utm marks.")]
+    pub utm_marks: Option<Vec<UtmMark>>,
     #[graphql(description = "Country of a user.")]
     pub country: Option<String>,
     #[graphql(description = "Referer application domain.")]
     pub referer: Option<String>,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, Default)]
+#[graphql(description = "Single utm key-value pair")]
+pub struct UtmMark {
+    pub key: String,
+    pub value: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -153,9 +158,7 @@ pub struct NewUserAdditionalData {
 
 impl Into<NewUserAdditionalData> for NewUserAdditionalDataInput {
     fn into(self) -> NewUserAdditionalData {
-        let utm_marks_keys = self.utm_marks_keys.into_iter().flatten();
-        let utm_marks_values = self.utm_marks_values.into_iter().flatten();
-        let utm_marks: HashMap<String, String> = utm_marks_keys.zip(utm_marks_values).collect();
+        let utm_marks: HashMap<String, String> = self.utm_marks.into_iter().flatten().map(|mark| (mark.key, mark.value)).collect();
         let utm_marks = Some(utm_marks).filter(|m| !m.is_empty());
         NewUserAdditionalData {
             referal: self.referal,
