@@ -14,6 +14,29 @@ use common::create_user;
 use common::get_jwt_by_provider;
 
 #[test]
+pub fn creates_store() {
+    //setup
+    let mut context = common::TestContext::new();
+    //given
+    let _ = context.create_user(common::default_create_user_input()).unwrap().unwrap();
+    let token: String = context
+        .get_jwt_by_email(common::default_create_jwt_email_input())
+        .unwrap()
+        .unwrap()
+        .get_jwt_by_email
+        .token;
+    context.set_bearer(token);
+    //when
+    let store = context
+        .create_store(common::default_create_store_input())
+        .unwrap()
+        .unwrap()
+        .create_store;
+    //then
+    assert_eq!(store.email, Some(common::default_create_user_input().email));
+}
+
+#[test]
 pub fn creates_user() {
     //setup
     let context = common::TestContext::new();
