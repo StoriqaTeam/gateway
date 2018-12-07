@@ -61,7 +61,8 @@ impl Context {
         let headers = match self.correlation_token.clone() {
             Some(value) => vec![(header_name, HeaderValue::from_str(&value.0).unwrap())],
             None => vec![(header_name, HeaderValue::from_str(&self.uuid).unwrap())],
-        }.into_iter()
+        }
+        .into_iter()
         .collect::<HeaderMap>();
 
         RestApiClient::new_with_default_headers(&self.config.service_url(s), self.user.clone().map(|u| u.user_id), Some(headers))

@@ -338,7 +338,8 @@ pub fn run_increment_in_cart_v1(context: &Context, input: IncrementInCartInput) 
             base_product.store_id,
             product.pre_order,
             product.pre_order_days,
-        ).sync()
+        )
+        .sync()
         .map_err(into_graphql)
         .and_then(|p| {
             if let Some(value) = input.value {
@@ -351,7 +352,8 @@ pub fn run_increment_in_cart_v1(context: &Context, input: IncrementInCartInput) 
             } else {
                 Ok(p)
             }
-        })?.into_iter()
+        })?
+        .into_iter()
         .collect();
 
     convert_products_to_cart(context, &products, None).map(Some)
@@ -385,7 +387,8 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -
             base_product.store_id,
             product.pre_order,
             product.pre_order_days,
-        ).sync()
+        )
+        .sync()
         .map_err(into_graphql)
         .and_then(|p| {
             if let Some(value) = input.value {
@@ -398,7 +401,8 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -
             } else {
                 Ok(p)
             }
-        })?.into_iter()
+        })?
+        .into_iter()
         .collect();
 
     convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)

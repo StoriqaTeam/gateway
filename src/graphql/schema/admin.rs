@@ -301,7 +301,8 @@ pub fn base_products_search(
                         juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
                         base_product.clone(),
                     )
-                }).collect();
+                })
+                .collect();
             let has_next_page = base_product_edges.len() as i32 == first + 1;
             if has_next_page {
                 base_product_edges.pop();
@@ -316,7 +317,8 @@ pub fn base_products_search(
                 end_cursor,
             };
             Connection::new(base_product_edges, page_info)
-        }).wait()
+        })
+        .wait()
         .map(Some)
 }
 
@@ -358,7 +360,8 @@ pub fn base_products_search_pages(
                             juniper::ID::from(ID::new(Service::Stores, Model::BaseProduct, base_product.id.0).to_string()),
                             base_product.clone(),
                         )
-                    }).collect();
+                    })
+                    .collect();
                 let page_info = PageInfoSegments {
                     current_page,
                     page_items_count: items_count,
@@ -366,6 +369,7 @@ pub fn base_products_search_pages(
                 };
                 Connection::new(base_product_edges, page_info)
             },
-        ).wait()
+        )
+        .wait()
         .map(Some)
 }

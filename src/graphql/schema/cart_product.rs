@@ -259,7 +259,8 @@ pub fn get_delivery_info(packages: HashMap<ProductId, AvailablePackageForUser>) 
             let element = available_packages::get_delivery_info(package);
 
             (product_id, element)
-        }).collect::<HashMap<ProductId, DeliveryInfo>>()
+        })
+        .collect::<HashMap<ProductId, DeliveryInfo>>()
 }
 
 pub fn get_product_info<'a>(context: &Context, cart_items: &'a HashSet<CartItem>) -> FieldResult<HashMap<ProductId, ProductInfo>> {
@@ -271,7 +272,8 @@ pub fn get_product_info<'a>(context: &Context, cart_items: &'a HashSet<CartItem>
 
                 Ok((cart_item.product_id, product_info))
             })
-        }).collect()
+        })
+        .collect()
 }
 
 fn get_select_package_v1(context: &Context, delivery_method: DeliveryMethodId) -> FieldResult<AvailablePackageForUser> {
