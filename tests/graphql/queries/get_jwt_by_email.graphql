@@ -1,5 +1,0 @@
-mutation getJWTByEmail($input: CreateJWTEmailInput!) {
-getJWTByEmail(input: $input) {
-  token
-}
-}

@@ -1,5 +1,0 @@
-mutation GetJwtByProvider($input: CreateJWTProviderInput!) {
-  getJWTByProvider(input: $input) {
-    token
-  }
-}
