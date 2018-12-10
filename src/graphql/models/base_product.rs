@@ -53,8 +53,8 @@ impl BaseProduct {
                 weight_g: weight_g as u32,
             },
             (None, None) => Measurements {
-                volume_cubic_cm: 10000,
-                weight_g: 1000,
+                volume_cubic_cm: 0,
+                weight_g: 0,
             },
         }
     }
