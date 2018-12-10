@@ -155,7 +155,6 @@ graphql_object!(Mutation: Context |&self| {
             .wait().map(|_| Mock)
     }
 
-    field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
     field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetApplyActionOutput>  as "Changes user password." {
         let context = executor.context();
         let url = format!("{}/{}/password_change",
