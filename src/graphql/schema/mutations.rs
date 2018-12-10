@@ -18,7 +18,7 @@ use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Currency, Provider};
-use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, SagaId, StoreId, WarehouseId};
+use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, SagaId, StoreId, UserId, WarehouseId};
 
 use errors::into_graphql;
 use graphql::schema::base_product;
@@ -62,6 +62,9 @@ graphql_object!(Mutation: Context |&self| {
             password: input.password.clone(),
             saga_id: SagaId::new(),
         };
+
+        let additional_data: NewUserAdditionalData = input.additional_data.unwrap_or_default().into();
+
         let new_user = NewUser {
             email: input.email.clone(),
             phone: None,
@@ -72,6 +75,10 @@ graphql_object!(Mutation: Context |&self| {
             birthdate: None,
             last_login_at: SystemTime::now(),
             saga_id: SagaId::new(),
+            referal: additional_data.referal.map(UserId),
+            utm_marks: additional_data.utm_marks,
+            country: additional_data.country,
+            referer: additional_data.referer,
         };
         let saga_profile = SagaCreateProfile {
             identity: new_ident,
@@ -126,7 +133,7 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field unblockUser(&executor, id: i32 as "Users raw id.") -> FieldResult<User>  as "Unblock existing user." {
+    field unblockUser(&executor, id: i32 as "User raw id.") -> FieldResult<User>  as "Unblock existing user." {
         let context = executor.context();
         let url = format!("{}/{}/{}/unblock",
             context.config.service_url(Service::Users),
@@ -135,6 +142,17 @@ graphql_object!(Mutation: Context |&self| {
 
         context.request::<User>(Method::Post, url, None)
             .wait()
+    }
+
+    field deleteUser(&executor, id: i32 as "User raw id.") -> FieldResult<Mock> as "Delete user from DB" {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/delete",
+            context.config.service_url(Service::Users),
+            Model::User.to_url(),
+            id);
+
+        context.request::<()>(Method::Delete, url, None)
+            .wait().map(|_| Mock)
     }
 
     field changePassword(&executor, input: ChangePasswordInput as "Password change input.") -> FieldResult<ResetActionOutput>  as "Changes user password." {
@@ -260,6 +278,17 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
 
         store_module::run_update_store_mutation(context, input)
+    }
+
+    field deleteStore(&executor, id: i32 as "Delete store raw id.") -> FieldResult<Mock> as "Deletes existing store from DB." {
+        let context = executor.context();
+        let url = format!("{}/{}/{}/delete",
+            context.config.service_url(Service::Stores),
+            Model::Store.to_url(),
+            id);
+
+        context.request::<()>(Method::Delete, url, None)
+            .wait().map(|_| Mock)
     }
 
     field deactivateStore(&executor, input: DeactivateStoreInput as "Deactivate store input.") -> FieldResult<Store>  as "Deactivates existing store." {
@@ -470,7 +499,9 @@ graphql_object!(Mutation: Context |&self| {
             Model::JWT.to_url(),
             input.provider);
 
-        let oauth = ProviderOauth { token: input.token };
+        let additional_data = input.additional_data.map(|data| data.into());
+
+        let oauth = ProviderOauth { token: input.token, additional_data };
         let body: String = serde_json::to_string(&oauth)?;
 
         context.request::<JWT>(Method::Post, url, Some(body))
@@ -1812,13 +1843,16 @@ graphql_object!(Mutation: Context |&self| {
             .wait()
     }
 
-    field addPackageToCompany(&executor, input: NewCompaniesPackagesInput as "Create company_package input.") -> FieldResult<CompaniesPackages> as "Creates new company_package." {
+    field addPackageToCompany(
+        &executor,
+        input: NewCompaniesPackagesInput as "Create company_package input.",
+    ) -> FieldResult<CompaniesPackages> as "Creates new company_package." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Delivery),
             Model::CompanyPackage.to_url());
 
-        let body: String = serde_json::to_string(&input)?.to_string();
+        let body: String = serde_json::to_string(&NewCompaniesPackagesPayload::from(input))?.to_string();
 
         context.request::<CompaniesPackages>(Method::Post, url, Some(body))
             .wait()
@@ -1920,4 +1954,21 @@ graphql_object!(Mutation: Context |&self| {
         category_module::run_replace_category(context, input)
     }
 
+    field replaceShippingRates(
+        &executor,
+        input: ReplaceShippingRatesInput as "Replace shipping rates input",
+    ) -> FieldResult<Vec<ShippingRates>> as "Replace shipping rates for a single 'from' country for a particular company-package" {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}/rates",
+            &context.config.service_url(Service::Delivery),
+            Model::CompanyPackage.to_url(),
+            input.company_package_id,
+        );
+
+        let body = serde_json::to_string(&ReplaceShippingRatesPayload::from(input))?;
+
+        context.request::<Vec<ShippingRates>>(Method::Post, url, Some(body)).wait()
+    }
 });

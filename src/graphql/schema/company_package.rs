@@ -1,4 +1,3 @@
-//! File containing Category object of graphql schema
 use futures::Future;
 use hyper::Method;
 use juniper::FieldResult;
@@ -60,4 +59,20 @@ graphql_object!(CompaniesPackages: Context as "CompaniesPackages" |&self| {
             .wait()
     }
 
+    field static_shipping_rates(
+        &executor,
+        country_from: String as "Country from which the shipment is sent",
+    ) -> FieldResult<Vec<ShippingRates>> as "Fetches shipping rates for the specified country" {
+        let context = executor.context();
+
+        let url = format!(
+            "{}/{}/{}/rates?from={}",
+            &context.config.service_url(Service::Delivery),
+            Model::CompanyPackage.to_url(),
+            self.id,
+            country_from,
+        );
+
+        context.request::<Vec<ShippingRates>>(Method::Get, url, None).wait()
+    }
 });

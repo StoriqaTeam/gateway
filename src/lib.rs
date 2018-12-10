@@ -92,7 +92,8 @@ pub fn start(config: Config) {
                     jwt_leeway,
                     config.clone(),
                     schema.clone(),
-                )).with_middleware(move |mut resp| {
+                ))
+                .with_middleware(move |mut resp| {
                     let contains_acao = resp.headers().has::<AccessControlAllowOrigin>();
                     if !contains_acao {
                         resp.headers_mut().set(AccessControlAllowOrigin::Value(domain.clone()));
@@ -104,7 +105,8 @@ pub fn start(config: Config) {
 
                 Ok(app)
             }
-        }).unwrap_or_else(|reason| {
+        })
+        .unwrap_or_else(|reason| {
             eprintln!("Http Server Initialization Error: {}", reason);
             process::exit(1);
         });
@@ -117,7 +119,8 @@ pub fn start(config: Config) {
                     handle.spawn(conn.map(|_| ()).map_err(|why| eprintln!("Server Error: {:?}", why)));
                     Ok(())
                 }
-            }).map_err(|_| ()),
+            })
+            .map_err(|_| ()),
     );
 
     //info!("Listening on http://{}, threads: {}", address, thread_count);

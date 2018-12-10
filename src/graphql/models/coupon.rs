@@ -28,23 +28,23 @@ impl Coupon {
             CouponScope::Store => Err(FieldError::new(
                 "Error response from microservice",
                 graphql_value!({ "code": 100, "details": {
-                            "status": "400 Bad Request",
-                            "code": "400",
-                            "message":
-                                "{ Using a coupon for a store is not supported }"
-                            ,
-                        }}),
+                    "status": "400 Bad Request",
+                    "code": "400",
+                    "message":
+                        "{ Using a coupon for a store is not supported }"
+                    ,
+                }}),
             )),
             CouponScope::BaseProducts => Ok(true),
             CouponScope::Categories => Err(FieldError::new(
                 "Error response from microservice",
                 graphql_value!({ "code": 100, "details": {
-                            "status": "400 Bad Request",
-                            "code": "400",
-                            "message":
-                                "{ Using a coupon for a categories is not supported }"
-                            ,
-                        }}),
+                    "status": "400 Bad Request",
+                    "code": "400",
+                    "message":
+                        "{ Using a coupon for a categories is not supported }"
+                    ,
+                }}),
             )),
         }
     }
@@ -203,43 +203,43 @@ impl CouponValidate {
             CouponValidate::NotActive => Err(FieldError::new(
                 "Error response from microservice",
                 graphql_value!({ "code": 100, "details": {
-                            "status": "400 Bad Request",
-                            "code": "400",
-                            "message":
-                                "{ Coupon is not active }"
-                            ,
-                        }}),
+                    "status": "400 Bad Request",
+                    "code": "400",
+                    "message":
+                        "{ Coupon is not active }"
+                    ,
+                }}),
             )),
 
             CouponValidate::AlreadyActivated => Err(FieldError::new(
                 "Error response from microservice",
                 graphql_value!({ "code": 100, "details": {
-                            "status": "400 Bad Request",
-                            "code": "400",
-                            "message":
-                                "{ Coupon is already activated }"
-                            ,
-                        }}),
+                    "status": "400 Bad Request",
+                    "code": "400",
+                    "message":
+                        "{ Coupon is already activated }"
+                    ,
+                }}),
             )),
             CouponValidate::HasExpired => Err(FieldError::new(
                 "Error response from microservice",
                 graphql_value!({ "code": 100, "details": {
-                            "status": "400 Bad Request",
-                            "code": "400",
-                            "message":
-                                "{ Coupon has expired }"
-                            ,
-                        }}),
+                    "status": "400 Bad Request",
+                    "code": "400",
+                    "message":
+                        "{ Coupon has expired }"
+                    ,
+                }}),
             )),
             CouponValidate::NoActivationsAvailable => Err(FieldError::new(
                 "Error response from microservice",
                 graphql_value!({ "code": 100, "details": {
-                            "status": "400 Bad Request",
-                            "code": "400",
-                            "message":
-                                "{ No activations available for the coupon }"
-                            ,
-                        }}),
+                    "status": "400 Bad Request",
+                    "code": "400",
+                    "message":
+                        "{ No activations available for the coupon }"
+                    ,
+                }}),
             )),
             CouponValidate::Valid => Ok(()),
         }

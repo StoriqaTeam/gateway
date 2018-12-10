@@ -5,7 +5,7 @@ use juniper::FieldResult;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::OrderState;
+use stq_static_resources::{CommitterRole, OrderState};
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -21,11 +21,15 @@ graphql_object!(OrderHistoryItem: Context as "OrderHistoryItem" |&self| {
         self.0.parent.to_string()
     }
 
-    field committer() -> &i32 as "User int id"{
+    field deprecated "use comitter_role" committer() -> &i32 as "User int id"{
         &self.0.committer.0
     }
 
-    field user(&executor) -> FieldResult<Option<User>> as "User" {
+    field committer_role() -> &CommitterRole as "Comitter role - seller, buyer, system"{
+        &self.0.committer_role
+    }
+
+    field deprecated "use comitter_role" user(&executor) -> FieldResult<Option<User>> as "User" {
         let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Users),

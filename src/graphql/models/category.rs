@@ -125,9 +125,7 @@ pub struct CategoryReplaceInput {
     pub current_category: i32,
     #[graphql(description = "Id of a new category.")]
     pub new_category: i32,
-    #[graphql(
-        description = "Ids of a base products.
-        When `base_product_ids` equal `null` category will replacing all entries in base products."
-    )]
+    #[graphql(description = "Ids of a base products.
+        When `base_product_ids` equal `null` category will replacing all entries in base products.")]
     pub base_product_ids: Option<Vec<i32>>,
 }
