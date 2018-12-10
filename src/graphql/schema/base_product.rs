@@ -557,3 +557,40 @@ pub fn get_base_product_shipping_details(
         measurements: base_product.get_measurements(),
     })
 }
+
+pub fn run_update_base_product(context: &Context, input: UpdateBaseProductInput) -> FieldResult<BaseProduct> {
+    let identifier = ID::from_str(&*input.id)?;
+    let base_product_id = BaseProductId(identifier.raw_id);
+
+    let url = identifier.url(&context.config);
+
+    if input.is_none() {
+        return Err(FieldError::new(
+            "Nothing to update",
+            graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+        ));
+    }
+
+    if validate_update_base_product(context, base_product_id)? {
+        let body: String = serde_json::to_string(&input)?.to_string();
+        context.request::<BaseProduct>(Method::Put, url, Some(body)).wait()
+    } else {
+        let current_base_product = get_base_product(context, base_product_id, Visibility::Active)?;
+
+        Err(FieldError::new(
+            "Could not update product.",
+            graphql_value!({ "code": 100, "details": { format!("Product with id: {} in status: {} cannot be changed.", base_product_id, current_base_product.status) }}),
+        ))
+    }
+}
+
+pub fn validate_update_base_product(context: &Context, base_product_id: BaseProductId) -> FieldResult<bool> {
+    let url = format!(
+        "{}/{}/{}/validate_update",
+        context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url(),
+        base_product_id
+    );
+
+    context.request::<bool>(Method::Get, url, None).wait()
+}
