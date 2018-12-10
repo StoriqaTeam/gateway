@@ -102,6 +102,31 @@ graphql_object!(User: Context as "User" |&self| {
         context.user.clone().map(|payload| payload.provider)
     }
 
+    field referal() -> Option<i32> as "Raw user id who advertised the project." {
+        self.referal.map(|id| id.0)
+    }
+
+    field utm_marks() -> Option<Vec<UtmMark>> as "Single utm key-value pair." {
+        if let Some(utm_marks) = self.utm_marks.clone() {
+            let res = utm_marks.into_iter()
+            .map(|(key, value)| UtmMark {
+                key, value
+            })
+            .collect();
+            Some(res)
+        } else {
+            None
+        }
+    }
+
+    field country() -> Option<&String> as "Alpha 3 country code of a user." {
+        self.country.as_ref().map(|alpha3| &alpha3.0)
+    }
+
+    field referer() -> &Option<String> as "Referer application domain." {
+        &self.referer
+    }
+
     field roles_on_user_microservices(&executor) -> Option<Vec<UserMicroserviceRole>> as "Fetches user roles on users microservice." {
         let context = executor.context();
 
@@ -508,6 +533,18 @@ graphql_object!(User: Context as "User" |&self| {
 
         context.request::<Vec<MerchantBalance>>(Method::Get, url, None)
             .wait()
+    }
+});
+
+graphql_object!(UtmMark: Context as "UsersUtmMark" |&self| {
+    description: "Users UtmMark"
+
+    field key() -> &str {
+        &self.key
+    }
+
+    field value() -> &str {
+        &self.value
     }
 });
 
