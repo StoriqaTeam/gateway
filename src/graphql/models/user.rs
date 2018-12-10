@@ -6,7 +6,7 @@ use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
 
 use stq_static_resources::{Device, Gender, Project, Provider};
-use stq_types::{SagaId, UserId};
+use stq_types::{Alpha3, SagaId, UserId};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct User {
@@ -22,8 +22,18 @@ pub struct User {
     pub avatar: Option<String>,
     pub is_blocked: bool,
     pub emarsys_id: Option<i32>,
+    pub referal: Option<UserId>,
+    pub utm_marks: Option<HashMap<String, String>>,
+    pub country: Option<Alpha3>,
+    pub referer: Option<String>,
     pub created_at: SystemTime,
     pub updated_at: SystemTime,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct UtmMark {
+    pub key: String,
+    pub value: String,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
@@ -134,8 +144,8 @@ pub struct NewUserAdditionalDataInput {
     #[graphql(description = "Raw user id who advertised the project.")]
     pub referal: Option<i32>,
     #[graphql(description = "Collection of marketing utm marks.")]
-    pub utm_marks: Option<Vec<UtmMark>>,
-    #[graphql(description = "Country of a user.")]
+    pub utm_marks: Option<Vec<UtmMarkInput>>,
+    #[graphql(description = "Alpha 3 country code of a user.")]
     pub country: Option<String>,
     #[graphql(description = "Referer application domain.")]
     pub referer: Option<String>,
@@ -143,7 +153,7 @@ pub struct NewUserAdditionalDataInput {
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, Default)]
 #[graphql(description = "Single utm key-value pair")]
-pub struct UtmMark {
+pub struct UtmMarkInput {
     pub key: String,
     pub value: String,
 }
