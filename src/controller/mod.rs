@@ -24,13 +24,14 @@ use stq_http::request_util::CorrelationToken;
 use stq_http::request_util::Currency as CurrencyHeader;
 use stq_http::request_util::SessionId as SessionIdHeader;
 use stq_router::RouteParser;
+use stq_routes::service::Service;
 use stq_static_resources::Currency;
 use stq_types::SessionId;
 
 use self::routes::Route;
 use config::Config;
 use errors::Error;
-use graphql::context::Context;
+use graphql::context::{check_jwt_not_revoked, Context, GraphQLResponse};
 use graphql::models::jwt::JWTPayload;
 use graphql::schema::Schema;
 use sentry_integration::log_and_capture_error;
@@ -120,6 +121,12 @@ impl Controller for ControllerImpl {
                             .and_then(move |graphql_req| {
                                 cpu_pool
                                     .spawn_fn(move || {
+                                        if let Some(ref payload) = token_payload {
+                                            let res = check_jwt_not_revoked(&client, payload, config.service_url(Service::Users));
+                                            if let Err(e) = res {
+                                                return serde_json::to_value(GraphQLResponse::from_field_error(e));
+                                            }
+                                        }
                                         let graphql_context = Context::new(
                                             client,
                                             token_payload,

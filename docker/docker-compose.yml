@@ -12,7 +12,7 @@ services:
       - ..:/app
       - stq_cargo_cache:/usr/local/cargo
     environment:
-      - "RUST_LOG=gateway=debug"
+      - "RUST_LOG=gateway=debug,stq_http=debug"
     ports:
       - 8000:8000
     stdin_open: true
