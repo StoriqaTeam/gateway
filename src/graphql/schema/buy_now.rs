@@ -329,7 +329,8 @@ fn validate_coupon(context: &Context, coupon_code: CouponCode, product_id: Produ
         .filter(|p| match p.discount {
             Some(discount) => discount < ZERO_DISCOUNT,
             None => true,
-        }).filter(|p| p.id == product_id)
+        })
+        .filter(|p| p.id == product_id)
         .collect::<Vec<Product>>();
 
     if all_support_products.is_empty() {

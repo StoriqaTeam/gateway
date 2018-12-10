@@ -213,8 +213,10 @@ impl Product {
                                 warehouse_id: warehouse.id,
                                 quantity: Quantity::default(),
                             })
-                        }).map(GraphQLStock)
-                }).collect::<FieldResult<Vec<GraphQLStock>>>()
+                        })
+                        .map(GraphQLStock)
+                })
+                .collect::<FieldResult<Vec<GraphQLStock>>>()
         })
     }
 

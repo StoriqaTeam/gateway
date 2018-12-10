@@ -410,7 +410,8 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem], user_country_c
                                                         v.delivery_method_id,
                                                         v.store_id,
                                                     )
-                                                }).unwrap_or_default();
+                                                })
+                                                .unwrap_or_default();
 
                                         CartProduct {
                                             id: variant.id,
@@ -430,11 +431,15 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem], user_country_c
                                             delivery_method_id,
                                             user_country_code: user_country_code.clone(),
                                         }
-                                    }).collect::<Vec<CartProduct>>(),
+                                    })
+                                    .collect::<Vec<CartProduct>>(),
                             )
-                        }).unwrap_or_default()
-                }).collect();
+                        })
+                        .unwrap_or_default()
+                })
+                .collect();
             CartStore::new(store, products)
-        }).collect();
+        })
+        .collect();
     Cart::new(cart_stores, user_country_code)
 }
