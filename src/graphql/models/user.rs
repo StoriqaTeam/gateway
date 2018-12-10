@@ -28,6 +28,7 @@ pub struct User {
     pub referer: Option<String>,
     pub created_at: SystemTime,
     pub updated_at: SystemTime,
+    pub revoke_before: SystemTime,
 }
 
 #[derive(Deserialize, Debug, Clone)]
