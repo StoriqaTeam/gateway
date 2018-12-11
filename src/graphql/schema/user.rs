@@ -119,8 +119,20 @@ graphql_object!(User: Context as "User" |&self| {
         }
     }
 
-    field country() -> Option<&String> as "Alpha 3 country code of a user." {
-        self.country.as_ref().map(|alpha3| &alpha3.0)
+    field country(&executor) -> FieldResult<Option<Country>> as "User country." {
+        let context = executor.context();
+
+        if let Some(ref alpha3) = self.country {
+            let find_by_alpha3_url = format!(
+                "{}/{}/alpha3/{}",
+                context.config.service_url(Service::Delivery),
+                Model::Country.to_url(),
+                alpha3
+            );
+            let country: Option<Country> = context.request::<Option<Country>>(Method::Get, find_by_alpha3_url, None).wait()?;
+            return Ok(country);
+        }
+        Ok(None)
     }
 
     field referer() -> &Option<String> as "Referer application domain." {
