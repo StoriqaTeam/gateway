@@ -34,6 +34,10 @@ graphql_object!(Product: Context as "Product" |&self| {
         &self.id.0
     }
 
+    field base_product_id() -> &i32 as "Base product raw id" {
+        &self.base_product_id.0
+    }
+
     field is_active() -> &bool as "If the product was disabled (deleted), isActive is false" {
         &self.is_active
     }
