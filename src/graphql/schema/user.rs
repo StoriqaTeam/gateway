@@ -129,10 +129,10 @@ graphql_object!(User: Context as "User" |&self| {
                 Model::Country.to_url(),
                 alpha3
             );
-            let country: Option<Country> = context.request::<Option<Country>>(Method::Get, find_by_alpha3_url, None).wait()?;
-            return Ok(country);
+            context.request::<Option<Country>>(Method::Get, find_by_alpha3_url, None).wait()
+        } else {
+            Ok(None)
         }
-        Ok(None)
     }
 
     field referer() -> &Option<String> as "Referer application domain." {
