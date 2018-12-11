@@ -135,7 +135,7 @@ pub struct NewUser {
     pub saga_id: SagaId,
     pub referal: Option<UserId>,
     pub utm_marks: Option<HashMap<String, String>>,
-    pub country: Option<String>,
+    pub country: Option<Alpha3>,
     pub referer: Option<String>,
 }
 
@@ -146,7 +146,7 @@ pub struct NewUserAdditionalDataInput {
     pub referal: Option<i32>,
     #[graphql(description = "Collection of marketing utm marks.")]
     pub utm_marks: Option<Vec<UtmMarkInput>>,
-    #[graphql(description = "Alpha 3 country code of a user.")]
+    #[graphql(description = "Alpha 2 country code of a user.")]
     pub country: Option<String>,
     #[graphql(description = "Referer application domain.")]
     pub referer: Option<String>,
@@ -163,7 +163,7 @@ pub struct UtmMarkInput {
 pub struct NewUserAdditionalData {
     pub referal: Option<i32>,
     pub utm_marks: Option<HashMap<String, String>>,
-    pub country: Option<String>,
+    pub country: Option<Alpha3>,
     pub referer: Option<String>,
 }
 
@@ -174,7 +174,7 @@ impl Into<NewUserAdditionalData> for NewUserAdditionalDataInput {
         NewUserAdditionalData {
             referal: self.referal,
             utm_marks,
-            country: self.country,
+            country: self.country.map(Alpha3),
             referer: self.referer,
         }
     }

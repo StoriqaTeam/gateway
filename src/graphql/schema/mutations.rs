@@ -64,7 +64,9 @@ graphql_object!(Mutation: Context |&self| {
             saga_id: SagaId::new(),
         };
 
-        let additional_data: NewUserAdditionalData = input.additional_data.unwrap_or_default().into();
+        let mut additional_data: NewUserAdditionalData = input.additional_data.unwrap_or_default().into();
+
+        user_module::change_alpha2_to_alpha3(&context, &mut additional_data);
 
         let new_user = NewUser {
             email: input.email.clone(),
@@ -477,9 +479,10 @@ graphql_object!(Mutation: Context |&self| {
             Model::JWT.to_url(),
             input.provider);
 
-        let additional_data = input.additional_data.map(|data| data.into());
+        let mut additional_data = input.additional_data.unwrap_or_default().into();
+        user_module::change_alpha2_to_alpha3(&context, &mut additional_data);
 
-        let oauth = ProviderOauth { token: input.token, additional_data };
+        let oauth = ProviderOauth { token: input.token, additional_data: Some(additional_data)};
         let body: String = serde_json::to_string(&oauth)?;
 
         context.request::<JWT>(Method::Post, url, Some(body))
