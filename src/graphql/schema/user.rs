@@ -632,3 +632,22 @@ pub fn run_verify_email(context: &Context, input: VerifyEmailApply) -> FieldResu
         email: result.user.email,
     })
 }
+
+pub fn change_alpha2_to_alpha3(context: &Context, additional_data: &mut NewUserAdditionalData) {
+    additional_data.country = additional_data.country.clone().and_then(|alpha2| {
+        let find_by_alpha2_url = format!(
+            "{}/{}/alpha2/{}",
+            context.config.service_url(Service::Delivery),
+            Model::Country.to_url(),
+            alpha2
+        );
+        let country: Option<Country> = match context.request::<Option<Country>>(Method::Get, find_by_alpha2_url, None).wait() {
+            Ok(country) => country,
+            Err(err) => {
+                warn!("createUser - could not find country by alpha2 code: {:?}", err);
+                None
+            }
+        };
+        country.map(|country| country.alpha3)
+    });
+}
