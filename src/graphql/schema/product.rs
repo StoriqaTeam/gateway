@@ -1,5 +1,7 @@
 //! File containing product object of graphql schema
 
+use std::str::FromStr;
+
 use futures::Future;
 use hyper::Method;
 use juniper;
@@ -15,7 +17,7 @@ use stq_types::{ProductId, ProductSellerPrice, Quantity, StockId};
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
-use graphql::schema::base_product as module_base_product;
+use graphql::schema::base_product as base_product_module;
 use graphql::schema::stock as module_stock;
 use graphql::schema::warehouse as module_warehouse;
 
@@ -30,6 +32,10 @@ graphql_object!(Product: Context as "Product" |&self| {
 
     field raw_id() -> &i32 as "Unique int id"{
         &self.id.0
+    }
+
+    field base_product_id() -> &i32 as "Base product raw id" {
+        &self.base_product_id.0
     }
 
     field is_active() -> &bool as "If the product was disabled (deleted), isActive is false" {
@@ -82,7 +88,7 @@ graphql_object!(Product: Context as "Product" |&self| {
         let context = executor.context();
         let visibility = visibility.unwrap_or_default();
 
-        module_base_product::try_get_base_product(context, self.base_product_id, visibility)
+        base_product_module::try_get_base_product(context, self.base_product_id, visibility)
     }
 
     field attributes(&executor) -> FieldResult<Option<Vec<ProdAttrValue>>> as "Variants" {
@@ -196,10 +202,47 @@ pub fn get_seller_price(context: &Context, product_id: ProductId) -> FieldResult
         })
 }
 
+pub fn run_update_product_mutation(context: &Context, input: UpdateProductWithAttributesInput) -> FieldResult<Product> {
+    let identifier = ID::from_str(&*input.id)?;
+    let product_id = ProductId(identifier.raw_id);
+
+    let url = identifier.url(&context.config);
+
+    if input.is_none() {
+        return Err(FieldError::new(
+            "Nothing to update",
+            graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
+        ));
+    }
+
+    if validate_update_product(context, product_id)? {
+        let body: String = serde_json::to_string(&input)?.to_string();
+        context.request::<Product>(Method::Put, url, Some(body)).wait()
+    } else {
+        let current_base_product = base_product_module::get_base_product_by_product(context, product_id)?;
+
+        Err(FieldError::new(
+            "Could not update product.",
+            graphql_value!({ "code": 100, "details": { format!("Variant with id: {} cannot be changed when Product with id: {} in status: {}.", product_id, current_base_product.id, current_base_product.status) }}),
+        ))
+    }
+}
+
+pub fn validate_update_product(context: &Context, product_id: ProductId) -> FieldResult<bool> {
+    let url = format!(
+        "{}/{}/{}/validate_update",
+        context.config.service_url(Service::Stores),
+        Model::Product.to_url(),
+        product_id
+    );
+
+    context.request::<bool>(Method::Get, url, None).wait()
+}
+
 impl Product {
     fn get_stocks(&self, context: &Context, visibility: Option<Visibility>) -> FieldResult<Vec<GraphQLStock>> {
         let visibility = visibility.unwrap_or(Visibility::Active);
-        let store_id = module_base_product::get_base_product(context, self.base_product_id, visibility)?.store_id;
+        let store_id = base_product_module::get_base_product(context, self.base_product_id, visibility)?.store_id;
 
         module_warehouse::get_warehouses_for_store(context, store_id).and_then(|warehouses: Vec<Warehouse>| {
             warehouses

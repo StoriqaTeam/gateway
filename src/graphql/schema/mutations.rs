@@ -21,12 +21,13 @@ use stq_static_resources::{Currency, Provider};
 use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, SagaId, StoreId, UserId, WarehouseId};
 
 use errors::into_graphql;
-use graphql::schema::base_product;
+use graphql::schema::base_product as base_product_module;
 use graphql::schema::buy_now;
 use graphql::schema::cart as cart_module;
 use graphql::schema::category as category_module;
 use graphql::schema::order;
-use graphql::schema::store;
+use graphql::schema::product as product_module;
+use graphql::schema::store as store_module;
 use graphql::schema::user as user_module;
 
 pub struct Mutation;
@@ -277,20 +278,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateStore(&executor, input: UpdateStoreInput as "Update store input.") -> FieldResult<Store>  as "Updates existing store."{
         let context = executor.context();
-        let identifier = ID::from_str(&*input.id)?;
-        let url = identifier.url(&context.config);
 
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-        context.request::<Store>(Method::Put, url, Some(body))
-            .wait()
+        store_module::run_update_store_mutation(context, input)
     }
 
     field deleteStore(&executor, id: i32 as "Delete store raw id.") -> FieldResult<Mock> as "Deletes existing store from DB." {
@@ -327,19 +316,19 @@ graphql_object!(Mutation: Context |&self| {
     field draftStore(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Hide the store from users." {
         let context = executor.context();
 
-        store::run_send_to_draft_store_mutation(context, StoreId(id))
+        store_module::run_send_to_draft_store_mutation(context, StoreId(id))
     }
 
     field sendStoreToModeration(&executor, id: i32 as "Store raw id.") -> FieldResult<Store>  as "Send store on moderation for store manager." {
         let context = executor.context();
 
-        store::run_send_to_moderation_store(context, StoreId(id))
+        store_module::run_send_to_moderation_store(context, StoreId(id))
     }
 
     field setModerationStatusStore(&executor, input: StoreModerateInput as "Change store moderation status input.") -> FieldResult<Store>  as "Change store moderation status for moderator." {
         let context = executor.context();
 
-        store::run_moderation_status_store(context, input)
+        store_module::run_moderation_status_store(context, input)
     }
 
     field createProduct(&executor, input: CreateProductWithAttributesInput as "Create product with attributes input.") -> FieldResult<Product> as "Creates new product." {
@@ -358,20 +347,8 @@ graphql_object!(Mutation: Context |&self| {
     field updateProduct(&executor, input: UpdateProductWithAttributesInput as "Update product input.") -> FieldResult<Product>  as "Updates existing product."{
 
         let context = executor.context();
-        let identifier = ID::from_str(&*input.id)?;
-        let url = identifier.url(&context.config);
 
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-        context.request::<Product>(Method::Put, url, Some(body))
-            .wait()
+        product_module::run_update_product_mutation(context, input)
     }
 
     field deactivateProduct(&executor, input: DeactivateProductInput as "Deactivate product input.") -> FieldResult<Product>  as "Deactivates existing product." {
@@ -415,20 +392,8 @@ graphql_object!(Mutation: Context |&self| {
     field updateBaseProduct(&executor, input: UpdateBaseProductInput as "Update base product input.") -> FieldResult<BaseProduct>  as "Updates existing base product."{
 
         let context = executor.context();
-        let identifier = ID::from_str(&*input.id)?;
-        let url = identifier.url(&context.config);
 
-        if input.is_none() {
-             return Err(FieldError::new(
-                "Nothing to update",
-                graphql_value!({ "code": 300, "details": { "All fields to update are none." }}),
-            ));
-        }
-
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-        context.request::<BaseProduct>(Method::Put, url, Some(body))
-            .wait()
+        base_product_module::run_update_base_product(context, input)
     }
 
     field deactivateBaseProduct(&executor, input: DeactivateBaseProductInput as "Deactivate base product input.") -> FieldResult<BaseProduct>  as "Deactivates existing base product." {
@@ -455,19 +420,19 @@ graphql_object!(Mutation: Context |&self| {
     field draftBaseProducts(&executor, ids: Vec<i32> as "BaseProduct raw ids.") -> FieldResult<Vec<BaseProduct>>  as "Hide base_products from users." {
         let context = executor.context();
 
-        base_product::run_draft_base_products_mutation(context, ids)
+        base_product_module::run_draft_base_products_mutation(context, ids)
     }
 
     field sendBaseProductToModeration(&executor, id: i32 as "BaseProduct raw id.") -> FieldResult<BaseProduct>  as "Send base product on moderation for store manager." {
         let context = executor.context();
 
-        base_product::run_send_to_moderation_base_product(context, BaseProductId(id))
+        base_product_module::run_send_to_moderation_base_product(context, BaseProductId(id))
     }
 
     field setModerationStatusBaseProduct(&executor, input: BaseProductModerateInput as "Change base product moderation status input.") -> FieldResult<BaseProduct>  as "Change base product moderation status for moderator." {
         let context = executor.context();
 
-        base_product::run_moderation_status_base_product(context, input)
+        base_product_module::run_moderation_status_base_product(context, input)
     }
 
     field createCustomAttribute(&executor, input: NewCustomAttributeInput as "Create custom attribute input.") -> FieldResult<CustomAttribute> as "Creates new custom attribute" {
@@ -1707,7 +1672,7 @@ graphql_object!(Mutation: Context |&self| {
 
         let local_delivery_to = delivery_from.clone();
 
-        let base_product = base_product::try_get_base_product(context, BaseProductId(input.base_product_id), Visibility::Active)?
+        let base_product = base_product_module::try_get_base_product(context, BaseProductId(input.base_product_id), Visibility::Active)?
             .ok_or(FieldError::new(
                 "Failed to update shipping options.",
                 graphql_value!({ "code": 300, "details": { format!("Base product with id: {} not found.", input.base_product_id) }}),
