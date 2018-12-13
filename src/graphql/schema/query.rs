@@ -640,4 +640,14 @@ graphql_object!(Query: Context |&self| {
 
         context.request::<AvailableShippingForUser>(Method::Get, url, None).wait()
     }
+
+    field existing_reset_token(&executor, input: ExistingResetTokenInput as "Existing rest token request input.") -> FieldResult<ResetToken>  as "Get existing reset token"{
+        let context = executor.context();
+        let users_url = context.config.service_url(Service::Users);
+        let url = match input.token_type {
+            TokenTypeInput::EmailVerify => format!("{}/users/{}/email_verify_token", users_url, input.user_id),
+            TokenTypeInput::PasswordReset => format!("{}/users/{}/password_reset_token", users_url, input.user_id),
+        };
+        context.request::<ResetToken>(Method::Get, url, None).wait()
+    }
 });
