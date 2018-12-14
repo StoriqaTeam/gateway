@@ -48,14 +48,10 @@ graphql_object!(Search: Context as "Search" |&self| {
             visibility
         );
 
-        let options = if let Some(mut options) = search_term.options.clone() {
+        let mut options = search_term.options.clone().unwrap_or_default();
+
+        if visibility == Visibility::Published {
             options.status = Some(ModerationStatus::Published);
-            options
-        } else {
-            ProductsSearchOptionsInput{
-                status : Some(ModerationStatus::Published),
-                ..ProductsSearchOptionsInput::default()
-            }
         };
 
         let mut search_term = search_term;
