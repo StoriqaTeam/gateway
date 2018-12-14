@@ -55,7 +55,7 @@ pipeline:
     environment:
     - CARGO_HOME=deps
     commands:
-    - cargo build
+    - cargo build --locked
     when:
       event: push
   package:
