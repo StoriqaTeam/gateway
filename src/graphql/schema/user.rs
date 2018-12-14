@@ -663,3 +663,12 @@ pub fn change_alpha2_to_alpha3(context: &Context, additional_data: &mut NewUserA
         country.map(|country| country.alpha3)
     });
 }
+
+pub fn existing_reset_token(context: &Context, input: ExistingResetTokenInput) -> FieldResult<ResetToken> {
+    let users_url = context.config.service_url(Service::Users);
+    let url = match input.token_type {
+        TokenTypeInput::EmailVerify => format!("{}/{}/{}/email_verify_token", users_url, Model::User.to_url(), input.user_id),
+        TokenTypeInput::PasswordReset => format!("{}/{}/{}/password_reset_token", users_url, Model::User.to_url(), input.user_id),
+    };
+    context.request::<ResetToken>(Method::Get, url, None).wait()
+}
