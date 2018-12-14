@@ -24,6 +24,7 @@ use graphql::schema::cart as cart_module;
 use graphql::schema::warehouse as warehouse_module;
 use schema::buy_now as buy_now_module;
 use schema::order as order_module;
+use schema::user as user_module;
 
 pub const QUERY_NODE_ID: i32 = 1;
 
@@ -639,5 +640,10 @@ graphql_object!(Query: Context |&self| {
         );
 
         context.request::<AvailableShippingForUser>(Method::Get, url, None).wait()
+    }
+
+    field existing_reset_token(&executor, input: ExistingResetTokenInput as "Existing rest token request input.") -> FieldResult<ResetToken>  as "Get existing reset token"{
+        let context = executor.context();
+        user_module::existing_reset_token(context, input)
     }
 });

@@ -24,6 +24,7 @@ pub mod package;
 pub mod page_info;
 pub mod product;
 pub mod query;
+pub mod reset_token;
 pub mod search;
 pub mod shipping;
 pub mod shipping_rates;
