@@ -2,7 +2,7 @@ use juniper::{FieldError, Value};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Visibility {
     Active,
     Published,

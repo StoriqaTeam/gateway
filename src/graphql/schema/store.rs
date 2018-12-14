@@ -465,10 +465,14 @@ graphql_object!(Store: Context as "Store" |&self| {
     field find_product(&executor,
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Offset form beginning",
-        search_term : SearchProductInput as "Search pattern")
+        search_term : SearchProductInput as "Search pattern",
+        visibility: Option<Visibility> as "Specifies allowed visibility of the base product"
+        )
             -> FieldResult<Option<Connection<BaseProduct, PageInfoProductsSearch>>> as "Find products by name using relay connection." {
 
         let context = executor.context();
+
+        let visibility = visibility.unwrap_or_default();
 
         let offset = after
             .and_then(|id|{
@@ -480,24 +484,21 @@ graphql_object!(Store: Context as "Store" |&self| {
         let records_limit = context.config.gateway.records_limit;
         let count = cmp::min(first.unwrap_or(records_limit as i32), records_limit as i32);
 
-        let url = format!("{}/{}/search?offset={}&count={}",
+        let url = format!("{}/{}/search?offset={}&count={}&visibility={}",
             context.config.service_url(Service::Stores),
             Model::BaseProduct.to_url(),
             offset,
-            count + 1
+            count + 1,
+            visibility
             );
 
-        let mut options = if let Some(mut options) = search_term.options.clone() {
-            options.store_id = Some(self.id.0);
-            options
-        } else {
-            ProductsSearchOptionsInput{
-                store_id : Some(self.id.0),
-                ..ProductsSearchOptionsInput::default()
-            }
-        };
+        let mut options = search_term.options.clone().unwrap_or_default();
 
-        options.status = Some(ModerationStatus::Published);
+        options.store_id = Some(self.id.0);
+
+        if visibility == Visibility::Published {
+            options.status = Some(ModerationStatus::Published);
+        };
 
         let mut search_term = search_term;
         search_term.options = Some(options);
