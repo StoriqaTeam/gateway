@@ -645,8 +645,8 @@ graphql_object!(Query: Context |&self| {
         let context = executor.context();
         let users_url = context.config.service_url(Service::Users);
         let url = match input.token_type {
-            TokenTypeInput::EmailVerify => format!("{}/users/{}/email_verify_token", users_url, input.user_id),
-            TokenTypeInput::PasswordReset => format!("{}/users/{}/password_reset_token", users_url, input.user_id),
+            TokenTypeInput::EmailVerify => format!("{}/{}/{}/email_verify_token", users_url, Model::User.to_url(), input.user_id),
+            TokenTypeInput::PasswordReset => format!("{}/{}/{}/password_reset_token", users_url, Model::User.to_url(), input.user_id),
         };
         context.request::<ResetToken>(Method::Get, url, None).wait()
     }
