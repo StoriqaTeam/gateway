@@ -298,7 +298,7 @@ graphql_object!(Mutation: Context |&self| {
     field deactivateStore(&executor, input: DeactivateStoreInput as "Deactivate store input.") -> FieldResult<Store>  as "Deactivates existing store." {
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
-        let url = format!("{}/{}/{}", context.config.saga_microservice.url, Model::Store.to_url(), identifier.raw_id);
+        let url = format!("{}/{}/{}/deactivate", context.config.saga_microservice.url, Model::Store.to_url(), identifier.raw_id);
         context.request::<Store>(Method::Post, url, None)
             .wait()
     }
@@ -355,7 +355,7 @@ graphql_object!(Mutation: Context |&self| {
     field deactivateProduct(&executor, input: DeactivateProductInput as "Deactivate product input.") -> FieldResult<Product>  as "Deactivates existing product." {
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
-        let url = format!("{}/{}/{}", context.config.saga_microservice.url, Model::Product.to_url(), identifier.raw_id);
+        let url = format!("{}/{}/{}/deactivate", context.config.saga_microservice.url, Model::Product.to_url(), identifier.raw_id);
         context.request::<Product>(Method::Post, url, None)
             .wait()
     }
@@ -399,7 +399,7 @@ graphql_object!(Mutation: Context |&self| {
     field deactivateBaseProduct(&executor, input: DeactivateBaseProductInput as "Deactivate base product input.") -> FieldResult<BaseProduct>  as "Deactivates existing base product." {
         let context = executor.context();
         let identifier = ID::from_str(&*input.id)?;
-        let url = format!("{}/{}/{}", context.config.saga_microservice.url, Model::BaseProduct.to_url(), identifier.raw_id);
+        let url = format!("{}/{}/{}/deactivate", context.config.saga_microservice.url, Model::BaseProduct.to_url(), identifier.raw_id);
         context.request::<BaseProduct>(Method::Post, url, None)
             .wait()
     }
