@@ -91,13 +91,6 @@ graphql_object!(Product: Context as "Product" |&self| {
         base_product_module::try_get_base_product(context, self.base_product_id, visibility)
     }
 
-    /*field older_base_product(&executor,
-    ) -> FieldResult<Option<BaseProduct>> as "Fetches inactive/deleted base product." {
-        let context = executor.context();
-
-        base_product_module::try_get_base_product_without_filters(context, self.base_product_id)
-    }*/
-
     field attributes(&executor) -> FieldResult<Option<Vec<ProdAttrValue>>> as "Variants" {
        let context = executor.context();
         let url = format!("{}/{}/{}/attributes",
