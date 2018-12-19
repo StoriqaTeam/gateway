@@ -403,6 +403,17 @@ pub fn try_get_base_product(context: &Context, base_product_id: BaseProductId, v
     context.request::<Option<BaseProduct>>(Method::Get, url, None).wait()
 }
 
+pub fn try_get_base_product_without_filters(context: &Context, base_product_id: BaseProductId) -> FieldResult<Option<BaseProduct>> {
+    let url = format!(
+        "{}/{}/{}/without_filters",
+        context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url(),
+        base_product_id,
+    );
+
+    context.request::<Option<BaseProduct>>(Method::Get, url, None).wait()
+}
+
 pub fn try_get_base_product_by_product(context: &Context, product_id: ProductId) -> FieldResult<Option<BaseProduct>> {
     let url = format!(
         "{}/{}/by_product/{}",
