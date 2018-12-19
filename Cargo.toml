@@ -20,7 +20,7 @@ config = { version = "0.9", default-features = false, features = ["toml"] }
 failure = "0.1"
 futures = "0.1"
 futures-cpupool = "0.1"
-geo = "0.10"
+geo = { version = "0.10", features = ["use-serde"] }
 hyper = "0.11"
 jsonwebtoken = "4.0"
 juniper = "0.9"
