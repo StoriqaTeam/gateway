@@ -21,10 +21,11 @@ use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::models::*;
+use graphql::schema::base_product as base_product_module;
 use graphql::schema::cart as cart_module;
 use graphql::schema::coupon::try_get_coupon;
 use graphql::schema::coupon::*;
-use graphql::schema::product;
+use graphql::schema::product as product_module;
 use graphql::schema::user::get_user_by_id;
 
 graphql_object!(GraphQLOrder: Context as "Order" |&self| {
@@ -59,7 +60,7 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         &self.0.product.0
     }
 
-    field product(&executor) -> FieldResult<Option<Product>> as "Product" {
+    field deprecated "use current_product" product(&executor) -> FieldResult<Option<Product>> as "Product" {
         let context = executor.context();
         let url = format!("{}/{}/{}",
             context.config.service_url(Service::Stores),
@@ -68,6 +69,11 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
 
         context.request::<Option<Product>>(Method::Get, url, None)
             .wait()
+    }
+
+    field current_product(&executor) -> FieldResult<Option<OrderProduct>> as "Product from order." {
+        let context = executor.context();
+        product_module::try_get_product_without_filters(context, self.0.product).map(|product| product.map(OrderProduct))
     }
 
     field store_id() -> &i32 as "Store int id"{
@@ -364,6 +370,126 @@ graphql_object!(Edge<OrderHistoryItem>: Context as "OrderHistoryItemsEdge" |&sel
     }
 });
 
+graphql_object!(OrderProduct: Context as "OrderProduct" |&self| {
+    description: "Order product's info."
+
+    interfaces: [&Node]
+
+    field id() -> GraphqlID as "Base64 Unique id"{
+        ID::new(Service::Stores, Model::OrderProduct, self.0.id.0).to_string().into()
+    }
+
+    field raw_id() -> &i32 as "Unique int id"{
+        &self.0.id.0
+    }
+
+    field base_product_id() -> &i32 as "Base product raw id" {
+        &self.0.base_product_id.0
+    }
+
+    field is_active() -> &bool as "If the product was disabled (deleted), isActive is false" {
+        &self.0.is_active
+    }
+
+    field discount() -> &Option<f64> as "Discount" {
+        &self.0.discount
+    }
+
+    field currency() -> Currency as "Currency" {
+        self.0.currency
+    }
+
+    field photo_main() -> &Option<String> as "Photo main" {
+        &self.0.photo_main
+    }
+
+    field additional_photos() -> &Option<Vec<String>> as "Additional photos of the product." {
+        &self.0.additional_photos
+    }
+
+    field vendor_code() -> &String as "Vendor code" {
+        &self.0.vendor_code
+    }
+
+    field cashback() -> &Option<f64> as "Cashback" {
+        &self.0.cashback
+    }
+
+    field price() -> &f64 as "Price" {
+        &self.0.price.0
+    }
+
+    field pre_order() -> &bool as "Pre-order" {
+        &self.0.pre_order
+    }
+
+    field pre_order_days() -> &i32 as "Pre-order days" {
+        &self.0.pre_order_days
+    }
+
+    field customer_price() -> &CustomerPrice as "Customer price" {
+        &self.0.customer_price
+    }
+
+    field base_product(&executor,
+    ) -> FieldResult<Option<BaseProduct>> as "Fetches base product by product." {
+        let context = executor.context();
+
+        base_product_module::try_get_base_product_without_filters(context, self.0.base_product_id)
+    }
+
+    field attributes(&executor) -> FieldResult<Option<Vec<ProdAttrValue>>> as "Variants" {
+       let context = executor.context();
+        let url = format!("{}/{}/{}/attributes",
+            context.config.service_url(Service::Stores),
+            Model::Product.to_url(),
+            self.0.id);
+
+        context.request::<Vec<ProdAttrValue>>(Method::Get, url, None)
+            .wait()
+            .or_else(|_| Ok(vec![]))
+            .map(Some)
+    }
+
+    field quantity(&executor) -> FieldResult<Option<i32>> as "Fetches product quantity from warehouses." {
+        let context = executor.context();
+
+        self.0.get_quantity(context)
+    }
+
+    field stocks(&executor,
+        visibility: Option<Visibility> as "Specifies allowed visibility of the stocks") -> FieldResult<Vec<GraphQLStock>> as "Find product on warehouses." {
+
+       let context = executor.context();
+       self.0.get_stocks(context, visibility)
+    }
+
+});
+
+graphql_object!(Connection<OrderProduct, PageInfo>: Context as "OrderProductsConnection" |&self| {
+    description:"Order products Connection"
+
+    field edges() -> &[Edge<OrderProduct>] {
+        &self.edges
+    }
+
+    field page_info() -> &PageInfo {
+        &self.page_info
+    }
+});
+
+graphql_object!(Edge<OrderProduct>: Context as "OrderProductsEdge" |&self| {
+    description:"Order products Edge"
+
+    field cursor() -> &juniper::ID {
+        &self.cursor
+    }
+
+    field node() -> &OrderProduct {
+        &self.node
+    }
+});
+
 pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput) -> FieldResult<CreateOrdersOutput> {
     let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
@@ -394,7 +520,7 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
 
     let products_with_prices = current_cart
         .iter()
-        .map(|p| product::get_seller_price(context, p.product_id).and_then(|seller_price| Ok((p.product_id, seller_price))))
+        .map(|p| product_module::get_seller_price(context, p.product_id).and_then(|seller_price| Ok((p.product_id, seller_price))))
         .collect::<FieldResult<CartProductWithPriceHash>>()?;
 
     if products_with_prices.len() == 0 {
@@ -477,7 +603,7 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) 
 
     let products_with_prices = current_cart
         .iter()
-        .map(|p| product::get_seller_price(context, p.product_id).and_then(|seller_price| Ok((p.product_id, seller_price))))
+        .map(|p| product_module::get_seller_price(context, p.product_id).and_then(|seller_price| Ok((p.product_id, seller_price))))
         .collect::<FieldResult<CartProductWithPriceHash>>()?;
 
     if products_with_prices.len() == 0 {

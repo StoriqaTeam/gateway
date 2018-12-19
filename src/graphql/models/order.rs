@@ -399,3 +399,6 @@ pub struct BuyNow {
     pub product_info: ProductInfo,
     pub uuid: String,
 }
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct OrderProduct(pub Product);

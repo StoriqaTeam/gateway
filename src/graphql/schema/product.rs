@@ -166,6 +166,17 @@ pub fn try_get_product(context: &Context, product_id: ProductId) -> FieldResult<
     context.request::<Option<Product>>(Method::Get, url_product, None).wait()
 }
 
+pub fn try_get_product_without_filters(context: &Context, product_id: ProductId) -> FieldResult<Option<Product>> {
+    let url_product = format!(
+        "{}/{}/{}/without_filters",
+        context.config.service_url(Service::Stores),
+        Model::Product.to_url(),
+        product_id
+    );
+
+    context.request::<Option<Product>>(Method::Get, url_product, None).wait()
+}
+
 pub fn get_product(context: &Context, product_id: ProductId) -> FieldResult<Product> {
     try_get_product(context, product_id).and_then(|value| {
         if let Some(value) = value {
@@ -240,7 +251,7 @@ pub fn validate_update_product(context: &Context, product_id: ProductId) -> Fiel
 }
 
 impl Product {
-    fn get_stocks(&self, context: &Context, visibility: Option<Visibility>) -> FieldResult<Vec<GraphQLStock>> {
+    pub fn get_stocks(&self, context: &Context, visibility: Option<Visibility>) -> FieldResult<Vec<GraphQLStock>> {
         let visibility = visibility.unwrap_or(Visibility::Active);
         let store_id = base_product_module::get_base_product(context, self.base_product_id, visibility)?.store_id;
 
@@ -263,7 +274,7 @@ impl Product {
         })
     }
 
-    fn get_quantity(&self, context: &Context) -> FieldResult<Option<i32>> {
+    pub fn get_quantity(&self, context: &Context) -> FieldResult<Option<i32>> {
         module_stock::get_stocks_for_product(context, self.id)
             .map(|products| products.iter().map(|p| p.quantity.0).sum())
             .map(Some)
