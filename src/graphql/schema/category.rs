@@ -116,3 +116,13 @@ pub fn run_replace_category(context: &Context, payload: CategoryReplaceInput) ->
 
     context.request::<Vec<BaseProduct>>(Method::Post, url, Some(body)).wait()
 }
+
+pub fn categories_with_products(context: &Context) -> FieldResult<Option<Category>> {
+    let url = format!(
+        "{}/{}/with_products",
+        context.config.service_url(Service::Stores),
+        Model::Category.to_url()
+    );
+
+    context.request::<Category>(Method::Get, url, None).wait().map(Some)
+}
