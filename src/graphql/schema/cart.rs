@@ -331,7 +331,7 @@ pub fn run_increment_in_cart_v1(context: &Context, input: IncrementInCartInput) 
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
 
-    let products: Vec<_> = rpc_client
+    let mut products: Vec<_> = rpc_client
         .increment_item(
             customer,
             input.product_id.into(),
@@ -340,21 +340,20 @@ pub fn run_increment_in_cart_v1(context: &Context, input: IncrementInCartInput) 
             product.pre_order_days,
         )
         .sync()
-        .map_err(into_graphql)
-        .and_then(|p| {
-            if let Some(value) = input.value {
-                let quantity = Quantity(value);
-
-                rpc_client
-                    .set_quantity(customer, input.product_id.into(), quantity)
-                    .sync()
-                    .map_err(into_graphql)
-            } else {
-                Ok(p)
-            }
-        })?
+        .map_err(into_graphql)?
         .into_iter()
         .collect();
+    // drop previous rpc_client
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+    if let Some(value) = input.value {
+        let quantity = Quantity(value);
+        products = rpc_client
+            .set_quantity(customer, input.product_id.into(), quantity)
+            .sync()
+            .map_err(into_graphql)?
+            .into_iter()
+            .collect();
+    }
 
     convert_products_to_cart(context, &products, None).map(Some)
 }
@@ -380,7 +379,7 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
 
-    let products: Vec<_> = rpc_client
+    let mut products: Vec<_> = rpc_client
         .increment_item(
             customer,
             input.product_id.into(),
@@ -389,21 +388,20 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -
             product.pre_order_days,
         )
         .sync()
-        .map_err(into_graphql)
-        .and_then(|p| {
-            if let Some(value) = input.value {
-                let quantity = Quantity(value);
-
-                rpc_client
-                    .set_quantity(customer, input.product_id.into(), quantity)
-                    .sync()
-                    .map_err(into_graphql)
-            } else {
-                Ok(p)
-            }
-        })?
+        .map_err(into_graphql)?
         .into_iter()
         .collect();
+    // drop previous rpc_client
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+    if let Some(value) = input.value {
+        let quantity = Quantity(value);
+        products = rpc_client
+            .set_quantity(customer, input.product_id.into(), quantity)
+            .sync()
+            .map_err(into_graphql)?
+            .into_iter()
+            .collect();
+    }
 
     convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)
 }
