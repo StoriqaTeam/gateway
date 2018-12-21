@@ -23,6 +23,7 @@ use graphql::schema::base_product as base_product_module;
 use graphql::schema::cart as cart_module;
 use graphql::schema::warehouse as warehouse_module;
 use schema::buy_now as buy_now_module;
+use schema::category as category_module;
 use schema::order as order_module;
 use schema::user as user_module;
 
@@ -231,6 +232,11 @@ graphql_object!(Query: Context |&self| {
 
         context.request::<Option<Category>>(Method::Get, url, None)
             .wait()
+    }
+
+    field categories_with_products(&executor) -> FieldResult<Option<Category>> as "Fetches categories tree only with exists products." {
+        let context = executor.context();
+        category_module::categories_with_products(context)
     }
 
     field category_by_slug(&executor, category_slug: String) -> FieldResult<Option<Category>> as "Find category by slug" {
