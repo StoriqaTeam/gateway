@@ -234,7 +234,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field categories_with_products(&executor) -> FieldResult<Option<Category>> as "Fetches categories tree only with exists products." {
+    field categories_with_products(&executor) -> FieldResult<Option<CategoryWithProducts>> as "Fetches categories tree only with exists products." {
         let context = executor.context();
         category_module::categories_with_products(context)
     }

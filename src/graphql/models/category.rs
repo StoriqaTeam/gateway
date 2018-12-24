@@ -17,6 +17,9 @@ pub struct Category {
     pub attributes: Vec<Attribute>,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+pub struct CategoryWithProducts(pub Category);
+
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Update Category input object")]
 pub struct UpdateCategoryInput {
