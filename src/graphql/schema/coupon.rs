@@ -32,8 +32,12 @@ graphql_object!(Coupon: Context as "Coupon" |&self| {
         &self.title
     }
 
-    field store_id() -> GraphqlID as "Base64 Store id"{
+    field deprecated "Use storeRawId instead" store_id() -> GraphqlID as "Base64 Store id"{
         ID::new(Service::Stores, Model::Store, self.store_id.0).to_string().into()
+    }
+
+    field store_raw_id() -> &i32 as "Store raw id" {
+        &self.store_id.0
     }
 
     field scope() -> CouponScope as "Coupon scope" {
