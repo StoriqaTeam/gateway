@@ -17,8 +17,8 @@ use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::{Currency, Provider};
-use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, ProductSellerPrice, SagaId, StoreId, UserId, WarehouseId};
+use stq_static_resources::Provider;
+use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, SagaId, StoreId, UserId, WarehouseId};
 
 use errors::into_graphql;
 use graphql::schema::base_product as base_product_module;
@@ -1471,7 +1471,7 @@ graphql_object!(Mutation: Context |&self| {
     field createOrdersV2(&executor, input: CreateOrderInputV2 as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
         let context = executor.context();
 
-        order::run_create_orders_mutation(context, input)
+        order::run_create_orders_mutation(context, input, CreateOrdersType::Crypto)
     }
 
     field deprecated "use buyNowV2. This endpoint will return incorrect delivery price if it is not set to 'fixed price' by the store owner"
@@ -1487,77 +1487,10 @@ graphql_object!(Mutation: Context |&self| {
         buy_now::run_buy_now_mutation(context, input)
     }
 
-    field createOrdersFiat(&executor, input: CreateOrderFiatInput as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart with FIAT billing." {
+    field createOrdersFiat(&executor, input: CreateOrderInputV2 as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart with FIAT billing." {
         let context = executor.context();
 
-        let user = context.user.clone().ok_or_else(||
-            FieldError::new(
-                "Could not create cart for unauthorized user.",
-                graphql_value!({ "code": 100, "details": { "No user id in request header." }}),
-            )
-        )?;
-
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products_with_prices = rpc_client.get_cart(user.user_id.into())
-            .sync()
-            .map_err(into_graphql)
-            .and_then (|hash|
-                hash.into_iter()
-                .map(|p| {
-                    let url = format!("{}/{}/{}/seller_price",
-                        context.config.service_url(Service::Stores),
-                        Model::Product.to_url(),
-                        p.product_id);
-
-                    context.request::<Option<ProductSellerPrice>>(Method::Get, url, None).wait().and_then(|seller_price|{
-                        if let Some(seller_price) = seller_price {
-                            Ok((p.product_id, seller_price))
-                        } else {
-                            Err(FieldError::new(
-                                "Could not find product seller price from id received from cart.",
-                                graphql_value!({ "code": 100, "details": { "Product with such id does not exist in stores microservice." }}),
-                            ))
-                        }
-                    })
-                })
-                .collect::<FieldResult<CartProductWithPriceHash>>()
-            )?;
-
-        //need a check that all products have the same currency - USD, EUR, RUB
-        let products_currencies = products_with_prices.iter().map(|(id, price)| price.currency).collect::<HashSet<Currency>>();
-        if products_currencies.len() == 0  {
-            return Err(FieldError::new(
-                "Could not create fiat orders for empty cart.",
-                graphql_value!({ "code": 100, "details": { "There is no products, selected in cart." }}),
-            ));
-        } else if products_currencies.len() > 1 {
-            return Err(FieldError::new(
-                "Could not create fiat orders, products currencies in cart are not equal.",
-                graphql_value!({ "code": 100, "details": { "There is more than one currency for products, selected in cart." }}),
-            ));
-        } else if !products_currencies.contains(&Currency::EUR) | !products_currencies.contains(&Currency::USD) | !products_currencies.contains(&Currency::RUB) {
-            return Err(FieldError::new(
-                "Could not create fiat orders, products currencies are not fiat.",
-                graphql_value!({ "code": 100, "details": { "Products, selected in cart are selling not in EUR, USD, RUB." }}),
-            ));
-        }
-
-        let create_order = CreateOrderFiat {
-            customer_id: user.user_id,
-            address: input.address_full,
-            receiver_name: input.receiver_name,
-            receiver_phone: input.receiver_phone,
-            prices: products_with_prices,
-        };
-
-        let url = format!("{}/create_order_fiat",
-            context.config.saga_microservice.url.clone());
-
-        let body: String = serde_json::to_string(&create_order)?.to_string();
-
-        context.request::<Invoice>(Method::Post, url, Some(body))
-            .wait()
-            .map(CreateOrdersOutput)
+        order::run_create_orders_mutation(context, input, CreateOrdersType::FIAT)
     }
 
     field setOrderStatusDelivery(&executor, input: OrderStatusDeliveryInput as "Order Status Delivery input.") -> FieldResult<Option<GraphQLOrder>>  as "Set Order Status Delivery."{
