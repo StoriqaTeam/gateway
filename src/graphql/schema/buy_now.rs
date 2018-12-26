@@ -5,7 +5,6 @@ use juniper::{FieldError, FieldResult};
 use futures::Future;
 use hyper::Method;
 
-use stq_static_resources::Currency;
 use stq_types::*;
 
 use graphql::context::Context;
@@ -174,7 +173,7 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInputV2) -> FieldRes
         uuid: input.uuid,
     };
 
-    if buy_now.currency == Currency::EUR || buy_now.currency == Currency::EUR || buy_now.currency == Currency::USD {
+    if buy_now.currency.is_fiat() {
         order::validate_products_fiat([buy_now.price.clone()].iter())?;
     }
 
@@ -240,7 +239,7 @@ pub fn run_buy_now_mutation_v1(context: &Context, input: BuyNowInput) -> FieldRe
         uuid: input.uuid,
     };
 
-    if buy_now.currency == Currency::EUR || buy_now.currency == Currency::EUR || buy_now.currency == Currency::USD {
+    if buy_now.currency.is_fiat() {
         order::validate_products_fiat([buy_now.price.clone()].iter())?;
     }
 

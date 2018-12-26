@@ -565,7 +565,7 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
         uuid: input.uuid,
     };
 
-    if create_order.currency == Currency::EUR || create_order.currency == Currency::EUR || create_order.currency == Currency::USD {
+    if create_order.currency.is_fiat() {
         validate_products_fiat(create_order.prices.values())?;
     }
 
@@ -652,7 +652,7 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) 
         uuid: input.uuid,
     };
 
-    if create_order.currency == Currency::EUR || create_order.currency == Currency::EUR || create_order.currency == Currency::USD {
+    if create_order.currency.is_fiat() {
         validate_products_fiat(create_order.prices.values())?;
     }
 
@@ -702,7 +702,7 @@ pub fn validate_products_fiat<'a>(products: impl Iterator<Item = &'a ProductSell
     let mut currencies = products.map(|p| p.currency);
 
     if let Some(currency) = currencies.next() {
-        if currency != Currency::EUR || currency != Currency::RUB || currency != Currency::USD {
+        if !currency.is_fiat() {
             return Err(FieldError::new(
                 "Cart product currency is not valid.",
                 graphql_value!({ "code": 100, "details": { "Cart product currency is not FIAT" }}),
