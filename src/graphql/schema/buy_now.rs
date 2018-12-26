@@ -5,12 +5,14 @@ use juniper::{FieldError, FieldResult};
 use futures::Future;
 use hyper::Method;
 
+use stq_static_resources::Currency;
 use stq_types::*;
 
 use graphql::context::Context;
 use graphql::models::*;
 use graphql::schema::available_packages::*;
 use graphql::schema::coupon;
+use graphql::schema::order;
 use graphql::schema::product as product_module;
 use graphql::schema::store;
 use graphql::schema::user::get_user_by_id;
@@ -172,6 +174,10 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInputV2) -> FieldRes
         uuid: input.uuid,
     };
 
+    if buy_now.currency == Currency::EUR || buy_now.currency == Currency::EUR || buy_now.currency == Currency::USD {
+        order::validate_products_fiat([buy_now.price.clone()].iter())?;
+    }
+
     let url = format!("{}/buy_now", context.config.saga_microservice.url.clone());
     let body: String = serde_json::to_string(&buy_now)?.to_string();
     context
@@ -233,6 +239,10 @@ pub fn run_buy_now_mutation_v1(context: &Context, input: BuyNowInput) -> FieldRe
         product_info,
         uuid: input.uuid,
     };
+
+    if buy_now.currency == Currency::EUR || buy_now.currency == Currency::EUR || buy_now.currency == Currency::USD {
+        order::validate_products_fiat([buy_now.price.clone()].iter())?;
+    }
 
     let url = format!("{}/buy_now", context.config.saga_microservice.url.clone());
     let body: String = serde_json::to_string(&buy_now)?.to_string();

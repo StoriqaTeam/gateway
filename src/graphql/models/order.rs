@@ -402,9 +402,3 @@ pub struct BuyNow {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct OrderProduct(pub Product);
-
-#[derive(Deserialize, Debug, Clone)]
-pub enum CreateOrdersType {
-    Crypto,
-    FIAT,
-}

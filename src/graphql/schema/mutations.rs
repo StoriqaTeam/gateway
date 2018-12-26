@@ -1471,7 +1471,7 @@ graphql_object!(Mutation: Context |&self| {
     field createOrdersV2(&executor, input: CreateOrderInputV2 as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
         let context = executor.context();
 
-        order::run_create_orders_mutation(context, input, CreateOrdersType::Crypto)
+        order::run_create_orders_mutation(context, input)
     }
 
     field deprecated "use buyNowV2. This endpoint will return incorrect delivery price if it is not set to 'fixed price' by the store owner"
@@ -1485,12 +1485,6 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
 
         buy_now::run_buy_now_mutation(context, input)
-    }
-
-    field createOrdersFiat(&executor, input: CreateOrderInputV2 as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart with FIAT billing." {
-        let context = executor.context();
-
-        order::run_create_orders_mutation(context, input, CreateOrdersType::FIAT)
     }
 
     field setOrderStatusDelivery(&executor, input: OrderStatusDeliveryInput as "Order Status Delivery input.") -> FieldResult<Option<GraphQLOrder>>  as "Set Order Status Delivery."{
