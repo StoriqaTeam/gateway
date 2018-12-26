@@ -15,7 +15,7 @@ use stq_api::{
 };
 use stq_routes::{model::Model, service::Service};
 use stq_static_resources::{Currency, OrderState};
-use stq_types::{CouponId, OrderIdentifier};
+use stq_types::{CouponId, OrderIdentifier, ProductSellerPrice};
 
 use super::*;
 use errors::into_graphql;
@@ -565,6 +565,10 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
         uuid: input.uuid,
     };
 
+    if create_order.currency.is_fiat() {
+        validate_products_fiat(create_order.prices.values())?;
+    }
+
     let url = format!("{}/create_order", context.config.saga_microservice.url.clone());
     let body: String = serde_json::to_string(&create_order)?.to_string();
     context
@@ -573,11 +577,7 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
         .map(CreateOrdersOutput)
 }
 
-pub fn run_create_orders_mutation(
-    context: &Context,
-    input: CreateOrderInputV2,
-    type_: CreateOrdersType,
-) -> FieldResult<CreateOrdersOutput> {
+pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) -> FieldResult<CreateOrdersOutput> {
     let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
@@ -652,13 +652,11 @@ pub fn run_create_orders_mutation(
         uuid: input.uuid,
     };
 
-    let url = match type_ {
-        CreateOrdersType::Crypto => format!("{}/create_order", context.config.saga_microservice.url.clone()),
-        CreateOrdersType::FIAT => {
-            validate_fiat(&create_order)?;
-            format!("{}/create_order_fiat", context.config.saga_microservice.url.clone())
-        }
-    };
+    if create_order.currency.is_fiat() {
+        validate_products_fiat(create_order.prices.values())?;
+    }
+
+    let url = format!("{}/create_order", context.config.saga_microservice.url.clone());
 
     let body: String = serde_json::to_string(&create_order)?.to_string();
     context
@@ -700,29 +698,17 @@ pub fn get_order(context: &Context, order_id: OrderIdentifier) -> FieldResult<Gr
     })
 }
 
-pub fn validate_fiat(create_order: &CreateOrder) -> FieldResult<()> {
-    match create_order.currency {
-        Currency::EUR | Currency::RUB | Currency::USD => (),
-        _ => {
-            return Err(FieldError::new(
-                "Customer currency is not valid.",
-                graphql_value!({ "code": 100, "details": { "Selected currency is not FIAT" }}),
-            ))
-        }
-    }
-
-    let mut currencies = create_order.prices.values().map(|p| p.currency);
+pub fn validate_products_fiat<'a>(products: impl Iterator<Item = &'a ProductSellerPrice>) -> FieldResult<()> {
+    let mut currencies = products.map(|p| p.currency);
 
     if let Some(currency) = currencies.next() {
-        match currency {
-            Currency::EUR | Currency::RUB | Currency::USD => (),
-            _ => {
-                return Err(FieldError::new(
-                    "Cart product currency is not valid.",
-                    graphql_value!({ "code": 100, "details": { "Cart product currency is not FIAT" }}),
-                ))
-            }
+        if !currency.is_fiat() {
+            return Err(FieldError::new(
+                "Cart product currency is not valid.",
+                graphql_value!({ "code": 100, "details": { "Cart product currency is not FIAT" }}),
+            ));
         }
+
         for cur in currencies {
             if cur != currency {
                 return Err(FieldError::new(
