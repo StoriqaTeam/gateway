@@ -21,6 +21,7 @@ use stq_static_resources::Provider;
 use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, SagaId, StoreId, UserId, WarehouseId};
 
 use errors::into_graphql;
+use graphql::microservice::{SagaService, SagaServiceImpl};
 use graphql::schema::base_product as base_product_module;
 use graphql::schema::buy_now;
 use graphql::schema::cart as cart_module;
@@ -1605,12 +1606,6 @@ graphql_object!(Mutation: Context |&self| {
                 graphql_value!({ "code": 300, "details": { format!("Base product with id: {} not found.", input.base_product_id) }}),
             ))?;
 
-        let url = format!(
-            "{}/{}/{}",
-            context.config.service_url(Service::Delivery),
-            Model::Product.to_url(),
-            base_product.id,
-        );
 
         let payload = NewShipping::from(NewShippingEnrichedInput {
             shipping: input,
@@ -1619,11 +1614,8 @@ graphql_object!(Mutation: Context |&self| {
             measurements: base_product.get_measurements(),
         });
 
-        let body = serde_json::to_string(&payload)?;
-
-        context.request::<Shipping>(Method::Post, url, Some(body))
-            .map(From::from)
-            .wait()
+        let saga  = SagaServiceImpl::new();
+        saga.upsert_shipping(context, base_product.id, payload).map(From::from)
     }
 
     field createCompany(&executor, input: NewCompanyInput as "Create company input.") -> FieldResult<Company> as "Creates new company." {
