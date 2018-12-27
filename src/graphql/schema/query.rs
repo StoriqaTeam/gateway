@@ -224,7 +224,7 @@ graphql_object!(Query: Context |&self| {
         OrderState::enum_iter().collect()
     }
 
-    field categories(&executor) -> FieldResult<Option<Category>> as "Fetches categories tree." {
+    field all_categories(&executor) -> FieldResult<Option<Category>> as "Fetches all categories tree." {
         let context = executor.context();
         let url = format!("{}/{}",
             context.config.service_url(Service::Stores),
@@ -234,7 +234,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field categories_with_products(&executor) -> FieldResult<Option<CategoryWithProducts>> as "Fetches categories tree only with exists products." {
+    field categories(&executor) -> FieldResult<Option<CategoryWithProducts>> as "Fetches categories tree only with exists products." {
         let context = executor.context();
         category_module::categories_with_products(context)
     }
