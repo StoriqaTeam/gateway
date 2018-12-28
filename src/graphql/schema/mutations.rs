@@ -697,7 +697,7 @@ graphql_object!(Mutation: Context |&self| {
         cart_module::run_add_in_cart(context, input)
     }
 
-    field deprecated "use setQuantityInCartV2" setQuantityInCart(&executor, input: SetQuantityInCartInput as "Set product quantity in cart input.") -> FieldResult<Option<Cart>> as "Sets product quantity in cart." {
+    field setQuantityInCart(&executor, input: SetQuantityInCartInput as "Set product quantity in cart input.") -> FieldResult<Option<Cart>> as "Sets product quantity in cart." {
         let context = executor.context();
 
         let customer = if let Some(ref user) = context.user {
@@ -995,7 +995,7 @@ graphql_object!(Mutation: Context |&self| {
         cart_module::convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)
     }
 
-    field deprecated "use setSelectionInCartV2" setSelectionInCart(
+    field setSelectionInCart(
         &executor,
         input: SetSelectionInCartInput as "Select product in cart input."
     ) -> FieldResult<Option<Cart>> as "Select product in cart." {
@@ -1098,7 +1098,7 @@ graphql_object!(Mutation: Context |&self| {
         cart_module::convert_products_to_cart(context, &products, Some(input.user_country_code)).map(Some)
     }
 
-    field deprecated "use setDeliveryMethodInCartV2" setDeliveryMethodInCart(
+    field setDeliveryMethodInCart(
         &executor,
         input: SetDeliveryMethodInCartInput as "Set delivery method in cart input.",
     ) -> FieldResult<Cart> as "Sets delivery method in the cart." {
@@ -1116,7 +1116,7 @@ graphql_object!(Mutation: Context |&self| {
         cart_module::run_set_delivery_method_in_cart(context, input)
     }
 
-    field deprecated "use removeDeliveryMethodFromCartV2" removeDeliveryMethodFromCart(
+    field removeDeliveryMethodFromCart(
         &executor,
         input: RemoveDeliveryMethodFromCartInput as "Remove delivery method from cart input.",
     ) -> FieldResult<Cart> as "Removes delivery method from the cart." {
@@ -1136,7 +1136,7 @@ graphql_object!(Mutation: Context |&self| {
 
     }
 
-    field deprecated "use deleteFromCartV2" deleteFromCart(
+    field deleteFromCart(
         &executor,
         input: DeleteFromCartInput as "Delete items from cart input.",
     ) -> FieldResult<Cart> as "Deletes products from cart." {
@@ -1188,7 +1188,7 @@ graphql_object!(Mutation: Context |&self| {
         cart_module::convert_products_to_cart(context, &products, Some(input.user_country_code))
     }
 
-    field deprecated "use clearCartV2" clearCart(&executor) -> FieldResult<Cart> as "Clears cart." {
+    field clearCart(&executor) -> FieldResult<Cart> as "Clears cart." {
         let context = executor.context();
 
         let customer = if let Some(ref user) = context.user {

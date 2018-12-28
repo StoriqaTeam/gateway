@@ -1,7 +1,6 @@
-use failure::Fail;
 use futures::Future;
 use hyper::Method;
-use juniper::{FieldError, FieldResult};
+use juniper::FieldResult;
 use serde_json;
 
 use stq_routes::model::Model;
