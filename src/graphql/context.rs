@@ -29,6 +29,8 @@ use stq_types::SessionId;
 use graphql::models::jwt::JWTPayload;
 use graphql::models::User;
 
+use graphql::microservice::{SagaService, SagaServiceImpl};
+
 pub struct Context {
     pub http_client: TimeLimitedHttpClient<ClientHandle>,
     pub user: Option<JWTPayload>,
@@ -196,6 +198,10 @@ impl Context {
             Some(value) => headers.set(value.clone()),
             None => headers.set(CorrelationToken(self.uuid.clone())),
         }
+    }
+
+    pub fn get_saga_microservice<'r>(&'r self) -> Box<dyn SagaService + 'r> {
+        Box::new(SagaServiceImpl::new(self))
     }
 }
 

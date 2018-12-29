@@ -21,7 +21,6 @@ use stq_static_resources::Provider;
 use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, SagaId, StoreId, UserId, WarehouseId};
 
 use errors::into_graphql;
-use graphql::microservice::{SagaService, SagaServiceImpl};
 use graphql::schema::base_product as base_product_module;
 use graphql::schema::buy_now;
 use graphql::schema::cart as cart_module;
@@ -1614,8 +1613,8 @@ graphql_object!(Mutation: Context |&self| {
             measurements: base_product.get_measurements(),
         });
 
-        let saga  = SagaServiceImpl::new();
-        saga.upsert_shipping(context, base_product.id, payload).map(From::from)
+        let saga  = context.get_saga_microservice();
+        saga.upsert_shipping(base_product.id, payload).map(From::from)
     }
 
     field createCompany(&executor, input: NewCompanyInput as "Create company input.") -> FieldResult<Company> as "Creates new company." {
