@@ -182,38 +182,3 @@ pipeline:
     when:
       event: push
       branch: master
-  slack:
-    image: plugins/slack
-    webhook: https://hooks.slack.com/services/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
-    channel: release
-    icon_url: https://drone.io/favicon.ico
-    username: cd.stq.cloud
-    template: >
-      {{#success build.status}}
-        {{repo.name}} has been released to stage.stq.cloud!
-      {{else}}
-        Failed to deploy {{repo.name}} to stage.stq.cloud! More details here {{build.link}}
-      {{/success}}
-    when:
-      event: tag
-      status:
-      - success
-      - failure
-  slack:
-    image: plugins/slack
-    webhook: https://hooks.slack.com/services/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
-    channel: release
-    icon_url: https://drone.io/favicon.ico
-    username: cd.stq.cloud
-    template: >
-      {{#success build.status}}
-        {{repo.name}} has been released to production.stq.cloud!
-      {{else}}
-        Failed to deploy {{repo.name}} to production.stq.cloud! More details here {{build.link}}
-      {{/success}}
-    when:
-      event: deployment
-      environment: production
-      status:
-      - success
-      - failure
