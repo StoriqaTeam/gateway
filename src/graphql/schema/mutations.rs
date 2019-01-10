@@ -659,7 +659,7 @@ graphql_object!(Mutation: Context |&self| {
         Ok(Mock{})
     }
 
-    field deprecated "use incrementInCartV2" incrementInCart(
+    field incrementInCart(
         &executor,
         input: IncrementInCartInput as "Increment in cart input.",
     ) -> FieldResult<Option<Cart>> as "Increment in cart." {
