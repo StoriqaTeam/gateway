@@ -677,7 +677,7 @@ graphql_object!(Mutation: Context |&self| {
         cart_module::run_increment_in_cart(context, input)
     }
 
-    field deprecated "use addInCartV2" AddInCart(
+    field AddInCart(
         &executor,
         input: AddInCartInput as "Add product quantity, plus delivery method in cart input.",
     ) -> FieldResult<Option<Cart>> as "Add in cart." {

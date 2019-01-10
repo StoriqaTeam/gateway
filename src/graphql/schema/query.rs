@@ -508,7 +508,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field deprecated "use cartV2" cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+    field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
