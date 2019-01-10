@@ -659,7 +659,7 @@ graphql_object!(Mutation: Context |&self| {
         Ok(Mock{})
     }
 
-    field deprecated "use incrementInCartV2" incrementInCart(
+    field incrementInCart(
         &executor,
         input: IncrementInCartInput as "Increment in cart input.",
     ) -> FieldResult<Option<Cart>> as "Increment in cart." {
@@ -747,7 +747,7 @@ graphql_object!(Mutation: Context |&self| {
 
     }
 
-    field deprecated "use setCouponInCartV2" setCouponInCart(
+    field setCouponInCart(
         &executor,
         input: SetCouponInCartInput as "Set coupon in cart input.",
     ) -> FieldResult<Option<Cart>> as "Sets coupon in cart." {
@@ -825,9 +825,11 @@ graphql_object!(Mutation: Context |&self| {
         }
 
         for product_id in products_for_cart {
+            let rpc_client = context.get_rest_api_client(Service::Orders);
             rpc_client.add_coupon(customer, product_id, coupon.id).sync()?;
         }
 
+        let rpc_client = context.get_rest_api_client(Service::Orders);
         let products: Vec<_> = rpc_client.get_cart(customer).sync()
             .map_err(into_graphql)?
             .into_iter().collect();
