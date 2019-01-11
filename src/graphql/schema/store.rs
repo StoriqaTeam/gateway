@@ -16,7 +16,7 @@ use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::{Language, ModerationStatus, Translation};
-use stq_types::{OrderIdentifier, OrderSlug, ProductId, StoreId};
+use stq_types::{OrderIdentifier, OrderSlug, ProductId, StoreId, StoresRole};
 
 use super::*;
 use errors::into_graphql;
@@ -495,6 +495,13 @@ graphql_object!(Store: Context as "Store" |&self| {
         let mut options = search_term.options.clone().unwrap_or_default();
 
         options.store_id = Some(self.id.0);
+
+        let stores_roles = context.permissions().store_roles()?;
+        if !stores_roles.contains(&StoresRole::Superuser) &&
+            !stores_roles.contains(&StoresRole::PlatformAdmin) &&
+            context.user.as_ref().map(|jwt| jwt.user_id) != Some(self.user_id) {
+            options.status = Some(ModerationStatus::Published);
+        }
 
         if visibility == Visibility::Published {
             options.status = Some(ModerationStatus::Published);

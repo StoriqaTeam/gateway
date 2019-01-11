@@ -7,6 +7,7 @@ use hyper::header::{Authorization, Cookie, Headers};
 use juniper;
 use juniper::parser::SourcePosition;
 use juniper::FieldError;
+use juniper::FieldResult;
 use serde::de::DeserializeOwned;
 use serde::ser;
 use serde::ser::SerializeMap;
@@ -24,12 +25,12 @@ use stq_http::request_util::{CorrelationToken, Currency as CurrencyHeader};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
-use stq_types::SessionId;
+use stq_types::{SessionId, StoresRole};
 
 use graphql::models::jwt::JWTPayload;
 use graphql::models::User;
 
-use graphql::microservice::{SagaService, SagaServiceImpl};
+use graphql::microservice::{SagaService, SagaServiceImpl, StoresService, StoresServiceImpl};
 
 pub struct Context {
     pub http_client: TimeLimitedHttpClient<ClientHandle>,
@@ -39,6 +40,10 @@ pub struct Context {
     pub correlation_token: Option<CorrelationToken>,
     pub uuid: String,
     pub config: Config,
+}
+
+pub struct Permissions<'r> {
+    context: &'r Context,
 }
 
 impl juniper::Context for Context {}
@@ -202,6 +207,23 @@ impl Context {
 
     pub fn get_saga_microservice<'r>(&'r self) -> Box<dyn SagaService + 'r> {
         Box::new(SagaServiceImpl::new(self))
+    }
+
+    pub fn get_stores_microservice<'r>(&'r self) -> Box<dyn StoresService + 'r> {
+        Box::new(StoresServiceImpl::new(self))
+    }
+
+    pub fn permissions(&self) -> Permissions {
+        Permissions { context: &self }
+    }
+}
+
+impl<'r> Permissions<'r> {
+    pub fn store_roles(&self) -> FieldResult<Vec<StoresRole>> {
+        if let Some(current_user_id) = self.context.user.as_ref().map(|jwt| jwt.user_id) {
+            return self.context.get_stores_microservice().roles(current_user_id);
+        }
+        Ok(Vec::new())
     }
 }
 
