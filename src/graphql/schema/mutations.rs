@@ -1050,7 +1050,7 @@ graphql_object!(Mutation: Context |&self| {
 
     }
 
-    field deprecated "use setCommentInCartV2" setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.")
+    field setCommentInCart(&executor, input: SetCommentInCartInput as "Set comment in cart input.")
         -> FieldResult<Option<Cart>> as "Set comment in cart." {
 
         let context = executor.context();
