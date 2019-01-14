@@ -1,7 +1,10 @@
 use std::time::SystemTime;
 
 use stq_static_resources::{Currency, OrderState};
-use stq_types::{InvoiceId, ProductPrice};
+use stq_types::{
+    stripe::{ChargeId, PaymentIntentId},
+    InvoiceId, ProductPrice,
+};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Invoice {
@@ -38,4 +41,32 @@ pub struct MerchantBalance {
 pub enum MerchantBalanceStatus {
     Active,
     Blocked,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PaymentIntent {
+    pub id: PaymentIntentId,
+    pub invoice_id: InvoiceId,
+    pub amount: u64,
+    pub amount_received: u64,
+    pub client_secret: Option<String>,
+    pub currency: Currency,
+    pub last_payment_error_message: Option<String>,
+    pub receipt_email: Option<String>,
+    pub charge_id: Option<ChargeId>,
+    pub status: PaymentIntentStatus,
+}
+
+#[derive(GraphQLEnum, Deserialize, Serialize, Debug, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum PaymentIntentStatus {
+    RequiresSource,
+    RequiresConfirmation,
+    RequiresSourceAction,
+    Processing,
+    RequiresCapture,
+    Canceled,
+    Succeeded,
+    #[serde(other)]
+    Other,
 }

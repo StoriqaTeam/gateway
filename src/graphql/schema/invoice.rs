@@ -54,6 +54,14 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
     field amount_captured() -> &f64 as "amount captured"{
         &self.amount_captured.0
     }
+
+    field payment_intent(&executor) -> FieldResult<Option<PaymentIntent>> as "Stripe payment intent" {
+        let context = executor.context();
+
+        let billing = context.get_billing_microservice();
+        billing.payment_intent_by_invoice(self.invoice_id)
+    }
+
 });
 
 graphql_object!(Transaction: Context as "Transaction" |&self| {

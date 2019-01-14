@@ -29,7 +29,7 @@ use stq_types::SessionId;
 use graphql::models::jwt::JWTPayload;
 use graphql::models::User;
 
-use graphql::microservice::{SagaService, SagaServiceImpl};
+use graphql::microservice::{BillingService, BillingServiceImpl, SagaService, SagaServiceImpl};
 
 pub struct Context {
     pub http_client: TimeLimitedHttpClient<ClientHandle>,
@@ -202,6 +202,10 @@ impl Context {
 
     pub fn get_saga_microservice<'r>(&'r self) -> Box<dyn SagaService + 'r> {
         Box::new(SagaServiceImpl::new(self))
+    }
+
+    pub fn get_billing_microservice<'r>(&'r self) -> Box<dyn BillingService + 'r> {
+        Box::new(BillingServiceImpl::new(self))
     }
 }
 
