@@ -79,8 +79,6 @@ pub struct UpdateStoreInput {
     pub default_language: Option<Language>,
     #[graphql(description = "Slogan")]
     pub slogan: Option<String>,
-    #[graphql(description = "Rating")]
-    pub rating: Option<f64>,
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,
@@ -104,7 +102,6 @@ impl UpdateStoreInput {
             instagram_url: None,
             default_language: None,
             slogan: None,
-            rating: None,
             address_full: AddressInput {
                 country: None,
                 country_code: None,
