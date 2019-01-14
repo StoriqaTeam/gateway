@@ -44,5 +44,3 @@ http = "0.1"
 
 graphql_client = "0.5.1"
 reqwest = "0.9.5"
-
-stripe-rust = { git = "https://github.com/StoriqaTeam/stripe-rs", branch="master" }

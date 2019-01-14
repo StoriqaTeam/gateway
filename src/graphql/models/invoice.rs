@@ -1,7 +1,5 @@
 use std::time::SystemTime;
 
-use stripe;
-
 use stq_static_resources::{Currency, OrderState};
 use stq_types::{
     stripe::{ChargeId, PaymentIntentId},
@@ -56,10 +54,11 @@ pub struct PaymentIntent {
     pub last_payment_error_message: Option<String>,
     pub receipt_email: Option<String>,
     pub charge_id: Option<ChargeId>,
-    pub status: stripe::PaymentIntentStatus,
+    pub status: PaymentIntentStatus,
 }
 
 #[derive(GraphQLEnum, Deserialize, Serialize, Debug, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
 pub enum PaymentIntentStatus {
     RequiresSource,
     RequiresConfirmation,
@@ -68,20 +67,6 @@ pub enum PaymentIntentStatus {
     RequiresCapture,
     Canceled,
     Succeeded,
+    #[serde(other)]
     Other,
-}
-
-impl From<stripe::PaymentIntentStatus> for PaymentIntentStatus {
-    fn from(other: stripe::PaymentIntentStatus) -> Self {
-        match other {
-            stripe::PaymentIntentStatus::RequiresSource => PaymentIntentStatus::RequiresSource,
-            stripe::PaymentIntentStatus::RequiresConfirmation => PaymentIntentStatus::RequiresConfirmation,
-            stripe::PaymentIntentStatus::RequiresSourceAction => PaymentIntentStatus::RequiresSourceAction,
-            stripe::PaymentIntentStatus::Processing => PaymentIntentStatus::Processing,
-            stripe::PaymentIntentStatus::RequiresCapture => PaymentIntentStatus::RequiresCapture,
-            stripe::PaymentIntentStatus::Canceled => PaymentIntentStatus::Canceled,
-            stripe::PaymentIntentStatus::Succeeded => PaymentIntentStatus::Succeeded,
-            stripe::PaymentIntentStatus::Other => PaymentIntentStatus::Other,
-        }
-    }
 }

@@ -8,7 +8,7 @@ use stq_static_resources::Currency;
 graphql_object!(PaymentIntent: Context as "PaymentIntent" |&self| {
     description: "PaymentIntent info."
 
-    field id() -> GraphqlID as "Base64 Unique id" {
+    field id() -> GraphqlID as "Unique id" {
         self.id.to_string().into()
     }
 
@@ -44,7 +44,7 @@ graphql_object!(PaymentIntent: Context as "PaymentIntent" |&self| {
         self.charge_id.as_ref().map(|v| v.0.clone())
     }
 
-    field status() -> PaymentIntentStatus as "Status" {
-        PaymentIntentStatus::from(self.status.clone())
+    field status() -> &PaymentIntentStatus as "Status" {
+        &self.status
     }
 });
