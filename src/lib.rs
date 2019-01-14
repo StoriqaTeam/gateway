@@ -35,6 +35,8 @@ extern crate geo;
 extern crate sentry;
 extern crate http;
 
+extern crate stripe;
+
 pub mod config;
 pub mod controller;
 pub mod errors;
