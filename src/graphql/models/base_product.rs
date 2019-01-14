@@ -83,8 +83,6 @@ pub struct UpdateBaseProductInput {
     pub currency: Option<Currency>,
     #[graphql(description = "Category id.")]
     pub category_id: Option<i32>,
-    #[graphql(description = "Rating.")]
-    pub rating: Option<f64>,
     #[graphql(description = "Slug.")]
     pub slug: Option<String>,
     #[graphql(description = "Length (cm)")]
@@ -109,7 +107,6 @@ impl UpdateBaseProductInput {
             seo_description: None,
             currency: None,
             category_id: None,
-            rating: None,
             slug: None,
             length_cm: None,
             width_cm: None,
