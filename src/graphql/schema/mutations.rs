@@ -1351,10 +1351,11 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateUserDeliveryAddressFull(&executor, input: UpdateUserDeliveryAddressFullInput as "Update delivery address full input.") -> FieldResult<UserDeliveryAddress>  as "Updates delivery address full."{
         let context = executor.context();
+        let identifier = ID::from_str(&*input.id)?;
         let url = format!("{}/{}/addresses/{}",
             context.config.service_url(Service::Delivery),
             Model::User.to_url(),
-            input.id.to_string());
+            identifier.raw_id);
 
         if input.is_none() {
              return Err(FieldError::new(
