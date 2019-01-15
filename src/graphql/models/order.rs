@@ -402,3 +402,14 @@ pub struct BuyNow {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct OrderProduct(pub Product);
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Order confirm for seller input.")]
+pub struct OrderConfirmInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Slug of order.")]
+    #[serde(skip_serializing)]
+    pub order_slug: i32,
+}
