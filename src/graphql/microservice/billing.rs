@@ -25,17 +25,16 @@ impl<'ctx> BillingServiceImpl<'ctx> {
     fn base_url(&self) -> String {
         self.context.config.service_url(Service::Billing)
     }
+
+    fn request_url(&self, request: &str) -> String {
+        format!("{}/{}", self.base_url(), request)
+    }
 }
 
 impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
     fn payment_intent_by_invoice(&self, invoice_id: InvoiceId) -> FieldResult<Option<PaymentIntent>> {
-        let url = format!(
-            "{}/{}/{}/{}",
-            self.base_url(),
-            Model::PaymentIntent.to_url(),
-            Model::Invoice.to_url(),
-            invoice_id
-        );
+        let request_path = format!("{}/{}/{}", Model::PaymentIntent.to_url(), Model::Invoice.to_url(), invoice_id);
+        let url = self.request_url(&request_path);
 
         self.context.request::<Option<PaymentIntent>>(Method::Get, url, None).wait()
     }
