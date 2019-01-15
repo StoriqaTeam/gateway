@@ -28,6 +28,7 @@ use graphql::schema::category as category_module;
 use graphql::schema::order;
 use graphql::schema::product as product_module;
 use graphql::schema::store as store_module;
+use graphql::schema::stripe as stripe_module;
 use graphql::schema::user as user_module;
 
 pub struct Mutation;
@@ -1914,6 +1915,13 @@ graphql_object!(Mutation: Context |&self| {
         let context = executor.context();
 
         order::run_confirm_email_mutation(context, input)
+    }
+
+    field CreateCustomerWithSource(&executor,
+                            input: CreateCustomerWithSourceInput as "Creates Customer object in Stripe",) -> FieldResult<Mock> as "Creates Customer object" {
+        let context = executor.context();
+
+        stripe_module::run_create_customer_with_source_mutation(context, input)
     }
 
 });
