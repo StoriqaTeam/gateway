@@ -41,6 +41,3 @@ tokio-signal = "0.2"
 uuid = { version = "0.6", features = ["use_std", "v4", "serde"] }
 sentry = { version = "0.12", default-features = false, features = ["with_client_implementation", "with_backtrace", "with_panic", "with_failure"]}
 http = "0.1"
-
-graphql_client = "0.5.1"
-reqwest = "0.9.5"
