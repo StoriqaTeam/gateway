@@ -4,10 +4,9 @@ use juniper::FieldResult;
 use serde_json;
 
 use stq_routes::model::Model;
-use stq_types::{BaseProductId, OrderSlug};
+use stq_types::BaseProductId;
 
 use stq_api::orders::Order;
-use stq_static_resources::OrderState;
 
 use graphql::context::Context;
 use graphql::models::*;
@@ -15,7 +14,7 @@ use graphql::models::*;
 pub trait SagaService {
     fn upsert_shipping(&self, base_product_id: BaseProductId, shipping: NewShipping) -> FieldResult<Shipping>;
 
-    fn set_order_state(&self, order_slug: OrderSlug, state: OrderState) -> FieldResult<Option<GraphQLOrder>>;
+    fn set_order_confirmed(&self, input: OrderConfirmed) -> FieldResult<Option<GraphQLOrder>>;
 }
 
 pub struct SagaServiceImpl<'ctx> {
@@ -45,10 +44,10 @@ impl<'ctx> SagaService for SagaServiceImpl<'ctx> {
         self.context.request::<Shipping>(Method::Post, url, Some(body)).wait()
     }
 
-    fn set_order_state(&self, order_slug: OrderSlug, state: OrderState) -> FieldResult<Option<GraphQLOrder>> {
-        let request_path = format!("{}/{}/set_state", Model::Order.to_url(), order_slug);
+    fn set_order_confirmed(&self, input: OrderConfirmed) -> FieldResult<Option<GraphQLOrder>> {
+        let request_path = format!("{}/{}/set_state", Model::Order.to_url(), input.order_slug);
         let url = self.request_url(&request_path);
-        let body = serde_json::to_string(&state)?;
+        let body = serde_json::to_string(&input)?;
 
         self.context
             .request::<Option<Order>>(Method::Post, url, Some(body))

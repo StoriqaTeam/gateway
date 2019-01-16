@@ -1904,7 +1904,7 @@ graphql_object!(Mutation: Context |&self| {
     }
 
     field confirmOrder(&executor,
-                        input: OrderConfirmInput as "Confirm order input object", ) -> FieldResult<Option<GraphQLOrder>> as "Confirm order for seller" {
+                        input: OrderConfirmedInput as "Confirm order input object", ) -> FieldResult<Option<GraphQLOrder>> as "Confirm order for seller" {
         let context = executor.context();
 
         order::run_confirm_order_mutation(context, input)

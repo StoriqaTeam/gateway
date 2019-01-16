@@ -15,7 +15,7 @@ use stq_api::{
 };
 use stq_routes::{model::Model, service::Service};
 use stq_static_resources::{Currency, OrderState};
-use stq_types::{CouponId, OrderIdentifier, OrderSlug, ProductSellerPrice};
+use stq_types::{CouponId, OrderIdentifier, ProductSellerPrice};
 
 use super::*;
 use errors::into_graphql;
@@ -722,11 +722,7 @@ pub fn validate_products_fiat<'a>(products: impl Iterator<Item = &'a ProductSell
     Ok(())
 }
 
-pub fn run_confirm_order_mutation(context: &Context, input: OrderConfirmInput) -> FieldResult<Option<GraphQLOrder>> {
+pub fn run_confirm_order_mutation(context: &Context, input: OrderConfirmedInput) -> FieldResult<Option<GraphQLOrder>> {
     let saga = context.get_saga_microservice();
-
-    let next_status = OrderState::InProcessing;
-    let slug = OrderSlug(input.order_slug);
-
-    saga.set_order_state(slug, next_status)
+    saga.set_order_confirmed(input.into())
 }
