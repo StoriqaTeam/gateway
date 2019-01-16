@@ -2,7 +2,9 @@ use failure::Error;
 use futures::Future;
 
 mod saga;
+mod stores;
 pub use self::saga::*;
+pub use self::stores::*;
 
 mod billing;
 pub use self::billing::*;
