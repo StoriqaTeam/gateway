@@ -405,11 +405,31 @@ pub struct OrderProduct(pub Product);
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Order confirm for seller input.")]
-pub struct OrderConfirmInput {
+pub struct OrderConfirmedInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
     #[graphql(description = "Slug of order.")]
-    #[serde(skip_serializing)]
     pub order_slug: i32,
+    #[graphql(description = "Comment")]
+    pub comment: Option<String>,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct OrderConfirmed {
+    pub order_slug: OrderSlug,
+    pub state: OrderState,
+    pub comment: Option<String>,
+    pub committer_role: CommitterRole,
+}
+
+impl From<OrderConfirmedInput> for OrderConfirmed {
+    fn from(order: OrderConfirmedInput) -> Self {
+        Self {
+            order_slug: OrderSlug(order.order_slug),
+            state: OrderState::InProcessing,
+            comment: order.comment,
+            committer_role: CommitterRole::Seller,
+        }
+    }
 }
