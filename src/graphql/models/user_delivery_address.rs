@@ -133,9 +133,9 @@ pub struct UpdateUserDeliveryAddressFullInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Id of delivery address.")]
+    #[graphql(description = "Raw id of delivery address.")]
     #[serde(skip_serializing)]
-    pub id: GraphqlID,
+    pub id: i32,
     #[graphql(description = "Address")]
     #[serde(flatten)]
     pub address_full: AddressInput,
