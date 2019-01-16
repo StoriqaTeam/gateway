@@ -722,7 +722,7 @@ pub fn validate_products_fiat<'a>(products: impl Iterator<Item = &'a ProductSell
     Ok(())
 }
 
-pub fn run_confirm_email_mutation(context: &Context, input: OrderConfirmInput) -> FieldResult<Option<GraphQLOrder>> {
+pub fn run_confirm_order_mutation(context: &Context, input: OrderConfirmInput) -> FieldResult<Option<GraphQLOrder>> {
     let saga = context.get_saga_microservice();
 
     let next_status = OrderState::InProcessing;
