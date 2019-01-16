@@ -1352,11 +1352,6 @@ graphql_object!(Mutation: Context |&self| {
 
     field updateUserDeliveryAddressFull(&executor, input: UpdateUserDeliveryAddressFullInput as "Update delivery address full input.") -> FieldResult<UserDeliveryAddress>  as "Updates delivery address full."{
         let context = executor.context();
-        let identifier = ID::from_str(&*input.id)?;
-        let url = format!("{}/{}/addresses/{}",
-            context.config.service_url(Service::Delivery),
-            Model::User.to_url(),
-            identifier.raw_id);
 
         if input.is_none() {
              return Err(FieldError::new(
@@ -1365,10 +1360,8 @@ graphql_object!(Mutation: Context |&self| {
             ));
         }
 
-        let body: String = serde_json::to_string(&input)?.to_string();
-
-        context.request::<UserDeliveryAddress>(Method::Put, url, Some(body))
-            .wait()
+        let delivery = context.get_delivery_microservice();
+        delivery.update_user_delivery_address(input)
     }
 
     field deleteUserDeliveryAddressFull(&executor, id: i32 as "Raw id of delivery address") -> FieldResult<UserDeliveryAddress>  as "Deletes delivery address." {
