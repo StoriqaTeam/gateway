@@ -220,6 +220,14 @@ graphql_object!(Query: Context |&self| {
         vec![Currency::STQ]
     }
 
+    field fiat_currencies(&executor) -> Vec<Currency> as "Fetches fiat currencies." {
+        Currency::enum_iter().filter(|v| v.is_fiat()).collect()
+    }
+
+    field crypto_currencies(&executor) -> Vec<Currency> as "Fetches crypto currencies." {
+        Currency::enum_iter().filter(|v| !v.is_fiat()).collect()
+    }
+
     field order_statuses(&executor) -> Vec<OrderState> as "Fetches order statuses." {
         OrderState::enum_iter().collect()
     }
