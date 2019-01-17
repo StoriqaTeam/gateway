@@ -19,9 +19,3 @@ After running gateway in Docker Compose, from `docker` directory run:
 ```
 docker-compose -f compose-test.yml up
 ```
-
-## Integration tests
-
-```
-docker-compose run -e RUN_MODE=test.toml --rm gateway cargo test -- --test-threads=1
-```
