@@ -15,7 +15,7 @@ pub use self::delivery::*;
 pub mod requests;
 pub use self::requests::*;
 
-pub mod response;
-pub use self::response::*;
+pub mod responses;
+pub use self::responses::*;
 
 pub type ApiFuture<T> = Box<Future<Item = T, Error = Error>>;

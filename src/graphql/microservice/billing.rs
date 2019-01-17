@@ -8,7 +8,7 @@ use stq_types::InvoiceId;
 
 use graphql::context::Context;
 use graphql::microservice::requests::*;
-use graphql::microservice::response::*;
+use graphql::microservice::responses::*;
 
 pub trait BillingService {
     fn payment_intent_by_invoice(&self, invoice_id: InvoiceId) -> FieldResult<Option<PaymentIntent>>;
