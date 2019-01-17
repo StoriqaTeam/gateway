@@ -5,7 +5,7 @@ pub struct CreateCustomerWithSourceInput {
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
     #[graphql(description = "Customer’s email address.")]
-    pub email: String,
+    pub email: Option<String>,
     #[graphql(description = "Credit card token for use Stripe API.")]
     pub card_token: String,
 }

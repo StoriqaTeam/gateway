@@ -2,7 +2,7 @@ use graphql::models::*;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct NewCustomerWithSourceRequest {
-    pub email: String,
+    pub email: Option<String>,
     pub card_token: String,
 }
 
