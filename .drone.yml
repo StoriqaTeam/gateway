@@ -54,6 +54,7 @@ pipeline:
     image: rust:1.31-stretch
     environment:
     - CARGO_HOME=deps
+    - RUSTFLAGS=-C opt-level=1 -C debuginfo=0
     commands:
     - cargo build --locked
     when:
