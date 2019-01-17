@@ -7,12 +7,13 @@ use stq_routes::service::Service;
 use stq_types::InvoiceId;
 
 use graphql::context::Context;
-use graphql::models::*;
+use graphql::microservice::requests::*;
+use graphql::microservice::response::*;
 
 pub trait BillingService {
     fn payment_intent_by_invoice(&self, invoice_id: InvoiceId) -> FieldResult<Option<PaymentIntent>>;
 
-    fn create_customer_with_source(&self, input: CreateCustomerWithSourceInput) -> FieldResult<()>;
+    fn create_customer_with_source(&self, input: NewCustomerWithSourceRequest) -> FieldResult<()>;
 }
 
 pub struct BillingServiceImpl<'ctx> {
@@ -41,7 +42,7 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         self.context.request::<Option<PaymentIntent>>(Method::Get, url, None).wait()
     }
 
-    fn create_customer_with_source(&self, input: CreateCustomerWithSourceInput) -> FieldResult<()> {
+    fn create_customer_with_source(&self, input: NewCustomerWithSourceRequest) -> FieldResult<()> {
         let request_path = format!("{}/with_source", Model::Customer.to_url());
         let url = self.request_url(&request_path);
 

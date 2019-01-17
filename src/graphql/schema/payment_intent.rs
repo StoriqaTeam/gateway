@@ -1,6 +1,6 @@
 //! File containing PaymentIntent object of graphql schema
 use graphql::context::Context;
-use graphql::models::*;
+use graphql::microservice::response::*;
 use juniper::ID as GraphqlID;
 
 use stq_static_resources::Currency;
