@@ -17,11 +17,11 @@ graphql_object!(PaymentIntent: Context as "PaymentIntent" |&self| {
     }
 
     field amount() -> f64 as "Amount" {
-        self.amount as f64
+        self.amount
     }
 
     field amount_received() -> f64 as "Amount received" {
-        self.amount_received as f64
+        self.amount_received
     }
 
     field client_secret() -> &Option<String> as "Client secret" {
@@ -32,7 +32,7 @@ graphql_object!(PaymentIntent: Context as "PaymentIntent" |&self| {
         &self.currency
     }
 
-    field last_payment_error_message() -> &Option<String> as " Last payment error message" {
+    field last_payment_error_message() -> &Option<String> as "Last payment error message" {
         &self.last_payment_error_message
     }
 

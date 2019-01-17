@@ -8,8 +8,8 @@ use stq_types::{
 pub struct PaymentIntent {
     pub id: PaymentIntentId,
     pub invoice_id: InvoiceId,
-    pub amount: u64,
-    pub amount_received: u64,
+    pub amount: f64,
+    pub amount_received: f64,
     pub client_secret: Option<String>,
     pub currency: Currency,
     pub last_payment_error_message: Option<String>,
