@@ -220,6 +220,18 @@ graphql_object!(Query: Context |&self| {
         vec![Currency::STQ]
     }
 
+    field fiat_currencies(&executor) -> Vec<Currency> as "Fetches fiat currencies for customers." {
+        vec![Currency::EUR, Currency::USD]
+    }
+
+    field crypto_currencies(&executor) -> Vec<Currency> as "Fetches crypto currencies for customers." {
+        vec![Currency::BTC, Currency::ETH, Currency::STQ]
+    }
+
+    field seller_currencies(&executor) -> Vec<Currency> as "Fetches currencies for sellers." {
+        vec![Currency::EUR, Currency::STQ, Currency::BTC, Currency::ETH]
+    }
+
     field order_statuses(&executor) -> Vec<OrderState> as "Fetches order statuses." {
         OrderState::enum_iter().collect()
     }
