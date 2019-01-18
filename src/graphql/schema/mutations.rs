@@ -1911,7 +1911,7 @@ graphql_object!(Mutation: Context |&self| {
     }
 
     field createCustomerWithSource(&executor,
-                            input: CreateCustomerWithSourceInput as "Creates Customer object in Stripe",) -> FieldResult<Mock> as "Creates Customer object" {
+                            input: CreateCustomerWithSourceInput as "Creates Customer object in Stripe",) -> FieldResult<Customer> as "Creates Customer object" {
         let context = executor.context();
 
         stripe_module::run_create_customer_with_source_mutation(context, input)

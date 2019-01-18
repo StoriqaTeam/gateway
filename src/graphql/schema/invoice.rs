@@ -10,7 +10,6 @@ use stq_static_resources::{Currency, OrderState};
 use stq_types::{OrderId, OrderIdentifier};
 
 use graphql::context::Context;
-use graphql::microservice::responses::*;
 use graphql::models::*;
 use graphql::schema::order as order_module;
 
