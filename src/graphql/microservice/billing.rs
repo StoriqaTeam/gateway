@@ -7,12 +7,15 @@ use stq_routes::service::Service;
 use stq_types::InvoiceId;
 
 use graphql::context::Context;
+use graphql::microservice::requests::*;
 use graphql::models::*;
 
 pub trait BillingService {
     fn payment_intent_by_invoice(&self, invoice_id: InvoiceId) -> FieldResult<Option<PaymentIntent>>;
 
-    fn create_customer_with_source(&self, input: CreateCustomerWithSourceInput) -> FieldResult<()>;
+    fn create_customer_with_source(&self, input: NewCustomerWithSourceRequest) -> FieldResult<Customer>;
+
+    fn get_current_customer(&self) -> FieldResult<Option<Customer>>;
 }
 
 pub struct BillingServiceImpl<'ctx> {
@@ -41,11 +44,18 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         self.context.request::<Option<PaymentIntent>>(Method::Get, url, None).wait()
     }
 
-    fn create_customer_with_source(&self, input: CreateCustomerWithSourceInput) -> FieldResult<()> {
+    fn create_customer_with_source(&self, input: NewCustomerWithSourceRequest) -> FieldResult<Customer> {
         let request_path = format!("{}/with_source", Model::Customer.to_url());
         let url = self.request_url(&request_path);
 
         let body: String = serde_json::to_string(&input)?;
-        self.context.request::<()>(Method::Post, url, Some(body)).wait()
+        self.context.request::<Customer>(Method::Post, url, Some(body)).wait()
+    }
+
+    fn get_current_customer(&self) -> FieldResult<Option<Customer>> {
+        let request_path = format!("{}", Model::Customer.to_url());
+        let url = self.request_url(&request_path);
+
+        self.context.request::<Option<Customer>>(Method::Get, url, None).wait()
     }
 }

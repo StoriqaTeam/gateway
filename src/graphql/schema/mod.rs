@@ -13,6 +13,7 @@ pub mod company_package;
 pub mod country;
 pub mod coupon;
 pub mod custom_attribute;
+pub mod customer;
 pub mod invoice;
 pub mod main_page;
 pub mod moderator_comment;

@@ -546,6 +546,14 @@ graphql_object!(User: Context as "User" |&self| {
         context.request::<Vec<MerchantBalance>>(Method::Get, url, None)
             .wait()
     }
+
+    field stripe_customer(&executor) -> FieldResult<Option<Customer>> as "Customer." {
+        let context = executor.context();
+
+        let billing = context.get_billing_microservice();
+        billing.get_current_customer()
+    }
+
 });
 
 graphql_object!(UtmMark: Context as "UsersUtmMark" |&self| {
