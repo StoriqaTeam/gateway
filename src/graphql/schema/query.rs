@@ -12,7 +12,7 @@ use stq_api::types::ApiFutureExt;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::Currency;
-use stq_static_resources::{Language, LanguageGraphQl, OrderState, TemplateVariant};
+use stq_static_resources::{CurrencyType, Language, LanguageGraphQl, OrderState, TemplateVariant};
 use stq_types::{BaseProductId, OrderId, WarehouseId};
 
 use super::*;
@@ -520,18 +520,18 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+    field cart(&executor, currency_type: Option<CurrencyType> as "Currency type") -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
         let fut = if let Some(session_id) = context.session_id {
             if let Some(ref user) = context.user {
-                rpc_client.merge(session_id.into(), user.user_id.into())
+                rpc_client.merge(session_id.into(), user.user_id.into(), currency_type)
             } else {
-                rpc_client.get_cart(session_id.into())
+                rpc_client.get_cart(session_id.into(), currency_type)
             }
         } else if let Some(ref user) = context.user {
-            rpc_client.get_cart(user.user_id.into())
+            rpc_client.get_cart(user.user_id.into(), currency_type)
         }  else {
             return Err(FieldError::new(
                 "Could not get users cart.",
@@ -546,18 +546,18 @@ graphql_object!(Query: Context |&self| {
         cart_module::convert_products_to_cart(context, &products, None).map(Some)
     }
 
-    field cart_v2(&executor, user_country_code: String as "User country code.") -> FieldResult<Option<Cart>> as "Fetches cart with country." {
+    field cart_v2(&executor, user_country_code: String as "User country code.", currency_type: Option<CurrencyType> as "Currency type") -> FieldResult<Option<Cart>> as "Fetches cart with country." {
         let context = executor.context();
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
         let fut = if let Some(session_id) = context.session_id {
             if let Some(ref user) = context.user {
-                rpc_client.merge(session_id.into(), user.user_id.into())
+                rpc_client.merge(session_id.into(), user.user_id.into(), currency_type)
             } else {
-                rpc_client.get_cart(session_id.into())
+                rpc_client.get_cart(session_id.into(), currency_type)
             }
         } else if let Some(ref user) = context.user {
-            rpc_client.get_cart(user.user_id.into())
+            rpc_client.get_cart(user.user_id.into(), currency_type)
         }  else {
             return Err(FieldError::new(
                 "Could not get users cart.",
