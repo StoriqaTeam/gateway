@@ -34,7 +34,6 @@ extern crate geo;
 #[macro_use]
 extern crate sentry;
 extern crate http;
-extern crate stripe;
 
 pub mod config;
 pub mod controller;

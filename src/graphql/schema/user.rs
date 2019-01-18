@@ -551,11 +551,7 @@ graphql_object!(User: Context as "User" |&self| {
         let context = executor.context();
 
         let billing = context.get_billing_microservice();
-        billing.get_current_customer().map(|response| {
-            response.map(|stripe_customer| {
-                Customer::from(stripe_customer)
-            })
-        })
+        billing.get_current_customer()
     }
 
 });
