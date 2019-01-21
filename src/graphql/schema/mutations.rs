@@ -17,7 +17,7 @@ use stq_api::types::ApiFutureExt;
 use stq_api::warehouses::WarehouseClient;
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::Provider;
+use stq_static_resources::{CurrencyType, Provider};
 use stq_types::{BaseProductId, CartItem, CouponCode, CouponId, ProductId, SagaId, StoreId, UserId, WarehouseId};
 
 use errors::into_graphql;
@@ -759,6 +759,7 @@ graphql_object!(Mutation: Context |&self| {
     field setCouponInCart(
         &executor,
         input: SetCouponInCartInput as "Set coupon in cart input.",
+        currency_type: Option<CurrencyType> as "Currency type",
     ) -> FieldResult<Option<Cart>> as "Sets coupon in cart." {
         let context = executor.context();
 
@@ -785,7 +786,7 @@ graphql_object!(Mutation: Context |&self| {
         }
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let current_cart = rpc_client.get_cart(customer).sync()?;
+        let current_cart = rpc_client.get_cart(customer, currency_type).sync()?;
 
         // validate used coupon
         let coupon_apply = current_cart.iter().any(|c| {
@@ -839,7 +840,7 @@ graphql_object!(Mutation: Context |&self| {
         }
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let products: Vec<_> = rpc_client.get_cart(customer).sync()
+        let products: Vec<_> = rpc_client.get_cart(customer, currency_type).sync()
             .map_err(into_graphql)?
             .into_iter().collect();
 
@@ -850,6 +851,7 @@ graphql_object!(Mutation: Context |&self| {
     field setCouponInCartV2(
         &executor,
         input: SetCouponInCartInputV2 as "Set coupon in cart input.",
+        currency_type: Option<CurrencyType> as "Currency type",
     ) -> FieldResult<Option<Cart>> as "Sets coupon in cart." {
         let context = executor.context();
 
@@ -876,7 +878,7 @@ graphql_object!(Mutation: Context |&self| {
         }
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
-        let current_cart = rpc_client.get_cart(customer).sync()?;
+        let current_cart = rpc_client.get_cart(customer, currency_type).sync()?;
 
         // validate used coupon
         let coupon_apply = current_cart.iter().any(|c| {
@@ -928,7 +930,7 @@ graphql_object!(Mutation: Context |&self| {
             rpc_client.add_coupon(customer, product_id, coupon.id).sync()?;
         }
 
-        let products: Vec<_> = rpc_client.get_cart(customer).sync()
+        let products: Vec<_> = rpc_client.get_cart(customer, currency_type).sync()
             .map_err(into_graphql)?
             .into_iter().collect();
 
@@ -1467,16 +1469,16 @@ graphql_object!(Mutation: Context |&self| {
             })
     }
 
-    field createOrders(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
+    field createOrders(&executor, input: CreateOrderInput as "Create order input.", currency_type: Option<CurrencyType> as "Currency type") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
         let context = executor.context();
 
-        order::run_create_orders_mutation_v1(context, input)
+        order::run_create_orders_mutation_v1(context, input, currency_type)
     }
 
-    field createOrdersV2(&executor, input: CreateOrderInputV2 as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
+    field createOrdersV2(&executor, input: CreateOrderInputV2 as "Create order input.", currency_type: Option<CurrencyType> as "Currency type") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
         let context = executor.context();
 
-        order::run_create_orders_mutation(context, input)
+        order::run_create_orders_mutation(context, input, currency_type)
     }
 
     field deprecated "use buyNowV2. This endpoint will return incorrect delivery price if it is not set to 'fixed price' by the store owner"

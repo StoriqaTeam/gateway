@@ -7,13 +7,13 @@ use futures::Future;
 use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
-use serde_json;
 
 use stq_api::{
     orders::{CartClient, Order, OrderClient},
     types::ApiFutureExt,
 };
 use stq_routes::{model::Model, service::Service};
+use stq_static_resources::CurrencyType;
 use stq_static_resources::{Currency, OrderState};
 use stq_types::{CouponId, OrderIdentifier, ProductSellerPrice};
 
@@ -269,18 +269,18 @@ graphql_object!(CreateOrdersOutput: Context as "CreateOrdersOutput" |&self| {
         &self.0
     }
 
-    field deprecated "use cartV2" cart(&executor) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+    field deprecated "use cartV2" cart(&executor, currency_type: Option<CurrencyType> as "Currency type") -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
         let fut = if let Some(session_id) = context.session_id {
             if let Some(ref user) = context.user {
-                rpc_client.merge(session_id.into(), user.user_id.into())
+                rpc_client.merge(session_id.into(), user.user_id.into(), currency_type)
             } else {
-                rpc_client.get_cart(session_id.into())
+                rpc_client.get_cart(session_id.into(), currency_type)
             }
         } else if let Some(ref user) = context.user {
-            rpc_client.get_cart(user.user_id.into())
+            rpc_client.get_cart(user.user_id.into(), currency_type)
         }  else {
             return Err(FieldError::new(
                 "Could not get users cart.",
@@ -295,18 +295,18 @@ graphql_object!(CreateOrdersOutput: Context as "CreateOrdersOutput" |&self| {
         cart_module::convert_products_to_cart(context, &products, None).map(Some)
     }
 
-    field cart_v2(&executor, user_country_code: String) -> FieldResult<Option<Cart>> as "Fetches cart products." {
+    field cart_v2(&executor, user_country_code: String, currency_type: Option<CurrencyType> as "Currency type") -> FieldResult<Option<Cart>> as "Fetches cart products." {
         let context = executor.context();
 
         let rpc_client = context.get_rest_api_client(Service::Orders);
         let fut = if let Some(session_id) = context.session_id {
             if let Some(ref user) = context.user {
-                rpc_client.merge(session_id.into(), user.user_id.into())
+                rpc_client.merge(session_id.into(), user.user_id.into(), currency_type)
             } else {
-                rpc_client.get_cart(session_id.into())
+                rpc_client.get_cart(session_id.into(), currency_type)
             }
         } else if let Some(ref user) = context.user {
-            rpc_client.get_cart(user.user_id.into())
+            rpc_client.get_cart(user.user_id.into(), currency_type)
         }  else {
             return Err(FieldError::new(
                 "Could not get users cart.",
@@ -490,7 +490,11 @@ graphql_object!(Edge<OrderProduct>: Context as "OrderProductsEdge" |&self| {
     }
 });
 
-pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput) -> FieldResult<CreateOrdersOutput> {
+pub fn run_create_orders_mutation_v1(
+    context: &Context,
+    input: CreateOrderInput,
+    currency_type: Option<CurrencyType>,
+) -> FieldResult<CreateOrdersOutput> {
     let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
@@ -500,7 +504,10 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
     })?;
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
-    let current_cart = rpc_client.get_cart(user.user_id.into()).sync().map_err(into_graphql)?;
+    let current_cart = rpc_client
+        .get_cart(user.user_id.into(), currency_type)
+        .sync()
+        .map_err(into_graphql)?;
 
     if let Some(cart_item) = current_cart.iter().find(|p| p.delivery_method_id.is_none()) {
         return Err(FieldError::new(
@@ -563,21 +570,22 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
         delivery_info,
         product_info,
         uuid: input.uuid,
+        currency_type,
     };
 
-    if create_order.currency.is_fiat() {
+    if create_order.currency.currency_type() == CurrencyType::Fiat {
         validate_products_fiat(create_order.prices.values())?;
     }
 
-    let url = format!("{}/create_order", context.config.saga_microservice.url.clone());
-    let body: String = serde_json::to_string(&create_order)?.to_string();
-    context
-        .request::<Invoice>(Method::Post, url, Some(body))
-        .wait()
-        .map(CreateOrdersOutput)
+    let saga = context.get_saga_microservice();
+    saga.create_orders(create_order)
 }
 
-pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) -> FieldResult<CreateOrdersOutput> {
+pub fn run_create_orders_mutation(
+    context: &Context,
+    input: CreateOrderInputV2,
+    currency_type: Option<CurrencyType>,
+) -> FieldResult<CreateOrdersOutput> {
     let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
@@ -587,7 +595,10 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) 
     })?;
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
-    let current_cart = rpc_client.get_cart(user.user_id.into()).sync().map_err(into_graphql)?;
+    let current_cart = rpc_client
+        .get_cart(user.user_id.into(), currency_type)
+        .sync()
+        .map_err(into_graphql)?;
 
     if let Some(cart_item) = current_cart.iter().find(|p| p.delivery_method_id.is_none()) {
         return Err(FieldError::new(
@@ -650,19 +661,15 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) 
         delivery_info,
         product_info,
         uuid: input.uuid,
+        currency_type,
     };
 
-    if create_order.currency.is_fiat() {
+    if create_order.currency.currency_type() == CurrencyType::Fiat {
         validate_products_fiat(create_order.prices.values())?;
     }
 
-    let url = format!("{}/create_order", context.config.saga_microservice.url.clone());
-
-    let body: String = serde_json::to_string(&create_order)?.to_string();
-    context
-        .request::<Invoice>(Method::Post, url, Some(body))
-        .wait()
-        .map(CreateOrdersOutput)
+    let saga = context.get_saga_microservice();
+    saga.create_orders(create_order)
 }
 
 pub fn try_get_order(context: &Context, order_id: OrderIdentifier) -> FieldResult<Option<GraphQLOrder>> {
@@ -702,7 +709,7 @@ pub fn validate_products_fiat<'a>(products: impl Iterator<Item = &'a ProductSell
     let mut currencies = products.map(|p| p.currency);
 
     if let Some(currency) = currencies.next() {
-        if !currency.is_fiat() {
+        if currency.currency_type() != CurrencyType::Fiat {
             return Err(FieldError::new(
                 "Cart product currency is not valid.",
                 graphql_value!({ "code": 100, "details": { "Cart product currency is not FIAT" }}),

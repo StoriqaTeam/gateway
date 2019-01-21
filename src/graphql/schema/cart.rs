@@ -338,6 +338,7 @@ pub fn run_increment_in_cart_v1(context: &Context, input: IncrementInCartInput) 
             base_product.store_id,
             product.pre_order,
             product.pre_order_days,
+            base_product.currency.currency_type(),
         )
         .sync()
         .map_err(into_graphql)?
@@ -386,6 +387,7 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -
             base_product.store_id,
             product.pre_order,
             product.pre_order_days,
+            base_product.currency.currency_type(),
         )
         .sync()
         .map_err(into_graphql)?

@@ -4,7 +4,7 @@ use chrono::prelude::*;
 use uuid::Uuid;
 
 use stq_api::orders::{Order, OrderDiff};
-use stq_static_resources::{CommitterRole, Currency, OrderState};
+use stq_static_resources::{CommitterRole, Currency, CurrencyType, OrderState};
 use stq_types::{
     BaseProductId, CashbackPercent, CompanyPackageId, CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId, StoreId,
     UserId,
@@ -124,6 +124,7 @@ pub struct CreateOrder {
     pub delivery_info: HashMap<ProductId, DeliveryInfo>,
     pub product_info: HashMap<ProductId, ProductInfo>,
     pub uuid: String,
+    pub currency_type: Option<CurrencyType>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
