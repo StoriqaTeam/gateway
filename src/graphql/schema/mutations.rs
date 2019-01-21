@@ -239,12 +239,16 @@ graphql_object!(Mutation: Context |&self| {
 
     field addRoleToUserOnStoresMicroservice(&executor, input: NewStoresRoleInput as "New Stores  Role Input.") -> FieldResult<NewRole<StoresMicroserviceRole>>  as "Adds stores role to user." {
         let context = executor.context();
-        let url = format!("{}/roles",
-            context.config.service_url(Service::Stores));
-        let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<NewRole<StoresMicroserviceRole>>(Method::Post, url, Some(body))
-            .wait()
+        let stores = context.get_stores_microservice();
+        stores.add_role_to_user(input)
+    }
+
+    field addRoleToUserOnBillingMicroservice(&executor, input: NewBillingRoleInput as "New Billing Role Input.") -> FieldResult<NewRole<BillingMicroserviceRole>>  as "Adds billing role to user." {
+        let context = executor.context();
+
+        let billing = context.get_billing_microservice();
+        billing.add_role_to_user(input)
     }
 
     field removeRoleFromUserOnUsersMicroservice(&executor, input: RemoveUsersRoleInput as "New Users  Role Input.") -> FieldResult<NewRole<UserMicroserviceRole>>  as "Removes users role." {
@@ -259,12 +263,16 @@ graphql_object!(Mutation: Context |&self| {
 
     field removeRoleFromUserOnStoresMicroservice(&executor, input: RemoveStoresRoleInput as "New Stores  Role Input.") -> FieldResult<NewRole<StoresMicroserviceRole>>  as "Removes stores role." {
         let context = executor.context();
-        let url = format!("{}/roles",
-            context.config.service_url(Service::Stores));
-        let body: String = serde_json::to_string(&input)?.to_string();
 
-        context.request::<NewRole<StoresMicroserviceRole>>(Method::Delete, url, Some(body))
-            .wait()
+        let stores = context.get_stores_microservice();
+        stores.remove_role_from_user(input)
+    }
+
+    field removeRoleFromUserOnBillingMicroservice(&executor, input: RemoveBillingRoleInput as "Remove Billing Role Input.") -> FieldResult<NewRole<BillingMicroserviceRole>>  as "Removes billing role." {
+        let context = executor.context();
+
+        let billing = context.get_billing_microservice();
+        billing.remove_role_from_user(input)
     }
 
     field createStore(&executor, input: CreateStoreInput as "Create store input.") -> FieldResult<Store> as "Creates new store." {
@@ -1597,10 +1605,12 @@ graphql_object!(Mutation: Context |&self| {
         let local_delivery_to = delivery_from.clone();
 
         let base_product = base_product_module::try_get_base_product(context, BaseProductId(input.base_product_id), Visibility::Active)?
-            .ok_or(FieldError::new(
-                "Failed to update shipping options.",
-                graphql_value!({ "code": 300, "details": { format!("Base product with id: {} not found.", input.base_product_id) }}),
-            ))?;
+            .ok_or_else(|| {
+                let details = format!("Base product with id: {} not found.", input.base_product_id);
+                FieldError::new(
+                    "Failed to update shipping options.",
+                    graphql_value!({ "code": 300, "details": { details }}),
+            )})?;
 
 
         let payload = NewShipping::from(NewShippingEnrichedInput {

@@ -17,6 +17,15 @@ pub enum StoresMicroserviceRole {
     User,
 }
 
+#[derive(GraphQLEnum, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[graphql(description = "Billing microservice role")]
+pub enum BillingMicroserviceRole {
+    Superuser,
+    User,
+    StoreManager,
+    FinancialManager,
+}
+
 #[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[graphql(description = "New role input object")]
 pub struct NewUsersRoleInput {
@@ -63,6 +72,30 @@ pub struct RemoveStoresRoleInput {
     pub user_id: i32,
     #[graphql(description = "Removed Role")]
     pub name: StoresMicroserviceRole,
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[graphql(description = "New role input object")]
+pub struct NewBillingRoleInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "User id")]
+    pub user_id: i32,
+    #[graphql(description = "New Role")]
+    pub name: BillingMicroserviceRole,
+}
+
+#[derive(GraphQLInputObject, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[graphql(description = "Remove role input object")]
+pub struct RemoveBillingRoleInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "User id")]
+    pub user_id: i32,
+    #[graphql(description = "Removed Role")]
+    pub name: BillingMicroserviceRole,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -25,3 +25,15 @@ graphql_object!(NewRole<StoresMicroserviceRole>: Context as "StoresRoles" |&self
         &self.name
     }
 });
+
+graphql_object!(NewRole<BillingMicroserviceRole>: Context as "BillingRoles" |&self| {
+    description: "Users Roles info."
+
+    field user_id() -> &i32 as "User id" {
+        &self.user_id.0
+    }
+
+    field name() -> &BillingMicroserviceRole as "User Roles" {
+        &self.name
+    }
+});
