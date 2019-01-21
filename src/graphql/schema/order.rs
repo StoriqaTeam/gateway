@@ -7,7 +7,6 @@ use futures::Future;
 use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
-use serde_json;
 
 use stq_api::{
     orders::{CartClient, Order, OrderClient},
@@ -571,18 +570,15 @@ pub fn run_create_orders_mutation_v1(
         delivery_info,
         product_info,
         uuid: input.uuid,
+        currency_type,
     };
 
     if create_order.currency.currency_type() == CurrencyType::Fiat {
         validate_products_fiat(create_order.prices.values())?;
     }
 
-    let url = format!("{}/create_order", context.config.saga_microservice.url.clone());
-    let body: String = serde_json::to_string(&create_order)?.to_string();
-    context
-        .request::<Invoice>(Method::Post, url, Some(body))
-        .wait()
-        .map(CreateOrdersOutput)
+    let saga = context.get_saga_microservice();
+    saga.create_orders(create_order)
 }
 
 pub fn run_create_orders_mutation(
@@ -665,19 +661,15 @@ pub fn run_create_orders_mutation(
         delivery_info,
         product_info,
         uuid: input.uuid,
+        currency_type,
     };
 
     if create_order.currency.currency_type() == CurrencyType::Fiat {
         validate_products_fiat(create_order.prices.values())?;
     }
-
-    let url = format!("{}/create_order", context.config.saga_microservice.url.clone());
-
-    let body: String = serde_json::to_string(&create_order)?.to_string();
-    context
-        .request::<Invoice>(Method::Post, url, Some(body))
-        .wait()
-        .map(CreateOrdersOutput)
+    
+    let saga = context.get_saga_microservice();
+    saga.create_orders(create_order)
 }
 
 pub fn try_get_order(context: &Context, order_id: OrderIdentifier) -> FieldResult<Option<GraphQLOrder>> {
