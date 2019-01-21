@@ -667,7 +667,7 @@ pub fn run_create_orders_mutation(
     if create_order.currency.currency_type() == CurrencyType::Fiat {
         validate_products_fiat(create_order.prices.values())?;
     }
-    
+
     let saga = context.get_saga_microservice();
     saga.create_orders(create_order)
 }

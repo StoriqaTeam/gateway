@@ -15,8 +15,10 @@ pub trait SagaService {
     fn upsert_shipping(&self, base_product_id: BaseProductId, shipping: NewShipping) -> FieldResult<Shipping>;
 
     fn set_order_confirmed(&self, input: OrderConfirmed) -> FieldResult<Option<GraphQLOrder>>;
-    
+
     fn create_orders(&self, input: CreateOrder) -> FieldResult<CreateOrdersOutput>;
+
+    fn buy_now(&self, input: BuyNow) -> FieldResult<CreateOrdersOutput>;
 }
 
 pub struct SagaServiceImpl<'ctx> {
@@ -66,4 +68,13 @@ impl<'ctx> SagaService for SagaServiceImpl<'ctx> {
             .map(CreateOrdersOutput)
     }
 
+    fn buy_now(&self, input: BuyNow) -> FieldResult<CreateOrdersOutput> {
+        let request_path = "buy_now";
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&input)?.to_string();
+        self.context
+            .request::<Invoice>(Method::Post, url, Some(body))
+            .wait()
+            .map(CreateOrdersOutput)
+    }
 }

@@ -2,9 +2,6 @@
 
 use juniper::{FieldError, FieldResult};
 
-use futures::Future;
-use hyper::Method;
-
 use stq_static_resources::CurrencyType;
 use stq_types::*;
 
@@ -178,12 +175,8 @@ pub fn run_buy_now_mutation(context: &Context, input: BuyNowInputV2) -> FieldRes
         order::validate_products_fiat([buy_now.price.clone()].iter())?;
     }
 
-    let url = format!("{}/buy_now", context.config.saga_microservice.url.clone());
-    let body: String = serde_json::to_string(&buy_now)?.to_string();
-    context
-        .request::<Invoice>(Method::Post, url, Some(body))
-        .wait()
-        .map(CreateOrdersOutput)
+    let saga = context.get_saga_microservice();
+    saga.buy_now(buy_now)
 }
 
 /// DEPRECATED
@@ -244,12 +237,8 @@ pub fn run_buy_now_mutation_v1(context: &Context, input: BuyNowInput) -> FieldRe
         order::validate_products_fiat([buy_now.price.clone()].iter())?;
     }
 
-    let url = format!("{}/buy_now", context.config.saga_microservice.url.clone());
-    let body: String = serde_json::to_string(&buy_now)?.to_string();
-    context
-        .request::<Invoice>(Method::Post, url, Some(body))
-        .wait()
-        .map(CreateOrdersOutput)
+    let saga = context.get_saga_microservice();
+    saga.buy_now(buy_now)
 }
 
 pub fn calculate_buy_now_v1(
