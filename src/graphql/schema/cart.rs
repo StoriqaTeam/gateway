@@ -127,6 +127,24 @@ graphql_object!(Cart: Context as "Cart" |&self| {
             acc + store_products_cost
         })
     }
+    field total_count_all(&executor) -> FieldResult<i32> as "Total products count" {
+        let context = executor.context();
+        let rpc_client = context.get_rest_api_client(Service::Orders);
+        let fut = if let Some(session_id) = context.session_id {
+                rpc_client.get_cart(session_id.into(), None)
+        } else if let Some(ref user) = context.user {
+            rpc_client.get_cart(user.user_id.into(), None)
+        }  else {
+            return Err(FieldError::new(
+                "Could not get users cart.",
+                graphql_value!({ "code": 100, "details": { "No user id or session id in request header." }}),
+            ));
+        };
+        fut
+            .sync()
+            .map_err(into_graphql)
+            .map(|cart| cart.len() as i32)
+    }
 });
 
 graphql_object!(CartProductStore: Context as "CartProductStore" |&self| {
