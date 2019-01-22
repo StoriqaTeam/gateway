@@ -1929,4 +1929,12 @@ graphql_object!(Mutation: Context |&self| {
         stripe_module::run_create_customer_with_source_mutation(context, input)
     }
 
+    field setPaidToSellerOrderState(&executor,
+                                    input: PaidToSellerOrderStateInput as "Confirmation by the financier that the money is transferred to the seller.",
+                                    ) -> FieldResult<Mock> as "" {
+        let context = executor.context();
+
+        order::run_set_paid_to_seller_order_state_mutation(context, input).map(|_| Mock)
+    }
+
 });

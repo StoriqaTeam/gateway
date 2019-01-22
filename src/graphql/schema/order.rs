@@ -733,3 +733,8 @@ pub fn run_confirm_order_mutation(context: &Context, input: OrderConfirmedInput)
     let saga = context.get_saga_microservice();
     saga.set_order_confirmed(input.into())
 }
+
+pub fn run_set_paid_to_seller_order_state_mutation(context: &Context, input: PaidToSellerOrderStateInput) -> FieldResult<()> {
+    let saga = context.get_saga_microservice();
+    saga.set_order_payment_state(input.into())
+}

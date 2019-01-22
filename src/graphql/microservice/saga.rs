@@ -18,6 +18,8 @@ pub trait SagaService {
 
     fn create_orders(&self, input: CreateOrder) -> FieldResult<CreateOrdersOutput>;
 
+    fn set_order_payment_state(&self, input: OrderPaymentState) -> FieldResult<()>;
+
     fn buy_now(&self, input: BuyNow) -> FieldResult<CreateOrdersOutput>;
 }
 
@@ -76,5 +78,13 @@ impl<'ctx> SagaService for SagaServiceImpl<'ctx> {
             .request::<Invoice>(Method::Post, url, Some(body))
             .wait()
             .map(CreateOrdersOutput)
+    }
+
+    fn set_order_payment_state(&self, input: OrderPaymentState) -> FieldResult<()> {
+        let request_path = format!("{}/{}/set_payment_state", Model::Order.to_url(), input.order_slug);
+        let url = self.request_url(&request_path);
+        let body = serde_json::to_string(&input)?;
+
+        self.context.request::<()>(Method::Post, url, Some(body)).wait()
     }
 }
