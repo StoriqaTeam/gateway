@@ -143,7 +143,15 @@ graphql_object!(Cart: Context as "Cart" |&self| {
         fut
             .sync()
             .map_err(into_graphql)
-            .map(|cart| cart.len() as i32)
+            .map(|cart| {
+                cart.iter().fold(0, |acc, cart_item| {
+                    if cart_item.selected {
+                        acc + cart_item.quantity.0
+                    } else {
+                        acc
+                    }
+                })
+            })
     }
 });
 
