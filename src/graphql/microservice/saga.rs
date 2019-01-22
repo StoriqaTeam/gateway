@@ -81,7 +81,7 @@ impl<'ctx> SagaService for SagaServiceImpl<'ctx> {
     }
 
     fn set_order_payment_state(&self, input: OrderPaymentState) -> FieldResult<()> {
-        let request_path = format!("{}/{}/set_payment_state", Model::Order.to_url(), input.order_slug);
+        let request_path = format!("{}/{}/set_payment_state", Model::Order.to_url(), input.order_id);
         let url = self.request_url(&request_path);
         let body = serde_json::to_string(&input)?;
 

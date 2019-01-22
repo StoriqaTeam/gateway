@@ -6,8 +6,8 @@ use uuid::Uuid;
 use stq_api::orders::{Order, OrderDiff};
 use stq_static_resources::{CommitterRole, Currency, CurrencyType, OrderState};
 use stq_types::{
-    BaseProductId, CashbackPercent, CompanyPackageId, CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId, StoreId,
-    UserId,
+    BaseProductId, CashbackPercent, CompanyPackageId, CouponId, OrderId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId,
+    StoreId, UserId,
 };
 
 use super::*;
@@ -442,21 +442,23 @@ pub struct PaidToSellerOrderStateInput {
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
     #[graphql(description = "Slug of order.")]
-    pub order_slug: i32,
+    pub order_id: String,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct OrderPaymentState {
-    pub order_slug: OrderSlug,
+    pub order_id: OrderId,
     pub state: PaymentState,
 }
 
-impl From<PaidToSellerOrderStateInput> for OrderPaymentState {
-    fn from(other: PaidToSellerOrderStateInput) -> Self {
-        Self {
-            order_slug: OrderSlug(other.order_slug),
+impl OrderPaymentState {
+    pub fn try_from_paid_to_seller_order_state(other: PaidToSellerOrderStateInput) -> Result<Self, uuid::ParseError> {
+        let order_id = Uuid::parse_str(&other.order_id).map(OrderId)?;
+
+        Ok(Self {
+            order_id,
             state: PaymentState::PaidToSeller,
-        }
+        })
     }
 }
 
