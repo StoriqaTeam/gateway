@@ -98,7 +98,7 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
     }
 
     fn orders(&self, skip: i32, count: i32, input: OrderBillingSearchInput) -> FieldResult<OrderBillingSearchResults> {
-        let request_path = format!("order/search?skip={}&count={}", skip, count);
+        let request_path = format!("orders/search?skip={}&count={}", skip, count);
         let url = self.request_url(&request_path);
         let body: String = serde_json::to_string(&input)?;
         self.context.request(Method::Post, url, Some(body)).wait()
