@@ -7,12 +7,12 @@ use super::*;
 use graphql::context::Context;
 use graphql::models::*;
 
-graphql_object!(OrderBilling: Context as "OrderBilling" |&self| {
-    description: "Billing order information."
+graphql_object!(OrderBillingInfo: Context as "OrderBillingInfo" |&self| {
+    description: "Billing info order information."
 
     interfaces: [&Node]
 
-    field order() -> &Order {
+    field order() -> &OrderBilling {
         &self.order
     }
 
@@ -30,6 +30,30 @@ graphql_object!(OrderBilling: Context as "OrderBilling" |&self| {
 
     field international_billing_info() -> &Option<InternationalBillingInfo> {
         &self.international_billing_info
+    }
+});
+
+graphql_object!(Connection<OrderBillingInfo, PageInfoSegments>: Context as "OrderBillingConnectionPages" |&self| {
+    description: "OrderBillingInfo Connection"
+
+    field edges() -> &[Edge<OrderBillingInfo>] {
+        &self.edges
+    }
+
+    field page_info() -> &PageInfoSegments {
+        &self.page_info
+    }
+});
+
+graphql_object!(Edge<OrderBillingInfo>: Context as "OrderBillingInfoEdge" |&self| {
+    description:"OrderBillingInfo Edge"
+
+    field cursor() -> &juniper::ID {
+        &self.cursor
+    }
+
+    field node() -> &OrderBillingInfo {
+        &self.node
     }
 });
 
@@ -57,7 +81,7 @@ graphql_object!(Edge<OrderBilling>: Context as "OrderBillingEdge" |&self| {
     }
 });
 
-graphql_object!(Order: Context as "Order" |&self| {
+graphql_object!(OrderBilling: Context as "Order billing" |&self| {
     field id() -> GraphqlID as "Base64 Unique id" {
         self.id.to_string().into()
     }

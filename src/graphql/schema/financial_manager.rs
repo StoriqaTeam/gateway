@@ -15,23 +15,16 @@ graphql_object!(FinancialManager: Context as "FinancialManager" |&self| {
         items_count : i32 as "Items count",
         search_params: OrderBillingSearchInput as "Search parameters"
     )
-    -> FieldResult<Connection<OrderBilling, PageInfoSegments>> as "find orders for financier manager." 
+    -> FieldResult<Connection<OrderBillingInfo, PageInfoSegments>> as "find orders for financier manager." 
     {
         let context = executor.context();
-
         let current_page = std::cmp::max(current_page, 1);
-
         let records_limit = context.config.gateway.records_limit;
-
         let items_count = std::cmp::max(1, std::cmp::min(items_count, records_limit as i32));
-
         let skip = items_count * (current_page - 1);
-
-        let orders = context.get_billing_microservice().orders(skip, items_count, search_params)?;
-
+        let orders = context.get_billing_microservice().orders_billing_info(skip, items_count, search_params)?;
         let total_pages = std::cmp::max(0, orders.total_count as i32 - 1) / items_count + 1;
-
-        let mut orders_edges: Vec<Edge<OrderBilling>> = orders.orders
+        let mut orders_edges: Vec<Edge<OrderBillingInfo>> = orders.orders
             .into_iter()
             .map(|order| Edge::new(
                 GraphqlID::from(order.order.id.0.to_string()), order

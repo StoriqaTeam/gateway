@@ -474,5 +474,5 @@ pub enum PaymentState {
     PaidToSeller,
     /// Need money payment to seller
     #[graphql(description = "Seller is awaiting a payment.")]
-    PaimentToSellerNeeded,
+    PaymentToSellerNeeded,
 }
