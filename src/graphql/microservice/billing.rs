@@ -17,6 +17,8 @@ pub trait BillingService {
 
     fn get_current_customer(&self) -> FieldResult<Option<Customer>>;
 
+    fn delete_customer(&self, payload: DeleteCustomerRequest) -> FieldResult<()>;
+
     fn add_role_to_user(&self, input: NewBillingRoleInput) -> FieldResult<NewRole<BillingMicroserviceRole>>;
 
     fn remove_role_from_user(&self, input: RemoveBillingRoleInput) -> FieldResult<NewRole<BillingMicroserviceRole>>;
@@ -61,6 +63,13 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         let url = self.request_url(&request_path);
 
         self.context.request::<Option<Customer>>(Method::Get, url, None).wait()
+    }
+
+    fn delete_customer(&self, payload: DeleteCustomerRequest) -> FieldResult<()> {
+        let request_path = format!("{}", Model::Customer.to_url());
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&payload)?;
+        self.context.request::<()>(Method::Delete, url, Some(body)).wait()
     }
 
     fn add_role_to_user(&self, input: NewBillingRoleInput) -> FieldResult<NewRole<BillingMicroserviceRole>> {

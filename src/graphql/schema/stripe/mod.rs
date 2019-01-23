@@ -8,3 +8,9 @@ pub fn run_create_customer_with_source_mutation(context: &Context, input: Create
 
     billing.create_customer_with_source(input.into())
 }
+
+pub fn run_delete_customer_mutation(context: &Context, input: DeleteCustomerInput) -> FieldResult<()> {
+    let billing = context.get_billing_microservice();
+
+    billing.delete_customer(input.into())
+}

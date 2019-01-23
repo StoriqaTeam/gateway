@@ -70,7 +70,7 @@ pub use self::visibility::*;
 pub use self::warehouse::*;
 pub use self::wizard_store::*;
 
-//Mock object, made to return from graphql when microservices responce contains nothing - '()'
+//Mock object, made to return from graphql when microservices response contains nothing - '()'
 pub struct Mock;
 
 //Search object, made to add endpoints for searching for unauthorized users
