@@ -22,6 +22,8 @@ pub trait BillingService {
     fn add_role_to_user(&self, input: NewBillingRoleInput) -> FieldResult<NewRole<BillingMicroserviceRole>>;
 
     fn remove_role_from_user(&self, input: RemoveBillingRoleInput) -> FieldResult<NewRole<BillingMicroserviceRole>>;
+
+    fn orders(&self, skip: i32, items_count: i32, input: OrderBillingSearchInput) -> FieldResult<OrderBillingSearchResults>;
 }
 
 pub struct BillingServiceImpl<'ctx> {
@@ -84,5 +86,12 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         let url = self.request_url(&request_path);
         let body: String = serde_json::to_string(&input)?;
         self.context.request(Method::Delete, url, Some(body)).wait()
+    }
+
+    fn orders(&self, skip: i32, count: i32, input: OrderBillingSearchInput) -> FieldResult<OrderBillingSearchResults> {
+        let request_path = format!("order_billing_info?skip={}&count={}", skip, count);
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request(Method::Post, url, Some(body)).wait()
     }
 }

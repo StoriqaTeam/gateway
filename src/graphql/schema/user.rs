@@ -97,6 +97,10 @@ graphql_object!(User: Context as "User" |&self| {
         Admin{}
     }
 
+    field financial_manager() -> FinancialManager as "Financial manager routes" {
+        FinancialManager {}
+    }
+
     field provider(&executor) -> Option<Provider> as "Provider user has logged in with" {
         let context = executor.context();
         context.user.clone().map(|payload| payload.provider)
