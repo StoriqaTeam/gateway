@@ -1,3 +1,4 @@
+use graphql::models::customer_id::CustomerId;
 use graphql::models::*;
 
 #[derive(Serialize, Debug, Clone)]
@@ -11,5 +12,18 @@ impl From<CreateCustomerWithSourceInput> for NewCustomerWithSourceRequest {
         let CreateCustomerWithSourceInput { email, card_token, .. } = other;
 
         Self { email, card_token }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DeleteCustomerRequest {
+    pub customer_id: CustomerId,
+}
+
+impl From<DeleteCustomerInput> for DeleteCustomerRequest {
+    fn from(other: DeleteCustomerInput) -> Self {
+        Self {
+            customer_id: CustomerId::new(other.id),
+        }
     }
 }
