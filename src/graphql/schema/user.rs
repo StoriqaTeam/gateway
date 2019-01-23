@@ -162,17 +162,10 @@ graphql_object!(User: Context as "User" |&self| {
     }
 
     field my_store(&executor) -> FieldResult<Option<Store>> as "Fetches store of the current user." {
-        let context = executor.context();
-
-        let url = format!(
-            "{}/{}/by_user_id/{}",
-            &context.config.service_url(Service::Stores),
-            Model::Store.to_url(),
-            self.id.to_string()
-        );
-
-        context.request::<Option<Store>>(Method::Get, url, None)
-            .wait()
+        executor
+        .context()
+        .get_stores_microservice()
+        .get_store_by_user(self.id)
     }
 
     field stores(&executor,

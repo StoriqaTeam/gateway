@@ -15,6 +15,8 @@ pub trait StoresService {
     fn add_role_to_user(&self, input: NewStoresRoleInput) -> FieldResult<NewRole<StoresMicroserviceRole>>;
 
     fn remove_role_from_user(&self, input: RemoveStoresRoleInput) -> FieldResult<NewRole<StoresMicroserviceRole>>;
+
+    fn get_store_by_user(&self, user_id: UserId) -> FieldResult<Option<Store>>;
 }
 
 pub struct StoresServiceImpl<'ctx> {
@@ -54,5 +56,11 @@ impl<'ctx> StoresService for StoresServiceImpl<'ctx> {
         let url = self.request_url(&request_path);
         let body: String = serde_json::to_string(&input)?;
         self.context.request(Method::Delete, url, Some(body)).wait()
+    }
+
+    fn get_store_by_user(&self, user_id: UserId) -> FieldResult<Option<Store>> {
+        let request_path = format!("{}/by_user_id/{}", Model::Store.to_url(), user_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
     }
 }
