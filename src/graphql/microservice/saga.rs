@@ -4,7 +4,7 @@ use juniper::FieldResult;
 use serde_json;
 
 use stq_routes::model::Model;
-use stq_types::BaseProductId;
+use stq_types::{BaseProductId, OrderId};
 
 use stq_api::orders::Order;
 
@@ -17,6 +17,8 @@ pub trait SagaService {
     fn set_order_confirmed(&self, input: OrderConfirmed) -> FieldResult<Option<GraphQLOrder>>;
 
     fn create_orders(&self, input: CreateOrder) -> FieldResult<CreateOrdersOutput>;
+
+    fn set_order_payment_state(&self, order_id: OrderId, input: OrderPaymentState) -> FieldResult<()>;
 
     fn buy_now(&self, input: BuyNow) -> FieldResult<CreateOrdersOutput>;
 }
@@ -76,5 +78,13 @@ impl<'ctx> SagaService for SagaServiceImpl<'ctx> {
             .request::<Invoice>(Method::Post, url, Some(body))
             .wait()
             .map(CreateOrdersOutput)
+    }
+
+    fn set_order_payment_state(&self, order_id: OrderId, input: OrderPaymentState) -> FieldResult<()> {
+        let request_path = format!("{}/{}/set_payment_state", Model::Order.to_url(), order_id);
+        let url = self.request_url(&request_path);
+        let body = serde_json::to_string(&input)?;
+
+        self.context.request::<()>(Method::Post, url, Some(body)).wait()
     }
 }

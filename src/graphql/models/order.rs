@@ -434,3 +434,37 @@ impl From<OrderConfirmedInput> for OrderConfirmed {
         }
     }
 }
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Confirmation by the financier that the money is transferred to the seller input object.")]
+pub struct PaidToSellerOrderStateInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Slug of order.")]
+    pub order_id: String,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct OrderPaymentState {
+    pub state: PaymentState,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum PaymentState {
+    /// Order created and maybe paid by customer
+    Initial,
+    /// Store manager declined the order
+    Declined,
+    /// Store manager confirmed the order, money was captured
+    Captured,
+    /// Need money refund to customer
+    RefundNeeded,
+    /// Money was refunded to customer
+    Refunded,
+    /// Money was paid to seller
+    PaidToSeller,
+    /// Need money payment to seller
+    PaymentToSellerNeeded,
+}
