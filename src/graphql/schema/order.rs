@@ -7,6 +7,7 @@ use futures::Future;
 use hyper::Method;
 use juniper::ID as GraphqlID;
 use juniper::{FieldError, FieldResult};
+use uuid::Uuid;
 
 use stq_api::{
     orders::{CartClient, Order, OrderClient},
@@ -15,7 +16,7 @@ use stq_api::{
 use stq_routes::{model::Model, service::Service};
 use stq_static_resources::CurrencyType;
 use stq_static_resources::{Currency, OrderState};
-use stq_types::{CouponId, OrderIdentifier, ProductSellerPrice};
+use stq_types::{CouponId, OrderId, OrderIdentifier, ProductSellerPrice};
 
 use super::*;
 use errors::into_graphql;
@@ -736,5 +737,10 @@ pub fn run_confirm_order_mutation(context: &Context, input: OrderConfirmedInput)
 
 pub fn run_set_paid_to_seller_order_state_mutation(context: &Context, input: PaidToSellerOrderStateInput) -> FieldResult<()> {
     let saga = context.get_saga_microservice();
-    saga.set_order_payment_state(OrderPaymentState::try_from_paid_to_seller_order_state(input)?)
+    let order_id = Uuid::parse_str(&input.order_id).map(OrderId)?;
+    let state = OrderPaymentState {
+        state: PaymentState::PaidToSeller,
+    };
+
+    saga.set_order_payment_state(order_id, state)
 }

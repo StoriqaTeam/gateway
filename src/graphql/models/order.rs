@@ -6,7 +6,7 @@ use uuid::Uuid;
 use stq_api::orders::{Order, OrderDiff};
 use stq_static_resources::{CommitterRole, Currency, CurrencyType, OrderState};
 use stq_types::{
-    BaseProductId, CashbackPercent, CompanyPackageId, CouponId, OrderId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId,
+    BaseProductId, CashbackPercent, CompanyPackageId, CouponId, OrderSlug, ProductId, ProductSellerPrice, Quantity, ShippingId,
     StoreId, UserId,
 };
 
@@ -447,19 +447,7 @@ pub struct PaidToSellerOrderStateInput {
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct OrderPaymentState {
-    pub order_id: OrderId,
     pub state: PaymentState,
-}
-
-impl OrderPaymentState {
-    pub fn try_from_paid_to_seller_order_state(other: PaidToSellerOrderStateInput) -> Result<Self, uuid::ParseError> {
-        let order_id = Uuid::parse_str(&other.order_id).map(OrderId)?;
-
-        Ok(Self {
-            order_id,
-            state: PaymentState::PaidToSeller,
-        })
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
@@ -477,4 +465,6 @@ pub enum PaymentState {
     Refunded,
     /// Money was paid to seller
     PaidToSeller,
+    /// Need money payment to seller
+    PaymentToSellerNeeded,
 }
