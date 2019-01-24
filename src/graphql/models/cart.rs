@@ -1,6 +1,6 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
-use stq_static_resources::Translation;
+use stq_static_resources::{Currency, CurrencyType, Translation};
 use stq_types::{
     BaseProductId, CartItem, CompanyPackageId, CouponId, DeliveryMethodId, ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId,
     UserId,
@@ -24,6 +24,7 @@ pub struct CartProduct {
     pub id: ProductId,
     pub name: Vec<Translation>,
     pub price: ProductPrice,
+    pub currency: Currency,
     pub discount: Option<f64>, // product
     pub photo_main: Option<String>,
     pub selected: bool,
@@ -43,11 +44,16 @@ pub struct CartProduct {
 pub struct Cart {
     pub inner: Vec<CartStore>,
     pub user_country_code: Option<String>,
+    pub currency_type: Option<CurrencyType>,
 }
 
 impl Cart {
     pub fn new(inner: Vec<CartStore>, user_country_code: Option<String>) -> Self {
-        Self { inner, user_country_code }
+        Self {
+            inner,
+            user_country_code,
+            currency_type: None,
+        }
     }
 }
 
@@ -336,10 +342,21 @@ pub struct CartStore {
     pub cover: Option<String>,
     pub rating: f64,
     pub products: Vec<CartProduct>,
+    pub currency_type: Option<CurrencyType>,
 }
 
 impl CartStore {
     pub fn new(store: Store, products: Vec<CartProduct>) -> Self {
+        let currency_types = products
+            .iter()
+            .map(|product| product.currency.currency_type())
+            .collect::<HashSet<CurrencyType>>();
+        let currency_type = if currency_types.len() > 1 {
+            None
+        } else {
+            currency_types.into_iter().next()
+        };
+
         Self {
             id: store.id,
             name: store.name,
@@ -347,6 +364,7 @@ impl CartStore {
             logo: store.logo,
             cover: store.cover,
             products,
+            currency_type,
         }
     }
 }
@@ -421,6 +439,7 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem], user_country_c
                                             photo_main: variant.photo_main.clone(),
                                             selected,
                                             price: variant.price,
+                                            currency: base_product.currency,
                                             quantity,
                                             comment,
                                             store_id,

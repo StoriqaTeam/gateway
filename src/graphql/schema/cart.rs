@@ -16,6 +16,8 @@ use stq_types::{CartCustomer, CartItem, DeliveryMethodId, ProductId, Quantity, S
 use stq_api::orders::CartClient;
 use stq_api::types::ApiFutureExt;
 
+use stq_static_resources::CurrencyType;
+
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
@@ -36,14 +38,20 @@ graphql_object!(Cart: Context as "Cart" |&self| {
     field id(&executor) -> GraphqlID as "Base64 Unique id"{
         let context = executor.context();
 
-        if let Some(ref user) = context.user {
-            ID::new(Service::Orders, Model::Cart, user.user_id.0).to_string().into()
-        } else if let Some(session_id) = context.session_id {
-            session_id.0.to_string().into()
-        }  else {
-            ID::new(Service::Orders, Model::Cart, UserId::default().0).to_string().into()
-        }
+        let currency_type_str = match self.currency_type {
+            Some(c) => c.to_string(),
+            None => "".to_string(),
+        };
 
+        let id_str = if let Some(ref user) = context.user {
+            ID::new(Service::Orders, Model::Cart, user.user_id.0).to_string()
+        } else if let Some(session_id) = context.session_id {
+            session_id.0.to_string()
+        }  else {
+            ID::new(Service::Orders, Model::Cart, UserId::default().0).to_string()
+        };
+
+        format!("{}|{}", id_str, currency_type_str).into()
     }
 
     field stores(&executor,
@@ -127,31 +135,14 @@ graphql_object!(Cart: Context as "Cart" |&self| {
             acc + store_products_cost
         })
     }
-    field total_count_all(&executor) -> FieldResult<i32> as "Total products count" {
+    field fiat(&executor) -> FieldResult<Cart> as "Fiat cart" {
         let context = executor.context();
-        let rpc_client = context.get_rest_api_client(Service::Orders);
-        let fut = if let Some(ref user) = context.user {
-            rpc_client.get_cart(user.user_id.into(), None)
-        }  else if let Some(session_id) = context.session_id {
-            rpc_client.get_cart(session_id.into(), None)
-        } else  {
-            return Err(FieldError::new(
-                "Could not get users cart.",
-                graphql_value!({ "code": 100, "details": { "No user id or session id in request header." }}),
-            ));
-        };
-        fut
-            .sync()
-            .map_err(into_graphql)
-            .map(|cart| {
-                cart.iter().fold(0, |acc, cart_item| {
-                    if cart_item.selected {
-                        acc + cart_item.quantity.0
-                    } else {
-                        acc
-                    }
-                })
-            })
+        get_cart(context, Some(CurrencyType::Fiat))
+
+    }
+    field crypto(&executor) -> FieldResult<Cart> as "Crypto cart" {
+        let context = executor.context();
+        get_cart(context, Some(CurrencyType::Crypto))
     }
 });
 
@@ -405,6 +396,17 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -
     })?;
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
+    let init_quantity = rpc_client
+        .get_cart(customer, Some(base_product.currency.currency_type()))
+        .sync()
+        .map_err(into_graphql)?
+        .into_iter()
+        .find(|product| product.product_id == product_id)
+        .map(|product| product.quantity.0)
+        .unwrap_or(0i32);
+
+    // drop previous rpc_client
+    let rpc_client = context.get_rest_api_client(Service::Orders);
 
     let mut products: Vec<_> = rpc_client
         .increment_item(
@@ -419,10 +421,11 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -
         .map_err(into_graphql)?
         .into_iter()
         .collect();
+
     // drop previous rpc_client
     let rpc_client = context.get_rest_api_client(Service::Orders);
     if let Some(value) = input.value {
-        let quantity = Quantity(value);
+        let quantity = Quantity(init_quantity + value);
         products = rpc_client
             .set_quantity(customer, input.product_id.into(), quantity)
             .sync()
@@ -489,6 +492,30 @@ pub fn convert_products_to_cart(context: &Context, products: &[CartItem], user_c
         .request::<Vec<Store>>(Method::Post, url, Some(body))
         .map(|stores| convert_to_cart(stores, &products, user_country_code))
         .wait()
+}
+
+pub fn get_cart(context: &Context, currency_type: Option<CurrencyType>) -> FieldResult<Cart> {
+    let rpc_client = context.get_rest_api_client(Service::Orders);
+    let fut = if let Some(session_id) = context.session_id {
+        if let Some(ref user) = context.user {
+            rpc_client.merge(session_id.into(), user.user_id.into(), currency_type)
+        } else {
+            rpc_client.get_cart(session_id.into(), currency_type)
+        }
+    } else if let Some(ref user) = context.user {
+        rpc_client.get_cart(user.user_id.into(), currency_type)
+    } else {
+        return Err(FieldError::new(
+            "Could not get users cart.",
+            graphql_value!({ "code": 100, "details": { "No user id or session id in request header." }}),
+        ));
+    };
+
+    let products: Vec<_> = fut.sync().map_err(into_graphql)?.into_iter().collect();
+
+    let mut cart = convert_products_to_cart(context, &products, None)?;
+    cart.currency_type = currency_type;
+    Ok(cart)
 }
 
 pub fn get_customer(context: &Context) -> Option<CartCustomer> {
