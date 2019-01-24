@@ -81,7 +81,7 @@ graphql_object!(Edge<OrderBilling>: Context as "OrderBillingEdge" |&self| {
     }
 });
 
-graphql_object!(OrderBilling: Context as "Order billing" |&self| {
+graphql_object!(OrderBilling: Context as "OrderBilling" |&self| {
     field id() -> GraphqlID as "Base64 Unique id" {
         self.id.to_string().into()
     }
@@ -112,7 +112,7 @@ graphql_object!(OrderBilling: Context as "Order billing" |&self| {
 
 });
 
-graphql_object!(ProxyCompanyBillingInfo: Context as "Proxy company billing info" |&self| {
+graphql_object!(ProxyCompanyBillingInfo: Context as "ProxyCompanyBillingInfo" |&self| {
     field id() -> &i32 {
         &self.id.0
     }
@@ -138,7 +138,7 @@ graphql_object!(ProxyCompanyBillingInfo: Context as "Proxy company billing info"
     }
 });
 
-graphql_object!(RussiaBillingInfo: Context as "Russia billing info" |&self| {
+graphql_object!(RussiaBillingInfo: Context as "RussiaBillingInfo" |&self| {
     field id() -> &i32 {
         &self.id.0
     }
@@ -164,7 +164,7 @@ graphql_object!(RussiaBillingInfo: Context as "Russia billing info" |&self| {
     }
 });
 
-graphql_object!(InternationalBillingInfo: Context as "International billing info" |&self| {
+graphql_object!(InternationalBillingInfo: Context as "InternationalBillingInfo" |&self| {
     field id() -> &i32 {
         &self.id.0
     }
