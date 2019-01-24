@@ -502,7 +502,7 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
     let current_cart = rpc_client
-        .get_cart(user.user_id.into(), input.currency_type)
+        .get_cart(user.user_id.into(), Some(input.currency.currency_type()))
         .sync()
         .map_err(into_graphql)?;
 
@@ -567,7 +567,7 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
         delivery_info,
         product_info,
         uuid: input.uuid,
-        currency_type: input.currency_type,
+        currency_type: Some(input.currency.currency_type()),
     };
 
     if create_order.currency.currency_type() == CurrencyType::Fiat {
@@ -589,7 +589,7 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) 
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
     let current_cart = rpc_client
-        .get_cart(user.user_id.into(), input.currency_type)
+        .get_cart(user.user_id.into(), Some(input.currency.currency_type()))
         .sync()
         .map_err(into_graphql)?;
 
@@ -654,7 +654,7 @@ pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) 
         delivery_info,
         product_info,
         uuid: input.uuid,
-        currency_type: input.currency_type,
+        currency_type: Some(input.currency.currency_type()),
     };
 
     if create_order.currency.currency_type() == CurrencyType::Fiat {
