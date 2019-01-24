@@ -1469,16 +1469,16 @@ graphql_object!(Mutation: Context |&self| {
             })
     }
 
-    field createOrders(&executor, input: CreateOrderInput as "Create order input.", currency_type: Option<CurrencyType> as "Currency type") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
+    field createOrders(&executor, input: CreateOrderInput as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
         let context = executor.context();
 
-        order::run_create_orders_mutation_v1(context, input, currency_type)
+        order::run_create_orders_mutation_v1(context, input)
     }
 
-    field createOrdersV2(&executor, input: CreateOrderInputV2 as "Create order input.", currency_type: Option<CurrencyType> as "Currency type") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
+    field createOrdersV2(&executor, input: CreateOrderInputV2 as "Create order input.") -> FieldResult<CreateOrdersOutput> as "Creates orders from cart." {
         let context = executor.context();
 
-        order::run_create_orders_mutation(context, input, currency_type)
+        order::run_create_orders_mutation(context, input)
     }
 
     field deprecated "use buyNowV2. This endpoint will return incorrect delivery price if it is not set to 'fixed price' by the store owner"

@@ -29,6 +29,8 @@ pub struct CreateOrderInput {
     pub receiver_phone: String,
     #[graphql(description = "Currency that will be paid")]
     pub currency: Currency,
+    #[graphql(description = "Cart currency type")]
+    pub currency_type: Option<CurrencyType>,
 }
 
 impl CreateOrderInput {
@@ -56,6 +58,8 @@ pub struct CreateOrderInputV2 {
     pub currency: Currency,
     #[graphql(description = "User country code")]
     pub user_country_code: String,
+    #[graphql(description = "Cart currency type")]
+    pub currency_type: Option<CurrencyType>,
 }
 
 impl CreateOrderInputV2 {
