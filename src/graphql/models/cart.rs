@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 
-use stq_static_resources::Translation;
+use stq_static_resources::{CurrencyType, Translation};
 use stq_types::{
     BaseProductId, CartItem, CompanyPackageId, CouponId, DeliveryMethodId, ProductId, ProductPrice, ProductSellerPrice, Quantity, StoreId,
     UserId,
@@ -43,11 +43,16 @@ pub struct CartProduct {
 pub struct Cart {
     pub inner: Vec<CartStore>,
     pub user_country_code: Option<String>,
+    pub currency_type: Option<CurrencyType>,
 }
 
 impl Cart {
     pub fn new(inner: Vec<CartStore>, user_country_code: Option<String>) -> Self {
-        Self { inner, user_country_code }
+        Self {
+            inner,
+            user_country_code,
+            currency_type: None,
+        }
     }
 }
 
