@@ -629,6 +629,38 @@ graphql_object!(Store: Context as "Store" |&self| {
             self.id);
         context.request::<Vec<Coupon>>(Method::Get, url, None).wait()
     }
+
+    field paid_to_seller_orders
+    (
+        &executor,
+        current_page : i32 as "Current page",
+        items_count : i32 as "Items count",
+    )
+    -> FieldResult<Connection<OrderBilling, PageInfoSegments>> as "find orders with PaidToSeller state." 
+    {
+        let context = executor.context();
+        let search_params = OrderBillingSearchInput {
+            payment_state: Some(PaymentState::PaidToSeller),
+            store_id: Some(self.id.0),
+        };
+        orders_billing(context, current_page, items_count, search_params)
+    }
+
+    field payment_to_seller_needed_orders(
+        &executor,
+        current_page : i32 as "Current page",
+        items_count : i32 as "Items count",
+        search_params: OrderBillingSearchInput as "Search parameters"
+    )
+    -> FieldResult<Connection<OrderBilling, PageInfoSegments>> as "find orders with PaymentToSellerNeeded state." 
+    {
+        let context = executor.context();
+        let search_params = OrderBillingSearchInput {
+            payment_state: Some(PaymentState::PaymentToSellerNeeded),
+            store_id: Some(self.id.0),
+        };
+        orders_billing(context, current_page, items_count, search_params)
+    }
 });
 
 graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {
@@ -714,6 +746,31 @@ graphql_object!(Connection<GraphQLOrder, PageInfoOrdersSearch>: Context as "Orde
         &self.page_info
     }
 });
+
+fn orders_billing(
+    context: &Context,
+    current_page: i32,
+    items_count: i32,
+    search_params: OrderBillingSearchInput,
+) -> FieldResult<Connection<OrderBilling, PageInfoSegments>> {
+    let current_page = std::cmp::max(current_page, 1);
+    let records_limit = context.config.gateway.records_limit;
+    let items_count = std::cmp::max(1, std::cmp::min(items_count, records_limit as i32));
+    let skip = items_count * (current_page - 1);
+    let orders = context.get_billing_microservice().orders(skip, items_count, search_params)?;
+    let total_pages = std::cmp::max(0, orders.total_count as i32 - 1) / items_count + 1;
+    let orders_edges: Vec<Edge<OrderBilling>> = orders
+        .orders
+        .into_iter()
+        .map(|order| Edge::new(GraphqlID::from(order.id.0.to_string()), order))
+        .collect();
+    let page_info = PageInfoSegments {
+        current_page,
+        page_items_count: items_count,
+        total_pages,
+    };
+    Ok(Connection::new(orders_edges, page_info))
+}
 
 pub fn get_store_id_by_product(context: &Context, product_id: ProductId) -> FieldResult<StoreId> {
     let url_store_id = format!(
