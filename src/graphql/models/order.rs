@@ -29,6 +29,8 @@ pub struct CreateOrderInput {
     pub receiver_phone: String,
     #[graphql(description = "Currency that will be paid")]
     pub currency: Currency,
+    #[graphql(description = "Cart currency type")]
+    pub currency_type: Option<CurrencyType>,
 }
 
 impl CreateOrderInput {
@@ -56,6 +58,8 @@ pub struct CreateOrderInputV2 {
     pub currency: Currency,
     #[graphql(description = "User country code")]
     pub user_country_code: String,
+    #[graphql(description = "Cart currency type")]
+    pub currency_type: Option<CurrencyType>,
 }
 
 impl CreateOrderInputV2 {
@@ -450,21 +454,29 @@ pub struct OrderPaymentState {
     pub state: PaymentState,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
+#[derive(GraphQLEnum, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
+#[graphql(name = "PaymentState", description = "Payment state")]
 #[serde(rename_all = "lowercase")]
 pub enum PaymentState {
     /// Order created and maybe paid by customer
+    #[graphql(description = "Initial order payment state.")]
     Initial,
     /// Store manager declined the order
+    #[graphql(description = "Order payment was declined.")]
     Declined,
     /// Store manager confirmed the order, money was captured
+    #[graphql(description = "Storiqa captured payment from buyer.")]
     Captured,
     /// Need money refund to customer
+    #[graphql(description = "Buyer is awaiting a refund.")]
     RefundNeeded,
     /// Money was refunded to customer
+    #[graphql(description = "Payment was refunded to buyer.")]
     Refunded,
     /// Money was paid to seller
+    #[graphql(description = "Seller received payment.")]
     PaidToSeller,
     /// Need money payment to seller
+    #[graphql(description = "Seller is awaiting a payment.")]
     PaymentToSellerNeeded,
 }

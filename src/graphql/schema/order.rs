@@ -491,11 +491,7 @@ graphql_object!(Edge<OrderProduct>: Context as "OrderProductsEdge" |&self| {
     }
 });
 
-pub fn run_create_orders_mutation_v1(
-    context: &Context,
-    input: CreateOrderInput,
-    currency_type: Option<CurrencyType>,
-) -> FieldResult<CreateOrdersOutput> {
+pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput) -> FieldResult<CreateOrdersOutput> {
     let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
@@ -506,7 +502,7 @@ pub fn run_create_orders_mutation_v1(
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
     let current_cart = rpc_client
-        .get_cart(user.user_id.into(), currency_type)
+        .get_cart(user.user_id.into(), input.currency_type)
         .sync()
         .map_err(into_graphql)?;
 
@@ -571,7 +567,7 @@ pub fn run_create_orders_mutation_v1(
         delivery_info,
         product_info,
         uuid: input.uuid,
-        currency_type,
+        currency_type: input.currency_type,
     };
 
     if create_order.currency.currency_type() == CurrencyType::Fiat {
@@ -582,11 +578,7 @@ pub fn run_create_orders_mutation_v1(
     saga.create_orders(create_order)
 }
 
-pub fn run_create_orders_mutation(
-    context: &Context,
-    input: CreateOrderInputV2,
-    currency_type: Option<CurrencyType>,
-) -> FieldResult<CreateOrdersOutput> {
+pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) -> FieldResult<CreateOrdersOutput> {
     let input = input.fill_uuid();
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
@@ -597,7 +589,7 @@ pub fn run_create_orders_mutation(
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
     let current_cart = rpc_client
-        .get_cart(user.user_id.into(), currency_type)
+        .get_cart(user.user_id.into(), input.currency_type)
         .sync()
         .map_err(into_graphql)?;
 
@@ -662,7 +654,7 @@ pub fn run_create_orders_mutation(
         delivery_info,
         product_info,
         uuid: input.uuid,
-        currency_type,
+        currency_type: input.currency_type,
     };
 
     if create_order.currency.currency_type() == CurrencyType::Fiat {

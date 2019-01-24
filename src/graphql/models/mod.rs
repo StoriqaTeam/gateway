@@ -19,6 +19,7 @@ pub mod invoice;
 pub mod jwt;
 pub mod moderator_comment;
 pub mod order;
+pub mod order_billing;
 pub mod package;
 pub mod product;
 pub mod reset_password;
@@ -55,6 +56,7 @@ pub use self::invoice::*;
 pub use self::jwt::{CreateJWTEmailInput, CreateJWTProviderInput, ProviderOauth, UserStatus, JWT};
 pub use self::moderator_comment::*;
 pub use self::order::*;
+pub use self::order_billing::*;
 pub use self::package::*;
 pub use self::product::*;
 pub use self::reset_password::*;
@@ -81,3 +83,6 @@ pub struct MainPage;
 
 //Admin object, made for displaying info at admin page
 pub struct Admin;
+
+//FinancialManager object, made for displaying info at financial manager page
+pub struct FinancialManager;
