@@ -1,7 +1,7 @@
 use stq_static_resources::Currency;
-use stq_types::{Alpha3, InternationalBillingId, InvoiceId, OrderId, ProxyCompanyBillingInfoId, RussiaBillingId, StoreId, SwiftId};
+use stq_types::{InvoiceId, OrderId, StoreId};
 
-use graphql::models::PaymentState;
+use graphql::models::{BillingType, InternationalBillingInfo, PaymentState, ProxyCompanyBillingInfo, RussiaBillingInfo};
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
 #[graphql(description = "Orders search parameters object")]
@@ -19,41 +19,6 @@ pub struct OrderBillingInfo {
     pub proxy_company_billing_info: Option<ProxyCompanyBillingInfo>,
     pub russia_billing_info: Option<RussiaBillingInfo>,
     pub international_billing_info: Option<InternationalBillingInfo>,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct InternationalBillingInfo {
-    pub id: InternationalBillingId,
-    pub store_id: StoreId,
-    pub swift_bic: SwiftId,
-    pub bank_name: String,
-    pub full_name: String,
-    pub iban: String,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct RussiaBillingInfo {
-    pub id: RussiaBillingId,
-    pub store_id: StoreId,
-    pub kpp: String,
-    pub bic: String,
-    pub inn: String,
-    pub full_name: String,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct ProxyCompanyBillingInfo {
-    pub id: ProxyCompanyBillingInfoId,
-    pub country_alpha3: Alpha3,
-    pub account: String,
-    pub currency: Currency,
-    pub name: String,
-    pub bank: String,
-    pub swift: SwiftId,
-    pub bank_address: String,
-    pub country: String,
-    pub city: String,
-    pub recipient_address: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -77,13 +42,4 @@ pub struct OrderBillingInfoSearchResults {
 pub struct OrderBillingSearchResults {
     pub total_count: u32,
     pub orders: Vec<OrderBilling>,
-}
-
-#[derive(GraphQLEnum, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
-#[graphql(name = "BillingType", description = "Billing type")]
-pub enum BillingType {
-    #[graphql(description = "International billing type.")]
-    International,
-    #[graphql(description = "Russian local billing type.")]
-    Russia,
 }
