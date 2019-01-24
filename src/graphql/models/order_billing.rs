@@ -44,11 +44,16 @@ pub struct RussiaBillingInfo {
 #[derive(Deserialize, Debug, Clone)]
 pub struct ProxyCompanyBillingInfo {
     pub id: ProxyCompanyBillingInfoId,
-    pub country: Alpha3,
-    pub swift_bic: SwiftId,
-    pub bank_name: String,
-    pub full_name: String,
-    pub iban: String,
+    pub country_alpha3: Alpha3,
+    pub account: String,
+    pub currency: Currency,
+    pub name: String,
+    pub bank: String,
+    pub swift: SwiftId,
+    pub bank_address: String,
+    pub country: String,
+    pub city: String,
+    pub recipient_address: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
