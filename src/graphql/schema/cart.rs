@@ -405,19 +405,14 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -
     })?;
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
-    let products: Vec<CartItem> = rpc_client
+    let init_quantity = rpc_client
         .get_cart(customer, Some(base_product.currency.currency_type()))
         .sync()
         .map_err(into_graphql)?
         .into_iter()
-        .collect();
-    let mut init_quantity: i32 = 0;
-    for product in products {
-        if product.product_id == product_id {
-            init_quantity = product.quantity.0;
-            break;
-        }
-    }
+        .find(|product| product.product_id == product_id)
+        .map(|product| product.quantity.0)
+        .unwrap_or(0i32);
 
     // drop previous rpc_client
     let rpc_client = context.get_rest_api_client(Service::Orders);
