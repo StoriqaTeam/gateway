@@ -20,7 +20,14 @@ graphql_object!(CartStore: Context as "CartStore" |&self| {
     interfaces: [&Node]
 
     field id() -> GraphqlID as "Base64 Unique id"{
-        ID::new(Service::Stores, Model::CartStore, self.id.0).to_string().into()
+        let currency_type_str = match self.currency_type {
+            Some(c) => c.to_string(),
+            None => "".to_string(),
+        };
+
+        let id_str = ID::new(Service::Stores, Model::CartStore, self.id.0).to_string();
+
+        format!("{}|{}", id_str, currency_type_str).into()
     }
 
     field raw_id() -> &i32 as "Unique int id"{
