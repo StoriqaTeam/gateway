@@ -1929,6 +1929,12 @@ graphql_object!(Mutation: Context |&self| {
         stripe_module::run_create_customer_with_source_mutation(context, input)
     }
 
+    field updateCustomer(&executor, input: UpdateCustomerInput as "Update customer object in Stripe") -> FieldResult<Customer> as "Updates Customer object" {
+        let context = executor.context();
+
+        stripe_module::run_update_customer_mutation(context, input)
+    }
+
     field deleteCustomer(&executor,
                             input: DeleteCustomerInput as "Delete Customer object in Stripe",)
                             -> FieldResult<Mock> as "" {
