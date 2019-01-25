@@ -21,8 +21,8 @@ use stq_http::errors::ErrorMessageWrapper;
 use stq_http::request_util::parse_body;
 use stq_http::request_util::serialize_future;
 use stq_http::request_util::CorrelationToken;
-use stq_http::request_util::Currency as CurrencyHeader;
 use stq_http::request_util::SessionId as SessionIdHeader;
+use stq_http::request_util::{Currency as CurrencyHeader, FiatCurrency as FiatCurrencyHeader};
 use stq_router::RouteParser;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
@@ -109,6 +109,7 @@ impl Controller for ControllerImpl {
 
                     let session_id_header = headers.get::<SessionIdHeader>().and_then(|sid| sid.parse::<SessionId>().ok());
                     let currency_header = headers.get::<CurrencyHeader>().and_then(|sid| sid.parse::<Currency>().ok());
+                    let fiat_currency_header = headers.get::<FiatCurrencyHeader>().and_then(|sid| sid.parse::<Currency>().ok());
                     let correlation_token = headers.get::<CorrelationToken>().map(|token| token.clone());
 
                     serialize_future::<_, FailureError, _>(
@@ -132,6 +133,7 @@ impl Controller for ControllerImpl {
                                             token_payload,
                                             session_id_header,
                                             currency_header,
+                                            fiat_currency_header,
                                             config,
                                             correlation_token,
                                         );

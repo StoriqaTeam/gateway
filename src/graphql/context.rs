@@ -21,7 +21,7 @@ use http::{
 };
 use stq_api::rpc_client::RestApiClient;
 use stq_http::client::{ClientHandle, Error, HttpClient, TimeLimitedHttpClient};
-use stq_http::request_util::{CorrelationToken, Currency as CurrencyHeader};
+use stq_http::request_util::{CorrelationToken, Currency as CurrencyHeader, FiatCurrency as FiatCurrencyHeader};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::Currency;
@@ -40,6 +40,7 @@ pub struct Context {
     pub user: Option<JWTPayload>,
     pub session_id: Option<SessionId>,
     pub currency: Option<Currency>,
+    pub fiat_currency: Option<Currency>,
     pub correlation_token: Option<CorrelationToken>,
     pub uuid: String,
     pub config: Config,
@@ -57,6 +58,7 @@ impl Context {
         user: Option<JWTPayload>,
         session_id: Option<SessionId>,
         currency: Option<Currency>,
+        fiat_currency: Option<Currency>,
         config: Config,
         correlation_token: Option<CorrelationToken>,
     ) -> Self {
@@ -67,6 +69,7 @@ impl Context {
             user,
             session_id,
             currency,
+            fiat_currency,
             uuid,
             config,
             correlation_token,
@@ -114,6 +117,9 @@ impl Context {
         if let Some(ref currency) = self.currency {
             headers.set(CurrencyHeader(currency.code().into()));
         };
+        if let Some(ref fiat_currency) = self.fiat_currency {
+            headers.set(FiatCurrencyHeader(fiat_currency.code().into()));
+        }
         headers.set(cookie);
 
         self.set_correlation_token(&mut headers);
