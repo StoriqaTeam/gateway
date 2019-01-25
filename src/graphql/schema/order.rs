@@ -499,7 +499,11 @@ graphql_object!(Edge<OrderProduct>: Context as "OrderProductsEdge" |&self| {
 });
 
 pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput) -> FieldResult<CreateOrdersOutput> {
-    let input = input.fill_uuid();
+    let mut input = input.fill_uuid();
+    //todo remove as soon as multi fiat currency becomes available
+    if input.currency.currency_type() == CurrencyType::Fiat {
+        input.currency = crate::config::FIAT_SELLER_CURRENCY;
+    }
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
             "Could not create orders for unauthorized user.",
@@ -586,7 +590,11 @@ pub fn run_create_orders_mutation_v1(context: &Context, input: CreateOrderInput)
 }
 
 pub fn run_create_orders_mutation(context: &Context, input: CreateOrderInputV2) -> FieldResult<CreateOrdersOutput> {
-    let input = input.fill_uuid();
+    let mut input = input.fill_uuid();
+    //todo remove as soon as multi fiat currency becomes available
+    if input.currency.currency_type() == CurrencyType::Fiat {
+        input.currency = crate::config::FIAT_SELLER_CURRENCY;
+    }
     let user = context.user.clone().ok_or_else(|| {
         FieldError::new(
             "Could not create orders for unauthorized user.",

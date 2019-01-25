@@ -3,10 +3,13 @@ use std::env;
 use stq_http;
 use stq_logging::GrayLogConfig;
 use stq_routes::service::Service as StqService;
+use stq_static_resources::Currency;
 
 use config_crate::{Config as RawConfig, ConfigError, Environment, File};
 
 use sentry_integration::SentryConfig;
+
+pub const FIAT_SELLER_CURRENCY: Currency = Currency::EUR;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Microservice {
