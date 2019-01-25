@@ -4,7 +4,7 @@ use juniper::FieldResult;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{InvoiceId, OrderId};
+use stq_types::{InvoiceId, OrderId, StoreId};
 
 use graphql::context::Context;
 use graphql::microservice::requests::*;
@@ -36,6 +36,12 @@ pub trait BillingService {
     fn update_russia_billing_info(&self, input: UpdateRussiaBillingInfoInput) -> FieldResult<RussiaBillingInfo>;
 
     fn get_fee_by_order_id(&self, order_id: OrderId) -> FieldResult<Option<Fee>>;
+
+    fn billing_type(&self, store_id: StoreId) -> FieldResult<Option<BillingType>>;
+
+    fn international_billing_info(&self, store_id: StoreId) -> FieldResult<Option<InternationalBillingInfo>>;
+
+    fn russia_billing_info(&self, store_id: StoreId) -> FieldResult<Option<RussiaBillingInfo>>;
 }
 
 pub struct BillingServiceImpl<'ctx> {
@@ -146,5 +152,23 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         let request_path = format!("fees/by-order-id/{}", order_id);
         let url = self.request_url(&request_path);
         self.context.request::<Option<Fee>>(Method::Get, url, None).wait()
+    }
+
+    fn billing_type(&self, store_id: StoreId) -> FieldResult<Option<BillingType>> {
+        let request_path = format!("billing_type/by-store-id/{}", store_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
+    }
+
+    fn international_billing_info(&self, store_id: StoreId) -> FieldResult<Option<InternationalBillingInfo>> {
+        let request_path = format!("billing_info/international/by-store-id/{}", store_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
+    }
+
+    fn russia_billing_info(&self, store_id: StoreId) -> FieldResult<Option<RussiaBillingInfo>> {
+        let request_path = format!("billing_info/russia/by-store-id/{}", store_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
     }
 }
