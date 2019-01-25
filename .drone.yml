@@ -59,6 +59,7 @@ pipeline:
     - cargo build --locked
     when:
       event: push
+      branch: master
   package:
     group: package
     image: plugins/docker
@@ -71,6 +72,7 @@ pipeline:
     - docker_password
     when:
       event: push
+      branch: master
   package:
     image: plugins/docker
     repo: storiqateam/stq-gw
