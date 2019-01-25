@@ -117,25 +117,46 @@ graphql_object!(ProxyCompanyBillingInfo: Context as "ProxyCompanyBillingInfo" |&
         &self.id.0
     }
 
-    field country() -> &String {
-        &self.country.0
+    field country_alpha3() -> &str {
+        &self.country_alpha3.0
     }
 
-    field swift_bic() -> &String {
-        &self.swift_bic.0
+    field account() -> &str {
+        &self.account
     }
 
-    field bank_name() -> &String {
-        &self.bank_name
+    field currency() -> &str {
+        self.currency.code()
     }
 
-    field full_name() -> &String {
-        &self.full_name
+    field name() -> &str {
+        &self.name
     }
 
-    field iban() -> &String {
-        &self.iban
+    field bank() -> &str {
+        &self.bank
     }
+
+    field swift() -> &str {
+        &self.swift.0
+    }
+
+    field bank_address() -> &str {
+        &self.bank_address
+    }
+
+    field country() -> &str {
+        &self.country
+    }
+
+    field city() -> &str {
+        &self.city
+    }
+
+    field recipient_address() -> &str {
+        &self.recipient_address
+    }
+
 });
 
 graphql_object!(RussiaBillingInfo: Context as "RussiaBillingInfo" |&self| {

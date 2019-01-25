@@ -1945,4 +1945,36 @@ graphql_object!(Mutation: Context |&self| {
         order::run_set_paid_to_seller_order_state_mutation(context, input).map(|_| Mock)
     }
 
+    field createInternationalBillingInfo(&executor, input: NewInternationalBillingInfoInput as "Create international billing info for a store")
+    -> FieldResult<InternationalBillingInfo> as "Created international billing info" {
+        let context = executor.context();
+
+        let billing = context.get_billing_microservice();
+        billing.create_international_billing_info(input)
+    }
+
+    field updateInternationalBillingInfo(&executor, input: UpdateInternationalBillingInfoInput as "Update international billing info for a store")
+    -> FieldResult<InternationalBillingInfo> as "Updated international billing info" {
+        let context = executor.context();
+
+        let billing = context.get_billing_microservice();
+        billing.update_international_billing_info(input)
+    }
+
+    field createRussiaBillingInfo(&executor, input: NewRussiaBillingInfoInput as "Create russia billing info for a store")
+    -> FieldResult<RussiaBillingInfo> as "Created russia billing info" {
+        let context = executor.context();
+
+        let billing = context.get_billing_microservice();
+        billing.create_russia_billing_info(input)
+    }
+
+    field updateRussiaBillingInfo(&executor, input: UpdateRussiaBillingInfoInput as "Update russia billing info for a store")
+    -> FieldResult<RussiaBillingInfo> as "Updated russia billing info" {
+        let context = executor.context();
+
+        let billing = context.get_billing_microservice();
+        billing.update_russia_billing_info(input)
+    }
+
 });

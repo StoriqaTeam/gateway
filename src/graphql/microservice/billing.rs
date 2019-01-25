@@ -26,6 +26,14 @@ pub trait BillingService {
     fn orders(&self, skip: i32, items_count: i32, input: OrderBillingSearchInput) -> FieldResult<OrderBillingSearchResults>;
 
     fn orders_billing_info(&self, skip: i32, count: i32, input: OrderBillingSearchInput) -> FieldResult<OrderBillingInfoSearchResults>;
+
+    fn create_international_billing_info(&self, input: NewInternationalBillingInfoInput) -> FieldResult<InternationalBillingInfo>;
+
+    fn update_international_billing_info(&self, input: UpdateInternationalBillingInfoInput) -> FieldResult<InternationalBillingInfo>;
+
+    fn create_russia_billing_info(&self, input: NewRussiaBillingInfoInput) -> FieldResult<RussiaBillingInfo>;
+
+    fn update_russia_billing_info(&self, input: UpdateRussiaBillingInfoInput) -> FieldResult<RussiaBillingInfo>;
 }
 
 pub struct BillingServiceImpl<'ctx> {
@@ -102,5 +110,33 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         let url = self.request_url(&request_path);
         let body: String = serde_json::to_string(&input)?;
         self.context.request(Method::Post, url, Some(body)).wait()
+    }
+
+    fn create_international_billing_info(&self, input: NewInternationalBillingInfoInput) -> FieldResult<InternationalBillingInfo> {
+        let request_path = format!("billing_info/international");
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request(Method::Post, url, Some(body)).wait()
+    }
+
+    fn update_international_billing_info(&self, input: UpdateInternationalBillingInfoInput) -> FieldResult<InternationalBillingInfo> {
+        let request_path = format!("billing_info/international/{}", input.id);
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request(Method::Put, url, Some(body)).wait()
+    }
+
+    fn create_russia_billing_info(&self, input: NewRussiaBillingInfoInput) -> FieldResult<RussiaBillingInfo> {
+        let request_path = format!("billing_info/russia");
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request(Method::Post, url, Some(body)).wait()
+    }
+
+    fn update_russia_billing_info(&self, input: UpdateRussiaBillingInfoInput) -> FieldResult<RussiaBillingInfo> {
+        let request_path = format!("billing_info/russia/{}", input.id);
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request(Method::Put, url, Some(body)).wait()
     }
 }
