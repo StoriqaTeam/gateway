@@ -15,6 +15,8 @@ pub trait BillingService {
 
     fn create_customer_with_source(&self, input: NewCustomerWithSourceRequest) -> FieldResult<Customer>;
 
+    fn update_customer(&self, input: UpdateCustomerInput) -> FieldResult<Customer>;
+
     fn get_current_customer(&self) -> FieldResult<Option<Customer>>;
 
     fn delete_customer(&self, payload: DeleteCustomerRequest) -> FieldResult<()>;
@@ -76,6 +78,14 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
 
         let body: String = serde_json::to_string(&input)?;
         self.context.request::<Customer>(Method::Post, url, Some(body)).wait()
+    }
+
+    fn update_customer(&self, input: UpdateCustomerInput) -> FieldResult<Customer> {
+        let request_path = format!("{}", Model::Customer.to_url());
+        let url = self.request_url(&request_path);
+
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request::<Customer>(Method::Put, url, Some(body)).wait()
     }
 
     fn get_current_customer(&self) -> FieldResult<Option<Customer>> {
