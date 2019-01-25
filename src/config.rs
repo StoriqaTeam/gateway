@@ -9,6 +9,8 @@ use config_crate::{Config as RawConfig, ConfigError, Environment, File};
 
 use sentry_integration::SentryConfig;
 
+/// The only supported fiat currency to buy products with.
+/// Remove as soon as multi fiat currency becomes available
 pub const FIAT_SELLER_CURRENCY: Currency = Currency::EUR;
 
 #[derive(Debug, Deserialize, Clone)]
