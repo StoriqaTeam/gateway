@@ -3,7 +3,7 @@ pub mod customer_id;
 use stq_static_resources::Currency;
 use stq_types::{
     stripe::{ChargeId, PaymentIntentId},
-    InvoiceId, UserId,
+    UserId,
 };
 
 use self::customer_id::CustomerId;
@@ -33,7 +33,6 @@ pub struct DeleteCustomerInput {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PaymentIntent {
     pub id: PaymentIntentId,
-    pub invoice_id: InvoiceId,
     pub amount: f64,
     pub amount_received: f64,
     pub client_secret: Option<String>,
