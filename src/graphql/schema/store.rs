@@ -661,6 +661,21 @@ graphql_object!(Store: Context as "Store" |&self| {
         };
         orders_billing(context, current_page, items_count, search_params)
     }
+
+    field billing_type(&executor) -> FieldResult<Option<BillingType>> as "Store billing type." {
+        let context = executor.context();
+        context.get_billing_microservice().billing_type(self.id)
+    }
+
+    field international_billing_info(&executor) -> FieldResult<Option<InternationalBillingInfo>> as "International billing info." {
+        let context = executor.context();
+        context.get_billing_microservice().international_billing_info(self.id)
+    }
+
+    field russia_billing_info(&executor) -> FieldResult<Option<RussiaBillingInfo>> as "International billing info." {
+        let context = executor.context();
+        context.get_billing_microservice().russia_billing_info(self.id)
+    }
 });
 
 graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {
