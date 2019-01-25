@@ -4,7 +4,7 @@ use juniper::FieldResult;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::InvoiceId;
+use stq_types::{InvoiceId, OrderId};
 
 use graphql::context::Context;
 use graphql::microservice::requests::*;
@@ -34,6 +34,8 @@ pub trait BillingService {
     fn create_russia_billing_info(&self, input: NewRussiaBillingInfoInput) -> FieldResult<RussiaBillingInfo>;
 
     fn update_russia_billing_info(&self, input: UpdateRussiaBillingInfoInput) -> FieldResult<RussiaBillingInfo>;
+
+    fn get_fee_by_order_id(&self, order_id: OrderId) -> FieldResult<Option<Fee>>;
 }
 
 pub struct BillingServiceImpl<'ctx> {
@@ -138,5 +140,11 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         let url = self.request_url(&request_path);
         let body: String = serde_json::to_string(&input)?;
         self.context.request(Method::Put, url, Some(body)).wait()
+    }
+
+    fn get_fee_by_order_id(&self, order_id: OrderId) -> FieldResult<Option<Fee>> {
+        let request_path = format!("fees/by-order-id/{}", order_id);
+        let url = self.request_url(&request_path);
+        self.context.request::<Option<Fee>>(Method::Get, url, None).wait()
     }
 }
