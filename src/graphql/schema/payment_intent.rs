@@ -12,10 +12,6 @@ graphql_object!(PaymentIntent: Context as "PaymentIntent" |&self| {
         self.id.to_string().into()
     }
 
-    field invoice_id() -> String as "Invoice id" {
-        self.invoice_id.to_string()
-    }
-
     field amount() -> f64 as "Amount" {
         self.amount
     }
