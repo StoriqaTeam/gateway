@@ -261,6 +261,13 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         context.request::<Option<Invoice>>(Method::Get, url, None)
             .wait()
     }
+
+    field fee(&executor) -> FieldResult<Option<Fee>> as "Fee" {
+        executor
+        .context()
+        .get_billing_microservice()
+        .get_fee_by_order_id(self.0.id)
+    }
 });
 
 graphql_object!(CreateOrdersOutput: Context as "CreateOrdersOutput" |&self| {

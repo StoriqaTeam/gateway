@@ -14,6 +14,7 @@ pub mod country;
 pub mod coupon;
 pub mod custom_attribute;
 pub mod customer;
+pub mod fee;
 pub mod financial_manager;
 pub mod invoice;
 pub mod main_page;

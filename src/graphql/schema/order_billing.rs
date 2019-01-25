@@ -1,6 +1,7 @@
 //! File containing order billing object of graphql schema
 use juniper::ID as GraphqlID;
 
+use juniper::FieldResult;
 use stq_static_resources::Currency;
 
 use super::*;
@@ -108,6 +109,13 @@ graphql_object!(OrderBilling: Context as "OrderBilling" |&self| {
 
     field state() -> PaymentState {
         self.state
+    }
+
+    field fee(&executor) -> FieldResult<Option<Fee>> as "Fee" {
+        executor
+        .context()
+        .get_billing_microservice()
+        .get_fee_by_order_id(self.id)
     }
 
 });
