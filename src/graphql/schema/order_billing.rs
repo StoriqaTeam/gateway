@@ -181,20 +181,29 @@ graphql_object!(RussiaBillingInfo: Context as "RussiaBillingInfo" |&self| {
         &self.store_id.0
     }
 
-    field kpp() -> &String {
-        &self.kpp
+    field bank_name() -> &str {
+        &self.bank_name
     }
-
-    field bic() -> &String {
-        &self.bic
+    field branch_name() -> &Option<String> {
+        &self.branch_name
     }
-
-    field inn() -> &String {
-        &self.inn
+    field swift_bic() -> &str {
+        self.swift_bic.0.as_ref()
     }
-
-    field full_name() -> &String {
-        &self.full_name
+    field tax_id() -> &str {
+        &self.tax_id
+    }
+    field correspondent_account() -> &str {
+        &self.correspondent_account
+    }
+    field current_account() -> &str {
+        &self.current_account
+    }
+    field personal_account() -> &Option<String> {
+        &self.personal_account
+    }
+    field beneficiary_full_name() -> &str {
+        &self.beneficiary_full_name
     }
 });
 
@@ -207,19 +216,39 @@ graphql_object!(InternationalBillingInfo: Context as "InternationalBillingInfo" 
         &self.store_id.0
     }
 
-    field swift_bic() -> &String {
-        &self.swift_bic.0
+    field account() -> &str {
+        &self.account
     }
 
-    field bank_name() -> &String {
-        &self.bank_name
+    field currency() -> &str {
+        self.currency.code()
     }
 
-    field full_name() -> &String {
-        &self.full_name
+    field name() -> &str {
+        &self.name
     }
 
-    field iban() -> &String {
-        &self.iban
+    field bank() -> &str {
+        &self.bank
+    }
+
+    field swift() -> &str {
+        &self.swift.0
+    }
+
+    field bank_address() -> &str {
+        &self.bank_address
+    }
+
+    field country() -> &str {
+        &self.country
+    }
+
+    field city() -> &str {
+        &self.city
+    }
+
+    field recipient_address() -> &str {
+        &self.recipient_address
     }
 });
