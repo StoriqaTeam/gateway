@@ -5,20 +5,29 @@ use stq_types::{Alpha3, InternationalBillingId, ProxyCompanyBillingInfoId, Russi
 pub struct InternationalBillingInfo {
     pub id: InternationalBillingId,
     pub store_id: StoreId,
-    pub swift_bic: SwiftId,
-    pub bank_name: String,
-    pub full_name: String,
-    pub iban: String,
+    pub account: String,
+    pub currency: Currency,
+    pub name: String,
+    pub bank: String,
+    pub swift: SwiftId,
+    pub bank_address: String,
+    pub country: String,
+    pub city: String,
+    pub recipient_address: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct RussiaBillingInfo {
     pub id: RussiaBillingId,
     pub store_id: StoreId,
-    pub kpp: String,
-    pub bic: String,
-    pub inn: String,
-    pub full_name: String,
+    pub bank_name: String,
+    pub branch_name: Option<String>,
+    pub swift_bic: SwiftId,
+    pub tax_id: String,
+    pub correspondent_account: String,
+    pub current_account: String,
+    pub personal_account: Option<String>,
+    pub beneficiary_full_name: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -53,14 +62,24 @@ pub struct NewInternationalBillingInfoInput {
     pub client_mutation_id: String,
     #[graphql(description = "store id.")]
     pub store_id: i32,
-    #[graphql(description = "swift bic.")]
-    pub swift_bic: String,
-    #[graphql(description = "bank name.")]
-    pub bank_name: String,
-    #[graphql(description = "full name.")]
-    pub full_name: String,
-    #[graphql(description = "iban.")]
-    pub iban: String,
+    #[graphql(description = "account.")]
+    pub account: String,
+    #[graphql(description = "currency.")]
+    pub currency: Currency,
+    #[graphql(description = "name.")]
+    pub name: String,
+    #[graphql(description = "bank.")]
+    pub bank: String,
+    #[graphql(description = "swift.")]
+    pub swift: String,
+    #[graphql(description = "bank address.")]
+    pub bank_address: String,
+    #[graphql(description = "country.")]
+    pub country: String,
+    #[graphql(description = "city.")]
+    pub city: String,
+    #[graphql(description = "recipient address.")]
+    pub recipient_address: String,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -74,14 +93,24 @@ pub struct UpdateInternationalBillingInfoInput {
     pub id: i32,
     #[graphql(description = "store id.")]
     pub store_id: Option<i32>,
-    #[graphql(description = "swift bic.")]
-    pub swift_bic: Option<String>,
-    #[graphql(description = "bank name.")]
-    pub bank_name: Option<String>,
-    #[graphql(description = "full name.")]
-    pub full_name: Option<String>,
-    #[graphql(description = "iban.")]
-    pub iban: Option<String>,
+    #[graphql(description = "account.")]
+    pub account: Option<String>,
+    #[graphql(description = "currency.")]
+    pub currency: Currency,
+    #[graphql(description = "name.")]
+    pub name: Option<String>,
+    #[graphql(description = "bank.")]
+    pub bank: Option<String>,
+    #[graphql(description = "swift.")]
+    pub swift: Option<String>,
+    #[graphql(description = "bank address.")]
+    pub bank_address: Option<String>,
+    #[graphql(description = "country.")]
+    pub country: Option<String>,
+    #[graphql(description = "city.")]
+    pub city: Option<String>,
+    #[graphql(description = "recipient address.")]
+    pub recipient_address: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -92,14 +121,22 @@ pub struct NewRussiaBillingInfoInput {
     pub client_mutation_id: String,
     #[graphql(description = "store id.")]
     pub store_id: i32,
-    #[graphql(description = "bic.")]
-    pub kpp: String,
-    #[graphql(description = "bic.")]
-    pub bic: String,
-    #[graphql(description = "inn.")]
-    pub inn: String,
-    #[graphql(description = "full name.")]
-    pub full_name: String,
+    #[graphql(description = "bank name.")]
+    pub bank_name: String,
+    #[graphql(description = "branch name.")]
+    pub branch_name: Option<String>,
+    #[graphql(description = "swift bic.")]
+    pub swift_bic: String,
+    #[graphql(description = "tax id.")]
+    pub tax_id: String,
+    #[graphql(description = "correspondent account.")]
+    pub correspondent_account: String,
+    #[graphql(description = "current account.")]
+    pub current_account: String,
+    #[graphql(description = "personal account.")]
+    pub personal_account: Option<String>,
+    #[graphql(description = "beneficiary full name.")]
+    pub beneficiary_full_name: String,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]
@@ -113,12 +150,20 @@ pub struct UpdateRussiaBillingInfoInput {
     pub id: i32,
     #[graphql(description = "store id.")]
     pub store_id: Option<i32>,
-    #[graphql(description = "bic.")]
-    pub kpp: Option<String>,
-    #[graphql(description = "bic.")]
-    pub bic: Option<String>,
-    #[graphql(description = "inn.")]
-    pub inn: Option<String>,
-    #[graphql(description = "full name.")]
-    pub full_name: Option<String>,
+    #[graphql(description = "bank name.")]
+    pub bank_name: Option<String>,
+    #[graphql(description = "branch name.")]
+    pub branch_name: Option<String>,
+    #[graphql(description = "swift bic.")]
+    pub swift_bic: Option<String>,
+    #[graphql(description = "tax id.")]
+    pub tax_id: Option<String>,
+    #[graphql(description = "correspondent account.")]
+    pub correspondent_account: Option<String>,
+    #[graphql(description = "current account.")]
+    pub current_account: Option<String>,
+    #[graphql(description = "personal account.")]
+    pub personal_account: Option<String>,
+    #[graphql(description = "beneficiary full name.")]
+    pub beneficiary_full_name: Option<String>,
 }
