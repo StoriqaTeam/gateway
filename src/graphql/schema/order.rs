@@ -751,3 +751,9 @@ pub fn run_set_paid_to_seller_order_state_mutation(context: &Context, input: Pai
 
     saga.set_order_payment_state(order_id, state)
 }
+
+pub fn run_charge_fee_mutation(context: &Context, input: ChargeFeeInput) -> FieldResult<Fee> {
+    let billing = context.get_billing_microservice();
+    let order_id = Uuid::parse_str(&input.order_id).map(OrderId)?;
+    billing.create_charge_fee_by_oder(order_id)
+}

@@ -1983,4 +1983,11 @@ graphql_object!(Mutation: Context |&self| {
         billing.update_russia_billing_info(input)
     }
 
+    field ChargeFee(&executor,
+                            input: ChargeFeeInput as "Creates Charge object in Stripe for pay fee-for-service platform.",) -> FieldResult<Fee> as "Creates Charge object" {
+        let context = executor.context();
+
+        order::run_charge_fee_mutation(context, input)
+    }
+
 });
