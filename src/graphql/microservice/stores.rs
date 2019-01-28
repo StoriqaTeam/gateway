@@ -4,12 +4,14 @@ use juniper::FieldResult;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{StoresRole, UserId};
+use stq_types::{StoreId, StoresRole, UserId};
 
 use graphql::context::Context;
 use graphql::models::*;
 
 pub trait StoresService {
+    fn get_store_by_id(&self, store_id: StoreId) -> FieldResult<Store>;
+
     fn roles(&self, user_id: UserId) -> FieldResult<Vec<StoresRole>>;
 
     fn add_role_to_user(&self, input: NewStoresRoleInput) -> FieldResult<NewRole<StoresMicroserviceRole>>;
@@ -38,6 +40,12 @@ impl<'ctx> StoresServiceImpl<'ctx> {
 }
 
 impl<'ctx> StoresService for StoresServiceImpl<'ctx> {
+    fn get_store_by_id(&self, store_id: StoreId) -> FieldResult<Store> {
+        let request_path = format!("{}/{}", Model::Store.to_url(), store_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
+    }
+
     fn roles(&self, user_id: UserId) -> FieldResult<Vec<StoresRole>> {
         let url = format!("{}/roles/by-user-id/{}", self.context.config.stores_microservice.url, user_id);
 
