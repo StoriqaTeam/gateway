@@ -3,13 +3,15 @@ use stq_types::{InvoiceId, OrderId, StoreId};
 
 use graphql::models::{BillingType, InternationalBillingInfo, PaymentState, ProxyCompanyBillingInfo, RussiaBillingInfo};
 
-#[derive(GraphQLInputObject, Serialize, Debug, Clone)]
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, Default)]
 #[graphql(description = "Orders search parameters object")]
 pub struct OrderBillingSearchInput {
     #[graphql(description = "payment state.")]
     pub payment_state: Option<PaymentState>,
     #[graphql(description = "Store id.")]
     pub store_id: Option<i32>,
+    #[graphql(description = "Order id.")]
+    pub order_id: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]

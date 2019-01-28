@@ -11,30 +11,28 @@ use graphql::models::*;
 graphql_object!(OrderBillingInfo: Context as "OrderBillingInfo" |&self| {
     description: "Billing info order information."
 
-    interfaces: [&Node]
-
-    field order() -> &OrderBilling {
+    field order() -> &OrderBilling as "order" {
         &self.order
     }
 
-    field billing_type() -> BillingType {
+    field billing_type() -> BillingType as "billing type" {
         self.billing_type
     }
 
-    field proxy_company_billing_info() -> &Option<ProxyCompanyBillingInfo> {
+    field proxy_company_billing_info() -> &Option<ProxyCompanyBillingInfo> as "proxy company billing" {
         &self.proxy_company_billing_info
     }
 
-    field russia_billing_info() -> &Option<RussiaBillingInfo> {
+    field russia_billing_info() -> &Option<RussiaBillingInfo> as "russia billing information" {
         &self.russia_billing_info
     }
 
-    field international_billing_info() -> &Option<InternationalBillingInfo> {
+    field international_billing_info() -> &Option<InternationalBillingInfo> as "international billing information" {
         &self.international_billing_info
     }
 });
 
-graphql_object!(Connection<OrderBillingInfo, PageInfoSegments>: Context as "OrderBillingConnectionPages" |&self| {
+graphql_object!(Connection<OrderBillingInfo, PageInfoSegments>: Context as "OrderBillingInfoConnectionPages" |&self| {
     description: "OrderBillingInfo Connection"
 
     field edges() -> &[Edge<OrderBillingInfo>] {
@@ -103,8 +101,15 @@ graphql_object!(OrderBilling: Context as "OrderBilling" |&self| {
         self.invoice_id.to_string().into()
     }
 
-    field store_id() -> i32 {
+    field store_id() -> i32 as "Store id" {
         self.store_id.0
+    }
+
+    field store(&executor) -> FieldResult<Store> as "Store" {
+         executor
+        .context()
+        .get_stores_microservice()
+        .get_store_by_id(self.store_id)
     }
 
     field state() -> PaymentState {

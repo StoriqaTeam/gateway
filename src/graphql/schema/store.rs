@@ -642,6 +642,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         let search_params = OrderBillingSearchInput {
             payment_state: Some(PaymentState::PaidToSeller),
             store_id: Some(self.id.0),
+            ..Default::default()
         };
         orders_billing(context, current_page, items_count, search_params)
     }
@@ -650,7 +651,6 @@ graphql_object!(Store: Context as "Store" |&self| {
         &executor,
         current_page : i32 as "Current page",
         items_count : i32 as "Items count",
-        search_params: OrderBillingSearchInput as "Search parameters"
     )
     -> FieldResult<Connection<OrderBilling, PageInfoSegments>> as "find orders with PaymentToSellerNeeded state." 
     {
@@ -658,6 +658,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         let search_params = OrderBillingSearchInput {
             payment_state: Some(PaymentState::PaymentToSellerNeeded),
             store_id: Some(self.id.0),
+            ..Default::default()
         };
         orders_billing(context, current_page, items_count, search_params)
     }
