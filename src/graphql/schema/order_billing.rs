@@ -15,6 +15,48 @@ graphql_object!(OrderBillingInfo: Context as "OrderBillingInfo" |&self| {
         &self.order
     }
 
+    field id() -> GraphqlID as "Base64 Unique id" {
+        self.order.id.to_string().into()
+    }
+
+    field seller_currency() -> Currency {
+        self.order.seller_currency
+    }
+
+    field total_amount() -> f64 {
+        self.order.total_amount
+    }
+
+    field cashback_amount() -> f64 {
+        self.order.cashback_amount
+    }
+
+    field invoice_id() -> GraphqlID as "Base64 invoice id" {
+        self.order.invoice_id.to_string().into()
+    }
+
+    field store_id() -> i32 as "Store id" {
+        self.order.store_id.0
+    }
+
+    field store(&executor) -> FieldResult<Store> as "Store" {
+         executor
+        .context()
+        .get_stores_microservice()
+        .get_store_by_id(self.order.store_id)
+    }
+
+    field state() -> PaymentState {
+        self.order.state
+    }
+
+    field fee(&executor) -> FieldResult<Option<Fee>> as "Fee" {
+        executor
+        .context()
+        .get_billing_microservice()
+        .get_fee_by_order_id(self.order.id)
+    }
+
     field billing_type() -> BillingType as "billing type" {
         self.billing_type
     }
