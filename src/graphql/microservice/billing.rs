@@ -46,6 +46,8 @@ pub trait BillingService {
     fn russia_billing_info(&self, store_id: StoreId) -> FieldResult<Option<RussiaBillingInfo>>;
 
     fn create_charge_fee_by_oder(&self, order_id: OrderId) -> FieldResult<Fee>;
+
+    fn create_payment_intent_fee(&self, fee_id: FeeId) -> FieldResult<PaymentIntent>;
 }
 
 pub struct BillingServiceImpl<'ctx> {
@@ -186,6 +188,12 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
 
     fn create_charge_fee_by_oder(&self, order_id: OrderId) -> FieldResult<Fee> {
         let request_path = format!("fees/by-order-id/{}/pay", order_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Post, url, None).wait()
+    }
+
+    fn create_payment_intent_fee(&self, fee_id: FeeId) -> FieldResult<PaymentIntent> {
+        let request_path = format!("/payment_intents/fees/{}", fee_id);
         let url = self.request_url(&request_path);
         self.context.request(Method::Post, url, None).wait()
     }
