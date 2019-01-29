@@ -7,6 +7,8 @@ use stq_static_resources::Currency;
 use super::*;
 use graphql::context::Context;
 use graphql::models::*;
+use stq_routes::model::Model;
+use stq_routes::service::Service;
 
 graphql_object!(OrderBillingInfo: Context as "OrderBillingInfo" |&self| {
     description: "Billing info order information."
@@ -170,7 +172,11 @@ graphql_object!(OrderBilling: Context as "OrderBilling" |&self| {
 });
 
 graphql_object!(ProxyCompanyBillingInfo: Context as "ProxyCompanyBillingInfo" |&self| {
-    field id() -> &i32 {
+    field id() -> GraphqlID as "GraphqlID" {
+        ID::new(Service::Billing, Model::ProxyCompanyBillingInfo, self.id.0).to_string().into()
+    }
+
+    field raw_id() -> &i32 {
         &self.id.0
     }
 
@@ -217,7 +223,11 @@ graphql_object!(ProxyCompanyBillingInfo: Context as "ProxyCompanyBillingInfo" |&
 });
 
 graphql_object!(RussiaBillingInfo: Context as "RussiaBillingInfo" |&self| {
-    field id() -> &i32 {
+    field id() -> GraphqlID as "GraphqlID" {
+        ID::new(Service::Billing, Model::RussiaBillingInfo, self.id.0).to_string().into()
+    }
+
+    field raw_id() -> &i32 {
         &self.id.0
     }
 
@@ -252,7 +262,11 @@ graphql_object!(RussiaBillingInfo: Context as "RussiaBillingInfo" |&self| {
 });
 
 graphql_object!(InternationalBillingInfo: Context as "InternationalBillingInfo" |&self| {
-    field id() -> &i32 {
+    field id() -> GraphqlID as "GraphqlID" {
+        ID::new(Service::Billing, Model::InternationalBillingInfo, self.id.0).to_string().into()
+    }
+
+    field raw_id() -> &i32 {
         &self.id.0
     }
 
