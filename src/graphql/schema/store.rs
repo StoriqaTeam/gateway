@@ -773,6 +773,7 @@ fn orders_billing(
     let records_limit = context.config.gateway.records_limit;
     let items_count = std::cmp::max(1, std::cmp::min(items_count, records_limit as i32));
     let skip = items_count * (current_page - 1);
+    let search_params = convert_search_term(context, search_params)?;
     let orders = context.get_billing_microservice().orders(skip, items_count, search_params)?;
     let total_pages = std::cmp::max(0, orders.total_count as i32 - 1) / items_count + 1;
     let orders_edges: Vec<Edge<OrderBilling>> = orders

@@ -11,7 +11,7 @@ use graphql::models::*;
 graphql_object!(OrderBillingInfo: Context as "OrderBillingInfo" |&self| {
     description: "Billing info order information."
 
-    field order(&executor) -> FieldResult<GraphQLOrder> as "order" {
+    field order(&executor) -> FieldResult<Option<GraphQLOrder>> as "order" {
        executor.context()
         .get_orders_microservice()
         .get_order_by_id(self.order.id)
