@@ -31,8 +31,8 @@ use graphql::models::jwt::JWTPayload;
 use graphql::models::User;
 
 use graphql::microservice::{
-    BillingService, BillingServiceImpl, DeliveryService, DeliveryServiceImpl, SagaService, SagaServiceImpl, StoresService,
-    StoresServiceImpl,
+    BillingService, BillingServiceImpl, DeliveryService, DeliveryServiceImpl, OrdersService, OrdersServiceImpl, SagaService,
+    SagaServiceImpl, StoresService, StoresServiceImpl,
 };
 
 pub struct Context {
@@ -228,6 +228,10 @@ impl Context {
 
     pub fn get_stores_microservice<'r>(&'r self) -> Box<dyn StoresService + 'r> {
         Box::new(StoresServiceImpl::new(self))
+    }
+
+    pub fn get_orders_microservice<'r>(&'r self) -> Box<dyn OrdersService + 'r> {
+        Box::new(OrdersServiceImpl::new(self))
     }
 
     pub fn permissions(&self) -> Permissions {

@@ -12,6 +12,9 @@ pub use self::billing::*;
 mod delivery;
 pub use self::delivery::*;
 
+mod order;
+pub use self::order::*;
+
 pub mod requests;
 pub use self::requests::*;
 
