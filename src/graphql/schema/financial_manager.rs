@@ -18,6 +18,7 @@ graphql_object!(FinancialManager: Context as "FinancialManager" |&self| {
     -> FieldResult<Connection<OrderBillingInfo, PageInfoSegments>> as "find orders for financier manager." 
     {
         let context = executor.context();
+        let search_term = convert_search_term(context, search_term)?;
         find_orders(context, current_page, items_count, search_term)
     }
 });
@@ -26,7 +27,7 @@ fn find_orders(
     context: &Context,
     current_page: i32,
     items_count: i32,
-    search_term: OrderBillingSearchInput,
+    search_term: OrderBillingSearch,
 ) -> FieldResult<Connection<OrderBillingInfo, PageInfoSegments>> {
     let current_page = std::cmp::max(current_page, 1);
     let records_limit = context.config.gateway.records_limit;
