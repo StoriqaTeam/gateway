@@ -347,6 +347,16 @@ pub fn run_increment_in_cart_v1(context: &Context, input: IncrementInCartInput) 
     })?;
 
     let rpc_client = context.get_rest_api_client(Service::Orders);
+    let init_quantity = rpc_client
+        .get_cart(customer, Some(base_product.currency.currency_type()))
+        .sync()
+        .map_err(into_graphql)?
+        .into_iter()
+        .find(|product| product.product_id == product_id)
+        .map(|product| product.quantity.0)
+        .unwrap_or(0i32);
+
+    let rpc_client = context.get_rest_api_client(Service::Orders);
 
     let mut products: Vec<_> = rpc_client
         .increment_item(
@@ -364,7 +374,7 @@ pub fn run_increment_in_cart_v1(context: &Context, input: IncrementInCartInput) 
     // drop previous rpc_client
     let rpc_client = context.get_rest_api_client(Service::Orders);
     if let Some(value) = input.value {
-        let quantity = Quantity(value);
+        let quantity = Quantity(init_quantity + value);
         products = rpc_client
             .set_quantity(customer, input.product_id.into(), quantity)
             .sync()
