@@ -268,6 +268,13 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
         .get_billing_microservice()
         .get_fee_by_order_id(self.0.id)
     }
+
+    field order_billing(&executor) -> FieldResult<Option<OrderBilling>> as "Order billing" {
+        executor
+        .context()
+        .get_billing_microservice()
+        .order(self.0.id)
+    }
 });
 
 graphql_object!(CreateOrdersOutput: Context as "CreateOrdersOutput" |&self| {
