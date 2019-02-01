@@ -8,8 +8,10 @@ use juniper::{FieldError, FieldResult};
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::currency_type::CurrencyType;
+use stq_static_resources::Currency;
 use stq_static_resources::Translation;
-use stq_types::{BaseProductId, CartItem, DeliveryMethodId, ProductId};
+use stq_types::{BaseProductId, CartItem, DeliveryMethodId, ExchangeRate, ProductId};
 
 use super::*;
 use graphql::context::Context;
@@ -217,7 +219,48 @@ pub fn calculate_coupon_discount(context: &Context, cart_product: &CartProduct) 
     Ok(0.0f64)
 }
 
+pub fn get_cart_product_base_product(context: &Context, product: &CartProduct) -> FieldResult<Option<BaseProduct>> {
+    let url = format!(
+        "{}/{}/{}?visibility={}",
+        &context.config.service_url(Service::Stores),
+        Model::BaseProduct.to_url(),
+        product.base_product_id.to_string(),
+        Visibility::Published,
+    );
+
+    context.request::<Option<BaseProduct>>(Method::Get, url, None).wait()
+}
+
+pub fn get_cart_product_original_currency(context: &Context, product: &CartProduct) -> FieldResult<Currency> {
+    Ok(get_cart_product_base_product(context, product)?
+        .map(|b| b.currency)
+        .unwrap_or(product.currency))
+}
+
+pub fn get_currency_exchange_rates(context: &Context, currency: Currency) -> FieldResult<ExchangeRates> {
+    Ok(context.get_stores_microservice().get_currency_exchange_info()?.data[&currency].clone())
+}
+
+pub fn get_exchange_rate(context: &Context, product: &CartProduct) -> FieldResult<ExchangeRate> {
+    let user_currency = match product.currency.currency_type() {
+        CurrencyType::Crypto => context.currency,
+        CurrencyType::Fiat => context.fiat_currency,
+    }
+    .unwrap_or(product.currency);
+    let product_currency = get_cart_product_original_currency(context, product)?;
+    let currency_map = get_currency_exchange_rates(context, user_currency)?;
+    Ok(currency_map[&product_currency])
+}
+
 pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> FieldResult<f64> {
+    calculate_delivery_cost_with_exchange_rate(context, product, get_exchange_rate(context, product)?)
+}
+
+pub fn calculate_delivery_cost_with_exchange_rate(
+    context: &Context,
+    product: &CartProduct,
+    exchange_rate: ExchangeRate,
+) -> FieldResult<f64> {
     match product.delivery_method_id {
         None => Ok(0.0f64),
         Some(delivery_method_id) => {
@@ -225,7 +268,7 @@ pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> Fiel
                 None => get_select_package_v1(context, delivery_method_id)?,
                 Some(user_country_code) => get_select_package(context, product.base_product_id, user_country_code, delivery_method_id)?,
             };
-            Ok(package.price.0 * f64::from(product.quantity.0))
+            Ok(package.price.0 * f64::from(product.quantity.0) * exchange_rate.0)
         }
     }
 }
@@ -263,7 +306,7 @@ pub fn get_delivery_info(packages: HashMap<ProductId, AvailablePackageForUser>) 
         .collect::<HashMap<ProductId, DeliveryInfo>>()
 }
 
-pub fn get_product_info<'a>(context: &Context, cart_items: &'a HashSet<CartItem>) -> FieldResult<HashMap<ProductId, ProductInfo>> {
+pub fn get_product_info(context: &Context, cart_items: &HashSet<CartItem>) -> FieldResult<HashMap<ProductId, ProductInfo>> {
     cart_items
         .iter()
         .map(|cart_item| {

@@ -19,6 +19,8 @@ pub trait StoresService {
     fn remove_role_from_user(&self, input: RemoveStoresRoleInput) -> FieldResult<NewRole<StoresMicroserviceRole>>;
 
     fn get_store_by_user(&self, user_id: UserId) -> FieldResult<Option<Store>>;
+
+    fn get_currency_exchange_info(&self) -> FieldResult<CurrencyExchangeInfo>;
 }
 
 pub struct StoresServiceImpl<'ctx> {
@@ -69,6 +71,12 @@ impl<'ctx> StoresService for StoresServiceImpl<'ctx> {
     fn get_store_by_user(&self, user_id: UserId) -> FieldResult<Option<Store>> {
         let request_path = format!("{}/by_user_id/{}", Model::Store.to_url(), user_id);
         let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
+    }
+
+    fn get_currency_exchange_info(&self) -> FieldResult<CurrencyExchangeInfo> {
+        let request_path = "currency_exchange";
+        let url = self.request_url(request_path);
         self.context.request(Method::Get, url, None).wait()
     }
 }
