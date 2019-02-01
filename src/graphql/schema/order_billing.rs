@@ -169,6 +169,10 @@ graphql_object!(OrderBilling: Context as "OrderBilling" |&self| {
         .get_fee_by_order_id(self.id)
     }
 
+    field stripe_fee() -> &Option<f64> as "Stripe fee" {
+        &self.stripe_fee
+    }
+
 });
 
 graphql_object!(ProxyCompanyBillingInfo: Context as "ProxyCompanyBillingInfo" |&self| {
