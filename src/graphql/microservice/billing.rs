@@ -27,6 +27,8 @@ pub trait BillingService {
 
     fn orders(&self, skip: i32, items_count: i32, input: OrderBillingSearch) -> FieldResult<OrderBillingSearchResults>;
 
+    fn order(&self, order_id: OrderId) -> FieldResult<Option<OrderBilling>>;
+
     fn orders_billing_info(&self, skip: i32, count: i32, input: OrderBillingSearch) -> FieldResult<OrderBillingInfoSearchResults>;
 
     fn create_international_billing_info(&self, input: NewInternationalBillingInfoInput) -> FieldResult<InternationalBillingInfo>;
@@ -131,6 +133,17 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         let request_path = format!("orders/search?skip={}&count={}", skip, count);
         let url = self.request_url(&request_path);
         let body: String = serde_json::to_string(&input)?;
+        self.context.request(Method::Post, url, Some(body)).wait()
+    }
+
+    fn order(&self, order_id: OrderId) -> FieldResult<Option<OrderBilling>> {
+        let request_path = format!("orders/search?skip={}&count={}", 0, 1);
+        let url = self.request_url(&request_path);
+        let search = OrderBillingSearch {
+            order_id: Some(order_id),
+            ..Default::default()
+        };
+        let body: String = serde_json::to_string(&search)?;
         self.context.request(Method::Post, url, Some(body)).wait()
     }
 

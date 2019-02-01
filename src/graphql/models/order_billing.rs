@@ -49,7 +49,7 @@ pub struct OrderBillingSearchResults {
     pub orders: Vec<OrderBilling>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct OrderBillingSearch {
     pub payment_state: Option<PaymentState>,
     pub store_id: Option<StoreId>,
