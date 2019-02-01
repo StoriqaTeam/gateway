@@ -35,6 +35,7 @@ pub struct OrderBilling {
     pub invoice_id: InvoiceId,
     pub store_id: StoreId,
     pub state: PaymentState,
+    pub stripe_fee: Option<f64>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
