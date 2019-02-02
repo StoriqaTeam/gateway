@@ -101,7 +101,7 @@ graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&
             1.0
         };
 
-        Ok(self.price.0 * exch_rate)
+        Ok(self.price.0 / exch_rate)
     }
 
     field currency() -> Currency as "Package currency." {
