@@ -74,6 +74,7 @@ pub struct NewProducts {
     pub store_id: StoreId,
     pub company_package_id: CompanyPackageId,
     pub price: Option<ProductPrice>,
+    pub currency: Currency,
     pub measurements: Measurements,
     pub delivery_from: Alpha3,
     pub deliveries_to: Vec<Alpha3>,
@@ -94,6 +95,7 @@ pub struct NewShippingEnrichedInput {
     pub delivery_from: Alpha3,
     pub local_delivery_to: Alpha3,
     pub measurements: Measurements,
+    pub base_product_currency: Currency,
 }
 
 impl From<NewShippingEnrichedInput> for NewShipping {
@@ -103,6 +105,7 @@ impl From<NewShippingEnrichedInput> for NewShipping {
             delivery_from,
             local_delivery_to,
             measurements,
+            base_product_currency,
         } = shipping;
 
         let base_product_id = shipping.base_product_id.into();
@@ -119,6 +122,7 @@ impl From<NewShippingEnrichedInput> for NewShipping {
                 delivery_from: delivery_from.clone(),
                 deliveries_to: vec![local_delivery_to.clone()],
                 shipping: ShippingVariant::Local,
+                currency: base_product_currency,
             })
             .collect();
 
@@ -134,6 +138,7 @@ impl From<NewShippingEnrichedInput> for NewShipping {
                 delivery_from: delivery_from.clone(),
                 deliveries_to: international.deliveries_to.into_iter().map(|v| Alpha3(v)).collect(),
                 shipping: ShippingVariant::International,
+                currency: base_product_currency,
             })
             .collect();
 
@@ -171,6 +176,7 @@ pub struct Products {
     pub store_id: StoreId,
     pub company_package_id: CompanyPackageId,
     pub price: Option<ProductPrice>,
+    pub currency: Currency,
     pub deliveries_to: Vec<Alpha3>,
     pub shipping: ShippingVariant,
 }
@@ -290,6 +296,7 @@ pub struct AvailablePackageForUser {
     pub name: String,
     pub logo: String,
     pub price: ProductPrice,
+    pub currency: Currency,
     pub base_product_id: BaseProductId,
     pub store_id: StoreId,
 }
