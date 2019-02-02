@@ -26,8 +26,9 @@ graphql_object!(Invoice: Context as "Invoice" |&self| {
         self.get_orders(context)
     }
 
-    field amount() -> &f64 as "amount"{
-        &self.amount.0
+    field amount() -> f64 as "amount"{
+        let multiplier = 10i64.pow(8 as u32) as f64;
+	    (self.amount.0 * multiplier).ceil() / multiplier
     }
 
     field currency() -> &Currency as "currency"{
