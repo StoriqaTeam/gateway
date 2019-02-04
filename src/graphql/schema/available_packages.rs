@@ -6,7 +6,7 @@ use juniper::{FieldError, FieldResult};
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_static_resources::Currency;
+use stq_static_resources::{Currency, CurrencyType};
 use stq_types::{BaseProductId, ShippingId};
 
 use graphql::context::Context;
@@ -82,8 +82,30 @@ graphql_object!(AvailablePackageForUser: Context as "AvailablePackageForUser" |&
         &self.logo
     }
 
-    field price() -> f64 as "Package price." {
-        self.price.0
+    field price(&executor) -> FieldResult<f64>  as "Package price." {
+        let context = executor.context();
+        let user_currency = match self.currency.currency_type() {
+            CurrencyType::Crypto => context.currency,
+            CurrencyType::Fiat => context.fiat_currency,
+        }
+        .unwrap_or(self.currency);
+
+        let exch_rate = if let Some(exch_rate) =
+            context
+                .get_stores_microservice()
+                .get_currency_exchange_info()?
+                .data
+                .get(&self.currency) {
+            exch_rate.get(&user_currency).map(|rate| rate.0).unwrap_or(1.0)
+        } else {
+            1.0
+        };
+
+        Ok(self.price.0 / exch_rate)
+    }
+
+    field currency() -> Currency as "Package currency." {
+        self.currency
     }
 });
 

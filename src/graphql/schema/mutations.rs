@@ -1620,6 +1620,7 @@ graphql_object!(Mutation: Context |&self| {
             delivery_from,
             local_delivery_to,
             measurements: base_product.get_measurements(),
+            base_product_currency: base_product.currency,
         });
 
         let saga  = context.get_saga_microservice();

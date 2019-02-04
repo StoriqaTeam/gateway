@@ -238,7 +238,13 @@ pub fn get_cart_product_original_currency(context: &Context, product: &CartProdu
 }
 
 pub fn get_currency_exchange_rates(context: &Context, currency: Currency) -> FieldResult<ExchangeRates> {
-    Ok(context.get_stores_microservice().get_currency_exchange_info()?.data[&currency].clone())
+    Ok(context
+        .get_stores_microservice()
+        .get_currency_exchange_info()?
+        .data
+        .get(&currency)
+        .cloned()
+        .unwrap_or_default())
 }
 
 pub fn get_exchange_rate(context: &Context, product: &CartProduct) -> FieldResult<ExchangeRate> {
@@ -249,7 +255,7 @@ pub fn get_exchange_rate(context: &Context, product: &CartProduct) -> FieldResul
     .unwrap_or(product.currency);
     let product_currency = get_cart_product_original_currency(context, product)?;
     let currency_map = get_currency_exchange_rates(context, user_currency)?;
-    Ok(currency_map[&product_currency])
+    Ok(currency_map.get(&product_currency).cloned().unwrap_or(ExchangeRate(1.0)))
 }
 
 pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> FieldResult<f64> {

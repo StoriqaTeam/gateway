@@ -2,7 +2,7 @@
 
 use juniper::{FieldError, FieldResult};
 
-use stq_static_resources::CurrencyType;
+use stq_static_resources::{Currency, CurrencyType};
 use stq_types::*;
 
 use graphql::context::Context;
@@ -29,12 +29,14 @@ graphql_object!(BuyNowCheckout: Context as "BuyNowCheckout" |&self| {
         calculate_coupon_discount(&self)
     }
 
-    field total_cost() -> f64 as "Total cost" {
-        calculate_cost(&self) + calculate_delivery_cost(&self.package, self.quantity)
+    field total_cost(&executor) -> FieldResult<f64> as "Total cost" {
+        let context = executor.context();
+        Ok(calculate_cost(&self) + calculate_delivery_cost(context, &self.package, self.quantity, self.product.currency)?)
     }
 
-    field total_cost_without_discounts() -> f64 as "Total without cost" {
-        calculate_cost_without_discounts(&self) + calculate_delivery_cost(&self.package, self.quantity)
+    field total_cost_without_discounts(&executor) -> FieldResult<f64> as "Total without cost" {
+        let context = executor.context();
+        Ok(calculate_cost_without_discounts(&self) + calculate_delivery_cost(context, &self.package, self.quantity, self.product.currency)?)
     }
 
     field total_count() -> &i32 as "Total products count" {
@@ -42,7 +44,7 @@ graphql_object!(BuyNowCheckout: Context as "BuyNowCheckout" |&self| {
     }
 
     field price() -> &f64 as "Price" {
-        &self.product.price.0
+        &self.product.customer_price.price.0
     }
 
     field subtotal() -> f64 as "Subtotal with discounts" {
@@ -53,8 +55,9 @@ graphql_object!(BuyNowCheckout: Context as "BuyNowCheckout" |&self| {
         calculate_cost_without_discounts(&self)
     }
 
-    field delivery_cost() -> f64 as "Delivery cost" {
-        calculate_delivery_cost(&self.package, self.quantity)
+    field delivery_cost(&executor) -> FieldResult<f64> as "Delivery cost" {
+        let context = executor.context();
+        calculate_delivery_cost(context, &self.package, self.quantity, self.product.currency)
     }
 
     field package() -> &Option<AvailablePackageForUser> as "Select delivery package" {
@@ -68,20 +71,21 @@ fn calculate_cost(buy_now: &BuyNowCheckout) -> f64 {
     }
 
     if let Some(discount) = buy_now.product.discount.filter(|discount| *discount > ZERO_DISCOUNT) {
-        let calc_cost = (buy_now.product.price.0 * (f64::from(buy_now.quantity.0))) * (1.0f64 - discount);
+        let calc_cost = (buy_now.product.customer_price.price.0 * (f64::from(buy_now.quantity.0))) * (1.0f64 - discount);
 
         return calc_cost;
     } else {
         if buy_now.coupon.is_some() {
             // set discount only 1 product
-            let product_cost_with_coupon_discount = buy_now.product.price.0 - calculate_coupon_discount(buy_now);
-            let calc_cost = product_cost_with_coupon_discount + (buy_now.product.price.0 * (f64::from(buy_now.quantity.0 - 1)));
+            let product_cost_with_coupon_discount = buy_now.product.customer_price.price.0 - calculate_coupon_discount(buy_now);
+            let calc_cost =
+                product_cost_with_coupon_discount + (buy_now.product.customer_price.price.0 * (f64::from(buy_now.quantity.0 - 1)));
 
             return calc_cost;
         }
     }
 
-    buy_now.product.price.0 * f64::from(buy_now.quantity.0)
+    buy_now.product.customer_price.price.0 * f64::from(buy_now.quantity.0)
 }
 
 fn calculate_cost_without_discounts(buy_now: &BuyNowCheckout) -> f64 {
@@ -89,13 +93,13 @@ fn calculate_cost_without_discounts(buy_now: &BuyNowCheckout) -> f64 {
         return 0f64;
     }
 
-    buy_now.product.price.0 * f64::from(buy_now.quantity.0)
+    buy_now.product.customer_price.price.0 * f64::from(buy_now.quantity.0)
 }
 
 fn calculate_coupon_discount(buy_now: &BuyNowCheckout) -> f64 {
     if let Some(coupon) = buy_now.coupon.as_ref() {
         // set discount only 1 product
-        let discount = (buy_now.product.price.0 / 100f64) * f64::from(coupon.percent);
+        let discount = (buy_now.product.customer_price.price.0 / 100f64) * f64::from(coupon.percent);
 
         return discount;
     }
@@ -103,20 +107,33 @@ fn calculate_coupon_discount(buy_now: &BuyNowCheckout) -> f64 {
     0.0f64
 }
 
-fn calculate_delivery_cost(package: &Option<AvailablePackageForUser>, quantity: Quantity) -> f64 {
-    if let Some(package) = package {
-        return calculate_delivery(package.price, quantity);
-    }
-
-    0.0f64
-}
-
-fn calculate_delivery(price: ProductPrice, quantity: Quantity) -> f64 {
+fn calculate_delivery_cost(
+    context: &Context,
+    package: &Option<AvailablePackageForUser>,
+    quantity: Quantity,
+    currency: Currency,
+) -> FieldResult<f64> {
     if quantity.0 <= 0 {
-        return 0f64;
+        return Ok(0f64);
+    };
+
+    if let Some(package) = package {
+        let user_currency = match currency.currency_type() {
+            CurrencyType::Crypto => context.currency,
+            CurrencyType::Fiat => context.fiat_currency,
+        }
+        .unwrap_or(currency);
+
+        let exch_rate = if let Some(exch_rate) = context.get_stores_microservice().get_currency_exchange_info()?.data.get(&currency) {
+            exch_rate.get(&user_currency).map(|rate| rate.0).unwrap_or(1.0)
+        } else {
+            1.0
+        };
+
+        return Ok(package.price.0 / exch_rate * quantity.0 as f64);
     }
 
-    price.0 * f64::from(quantity.0)
+    Ok(0.0f64)
 }
 
 pub fn run_buy_now_mutation(context: &Context, input: BuyNowInputV2) -> FieldResult<CreateOrdersOutput> {
