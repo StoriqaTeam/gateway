@@ -106,8 +106,9 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
 
     field subtotal() -> f64 as "Subtotal" {
 
+        // product_discount - here is the already calculated discount amount
         if let Some(discount) = self.0.product_discount.map(|c| c.0).filter(|discount| *discount > ZERO_DISCOUNT) {
-            (self.0.price.0 * f64::from(self.0.quantity.0)) * (1.0f64 - discount)
+            (self.0.price.0 * f64::from(self.0.quantity.0)) - discount
         } else {
             self.0.price.0 * f64::from(self.0.quantity.0)
         }
