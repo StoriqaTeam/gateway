@@ -43,6 +43,10 @@ graphql_object!(OrderBillingInfo: Context as "OrderBillingInfo" |&self| {
         self.order.store_id.0
     }
 
+    field stripe_fee() -> &Option<f64> as "Stripe fee" {
+        &self.order.stripe_fee
+    }
+
     field store(&executor) -> FieldResult<Store> as "Store" {
          executor
         .context()
