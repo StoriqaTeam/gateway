@@ -581,18 +581,6 @@ graphql_object!(Store: Context as "Store" |&self| {
             .map(Some)
     }
 
-    field balance(&executor) -> FieldResult<Vec<MerchantBalance>> as "Fetches balance of current store." {
-        let context = executor.context();
-
-        let url = format!("{}/merchants/store/{}/balance",
-            &context.config.service_url(Service::Billing),
-            self.id,
-            );
-
-        context.request::<Vec<MerchantBalance>>(Method::Get, url, None)
-            .wait()
-    }
-
     field deprecated "use findProductsAdminPages" find_products_admin(&executor,
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Base64 Id of a base_product",
@@ -636,7 +624,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         current_page : i32 as "Current page",
         items_count : i32 as "Items count",
     )
-    -> FieldResult<Connection<OrderBilling, PageInfoSegments>> as "find orders with PaidToSeller state." 
+    -> FieldResult<Connection<OrderBilling, PageInfoSegments>> as "find orders with PaidToSeller state."
     {
         let context = executor.context();
         let search_params = OrderBillingSearchInput {
@@ -652,7 +640,7 @@ graphql_object!(Store: Context as "Store" |&self| {
         current_page : i32 as "Current page",
         items_count : i32 as "Items count",
     )
-    -> FieldResult<Connection<OrderBilling, PageInfoSegments>> as "find orders with PaymentToSellerNeeded state." 
+    -> FieldResult<Connection<OrderBilling, PageInfoSegments>> as "find orders with PaymentToSellerNeeded state."
     {
         let context = executor.context();
         let search_params = OrderBillingSearchInput {
