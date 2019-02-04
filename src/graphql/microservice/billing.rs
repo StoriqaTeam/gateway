@@ -144,7 +144,9 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
             ..Default::default()
         };
         let body: String = serde_json::to_string(&search)?;
-        self.context.request(Method::Post, url, Some(body)).wait()
+        let mut result: OrderBillingSearchResults = self.context.request(Method::Post, url, Some(body)).wait()?;
+
+        Ok(result.orders.pop())
     }
 
     fn create_international_billing_info(&self, input: NewInternationalBillingInfoInput) -> FieldResult<InternationalBillingInfo> {
