@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use futures::Future;
 use hyper::Method;
 use juniper::FieldResult;
@@ -21,6 +23,8 @@ pub trait SagaService {
     fn set_order_payment_state(&self, order_id: OrderId, input: OrderPaymentState) -> FieldResult<()>;
 
     fn buy_now(&self, input: BuyNow) -> FieldResult<CreateOrdersOutput>;
+
+    fn update_base_product(&self, input: UpdateBaseProductInput) -> FieldResult<BaseProduct>;
 }
 
 pub struct SagaServiceImpl<'ctx> {
@@ -86,5 +90,15 @@ impl<'ctx> SagaService for SagaServiceImpl<'ctx> {
         let body = serde_json::to_string(&input)?;
 
         self.context.request::<()>(Method::Post, url, Some(body)).wait()
+    }
+
+    fn update_base_product(&self, input: UpdateBaseProductInput) -> FieldResult<BaseProduct> {
+        let identifier = ID::from_str(&*input.id)?;
+        let base_product_id = BaseProductId(identifier.raw_id);
+        let request_path = format!("{}/{}/update", Model::BaseProduct.to_url(), base_product_id);
+        let url = self.request_url(&request_path);
+
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request::<BaseProduct>(Method::Post, url, Some(body)).wait()
     }
 }

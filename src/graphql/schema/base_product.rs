@@ -573,8 +573,6 @@ pub fn run_update_base_product(context: &Context, input: UpdateBaseProductInput)
     let identifier = ID::from_str(&*input.id)?;
     let base_product_id = BaseProductId(identifier.raw_id);
 
-    let url = identifier.url(&context.config);
-
     if input.is_none() {
         return Err(FieldError::new(
             "Nothing to update",
@@ -583,8 +581,7 @@ pub fn run_update_base_product(context: &Context, input: UpdateBaseProductInput)
     }
 
     if validate_update_base_product(context, base_product_id)? {
-        let body: String = serde_json::to_string(&input)?.to_string();
-        context.request::<BaseProduct>(Method::Put, url, Some(body)).wait()
+        context.get_saga_microservice().update_base_product(input)
     } else {
         let current_base_product = get_base_product(context, base_product_id, Visibility::Active)?;
 
