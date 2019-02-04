@@ -1,5 +1,5 @@
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
-#[graphql(description = "Update product with attributes input object")]
+#[graphql(description = "Create payment intent for fee input")]
 pub struct CreatePaymentIntentFeeInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
