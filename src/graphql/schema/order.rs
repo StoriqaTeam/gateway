@@ -105,7 +105,12 @@ graphql_object!(GraphQLOrder: Context as "Order" |&self| {
     }
 
     field subtotal() -> f64 as "Subtotal" {
-        self.0.price.0 * f64::from(self.0.quantity.0) * (1.0f64 - self.0.product_discount.map(|c| c.0).unwrap_or_default())
+
+        if let Some(discount) = self.0.product_discount.map(|c| c.0).filter(|discount| *discount > ZERO_DISCOUNT) {
+            (self.0.price.0 * f64::from(self.0.quantity.0)) * (1.0f64 - discount)
+        } else {
+            self.0.price.0 * f64::from(self.0.quantity.0)
+        }
     }
 
     field coupon(&executor) -> FieldResult<Option<Coupon>> as "Coupon added user" {
