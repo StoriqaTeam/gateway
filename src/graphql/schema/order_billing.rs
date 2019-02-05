@@ -20,7 +20,7 @@ graphql_object!(OrderBillingInfo: Context as "OrderBillingInfo" |&self| {
     }
 
     field id() -> GraphqlID as "Base64 Unique id" {
-        format!("{}|billing",self.order.id).to_string().into()
+        format!("{}|billing_info",self.order.id).to_string().into()
     }
 
     field seller_currency() -> Currency {
@@ -132,7 +132,7 @@ graphql_object!(Edge<OrderBilling>: Context as "OrderBillingEdge" |&self| {
 
 graphql_object!(OrderBilling: Context as "OrderBilling" |&self| {
     field id() -> GraphqlID as "Base64 Unique id" {
-        self.id.to_string().into()
+        format!("{}|billing",self.id).to_string().into()
     }
 
     field seller_currency() -> Currency {
