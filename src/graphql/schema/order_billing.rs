@@ -20,7 +20,7 @@ graphql_object!(OrderBillingInfo: Context as "OrderBillingInfo" |&self| {
     }
 
     field id() -> GraphqlID as "Base64 Unique id" {
-        self.order.id.to_string().into()
+        format!("{}|billing",self.order.id).to_string().into()
     }
 
     field seller_currency() -> Currency {
