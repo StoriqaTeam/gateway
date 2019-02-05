@@ -417,14 +417,14 @@ pub struct OrderConfirmedInput {
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
-pub struct OrderConfirmed {
+pub struct UpdateOrderState {
     pub order_slug: OrderSlug,
     pub state: OrderState,
     pub comment: Option<String>,
     pub committer_role: CommitterRole,
 }
 
-impl From<OrderConfirmedInput> for OrderConfirmed {
+impl From<OrderConfirmedInput> for UpdateOrderState {
     fn from(order: OrderConfirmedInput) -> Self {
         Self {
             order_slug: OrderSlug(order.order_slug),
@@ -435,14 +435,37 @@ impl From<OrderConfirmedInput> for OrderConfirmed {
     }
 }
 
+impl From<CreateDisputeInput> for UpdateOrderState {
+    fn from(order: CreateDisputeInput) -> Self {
+        Self {
+            order_slug: OrderSlug(order.order_slug),
+            state: OrderState::Dispute,
+            comment: order.comment,
+            committer_role: CommitterRole::Customer,
+        }
+    }
+}
+
 #[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
 #[graphql(description = "Confirmation by the financier that the money is transferred to the seller input object.")]
 pub struct PaidToSellerOrderStateInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
-    #[graphql(description = "Slug of order.")]
+    #[graphql(description = "Order id.")]
     pub order_id: String,
+}
+
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "Create dispute input object.")]
+pub struct CreateDisputeInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Slug of order.")]
+    pub order_slug: i32,
+    #[graphql(description = "Comment")]
+    pub comment: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]

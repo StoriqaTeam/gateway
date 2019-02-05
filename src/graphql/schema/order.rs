@@ -751,8 +751,7 @@ pub fn validate_products_fiat<'a>(products: impl Iterator<Item = &'a ProductSell
 }
 
 pub fn run_confirm_order_mutation(context: &Context, input: OrderConfirmedInput) -> FieldResult<Option<GraphQLOrder>> {
-    let saga = context.get_saga_microservice();
-    saga.set_order_confirmed(input.into())
+    context.get_saga_microservice().set_order_state(input.into())
 }
 
 pub fn run_set_paid_to_seller_order_state_mutation(context: &Context, input: PaidToSellerOrderStateInput) -> FieldResult<()> {
@@ -763,6 +762,10 @@ pub fn run_set_paid_to_seller_order_state_mutation(context: &Context, input: Pai
     };
 
     saga.set_order_payment_state(order_id, state)
+}
+
+pub fn run_create_dispute_mutation(context: &Context, input: CreateDisputeInput) -> FieldResult<Option<GraphQLOrder>> {
+    context.get_saga_microservice().set_order_state(input.into())
 }
 
 pub fn run_charge_fee_mutation(context: &Context, input: ChargeFeeInput) -> FieldResult<Fee> {

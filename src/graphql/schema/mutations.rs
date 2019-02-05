@@ -1997,4 +1997,12 @@ graphql_object!(Mutation: Context |&self| {
             .create_payment_intent_fee(FeeId::new(input.fee_id))
     }
 
+    field createDispute(&executor,
+                            input: CreateDisputeInput as "Open dispute by order.",
+                                    ) -> FieldResult<Mock> as "" {
+        let context = executor.context();
+
+        order::run_create_dispute_mutation(context, input).map(|_| Mock)
+    }
+
 });
