@@ -231,12 +231,6 @@ pub fn get_cart_product_base_product(context: &Context, product: &CartProduct) -
     context.request::<Option<BaseProduct>>(Method::Get, url, None).wait()
 }
 
-pub fn get_cart_product_original_currency(context: &Context, product: &CartProduct) -> FieldResult<Currency> {
-    Ok(get_cart_product_base_product(context, product)?
-        .map(|b| b.currency)
-        .unwrap_or(product.currency))
-}
-
 pub fn get_currency_exchange_rates(context: &Context, currency: Currency) -> FieldResult<ExchangeRates> {
     Ok(context
         .get_stores_microservice()
@@ -253,9 +247,8 @@ pub fn get_exchange_rate(context: &Context, product: &CartProduct) -> FieldResul
         CurrencyType::Fiat => context.fiat_currency,
     }
     .unwrap_or(product.currency);
-    let product_currency = get_cart_product_original_currency(context, product)?;
-    let currency_map = get_currency_exchange_rates(context, user_currency)?;
-    Ok(currency_map.get(&product_currency).cloned().unwrap_or(ExchangeRate(1.0)))
+    let currency_map = get_currency_exchange_rates(context, product.currency)?;
+    Ok(currency_map.get(&user_currency).cloned().unwrap_or(ExchangeRate(1.0)))
 }
 
 pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> FieldResult<f64> {
@@ -274,7 +267,7 @@ pub fn calculate_delivery_cost_with_exchange_rate(
                 None => get_select_package_v1(context, delivery_method_id)?,
                 Some(user_country_code) => get_select_package(context, product.base_product_id, user_country_code, delivery_method_id)?,
             };
-            Ok(package.price.0 * f64::from(product.quantity.0) * exchange_rate.0)
+            Ok(package.price.0 / exchange_rate.0 * f64::from(product.quantity.0))
         }
     }
 }
