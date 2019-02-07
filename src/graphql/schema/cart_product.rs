@@ -9,7 +9,6 @@ use juniper::{FieldError, FieldResult};
 use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency_type::CurrencyType;
-use stq_static_resources::Currency;
 use stq_static_resources::Translation;
 use stq_types::{BaseProductId, CartItem, DeliveryMethodId, ExchangeRate, ProductId};
 
