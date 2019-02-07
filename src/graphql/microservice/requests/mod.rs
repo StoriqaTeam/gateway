@@ -1,3 +1,5 @@
+use stq_types::OrderId;
+
 use graphql::models::customer_id::CustomerId;
 use graphql::models::*;
 
@@ -18,6 +20,11 @@ impl From<CreateCustomerWithSourceInput> for NewCustomerWithSourceRequest {
 #[derive(Debug, Clone, Serialize)]
 pub struct DeleteCustomerRequest {
     pub customer_id: CustomerId,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct FeesPayByOrdersRequest {
+    pub order_ids: Vec<OrderId>,
 }
 
 impl From<DeleteCustomerInput> for DeleteCustomerRequest {

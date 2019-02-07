@@ -21,6 +21,7 @@ use stq_types::{CouponId, OrderId, OrderIdentifier, ProductSellerPrice};
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
+use graphql::microservice::requests::*;
 use graphql::models::*;
 use graphql::schema::base_product as base_product_module;
 use graphql::schema::cart as cart_module;
@@ -751,8 +752,7 @@ pub fn validate_products_fiat<'a>(products: impl Iterator<Item = &'a ProductSell
 }
 
 pub fn run_confirm_order_mutation(context: &Context, input: OrderConfirmedInput) -> FieldResult<Option<GraphQLOrder>> {
-    let saga = context.get_saga_microservice();
-    saga.set_order_confirmed(input.into())
+    context.get_saga_microservice().set_order_state(input.into())
 }
 
 pub fn run_set_paid_to_seller_order_state_mutation(context: &Context, input: PaidToSellerOrderStateInput) -> FieldResult<()> {
@@ -765,8 +765,22 @@ pub fn run_set_paid_to_seller_order_state_mutation(context: &Context, input: Pai
     saga.set_order_payment_state(order_id, state)
 }
 
+pub fn run_create_dispute_mutation(context: &Context, input: CreateDisputeInput) -> FieldResult<Option<GraphQLOrder>> {
+    context.get_saga_microservice().set_order_state(input.into())
+}
+
 pub fn run_charge_fee_mutation(context: &Context, input: ChargeFeeInput) -> FieldResult<Fee> {
     let billing = context.get_billing_microservice();
     let order_id = Uuid::parse_str(&input.order_id).map(OrderId)?;
     billing.create_charge_fee_by_oder(order_id)
+}
+
+pub fn run_charge_fees_mutation(context: &Context, input: ChargeFeesInput) -> FieldResult<Vec<Fee>> {
+    let order_ids = input
+        .order_ids
+        .into_iter()
+        .map(|order_id| Uuid::parse_str(&order_id).map(OrderId))
+        .collect::<Result<_, _>>()?;
+    let input = FeesPayByOrdersRequest { order_ids };
+    context.get_billing_microservice().create_charge_fee_by_oders(input)
 }

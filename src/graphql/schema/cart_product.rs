@@ -43,7 +43,7 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     }
 
     field price() -> &f64 as "Price" {
-        &self.price.0
+        &self.customer_price.0
     }
 
     field subtotal(&executor) -> FieldResult<f64> as "Subtotal with discounts" {
@@ -52,7 +52,7 @@ graphql_object!(CartProduct: Context as "CartProduct" |&self| {
     }
 
     field subtotal_without_discounts() -> f64 as "Subtotal without discounts" {
-        self.price.0 * f64::from(self.quantity.0)
+        self.customer_price.0 * f64::from(self.quantity.0)
     }
 
     field delivery_cost(&executor) -> FieldResult<f64> as "Delivery cost" {
@@ -183,35 +183,36 @@ pub fn calculate_product_price(context: &Context, cart_product: &CartProduct) ->
     }
 
     if let Some(discount) = cart_product.discount.filter(|discount| *discount > ZERO_DISCOUNT) {
-        let calc_price = (cart_product.price.0 * (f64::from(cart_product.quantity.0))) * (1.0f64 - discount);
+        let calc_price = (cart_product.customer_price.0 * (f64::from(cart_product.quantity.0))) * (1.0f64 - discount);
 
         return Ok(calc_price);
     } else {
         if cart_product.coupon_id.is_some() {
             // set discount only 1 product
-            let product_price_with_coupon_discount = cart_product.price.0 - calculate_coupon_discount(context, cart_product)?;
-            let calc_price = product_price_with_coupon_discount + (cart_product.price.0 * (f64::from(cart_product.quantity.0 - 1)));
+            let product_price_with_coupon_discount = cart_product.customer_price.0 - calculate_coupon_discount(context, cart_product)?;
+            let calc_price =
+                product_price_with_coupon_discount + (cart_product.customer_price.0 * (f64::from(cart_product.quantity.0 - 1)));
 
             return Ok(calc_price);
         }
     }
 
-    Ok(cart_product.price.0 * f64::from(cart_product.quantity.0))
+    Ok(cart_product.customer_price.0 * f64::from(cart_product.quantity.0))
 }
 
-pub fn calculate_product_price_without_discounts(product: &CartProduct) -> f64 {
-    if product.quantity.0 <= 0 {
+pub fn calculate_product_price_without_discounts(cart_product: &CartProduct) -> f64 {
+    if cart_product.quantity.0 <= 0 {
         return 0f64;
     }
 
-    product.price.0 * f64::from(product.quantity.0)
+    cart_product.customer_price.0 * f64::from(cart_product.quantity.0)
 }
 
 pub fn calculate_coupon_discount(context: &Context, cart_product: &CartProduct) -> FieldResult<f64> {
     if let Some(coupon_id) = cart_product.coupon_id {
         if let Some(coupon) = try_get_coupon(context, coupon_id)? {
             // set discount only 1 product
-            let discount = (cart_product.price.0 / 100f64) * f64::from(coupon.percent);
+            let discount = (cart_product.customer_price.0 / 100f64) * f64::from(coupon.percent);
 
             return Ok(discount);
         }
@@ -232,21 +233,14 @@ pub fn get_cart_product_base_product(context: &Context, product: &CartProduct) -
     context.request::<Option<BaseProduct>>(Method::Get, url, None).wait()
 }
 
-pub fn get_cart_product_original_currency(context: &Context, product: &CartProduct) -> FieldResult<Currency> {
-    Ok(get_cart_product_base_product(context, product)?
-        .map(|b| b.currency)
-        .unwrap_or(product.currency))
-}
-
 pub fn get_exchange_rate(context: &Context, product: &CartProduct) -> FieldResult<ExchangeRate> {
-    let user_currency = match product.currency.currency_type() {
+    let user_currency = match product.customer_currency.currency_type() {
         CurrencyType::Crypto => context.currency,
         CurrencyType::Fiat => context.fiat_currency,
     }
-    .unwrap_or(product.currency);
-    let product_currency = get_cart_product_original_currency(context, product)?;
-    let currency_map = get_currency_exchange_rates(context, user_currency)?;
-    Ok(currency_map.get(&product_currency).cloned().unwrap_or(ExchangeRate(1.0)))
+    .unwrap_or(product.customer_currency);
+    let currency_map = get_currency_exchange_rates(context, product.base_product_currency)?;
+    Ok(currency_map.get(&user_currency).cloned().unwrap_or(ExchangeRate(1.0)))
 }
 
 pub fn calculate_delivery_cost(context: &Context, product: &CartProduct) -> FieldResult<f64> {
@@ -265,7 +259,7 @@ pub fn calculate_delivery_cost_with_exchange_rate(
                 None => get_select_package_v1(context, delivery_method_id)?,
                 Some(user_country_code) => get_select_package(context, product.base_product_id, user_country_code, delivery_method_id)?,
             };
-            Ok(package.price.0 * f64::from(product.quantity.0) * exchange_rate.0)
+            Ok(package.price.0 / exchange_rate.0 * f64::from(product.quantity.0))
         }
     }
 }

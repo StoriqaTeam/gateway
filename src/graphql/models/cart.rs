@@ -23,14 +23,15 @@ pub type CartHash = BTreeMap<ProductId, OrdersCartItemInfo>;
 pub struct CartProduct {
     pub id: ProductId,
     pub name: Vec<Translation>,
-    pub price: ProductPrice,
-    pub currency: Currency,
+    pub customer_price: ProductPrice,
+    pub customer_currency: Currency,
     pub discount: Option<f64>, // product
     pub photo_main: Option<String>,
     pub selected: bool,
     pub quantity: Quantity,
     pub comment: String,
     pub store_id: StoreId,
+    pub base_product_currency: Currency,
     pub base_product_id: BaseProductId,
     pub pre_order: bool,     // TODO: move ProductInfo
     pub pre_order_days: i32, // TODO: move ProductInfo
@@ -349,7 +350,7 @@ impl CartStore {
     pub fn new(store: Store, products: Vec<CartProduct>) -> Self {
         let currency_types = products
             .iter()
-            .map(|product| product.currency.currency_type())
+            .map(|product| product.customer_currency.currency_type())
             .collect::<HashSet<CurrencyType>>();
         let currency_type = if currency_types.len() > 1 {
             None
@@ -435,11 +436,12 @@ pub fn convert_to_cart(stores: Vec<Store>, products: &[CartItem], user_country_c
                                             id: variant.id,
                                             name: base_product.name.clone(),
                                             base_product_id: base_product.id,
+                                            base_product_currency: base_product.currency,
                                             discount: variant.discount,
                                             photo_main: variant.photo_main.clone(),
                                             selected,
-                                            price: variant.customer_price.price,
-                                            currency: variant.customer_price.currency,
+                                            customer_price: variant.customer_price.price,
+                                            customer_currency: variant.customer_price.currency,
                                             quantity,
                                             comment,
                                             store_id,

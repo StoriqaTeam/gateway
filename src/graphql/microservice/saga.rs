@@ -16,7 +16,7 @@ use graphql::models::*;
 pub trait SagaService {
     fn upsert_shipping(&self, base_product_id: BaseProductId, shipping: NewShipping) -> FieldResult<Shipping>;
 
-    fn set_order_confirmed(&self, input: OrderConfirmed) -> FieldResult<Option<GraphQLOrder>>;
+    fn set_order_state(&self, input: UpdateOrderState) -> FieldResult<Option<GraphQLOrder>>;
 
     fn create_orders(&self, input: CreateOrder) -> FieldResult<CreateOrdersOutput>;
 
@@ -54,7 +54,7 @@ impl<'ctx> SagaService for SagaServiceImpl<'ctx> {
         self.context.request::<Shipping>(Method::Post, url, Some(body)).wait()
     }
 
-    fn set_order_confirmed(&self, input: OrderConfirmed) -> FieldResult<Option<GraphQLOrder>> {
+    fn set_order_state(&self, input: UpdateOrderState) -> FieldResult<Option<GraphQLOrder>> {
         let request_path = format!("{}/{}/set_state", Model::Order.to_url(), input.order_slug);
         let url = self.request_url(&request_path);
         let body = serde_json::to_string(&input)?;

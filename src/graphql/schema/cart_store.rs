@@ -152,7 +152,7 @@ pub fn calculate_products_price(context: &Context, products: &[CartProduct]) -> 
 pub fn calculate_products_price_without_discounts(products: &[CartProduct]) -> f64 {
     products.iter().fold(0.0, |acc, x| {
         if x.selected {
-            acc + x.price.0 * f64::from(x.quantity.0)
+            acc + x.customer_price.0 * f64::from(x.quantity.0)
         } else {
             acc
         }

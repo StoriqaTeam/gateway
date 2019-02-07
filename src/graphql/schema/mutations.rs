@@ -1991,10 +1991,25 @@ graphql_object!(Mutation: Context |&self| {
         order::run_charge_fee_mutation(context, input)
     }
 
+    field ChargeFees(&executor,
+                     input: ChargeFeesInput as "Creates Charge object in Stripe for pay fee-for-service platform.",) -> FieldResult<Vec<Fee>> as "Creates Charge object" {
+        let context = executor.context();
+
+        order::run_charge_fees_mutation(context, input)
+    }
+
     field createPaymentIntentFee(&executor, input: CreatePaymentIntentFeeInput as "Create payment intent for fee input") -> FieldResult<PaymentIntent> as "Create payment intent for fee" {
         executor.context()
             .get_billing_microservice()
             .create_payment_intent_fee(FeeId::new(input.fee_id))
+    }
+
+    field createDispute(&executor,
+                            input: CreateDisputeInput as "Open dispute by order.",
+                                    ) -> FieldResult<Mock> as "" {
+        let context = executor.context();
+
+        order::run_create_dispute_mutation(context, input).map(|_| Mock)
     }
 
 });

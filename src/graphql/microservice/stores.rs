@@ -11,7 +11,7 @@ use graphql::context::Context;
 use graphql::models::*;
 
 pub trait StoresService {
-    fn get_store_by_id(&self, store_id: StoreId) -> FieldResult<Store>;
+    fn get_store_by_id(&self, store_id: StoreId) -> FieldResult<Option<Store>>;
 
     fn roles(&self, user_id: UserId) -> FieldResult<Vec<StoresRole>>;
 
@@ -43,7 +43,7 @@ impl<'ctx> StoresServiceImpl<'ctx> {
 }
 
 impl<'ctx> StoresService for StoresServiceImpl<'ctx> {
-    fn get_store_by_id(&self, store_id: StoreId) -> FieldResult<Store> {
+    fn get_store_by_id(&self, store_id: StoreId) -> FieldResult<Option<Store>> {
         let request_path = format!("{}/{}", Model::Store.to_url(), store_id);
         let url = self.request_url(&request_path);
         self.context.request(Method::Get, url, None).wait()
