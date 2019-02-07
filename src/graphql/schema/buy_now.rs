@@ -6,6 +6,7 @@ use stq_static_resources::{Currency, CurrencyType};
 use stq_types::*;
 
 use graphql::context::Context;
+use graphql::microservice::get_currency_exchange_rates;
 use graphql::models::*;
 use graphql::schema::available_packages::*;
 use graphql::schema::coupon;
@@ -124,13 +125,12 @@ fn calculate_delivery_cost(
         }
         .unwrap_or(currency);
 
-        let exch_rate = if let Some(exch_rate) = context.get_stores_microservice().get_currency_exchange_info()?.data.get(&currency) {
-            exch_rate.get(&user_currency).map(|rate| rate.0).unwrap_or(1.0)
-        } else {
-            1.0
-        };
+        let exchange_rate = get_currency_exchange_rates(context, user_currency)?
+            .get(&currency)
+            .cloned()
+            .unwrap_or(ExchangeRate(1.0));
 
-        return Ok(package.price.0 / exch_rate * quantity.0 as f64);
+        return Ok(package.price.0 * f64::from(quantity.0) * exchange_rate.0);
     }
 
     Ok(0.0f64)

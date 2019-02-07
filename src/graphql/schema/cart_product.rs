@@ -15,6 +15,7 @@ use stq_types::{BaseProductId, CartItem, DeliveryMethodId, ExchangeRate, Product
 
 use super::*;
 use graphql::context::Context;
+use graphql::microservice::get_currency_exchange_rates;
 use graphql::models::*;
 use graphql::schema::available_packages::*;
 use graphql::schema::coupon::*;
@@ -235,16 +236,6 @@ pub fn get_cart_product_original_currency(context: &Context, product: &CartProdu
     Ok(get_cart_product_base_product(context, product)?
         .map(|b| b.currency)
         .unwrap_or(product.currency))
-}
-
-pub fn get_currency_exchange_rates(context: &Context, currency: Currency) -> FieldResult<ExchangeRates> {
-    Ok(context
-        .get_stores_microservice()
-        .get_currency_exchange_info()?
-        .data
-        .get(&currency)
-        .cloned()
-        .unwrap_or_default())
 }
 
 pub fn get_exchange_rate(context: &Context, product: &CartProduct) -> FieldResult<ExchangeRate> {

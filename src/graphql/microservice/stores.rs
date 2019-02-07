@@ -4,6 +4,7 @@ use juniper::FieldResult;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
+use stq_static_resources::Currency;
 use stq_types::{StoreId, StoresRole, UserId};
 
 use graphql::context::Context;
@@ -79,4 +80,14 @@ impl<'ctx> StoresService for StoresServiceImpl<'ctx> {
         let url = self.request_url(request_path);
         self.context.request(Method::Get, url, None).wait()
     }
+}
+
+pub fn get_currency_exchange_rates(context: &Context, currency: Currency) -> FieldResult<ExchangeRates> {
+    Ok(context
+        .get_stores_microservice()
+        .get_currency_exchange_info()?
+        .data
+        .get(&currency)
+        .cloned()
+        .unwrap_or_default())
 }
