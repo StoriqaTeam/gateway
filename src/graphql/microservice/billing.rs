@@ -49,6 +49,8 @@ pub trait BillingService {
 
     fn create_charge_fee_by_oder(&self, order_id: OrderId) -> FieldResult<Fee>;
 
+    fn create_charge_fee_by_oders(&self, input: FeesPayByOrdersRequest) -> FieldResult<Vec<Fee>>;
+
     fn create_payment_intent_fee(&self, fee_id: FeeId) -> FieldResult<PaymentIntent>;
 }
 
@@ -205,6 +207,13 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         let request_path = format!("fees/by-order-id/{}/pay", order_id);
         let url = self.request_url(&request_path);
         self.context.request(Method::Post, url, None).wait()
+    }
+
+    fn create_charge_fee_by_oders(&self, input: FeesPayByOrdersRequest) -> FieldResult<Vec<Fee>> {
+        let request_path = "fees/by-order-ids/pay";
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request(Method::Post, url, Some(body)).wait()
     }
 
     fn create_payment_intent_fee(&self, fee_id: FeeId) -> FieldResult<PaymentIntent> {

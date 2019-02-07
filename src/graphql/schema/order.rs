@@ -21,6 +21,7 @@ use stq_types::{CouponId, OrderId, OrderIdentifier, ProductSellerPrice};
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
+use graphql::microservice::requests::*;
 use graphql::models::*;
 use graphql::schema::base_product as base_product_module;
 use graphql::schema::cart as cart_module;
@@ -772,4 +773,14 @@ pub fn run_charge_fee_mutation(context: &Context, input: ChargeFeeInput) -> Fiel
     let billing = context.get_billing_microservice();
     let order_id = Uuid::parse_str(&input.order_id).map(OrderId)?;
     billing.create_charge_fee_by_oder(order_id)
+}
+
+pub fn run_charge_fees_mutation(context: &Context, input: ChargeFeesInput) -> FieldResult<Vec<Fee>> {
+    let order_ids = input
+        .order_ids
+        .into_iter()
+        .map(|order_id| Uuid::parse_str(&order_id).map(OrderId))
+        .collect::<Result<_, _>>()?;
+    let input = FeesPayByOrdersRequest { order_ids };
+    context.get_billing_microservice().create_charge_fee_by_oders(input)
 }
