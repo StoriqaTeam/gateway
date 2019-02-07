@@ -155,7 +155,7 @@ graphql_object!(OrderBilling: Context as "OrderBilling" |&self| {
         self.store_id.0
     }
 
-    field store(&executor) -> FieldResult<Store> as "Store" {
+    field store(&executor) -> FieldResult<Option<Store>> as "Store" {
          executor
         .context()
         .get_stores_microservice()
