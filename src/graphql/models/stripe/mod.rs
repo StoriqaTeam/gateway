@@ -52,6 +52,16 @@ pub struct ChargeFeeInput {
     pub order_id: String,
 }
 
+#[derive(GraphQLInputObject, Serialize, Debug, Clone, PartialEq)]
+#[graphql(description = "The removal of fee-for-service platform.")]
+pub struct ChargeFeesInput {
+    #[graphql(description = "Client mutation id.")]
+    #[serde(skip_serializing)]
+    pub client_mutation_id: String,
+    #[graphql(description = "Order id for pay fee.")]
+    pub order_ids: Vec<String>,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PaymentIntent {
     pub id: PaymentIntentId,
