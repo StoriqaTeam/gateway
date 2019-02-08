@@ -35,7 +35,7 @@ pub struct UpdateCategoryInput {
     pub meta_field: Option<String>,
     #[graphql(description = "Parent category id.")]
     pub parent_id: Option<i32>,
-    #[graphql(description = "Category level.")]
+    #[graphql(description = "Category level (DEPRECATED: this field is now ignored, new level is calculated automatically).")]
     pub level: Option<i32>,
     #[graphql(description = "Category slug.")]
     pub slug: Option<String>,
