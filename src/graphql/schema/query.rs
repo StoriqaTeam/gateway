@@ -13,12 +13,12 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_static_resources::currency::Currency;
 use stq_static_resources::{Language, LanguageGraphQl, OrderState, TemplateVariant};
-use stq_types::{BaseProductId, OrderId, WarehouseId};
+use stq_types::{BaseProductId, OrderId, ProductId, WarehouseId};
 
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
-use graphql::microservice::requests::GetBaseProductsRequest;
+use graphql::microservice::requests::{GetBaseProductsRequest, GetProductsRequest};
 use graphql::models::*;
 use graphql::schema::base_product as base_product_module;
 use graphql::schema::cart as cart_module;
@@ -429,7 +429,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field base_products(&executor, input: GetBaseProductsInput as "get base input") -> FieldResult<Vec<BaseProduct>> as "Fetches base products by ids." {
+    field base_products(&executor, input: GetBaseProductsInput as "get base products input") -> FieldResult<Vec<BaseProduct>> as "Fetches base products by ids." {
         let context = executor.context();
         let request = GetBaseProductsRequest {
             ids: input.ids.into_iter().take(context.config.gateway.records_limit).map(BaseProductId).collect()
@@ -437,6 +437,16 @@ graphql_object!(Query: Context |&self| {
 
         context.get_stores_microservice()
             .get_base_products(request)
+    }
+
+    field products(&executor, input: GetProductsInput as "get products input") -> FieldResult<Vec<Product>> as "Fetches products by ids." {
+        let context = executor.context();
+        let request = GetProductsRequest {
+            ids: input.ids.into_iter().take(context.config.gateway.records_limit).map(ProductId).collect()
+        };
+
+        context.get_stores_microservice()
+            .get_products(request)
     }
 
     field base_product_by_slug(

@@ -178,7 +178,7 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
         } else {
             executor.context()
                 .get_stores_microservice()
-                .get_products(self.id)
+                .get_products_by_base_product(self.id)
                 .map(|products| products.into_iter().next())
         }
     }
