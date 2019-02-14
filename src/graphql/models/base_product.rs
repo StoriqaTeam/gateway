@@ -252,3 +252,10 @@ pub struct BaseProductShippingDetails {
     pub delivery_from: String,
     pub measurements: Measurements,
 }
+
+#[derive(GraphQLInputObject, Clone, Debug)]
+#[graphql(description = "Get several base products")]
+pub struct GetBaseProductsInput {
+    #[graphql(description = "Int Id Array of base products.")]
+    pub ids: Vec<i32>,
+}
