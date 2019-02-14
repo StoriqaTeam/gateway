@@ -170,6 +170,19 @@ graphql_object!(BaseProduct: Context as "BaseProduct" |&self| {
 
     }
 
+    field product(&executor, product_raw_id: Option<i32> as "Desired variant id") -> FieldResult<Option<Product>> {
+        if let Some(product_id) = product_raw_id.map(ProductId) {
+            executor.context()
+                .get_stores_microservice()
+                .get_product(product_id)
+        } else {
+            executor.context()
+                .get_stores_microservice()
+                .get_products(self.id)
+                .map(|products| products.into_iter().next())
+        }
+    }
+
     field products(&executor,
         first = None : Option<i32> as "First edges",
         after = None : Option<GraphqlID>  as "Offset from begining")

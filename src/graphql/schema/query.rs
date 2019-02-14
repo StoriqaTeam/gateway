@@ -18,6 +18,7 @@ use stq_types::{BaseProductId, OrderId, WarehouseId};
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
+use graphql::microservice::requests::GetBaseProductsRequest;
 use graphql::models::*;
 use graphql::schema::base_product as base_product_module;
 use graphql::schema::cart as cart_module;
@@ -426,6 +427,16 @@ graphql_object!(Query: Context |&self| {
 
         context.request::<Option<BaseProduct>>(Method::Get, url, None)
             .wait()
+    }
+
+    field base_products(&executor, input: GetBaseProductsInput as "get base input") -> FieldResult<Vec<BaseProduct>> as "Fetches base products by ids." {
+        let context = executor.context();
+        let request = GetBaseProductsRequest {
+            ids: input.ids.into_iter().take(context.config.gateway.records_limit).map(BaseProductId).collect()
+        };
+
+        context.get_stores_microservice()
+            .get_base_products(request)
     }
 
     field base_product_by_slug(

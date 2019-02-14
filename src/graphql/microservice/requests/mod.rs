@@ -1,4 +1,4 @@
-use stq_types::OrderId;
+use stq_types::{BaseProductId, OrderId};
 
 use graphql::models::customer_id::CustomerId;
 use graphql::models::*;
@@ -33,4 +33,9 @@ impl From<DeleteCustomerInput> for DeleteCustomerRequest {
             customer_id: CustomerId::new(other.id),
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetBaseProductsRequest {
+    pub ids: Vec<BaseProductId>,
 }

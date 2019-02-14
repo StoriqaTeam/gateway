@@ -4,9 +4,10 @@ use juniper::FieldResult;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{StoreId, StoresRole, UserId};
+use stq_types::{BaseProductId, ProductId, StoreId, StoresRole, UserId};
 
 use graphql::context::Context;
+use graphql::microservice::requests::GetBaseProductsRequest;
 use graphql::models::*;
 
 pub trait StoresService {
@@ -21,6 +22,12 @@ pub trait StoresService {
     fn get_store_by_user(&self, user_id: UserId) -> FieldResult<Option<Store>>;
 
     fn get_currency_exchange_info(&self) -> FieldResult<CurrencyExchangeInfo>;
+
+    fn get_base_products(&self, input: GetBaseProductsRequest) -> FieldResult<Vec<BaseProduct>>;
+
+    fn get_product(&self, product_id: ProductId) -> FieldResult<Option<Product>>;
+
+    fn get_products(&self, base_product_id: BaseProductId) -> FieldResult<Vec<Product>>;
 }
 
 pub struct StoresServiceImpl<'ctx> {
@@ -77,6 +84,25 @@ impl<'ctx> StoresService for StoresServiceImpl<'ctx> {
     fn get_currency_exchange_info(&self) -> FieldResult<CurrencyExchangeInfo> {
         let request_path = "currency_exchange";
         let url = self.request_url(request_path);
+        self.context.request(Method::Get, url, None).wait()
+    }
+
+    fn get_base_products(&self, input: GetBaseProductsRequest) -> FieldResult<Vec<BaseProduct>> {
+        let request_path = format!("{}/search_by_ids?visibility={}", Model::BaseProduct.to_url(), visibility,);
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request(Method::Post, url, Some(body)).wait()
+    }
+
+    fn get_product(&self, product_id: ProductId) -> FieldResult<Option<Product>> {
+        let request_path = format!("{}/{}", Model::Product.to_url(), product_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
+    }
+
+    fn get_products(&self, base_product_id: BaseProductId) -> FieldResult<Vec<Product>> {
+        let request_path = format!("{}/by_base_product/{}", Model::Product.to_url(), base_product_id);
+        let url = self.request_url(&request_path);
         self.context.request(Method::Get, url, None).wait()
     }
 }
