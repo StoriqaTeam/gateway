@@ -259,3 +259,10 @@ pub struct GetBaseProductsInput {
     #[graphql(description = "Int Id Array of base products.")]
     pub ids: Vec<i32>,
 }
+
+#[derive(GraphQLInputObject, Clone, Debug)]
+#[graphql(description = "Get several products")]
+pub struct GetProductsInput {
+    #[graphql(description = "Int Id Array of products.")]
+    pub ids: Vec<i32>,
+}
