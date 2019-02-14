@@ -88,7 +88,7 @@ impl<'ctx> StoresService for StoresServiceImpl<'ctx> {
     }
 
     fn get_base_products(&self, input: GetBaseProductsRequest) -> FieldResult<Vec<BaseProduct>> {
-        let request_path = format!("{}/search_by_ids?visibility={}", Model::BaseProduct.to_url(), visibility,);
+        let request_path = format!("{}/search_by_ids", Model::BaseProduct.to_url());
         let url = self.request_url(&request_path);
         let body: String = serde_json::to_string(&input)?;
         self.context.request(Method::Post, url, Some(body)).wait()
