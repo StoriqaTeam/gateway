@@ -27,6 +27,7 @@ pub mod order_history;
 pub mod package;
 pub mod page_info;
 pub mod payment_intent;
+pub mod payout;
 pub mod product;
 pub mod query;
 pub mod reset_token;

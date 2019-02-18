@@ -21,6 +21,7 @@ use stq_types::{OrderIdentifier, OrderSlug, ProductId, StoreId};
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
+use graphql::microservice::CalculatePayoutPayload;
 use graphql::models::*;
 use graphql::schema::warehouse as warehouse_module;
 use schema::admin::{base_products_search, base_products_search_pages};
@@ -664,6 +665,29 @@ graphql_object!(Store: Context as "Store" |&self| {
     field russia_billing_info(&executor) -> FieldResult<Option<RussiaBillingInfo>> as "International billing info." {
         let context = executor.context();
         context.get_billing_microservice().russia_billing_info(self.id)
+    }
+
+    field calculate_payout(&executor, input: CalculatePayoutInput)
+        -> FieldResult<PayoutCalculation> as "Calculate payout for orders in a particular currency." {
+        let context = executor.context();
+
+        let CalculatePayoutInput {
+            currency,
+            wallet_address,
+        } = input;
+
+        let payload = CalculatePayoutPayload {
+            store_id: self.id,
+            currency,
+            wallet_address,
+        };
+
+        context.get_billing_microservice().calculate_payout(payload)
+    }
+
+    field get_payouts(&executor) -> FieldResult<PayoutsByStoreId> as "Get payouts for this store." {
+        let context = executor.context();
+        context.get_billing_microservice().get_payouts_by_store_id(self.id)
     }
 });
 

@@ -26,6 +26,7 @@ use graphql::schema::buy_now;
 use graphql::schema::cart as cart_module;
 use graphql::schema::category as category_module;
 use graphql::schema::order;
+use graphql::schema::payout;
 use graphql::schema::product as product_module;
 use graphql::schema::store as store_module;
 use graphql::schema::stripe as stripe_module;
@@ -2004,12 +2005,21 @@ graphql_object!(Mutation: Context |&self| {
             .create_payment_intent_fee(FeeId::new(input.fee_id))
     }
 
-    field createDispute(&executor,
-                            input: CreateDisputeInput as "Open dispute by order.",
-                                    ) -> FieldResult<Mock> as "" {
+    field createDispute(
+        &executor,
+        input: CreateDisputeInput as "Open dispute by order.",
+    ) -> FieldResult<Mock> as "" {
         let context = executor.context();
 
         order::run_create_dispute_mutation(context, input).map(|_| Mock)
     }
 
+    field payOutCryptoToSeller(
+        &executor,
+        input: PayOutCryptoToSellerInput,
+    ) -> FieldResult<Payout> as "Payout info" {
+        let context = executor.context();
+
+        payout::run_pay_out_crypto_to_seller_mutation(context, input)
+    }
 });
