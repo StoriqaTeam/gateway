@@ -9,6 +9,7 @@ extern crate stq_static_resources;
 extern crate stq_types;
 
 extern crate base64;
+extern crate bigdecimal;
 extern crate chrono;
 extern crate config as config_crate;
 extern crate futures;
