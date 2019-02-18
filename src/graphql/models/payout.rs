@@ -82,9 +82,13 @@ pub struct PayOutCryptoToSellerInput {
     #[graphql(description = "Client mutation id.")]
     #[serde(skip_serializing)]
     pub client_mutation_id: String,
+    #[graphql(description = "IDs of the orders to include in the payout. All orders must have the same currency")]
     pub order_ids: Vec<String>,
+    #[graphql(description = "Currency of the payout. Must be the same as the currency of the orders. Must be a cryptocurrency")]
     pub wallet_currency: Currency,
+    #[graphql(description = "Target blockchain wallet address")]
     pub wallet_address: String,
+    #[graphql(description = "Blockchain fee amount that was selected by the user")]
     pub blockchain_fee: String,
 }
 
