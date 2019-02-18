@@ -29,6 +29,7 @@ pub enum Node {
     Company(Company),
     Package(Packages),
     CompanyPackage(CompaniesPackages),
+    Payout(Payout),
 }
 
 graphql_interface!(Node: Context as "Node" |&self| {
@@ -56,6 +57,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
             Node::Company(Company { ref id, .. })  => ID::new(Service::Delivery, Model::Company, id.0).to_string().into(),
             Node::Package(Packages { ref id, .. })  => ID::new(Service::Delivery, Model::Package, id.0).to_string().into(),
             Node::CompanyPackage(CompaniesPackages { ref id, .. })  => ID::new(Service::Delivery, Model::CompanyPackage, id.0).to_string().into(),
+            Node::Payout(Payout { ref id, .. }) => id.to_string().into(),
         }
     }
 
@@ -78,6 +80,7 @@ graphql_interface!(Node: Context as "Node" |&self| {
         &Packages => match *self { Node::Package(ref h) => Some(h), _ => None },
         &CompaniesPackages => match *self { Node::CompanyPackage(ref h) => Some(h), _ => None },
         &Cart => None::<&Cart>,
+        &Payout => match *self { Node::Payout(ref h) => Some(h), _ => None },
     }
 });
 
