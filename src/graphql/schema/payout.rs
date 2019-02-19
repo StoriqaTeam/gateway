@@ -59,7 +59,7 @@ graphql_object!(Payout: Context as "Payout" |&self| {
     }
 });
 
-graphql_object!(PayoutCalculation: Context as "Payout calculation" |&self| {
+graphql_object!(PayoutCalculation: Context as "PayoutCalculation" |&self| {
     description: "Payout calculation"
 
     field order_ids() -> Vec<String> as "IDs of the billing orders included in the calculation" {
@@ -79,7 +79,7 @@ graphql_object!(PayoutCalculation: Context as "Payout calculation" |&self| {
     }
 });
 
-graphql_object!(BlockchainFeeOption: Context as "Blockchain fee option" |&self| {
+graphql_object!(BlockchainFeeOption: Context as "BlockchainFeeOption" |&self| {
     field value() -> String as "Blockchain fee value" {
         self.value.to_string()
     }
@@ -89,7 +89,7 @@ graphql_object!(BlockchainFeeOption: Context as "Blockchain fee option" |&self| 
     }
 });
 
-graphql_object!(PayoutsByStoreId: Context as "Payouts of the store" |&self| {
+graphql_object!(PayoutsByStoreId: Context as "PayoutsByStoreId" |&self| {
     field payouts() -> Vec<Payout> as "Payouts of the store" {
         self.payouts.iter().cloned().map(|p| p.payout).collect()
     }
