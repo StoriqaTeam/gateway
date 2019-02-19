@@ -223,26 +223,26 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
     }
 
     fn create_payment_intent_fee(&self, fee_id: FeeId) -> FieldResult<PaymentIntent> {
-        let request_path = format!("/payment_intents/fees/{}", fee_id);
+        let request_path = format!("payment_intents/fees/{}", fee_id);
         let url = self.request_url(&request_path);
         self.context.request(Method::Post, url, None).wait()
     }
 
     fn calculate_payout(&self, input: CalculatePayoutPayload) -> FieldResult<PayoutCalculation> {
-        let request_path = "/payouts/calculate";
+        let request_path = "payouts/calculate";
         let url = self.request_url(&request_path);
         let body = serde_json::to_string(&input)?;
         self.context.request(Method::Post, url, Some(body)).wait()
     }
 
     fn get_payouts_by_store_id(&self, store_id: StoreId) -> FieldResult<PayoutsByStoreId> {
-        let request_path = format!("/payouts/by-store-id/{}", store_id);
+        let request_path = format!("payouts/by-store-id/{}", store_id);
         let url = self.request_url(&request_path);
         self.context.request(Method::Get, url, None).wait()
     }
 
     fn pay_out_to_seller(&self, input: PayOutToSellerPayload) -> FieldResult<Payout> {
-        let request_path = "/payouts";
+        let request_path = "payouts";
         let url = self.request_url(&request_path);
         let body = serde_json::to_string(&input)?;
         self.context.request(Method::Post, url, Some(body)).wait()
