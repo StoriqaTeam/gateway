@@ -29,7 +29,7 @@ pub struct PayoutCalculation {
 pub struct PayoutsByStoreId {
     pub store_id: StoreId,
     pub payouts: Vec<PayoutWithOrderId>,
-    pub order_ids_without_payouts: Vec<OrderId>,
+    pub order_ids_without_payout: Vec<OrderId>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
