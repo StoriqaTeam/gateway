@@ -1482,8 +1482,7 @@ graphql_object!(Mutation: Context |&self| {
         order::run_create_orders_mutation(context, input)
     }
 
-    field deprecated "use buyNowV2. This endpoint will return incorrect delivery price if it is not set to 'fixed price' by the store owner"
-    buyNow(&executor, input: BuyNowInput as "Buy now input.") -> FieldResult<CreateOrdersOutput> as "Creates orders." {
+    field buyNow(&executor, input: BuyNowInput as "Buy now input.") -> FieldResult<CreateOrdersOutput> as "Creates orders." {
         let context = executor.context();
 
         buy_now::run_buy_now_mutation_v1(context, input)
