@@ -4,7 +4,7 @@ use stq_static_resources::Currency;
 use stq_types::{OrderId, PayoutId, StoreId, UserId};
 use uuid::Uuid;
 
-use graphql::microservice::{CryptoPaymentDetails, PayOutToSellerPayload, PaymentDetails};
+use graphql::microservice::{self, CryptoPaymentDetails, PayOutToSellerPayload, PaymentDetails};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Payout {
@@ -25,6 +25,26 @@ pub struct PayoutCalculation {
     pub blockchain_fee_options: Vec<BlockchainFeeOption>,
 }
 
+impl PayoutCalculation {
+    pub fn try_from_dto(dto: microservice::PayoutCalculation) -> Result<PayoutCalculation, ()> {
+        let microservice::PayoutCalculation {
+            blockchain_fee_options,
+            currency,
+            gross_amount,
+            order_ids,
+        } = dto;
+
+        let currency = Currency::from_code(&currency).ok_or(())?;
+
+        Ok(PayoutCalculation {
+            blockchain_fee_options: blockchain_fee_options.into_iter().map(BlockchainFeeOption::from).collect(),
+            currency,
+            gross_amount,
+            order_ids,
+        })
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PayoutsByStoreId {
     pub store_id: StoreId,
@@ -42,6 +62,20 @@ pub struct PayoutWithOrderId {
 pub struct BlockchainFeeOption {
     pub value: BigDecimal,
     pub estimated_time_seconds: i32,
+}
+
+impl From<microservice::BlockchainFeeOption> for BlockchainFeeOption {
+    fn from(dto: microservice::BlockchainFeeOption) -> BlockchainFeeOption {
+        let microservice::BlockchainFeeOption {
+            value,
+            estimated_time_seconds,
+        } = dto;
+
+        BlockchainFeeOption {
+            value,
+            estimated_time_seconds,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
