@@ -102,6 +102,8 @@ pub struct CreateProductWithAttributesInput {
     pub product: NewProduct,
     #[graphql(description = "Attributes")]
     pub attributes: Vec<ProdAttrValueInput>,
+    #[graphql(description = "Quantity")]
+    pub quantity: Option<i32>,
 }
 
 #[derive(GraphQLInputObject, Serialize, Debug, Clone)]

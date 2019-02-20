@@ -383,8 +383,8 @@ graphql_object!(Mutation: Context |&self| {
 
     field createBaseProductWithVariants(&executor, input: NewBaseProductWithVariantsInput as "Create base product with variants input.") -> FieldResult<BaseProduct> as "Creates new base product with variants." {
         let context = executor.context();
-        let url = format!("{}/{}/with_variants",
-            context.config.service_url(Service::Stores),
+        let url = format!("{}/{}/create_with_variants",
+            context.config.saga_microservice.url,
             Model::BaseProduct.to_url());
         let mut input = input;
         input.variants = input.variants.into_iter()
