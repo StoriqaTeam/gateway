@@ -123,7 +123,7 @@ impl PayOutCryptoToSellerInput {
         Ok(PayOutToSellerPayload {
             order_ids,
             payment_details: PaymentDetails::Crypto(CryptoPaymentDetails {
-                wallet_currency,
+                wallet_currency: wallet_currency.to_string().to_ascii_lowercase(),
                 wallet_address,
                 blockchain_fee,
             }),

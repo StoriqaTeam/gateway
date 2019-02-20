@@ -678,7 +678,7 @@ graphql_object!(Store: Context as "Store" |&self| {
 
         let payload = CalculatePayoutPayload {
             store_id: self.id,
-            currency,
+            currency: currency.to_string().to_ascii_lowercase(),
             wallet_address,
         };
 

@@ -1,5 +1,4 @@
 use bigdecimal::BigDecimal;
-use stq_static_resources::Currency;
 use stq_types::{BaseProductId, OrderId, ProductId, StoreId};
 
 use graphql::models::customer_id::CustomerId;
@@ -50,7 +49,7 @@ pub struct GetProductsRequest {
 #[derive(Debug, Clone, Serialize)]
 pub struct CalculatePayoutPayload {
     pub store_id: StoreId,
-    pub currency: Currency,
+    pub currency: String,
     pub wallet_address: String,
 }
 
@@ -67,7 +66,7 @@ pub enum PaymentDetails {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CryptoPaymentDetails {
-    pub wallet_currency: Currency,
+    pub wallet_currency: String,
     pub wallet_address: String,
     pub blockchain_fee: BigDecimal,
 }
