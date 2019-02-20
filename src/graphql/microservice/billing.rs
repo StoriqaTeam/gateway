@@ -8,6 +8,7 @@ use stq_types::{InvoiceId, OrderId, StoreId};
 
 use graphql::context::Context;
 use graphql::microservice::requests::*;
+use graphql::microservice::responses::PayoutCalculation;
 use graphql::models::*;
 
 pub trait BillingService {
