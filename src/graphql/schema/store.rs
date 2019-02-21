@@ -678,11 +678,17 @@ graphql_object!(Store: Context as "Store" |&self| {
 
         let payload = CalculatePayoutPayload {
             store_id: self.id,
-            currency,
+            currency: currency.to_string().to_ascii_lowercase(),
             wallet_address,
         };
 
-        context.get_billing_microservice().calculate_payout(payload)
+        let dto = context.get_billing_microservice().calculate_payout(payload)?;
+
+        PayoutCalculation::try_from_dto(dto)
+            .map_err(|_|  FieldError::new(
+                "Invalid response from billing microservice",
+                graphql_value!({ "code": 100, "details": { "Billing microservice returned invalid currency" }}),
+            ))
     }
 
     field get_payouts(&executor) -> FieldResult<PayoutsByStoreId> as "Get payouts for this store." {
