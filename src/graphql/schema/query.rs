@@ -284,8 +284,7 @@ graphql_object!(Query: Context |&self| {
             .wait()
     }
 
-    field deprecated "use calculateBuyNowV2. This endpoint will return incorrect delivery price if it is not set to 'fixed price' by the store owner"
-    calculate_buy_now(
+    field calculate_buy_now(
         &executor,
         product_id: i32 as "Product raw id",
         quantity: i32 as "Quantity",

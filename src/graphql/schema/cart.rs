@@ -13,7 +13,7 @@ use stq_routes::model::Model;
 use stq_routes::service::Service;
 use stq_types::{CartCustomer, CartItem, DeliveryMethodId, ProductId, Quantity, ShippingId, UserId};
 
-use stq_api::orders::CartClient;
+use stq_api::orders::{CartClient, UserCountryCodeUpdater};
 use stq_api::types::ApiFutureExt;
 
 use stq_static_resources::CurrencyType;
@@ -427,7 +427,9 @@ pub fn run_increment_in_cart(context: &Context, input: IncrementInCartInputV2) -
             product.pre_order,
             product.pre_order_days,
             base_product.currency.currency_type(),
-            None,
+            Some(UserCountryCodeUpdater::Set {
+                value: input.user_country_code.clone().into(),
+            }),
         )
         .sync()
         .map_err(into_graphql)?
