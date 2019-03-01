@@ -4,7 +4,7 @@ use juniper::FieldResult;
 
 use stq_routes::model::Model;
 use stq_routes::service::Service;
-use stq_types::{InvoiceId, OrderId, StoreId};
+use stq_types::{InvoiceId, OrderId, StoreId, SubscriptionPaymentId};
 
 use graphql::context::Context;
 use graphql::microservice::requests::*;
@@ -61,6 +61,21 @@ pub trait BillingService {
     fn pay_out_to_seller(&self, input: PayOutToSellerPayload) -> FieldResult<Payout>;
 
     fn get_balance_by_store_id(&self, store_id: StoreId) -> FieldResult<Balances>;
+
+    fn create_store_subscription(&self, input: CreateStoreSubscriptionInput) -> FieldResult<StoreSubscription>;
+
+    fn update_store_subscription(&self, input: UpdateStoreSubscriptionInput) -> FieldResult<StoreSubscription>;
+
+    fn get_store_subscription(&self, store_id: StoreId) -> FieldResult<Option<StoreSubscription>>;
+
+    fn subscription_payments(
+        &self,
+        skip: i32,
+        count: i32,
+        input: SubscriptionPaymentSearch,
+    ) -> FieldResult<SubscriptionPaymentsSearchResults>;
+
+    fn get_subscriptions(&self, subscription_payment_id: SubscriptionPaymentId) -> FieldResult<Vec<Subscription>>;
 }
 
 pub struct BillingServiceImpl<'ctx> {
@@ -252,6 +267,44 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
     }
     fn get_balance_by_store_id(&self, store_id: StoreId) -> FieldResult<Balances> {
         let request_path = format!("balance/by-store-id/{}", store_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
+    }
+
+    fn create_store_subscription(&self, input: CreateStoreSubscriptionInput) -> FieldResult<StoreSubscription> {
+        let request_path = format!("store_subscription/by-store-id/{}", input.store_id);
+        let url = self.request_url(&request_path);
+        let body = serde_json::to_string(&input)?;
+        self.context.request(Method::Post, url, Some(body)).wait()
+    }
+
+    fn update_store_subscription(&self, input: UpdateStoreSubscriptionInput) -> FieldResult<StoreSubscription> {
+        let request_path = format!("store_subscription/by-store-id/{}", input.store_id);
+        let url = self.request_url(&request_path);
+        let body = serde_json::to_string(&input)?;
+        self.context.request(Method::Put, url, Some(body)).wait()
+    }
+
+    fn get_store_subscription(&self, store_id: StoreId) -> FieldResult<Option<StoreSubscription>> {
+        let request_path = format!("store_subscription/by-store-id/{}", store_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
+    }
+
+    fn subscription_payments(
+        &self,
+        skip: i32,
+        count: i32,
+        input: SubscriptionPaymentSearch,
+    ) -> FieldResult<SubscriptionPaymentsSearchResults> {
+        let request_path = format!("subscription/payment/search?skip={}&count={}", skip, count);
+        let url = self.request_url(&request_path);
+        let body: String = serde_json::to_string(&input)?;
+        self.context.request(Method::Post, url, Some(body)).wait()
+    }
+
+    fn get_subscriptions(&self, subscription_payment_id: SubscriptionPaymentId) -> FieldResult<Vec<Subscription>> {
+        let request_path = format!("subscriptions/by-subscription-payment-id//{}", subscription_payment_id);
         let url = self.request_url(&request_path);
         self.context.request(Method::Get, url, None).wait()
     }

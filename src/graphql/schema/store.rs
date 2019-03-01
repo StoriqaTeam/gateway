@@ -703,6 +703,27 @@ graphql_object!(Store: Context as "Store" |&self| {
         .get_balance_by_store_id(self.id)
     }
 
+    field store_subscription(&executor) -> FieldResult<Option<StoreSubscription>> as "Get store subscription" {
+        executor
+            .context()
+            .get_billing_microservice()
+            .get_store_subscription(self.id)
+    }
+
+    field subscription_payments(
+        &executor,
+        current_page : i32 as "Current page",
+        items_count : i32 as "Items count",
+    ) -> FieldResult<Connection<SubscriptionPayment, PageInfoSegments>> {
+        let context = executor.context();
+        let search_params = SubscriptionPaymentSearch {
+            store_id: Some(self.id.0),
+            ..Default::default()
+        };
+
+        super::subscription::subscription_payments(context, current_page, items_count, search_params)
+    }
+
 });
 
 graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {
