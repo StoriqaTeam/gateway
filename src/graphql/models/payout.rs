@@ -1,8 +1,11 @@
+use std::collections::HashMap;
+
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
+use uuid::Uuid;
+
 use stq_static_resources::Currency;
 use stq_types::{OrderId, PayoutId, StoreId, UserId};
-use uuid::Uuid;
 
 use graphql::microservice::{self, CryptoPaymentDetails, PayOutToSellerPayload, PaymentDetails};
 
@@ -43,6 +46,11 @@ impl PayoutCalculation {
             order_ids,
         })
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Balances {
+    pub currencies: HashMap<Currency, BigDecimal>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
