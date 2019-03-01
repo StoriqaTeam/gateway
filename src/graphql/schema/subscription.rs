@@ -40,7 +40,7 @@ graphql_object!(SubscriptionPayment: Context as "SubscriptionPayment" |&self| {
     description: "Subscription payment information."
 
     field id() -> GraphqlID as "Base64 Unique id" {
-        format!("{}|subscripotion_payment",self.id).to_string().into()
+        format!("{}|subscription_payment",self.id).to_string().into()
     }
 
     field store_id() -> i32 as "Store id" {
@@ -144,7 +144,7 @@ pub fn subscription_payments(
         .into_iter()
         .map(|subscription_payment| {
             Edge::new(
-                GraphqlID::from(format!("{}|subscription", subscription_payment.id)),
+                GraphqlID::from(format!("{}|subscription_payment", subscription_payment.id)),
                 subscription_payment,
             )
         })
