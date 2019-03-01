@@ -59,6 +59,8 @@ pub trait BillingService {
     fn get_payouts_by_store_id(&self, store_id: StoreId) -> FieldResult<PayoutsByStoreId>;
 
     fn pay_out_to_seller(&self, input: PayOutToSellerPayload) -> FieldResult<Payout>;
+
+    fn get_balance_by_store_id(&self, store_id: StoreId) -> FieldResult<Balances>;
 }
 
 pub struct BillingServiceImpl<'ctx> {
@@ -247,5 +249,10 @@ impl<'ctx> BillingService for BillingServiceImpl<'ctx> {
         let url = self.request_url(&request_path);
         let body = serde_json::to_string(&input)?;
         self.context.request(Method::Post, url, Some(body)).wait()
+    }
+    fn get_balance_by_store_id(&self, store_id: StoreId) -> FieldResult<Balances> {
+        let request_path = format!("balance/by-store-id/{}", store_id);
+        let url = self.request_url(&request_path);
+        self.context.request(Method::Get, url, None).wait()
     }
 }

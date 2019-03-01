@@ -95,6 +95,35 @@ graphql_object!(PayoutsByStoreId: Context as "PayoutsByStoreId" |&self| {
     }
 });
 
+graphql_object!(Balances: Context as "StoreBalance" |&self| {
+    description: "Store billing balance"
+
+    field stq() -> f64 as "STQ Balance" {
+        self.currencies.get(&Currency::STQ)
+        .map(|amount| amount.to_string().parse::<f64>().unwrap_or(0.0))
+        .unwrap_or(0.0)
+    }
+
+    field btc(&executor) -> f64 as "BTC Balance" {
+        self.currencies.get(&Currency::BTC)
+        .map(|amount| amount.to_string().parse::<f64>().unwrap_or(0.0))
+        .unwrap_or(0.0)
+    }
+
+    field eth(&executor) -> f64 as "ETH Balance" {
+        self.currencies.get(&Currency::ETH)
+        .map(|amount| amount.to_string().parse::<f64>().unwrap_or(0.0))
+        .unwrap_or(0.0)
+    }
+
+    field eur(&executor) -> f64 as "EUR Balance" {
+        self.currencies.get(&Currency::EUR)
+        .map(|amount| amount.to_string().parse::<f64>().unwrap_or(0.0))
+        .unwrap_or(0.0)
+    }
+
+});
+
 pub fn run_pay_out_crypto_to_seller_mutation(context: &Context, input: PayOutCryptoToSellerInput) -> FieldResult<Payout> {
     let payload = input.try_into_payload().map_err(|e| match e {
         PayOutCryptoInputConversionError::InvalidOrderIdFormat => FieldError::new(

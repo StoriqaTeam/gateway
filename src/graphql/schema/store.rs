@@ -695,6 +695,14 @@ graphql_object!(Store: Context as "Store" |&self| {
         let context = executor.context();
         context.get_billing_microservice().get_payouts_by_store_id(self.id)
     }
+
+    field get_balances(&executor) ->  FieldResult<Balances> as "Get balances." {
+        executor
+        .context()
+        .get_billing_microservice()
+        .get_balance_by_store_id(self.id)
+    }
+
 });
 
 graphql_object!(Connection<Store, PageInfo>: Context as "StoresConnection" |&self| {
