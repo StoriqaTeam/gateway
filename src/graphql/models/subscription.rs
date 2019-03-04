@@ -27,7 +27,9 @@ pub struct UpdateStoreSubscriptionInput {
     #[serde(skip_serializing)]
     pub store_id: i32,
     #[graphql(description = "Currency.")]
-    pub currency: Currency,
+    pub currency: Option<Currency>,
+    #[graphql(description = "Status.")]
+    pub status: Option<SubscriptionPaymentStatus>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -37,6 +39,16 @@ pub struct StoreSubscription {
     pub value: BigDecimal,
     pub wallet_address: Option<String>,
     pub trial_start_date: Option<NaiveDateTime>,
+    pub status: StoreSubscriptionStatus,
+}
+
+#[derive(GraphQLEnum, Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[graphql(name = "SubscriptionPaymentStatus", description = "Subscription payment status")]
+#[serde(rename_all = "lowercase")]
+pub enum StoreSubscriptionStatus {
+    Trial,
+    Paid,
+    Free,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -53,6 +65,7 @@ pub struct SubscriptionPayment {
 
 #[derive(GraphQLEnum, Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[graphql(name = "SubscriptionPaymentStatus", description = "Subscription payment status")]
+#[serde(rename_all = "lowercase")]
 pub enum SubscriptionPaymentStatus {
     Paid,
     Failed,
