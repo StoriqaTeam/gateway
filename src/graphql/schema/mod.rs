@@ -37,6 +37,7 @@ pub mod shipping_rates;
 pub mod stock;
 pub mod store;
 pub mod stripe;
+pub mod subscription;
 pub mod user;
 pub mod user_delivery_address;
 pub mod user_role;

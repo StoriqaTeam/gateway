@@ -2021,4 +2021,14 @@ graphql_object!(Mutation: Context |&self| {
 
         payout::run_pay_out_crypto_to_seller_mutation(context, input)
     }
+
+    field createStoreSubscription(&executor, input: CreateStoreSubscriptionInput) -> FieldResult<StoreSubscription> {
+        executor.context().get_billing_microservice()
+            .create_store_subscription(input)
+    }
+
+    field updateStoreSubscription(&executor, input: UpdateStoreSubscriptionInput) -> FieldResult<StoreSubscription> {
+        executor.context().get_billing_microservice()
+            .update_store_subscription(input)
+    }
 });
