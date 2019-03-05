@@ -39,6 +39,7 @@ pub struct StoreSubscription {
     pub value: BigDecimal,
     pub wallet_address: Option<String>,
     pub trial_start_date: Option<NaiveDateTime>,
+    pub trial_end_date: Option<NaiveDateTime>,
     pub status: StoreSubscriptionStatus,
 }
 

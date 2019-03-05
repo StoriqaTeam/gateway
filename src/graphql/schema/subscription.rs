@@ -35,6 +35,10 @@ graphql_object!(StoreSubscription: Context as "StoreSubscription" |&self| {
         self.trial_start_date.map(|date| date.format("%+").to_string())
     }
 
+    field trial_end_date() ->  Option<String> as "Trial end date" {
+        self.trial_end_date.map(|date| date.format("%+").to_string())
+    }
+
     field status() -> StoreSubscriptionStatus as "Store subscription status" {
         self.status
     }
