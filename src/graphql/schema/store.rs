@@ -21,7 +21,6 @@ use stq_types::{OrderIdentifier, OrderSlug, ProductId, StoreId};
 use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
-use graphql::microservice::CalculatePayoutPayload;
 use graphql::models::*;
 use graphql::schema::warehouse as warehouse_module;
 use schema::admin::{base_products_search, base_products_search_pages};
@@ -665,30 +664,6 @@ graphql_object!(Store: Context as "Store" |&self| {
     field russia_billing_info(&executor) -> FieldResult<Option<RussiaBillingInfo>> as "International billing info." {
         let context = executor.context();
         context.get_billing_microservice().russia_billing_info(self.id)
-    }
-
-    field calculate_payout(&executor, input: CalculatePayoutInput)
-        -> FieldResult<PayoutCalculation> as "Calculate payout for orders in a particular currency." {
-        let context = executor.context();
-
-        let CalculatePayoutInput {
-            currency,
-            wallet_address,
-        } = input;
-
-        let payload = CalculatePayoutPayload {
-            store_id: self.id,
-            currency: currency.to_string().to_ascii_lowercase(),
-            wallet_address,
-        };
-
-        let dto = context.get_billing_microservice().calculate_payout(payload)?;
-
-        PayoutCalculation::try_from_dto(dto)
-            .map_err(|_|  FieldError::new(
-                "Invalid response from billing microservice",
-                graphql_value!({ "code": 100, "details": { "Billing microservice returned invalid currency" }}),
-            ))
     }
 
     field get_payouts(&executor) -> FieldResult<PayoutsByStoreId> as "Get payouts for this store." {
