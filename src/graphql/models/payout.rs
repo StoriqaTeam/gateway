@@ -112,6 +112,8 @@ pub enum PayoutStatus {
 #[derive(GraphQLInputObject, Clone, Debug)]
 #[graphql(description = "Payout calculation input object")]
 pub struct CalculatePayoutInput {
+    #[graphql(description = "Store id")]
+    pub store_id: i32,
     #[graphql(description = "Currency of the target wallet")]
     pub currency: Currency,
     #[graphql(description = "Address of the target wallet")]

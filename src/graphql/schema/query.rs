@@ -19,6 +19,7 @@ use super::*;
 use errors::into_graphql;
 use graphql::context::Context;
 use graphql::microservice::requests::{GetBaseProductsRequest, GetProductsRequest};
+use graphql::microservice::CalculatePayoutPayload;
 use graphql::models::*;
 use graphql::schema::base_product as base_product_module;
 use graphql::schema::cart as cart_module;
@@ -659,4 +660,30 @@ graphql_object!(Query: Context |&self| {
         let context = executor.context();
         user_module::existing_reset_token(context, input)
     }
+
+    field calculate_payout(&executor, input: CalculatePayoutInput)
+        -> FieldResult<PayoutCalculation> as "Calculate payout for store orders in a particular currency." {
+        let context = executor.context();
+
+        let CalculatePayoutInput {
+            currency,
+            wallet_address,
+            store_id,
+        } = input;
+
+        let payload = CalculatePayoutPayload {
+            store_id: store_id.into(),
+            currency: currency.to_string().to_ascii_lowercase(),
+            wallet_address,
+        };
+
+        let dto = context.get_billing_microservice().calculate_payout(payload)?;
+
+        PayoutCalculation::try_from_dto(dto)
+            .map_err(|_|  FieldError::new(
+                "Invalid response from billing microservice",
+                graphql_value!({ "code": 100, "details": { "Billing microservice returned invalid currency" }}),
+            ))
+    }
+
 });
