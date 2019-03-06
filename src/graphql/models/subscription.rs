@@ -29,7 +29,7 @@ pub struct UpdateStoreSubscriptionInput {
     #[graphql(description = "Currency.")]
     pub currency: Option<Currency>,
     #[graphql(description = "Status.")]
-    pub status: Option<SubscriptionPaymentStatus>,
+    pub status: Option<StoreSubscriptionStatus>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
